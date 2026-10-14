@@ -393,6 +393,18 @@ export interface User {
   trendsOptIn?: boolean | null;
   shareWithLearners?: boolean | null;
   haptics?: boolean | null;
+  /**
+   * When this person last opened Teach, per portal id. Used to count shared answers that arrived after that visit.
+   */
+  teachSeen?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   removed?: boolean | null;
   updatedBy?: (number | null) | User;
   onBehalfOf?: (number | null) | User;
@@ -678,8 +690,17 @@ export interface Lesson {
   transcript?: string | null;
   transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
   transcriptNote?: string | null;
+  /**
+   * Draft talks are hidden from learners. Existing rows stay published.
+   */
   publishState?: ('draft' | 'published') | null;
+  /**
+   * Optional door, W1 to W20.
+   */
   jibrilSection?: string | null;
+  /**
+   * Optional Ghunya heading for this talk.
+   */
   ghunyaHeading?: string | null;
   sourceUrl?: string | null;
   /**
@@ -695,6 +716,57 @@ export interface Lesson {
    * Live portrait framing track for the whole talk: [{ start, end, mode A–F, crop, focus, confidence }]. Written by pnpm framing:analyse. Never a rendered file.
    */
   framingTrack?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "channel-speakers".
+ */
+export interface ChannelSpeaker {
+  id: number;
+  channelKey: string;
+  label?: string | null;
+  speaker: string;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "helper-tokens".
+ */
+export interface HelperToken {
+  id: number;
+  label: string;
+  tokenHash: string;
+  tokenPrefix?: string | null;
+  createdBy?: (number | null) | User;
+  revokedAt?: string | null;
+  lastUsedAt?: string | null;
+  /**
+   * Cleared after the desk shows the token once.
+   */
+  shownOnce?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bring-in-previews".
+ */
+export interface BringInPreview {
+  id: number;
+  actor?: (number | null) | User;
+  portal?: (number | null) | Portal;
+  body?:
     | {
         [k: string]: unknown;
       }
@@ -2097,6 +2169,11 @@ export interface AiStepVersion {
   authorName?: string | null;
   authorRole?: string | null;
   live?: boolean | null;
+  portal?: (number | null) | Portal;
+  forkedFrom?: number | null;
+  beforePrompt?: string | null;
+  kept?: boolean | null;
+  rolledBack?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2136,6 +2213,8 @@ export interface AiStepOutput {
   protectsId?: number | null;
   protectsReason?: string | null;
   mock?: boolean | null;
+  portal?: (number | null) | Portal;
+  actorName?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2174,6 +2253,7 @@ export interface AiStepJob {
   actorName?: string | null;
   note?: string | null;
   error?: string | null;
+  portal?: (number | null) | Portal;
   updatedAt: string;
   createdAt: string;
 }
@@ -2185,6 +2265,7 @@ export interface AiDesk {
   id: number;
   key: string;
   portalMayEdit?: boolean | null;
+  activitySeenAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2870,6 +2951,18 @@ export interface PayloadLockedDocument {
         value: number | Lesson;
       } | null)
     | ({
+        relationTo: 'channel-speakers';
+        value: number | ChannelSpeaker;
+      } | null)
+    | ({
+        relationTo: 'helper-tokens';
+        value: number | HelperToken;
+      } | null)
+    | ({
+        relationTo: 'bring-in-previews';
+        value: number | BringInPreview;
+      } | null)
+    | ({
         relationTo: 'resources';
         value: number | Resource;
       } | null)
@@ -3282,6 +3375,7 @@ export interface UsersSelect<T extends boolean = true> {
   trendsOptIn?: T;
   shareWithLearners?: T;
   haptics?: T;
+  teachSeen?: T;
   removed?: T;
   updatedBy?: T;
   onBehalfOf?: T;
@@ -3467,6 +3561,43 @@ export interface LessonsSelect<T extends boolean = true> {
   starterLane?: T;
   sourceTitle?: T;
   framingTrack?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "channel-speakers_select".
+ */
+export interface ChannelSpeakersSelect<T extends boolean = true> {
+  channelKey?: T;
+  label?: T;
+  speaker?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "helper-tokens_select".
+ */
+export interface HelperTokensSelect<T extends boolean = true> {
+  label?: T;
+  tokenHash?: T;
+  tokenPrefix?: T;
+  createdBy?: T;
+  revokedAt?: T;
+  lastUsedAt?: T;
+  shownOnce?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bring-in-previews_select".
+ */
+export interface BringInPreviewsSelect<T extends boolean = true> {
+  actor?: T;
+  portal?: T;
+  body?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4371,6 +4502,11 @@ export interface AiStepVersionsSelect<T extends boolean = true> {
   authorName?: T;
   authorRole?: T;
   live?: T;
+  portal?: T;
+  forkedFrom?: T;
+  beforePrompt?: T;
+  kept?: T;
+  rolledBack?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4393,6 +4529,8 @@ export interface AiStepOutputsSelect<T extends boolean = true> {
   protectsId?: T;
   protectsReason?: T;
   mock?: T;
+  portal?: T;
+  actorName?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4414,6 +4552,7 @@ export interface AiStepJobsSelect<T extends boolean = true> {
   actorName?: T;
   note?: T;
   error?: T;
+  portal?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -4424,6 +4563,7 @@ export interface AiStepJobsSelect<T extends boolean = true> {
 export interface AiDeskSelect<T extends boolean = true> {
   key?: T;
   portalMayEdit?: T;
+  activitySeenAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -5060,60 +5200,6 @@ export interface CollectionsWidget {
  */
 export interface Auth {
   [k: string]: unknown;
-}
-
-export interface ChannelSpeaker {
-  id: number;
-  channelKey: string;
-  label?: string | null;
-  speaker: string;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface ChannelSpeakersSelect<T extends boolean = true> {
-  channelKey?: T;
-  label?: T;
-  speaker?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-export interface HelperToken {
-  id: number;
-  label: string;
-  tokenHash: string;
-  tokenPrefix?: string | null;
-  createdBy?: (number | null) | User;
-  revokedAt?: string | null;
-  lastUsedAt?: string | null;
-  shownOnce?: string | null;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface HelperTokensSelect<T extends boolean = true> {
-  label?: T;
-  tokenHash?: T;
-  tokenPrefix?: T;
-  createdBy?: T;
-  revokedAt?: T;
-  lastUsedAt?: T;
-  shownOnce?: T;
-  updatedAt?: T;
-  createdAt?: T;
-}
-export interface BringInPreview {
-  id: number;
-  actor?: (number | null) | User;
-  portal?: (number | null) | Portal;
-  body?: unknown;
-  updatedAt: string;
-  createdAt: string;
-}
-export interface BringInPreviewsSelect<T extends boolean = true> {
-  actor?: T;
-  portal?: T;
-  body?: T;
-  updatedAt?: T;
-  createdAt?: T;
 }
 
 

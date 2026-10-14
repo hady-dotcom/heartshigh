@@ -94,7 +94,7 @@ export async function POST(req: Request) {
       const gate = portalAiGate({ role: session.user.role, realRole: session.actor?.role, usePortalAi: text(form, 'usePortalAi') === 'yes', confirmed: text(form, 'confirmAi') === 'yes' })
       if (gate.error) return redirectTo(req, next, gate.error)
       const client = gate.spend ? await clientForPortal(session.payload, portal.id, session.user.role, session.actor?.role) : null
-      const result = await checkQuestions(session.payload, session.user, client)
+      const result = await checkQuestions(session.payload, session.user, client, portal.id)
       const paid = result.paidFallback ? ` ${result.paidFallback}` : ''
       return redirectTo(req, next, undefined, `Checked ${result.checked} questions. ${result.flagged} weak ones have a draft rewrite. Nothing was published.${paid}`)
     }

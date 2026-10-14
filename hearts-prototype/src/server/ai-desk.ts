@@ -3,14 +3,24 @@ import { authorTextProblems } from '@/lib/opening-data'
 import {
   STEP_SPECS,
   TIER_FIELDS,
+  bellKey,
+  bellText,
   canEditSteps,
   canViewSteps,
   clipText,
+  countNewSince,
   defaultModel,
+  deniedAudit,
+  editAudit,
   extractJson,
   fillPrompt,
+  filterActivity,
+  forkKeep,
+  forkRollback,
+  forkSave,
   jobNote,
   liveVersion,
+  londonDay,
   markLive,
   mockBanner,
   mockOutput,
@@ -18,7 +28,9 @@ import {
   placeholderProblems,
   pointProtect,
   portalFromNote,
+  runAudit,
   runQueue,
+  sameVersions,
   schemaProblems,
   stepBySlug,
   tierProtect,
@@ -29,6 +41,8 @@ import {
   type TalkContext,
   type VersionState,
 } from '@/lib/ai-steps'
+import { now } from '@/lib/clock'
+import { idOf } from '@/lib/ids'
 import type { LlmClient } from '@/lib/llm'
 import { clientForPortal, storedForPortal } from './portal-ai'
 import { saidInTalk } from '@/lib/tiers'
@@ -137,11 +151,12 @@ function assertView(actor: Person) {
   }
 }
 
-async function assertEdit(payload: Payload, actor: Person) {
+async function assertEdit(payload: Payload, actor: Person, portalId: number | null = null) {
   assertView(actor)
   const allowed = canEditSteps(actor, await portalMayEdit(payload))
   if (!allowed) {
-    await audit(payload, 'ai.step.denied', { actor: actor.id, actorRole: actor.role, reason: 'Portal admins can read the steps. The master has not granted editing.', detail: { role: actor.role } })
+    const entry = deniedAudit({ actorId: actor.id, actorRole: actor.role || '', portalId, reason: 'Portal admins can read the steps. The master has not granted editing.' })
+    await audit(payload, entry.event, entry.fields)
     const error = new Error('You can read the steps. The master has not granted editing.')
     ;(error as Error & { status?: number }).status = 403
     throw error
@@ -174,37 +189,35 @@ async function versionRows(payload: Payload, stepId: number) {
   return found.docs as unknown as Doc[]
 }
 
-export async function saveVersion(
-  payload: Payload,
-  actor: Person,
-  input: { slug: string; prompt: string; provider: string; model: string; temperature: number; maxTokens: number; note: string },
-) {
-  await assertEdit(payload, actor)
-  const step = await one(payload, 'ai-steps', { slug: { equals: input.slug } })
-  if (!step) throw new Error('That step is not in the registry.')
-  const spec = specOf(step)
-  const provider: ProviderName = input.provider === 'openai' ? 'openai' : 'anthropic'
-  const temperature = Math.min(1, Math.max(0, Number.isFinite(input.temperature) ? input.temperature : 0))
-  const maxTokens = Math.min(8000, Math.max(64, Math.round(input.maxTokens || spec.maxTokens)))
-  const problems = placeholderProblems(input.prompt, (step.placeholders as Placeholder[]) || spec.placeholders)
-  if (problems.length) throw new Error(problems[0])
-  const rows = await versionRows(payload, step.id)
-  const draft = nextVersion(versionsOf(rows), {
-    prompt: input.prompt,
-    provider,
-    model: input.model.trim() || defaultModel(provider),
-    temperature,
-    maxTokens,
-    note: input.note.trim() || 'No note added.',
-    authorName: actor.name || actor.email || 'Someone',
-  })
-  const created = draft[draft.length - 1]
-  const version = asDoc(
+function masterRows(rows: Doc[]) {
+  return rows.filter((row) => idOf(row.portal) == null)
+}
+
+function portalRows(rows: Doc[], portalId: number) {
+  return rows.filter((row) => idOf(row.portal) === portalId)
+}
+
+function assertHeartsUntouched(before: VersionState[], after: VersionState[]) {
+  if (!sameVersions(before, after)) throw new Error('A portal edit tried to change the HEARTS version. It was not saved.')
+}
+
+async function persistLive(payload: Payload, rows: Doc[], desired: VersionState[]) {
+  const liveNumbers = new Set(desired.filter((version) => version.live).map((version) => version.number))
+  for (const row of rows) {
+    const should = liveNumbers.has(Number(row.number))
+    if (Boolean(row.live) !== should) {
+      await payload.update({ collection: col('ai-step-versions'), id: row.id, overrideAccess: true, data: { live: should } as never })
+    }
+  }
+}
+
+async function writeVersion(payload: Payload, stepId: number, created: VersionState, actor: Person, extra: Record<string, unknown>) {
+  return asDoc(
     await payload.create({
       collection: col('ai-step-versions'),
       overrideAccess: true,
       data: {
-        step: step.id,
+        step: stepId,
         number: created.number,
         prompt: created.prompt,
         provider: created.provider,
@@ -215,38 +228,150 @@ export async function saveVersion(
         author: actor.id,
         authorName: created.authorName,
         authorRole: actor.role || '',
-        live: false,
+        ...extra,
       } as never,
     }),
   )
-  await audit(payload, 'ai.step.version', {
-    actor: actor.id,
-    actorRole: actor.role,
-    reason: created.note,
-    detail: { slug: input.slug, version: created.number, versionId: version.id },
-  })
-  return { step, version: created }
 }
 
-export async function publishVersion(payload: Payload, actor: Person, slug: string, number: number, rollback: boolean) {
-  await assertEdit(payload, actor)
+async function notifyPortalChange(payload: Payload, portalId: number) {
+  const portal = await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null)
+  const portalName = String((portal as Doc | null)?.name || 'A portal')
+  const day = londonDay(now())
+  const key = bellKey(portalId, day)
+  const found = await payload.find({
+    collection: col('ai-step-versions'),
+    overrideAccess: true,
+    depth: 0,
+    limit: 200,
+    pagination: false,
+    where: { portal: { equals: portalId } },
+  })
+  const count = (found.docs as unknown as Doc[]).filter((row) => londonDay(new Date(String(row.createdAt || ''))) === day).length || 1
+  const text = bellText(portalName, count)
+  const masters = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 20, where: { role: { equals: 'master' } } })
+  for (const master of masters.docs) {
+    const existing = await payload.find({
+      collection: 'notifications',
+      overrideAccess: true,
+      depth: 0,
+      limit: 1,
+      where: { and: [{ user: { equals: master.id } }, { key: { equals: key } }] },
+    })
+    if (existing.docs[0]) {
+      await payload.update({
+        collection: 'notifications',
+        id: existing.docs[0].id,
+        overrideAccess: true,
+        data: { title: text.title, body: text.body, href: '/master/ai', read: false } as never,
+      })
+    } else {
+      await payload.create({
+        collection: 'notifications',
+        overrideAccess: true,
+        data: { user: master.id, portal: portalId, title: text.title, body: text.body, href: '/master/ai', channel: 'in-app', key, read: false } as never,
+      })
+    }
+  }
+}
+
+export async function saveVersion(
+  payload: Payload,
+  actor: Person,
+  input: { slug: string; prompt: string; provider: string; model: string; temperature: number; maxTokens: number; note: string },
+  portalId: number | null = null,
+) {
+  await assertEdit(payload, actor, portalId)
+  const step = await one(payload, 'ai-steps', { slug: { equals: input.slug } })
+  if (!step) throw new Error('That step is not in the registry.')
+  const spec = specOf(step)
+  const provider: ProviderName = input.provider === 'openai' ? 'openai' : 'anthropic'
+  const temperature = Math.min(1, Math.max(0, Number.isFinite(input.temperature) ? input.temperature : 0))
+  const maxTokens = Math.min(8000, Math.max(64, Math.round(input.maxTokens || spec.maxTokens)))
+  const problems = placeholderProblems(input.prompt, (step.placeholders as Placeholder[]) || spec.placeholders)
+  if (problems.length) throw new Error(problems[0])
+  const rows = await versionRows(payload, step.id)
+  const draft = {
+    prompt: input.prompt,
+    provider,
+    model: input.model.trim() || defaultModel(provider),
+    temperature,
+    maxTokens,
+    note: input.note.trim() || 'No note added.',
+    authorName: actor.name || actor.email || 'Someone',
+  }
+  if (actor.role === 'portal-admin') {
+    if (!portalId) throw new Error('This account is not in a portal, so the edit was not saved.')
+    const hearts = versionsOf(masterRows(rows))
+    const own = versionsOf(portalRows(rows, portalId))
+    const saved = forkSave(hearts, own, draft)
+    assertHeartsUntouched(hearts, saved.master)
+    const created = liveVersion(saved.portal)
+    if (!created) throw new Error('The portal version was not saved.')
+    await persistLive(payload, portalRows(rows, portalId), saved.portal.filter((version) => version.number !== created.number))
+    const before = liveVersion(own)?.prompt || liveVersion(hearts)?.prompt || String(step.prompt || '')
+    const version = await writeVersion(payload, step.id, created, actor, {
+      live: true,
+      portal: portalId,
+      forkedFrom: liveVersion(hearts)?.number || Number(step.liveVersion || 1),
+      beforePrompt: before,
+      kept: false,
+      rolledBack: false,
+    })
+    const entry = editAudit({ actorId: actor.id, actorRole: actor.role || '', portalId, slug: input.slug, version: created.number, note: created.note, authorName: created.authorName })
+    await audit(payload, entry.event, { ...entry.fields, detail: { ...(entry.fields.detail as object), versionId: version.id } })
+    await notifyPortalChange(payload, portalId)
+    return { step, version: created, forked: true }
+  }
+  const next = nextVersion(versionsOf(masterRows(rows)), draft)
+  const created = next[next.length - 1]
+  const version = await writeVersion(payload, step.id, created, actor, { live: false })
+  const entry = editAudit({ actorId: actor.id, actorRole: actor.role || '', portalId: null, slug: input.slug, version: created.number, note: created.note, authorName: created.authorName })
+  await audit(payload, entry.event, { ...entry.fields, detail: { ...(entry.fields.detail as object), versionId: version.id } })
+  return { step, version: created, forked: false }
+}
+
+export async function publishVersion(payload: Payload, actor: Person, slug: string, number: number, rollback: boolean, portalId: number | null = null) {
+  await assertEdit(payload, actor, portalId)
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const rows = await versionRows(payload, step.id)
+  if (actor.role === 'portal-admin') {
+    if (!portalId) throw new Error('This account is not in a portal.')
+    const hearts = versionsOf(masterRows(rows))
+    const ownRows = portalRows(rows, portalId)
+    const own = versionsOf(ownRows)
+    let result: { master: VersionState[]; portal: VersionState[]; fellBackToMaster?: boolean }
+    try {
+      result = rollback ? forkRollback(hearts, own, number) : forkKeep(hearts, own, number)
+    } catch (error) {
+      throw new Error(error instanceof Error ? error.message : 'That version is not in the history.')
+    }
+    assertHeartsUntouched(hearts, result.master)
+    await persistLive(payload, ownRows, result.portal)
+    if (rollback) {
+      const target = ownRows.find((row) => Number(row.number) === number)
+      if (target) await payload.update({ collection: col('ai-step-versions'), id: target.id, overrideAccess: true, data: { rolledBack: true, kept: false } as never })
+    }
+    await audit(payload, rollback ? 'ai.step.rollback' : 'ai.step.live', {
+      actor: actor.id,
+      actorRole: actor.role,
+      portal: portalId,
+      reason: rollback ? `Rolled this portal back to version ${number}.` : `This portal is using version ${number}.`,
+      detail: { slug, version: number, portalId, forked: true },
+    })
+    return liveVersion(result.portal) || liveVersion(hearts)
+  }
+  const heartsRows = masterRows(rows)
   let marked: VersionState[]
   try {
-    marked = markLive(versionsOf(rows), number)
+    marked = markLive(versionsOf(heartsRows), number)
   } catch (error) {
     throw new Error(error instanceof Error ? error.message : 'That version is not in the history.')
   }
   const live = liveVersion(marked)
   if (!live) throw new Error('That version is not in the history.')
-  for (const row of rows) {
-    const should = Number(row.number) === number
-    if (Boolean(row.live) !== should) {
-      await payload.update({ collection: col('ai-step-versions'), id: row.id, overrideAccess: true, data: { live: should } as never })
-    }
-  }
+  await persistLive(payload, heartsRows, marked)
   await payload.update({
     collection: col('ai-steps'),
     id: step.id,
@@ -262,9 +387,78 @@ export async function publishVersion(payload: Payload, actor: Person, slug: stri
   return live
 }
 
+/** A portal admin drops their fork and uses the HEARTS instructions again. */
+export async function useHeartsVersion(payload: Payload, actor: Person, slug: string, portalId: number | null) {
+  await assertEdit(payload, actor, portalId)
+  if (actor.role !== 'portal-admin' || !portalId) throw new Error('Only a portal admin can switch their portal back to the HEARTS version.')
+  const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
+  if (!step) throw new Error('That step is not in the registry.')
+  const own = portalRows(await versionRows(payload, step.id), portalId)
+  for (const row of own) {
+    if (row.live) await payload.update({ collection: col('ai-step-versions'), id: row.id, overrideAccess: true, data: { live: false } as never })
+  }
+  await audit(payload, 'ai.step.rollback', {
+    actor: actor.id,
+    actorRole: actor.role,
+    portal: portalId,
+    reason: 'This portal is using the HEARTS version again.',
+    detail: { slug, portalId, fellBackToMaster: true },
+  })
+}
+
+/** The master keeps a portal fork, or rolls that portal back. HEARTS is not written. */
+export async function decidePortalChange(payload: Payload, actor: Person, versionId: number, decision: 'keep' | 'rollback') {
+  if (actor.role !== 'master') {
+    const entry = deniedAudit({ actorId: actor.id, actorRole: actor.role || '', reason: 'Only the master can keep or roll back a portal change.' })
+    await audit(payload, entry.event, entry.fields)
+    throw Object.assign(new Error('Only the master can keep or roll back a portal change.'), { status: 403 })
+  }
+  const version = (await payload.findByID({ collection: col('ai-step-versions'), id: versionId, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null
+  if (!version) throw new Error('That change was not found.')
+  const portalId = idOf(version.portal)
+  if (!portalId) throw new Error('That version is a HEARTS version. Roll it back from the step itself.')
+  const stepId = idOf(version.step)
+  if (!stepId) throw new Error('That change is not attached to a step.')
+  const step = (await payload.findByID({ collection: col('ai-steps'), id: stepId, depth: 0, overrideAccess: true }).catch(() => null)) as Doc | null
+  const slug = String(step?.slug || '')
+  const rows = await versionRows(payload, stepId)
+  const hearts = versionsOf(masterRows(rows))
+  const ownRows = portalRows(rows, portalId)
+  const own = versionsOf(ownRows)
+  const number = Number(version.number)
+  if (decision === 'keep') {
+    const result = forkKeep(hearts, own, number)
+    assertHeartsUntouched(hearts, result.master)
+    await persistLive(payload, ownRows, result.portal)
+    await payload.update({ collection: col('ai-step-versions'), id: version.id, overrideAccess: true, data: { kept: true, rolledBack: false } as never })
+    await audit(payload, 'ai.step.keep', {
+      actor: actor.id,
+      actorRole: actor.role,
+      portal: portalId,
+      reason: `Kept the portal change on ${slug}.`,
+      detail: { slug, version: number, portalId, versionId },
+    })
+    return 'Kept. This portal still uses that change. HEARTS is unchanged for everyone else.'
+  }
+  const result = forkRollback(hearts, own, number)
+  assertHeartsUntouched(hearts, result.master)
+  await persistLive(payload, ownRows, result.portal)
+  await payload.update({ collection: col('ai-step-versions'), id: version.id, overrideAccess: true, data: { rolledBack: true, kept: false } as never })
+  await audit(payload, 'ai.step.rollback', {
+    actor: actor.id,
+    actorRole: actor.role,
+    portal: portalId,
+    reason: result.fellBackToMaster ? 'Rolled a portal back to the HEARTS version.' : `Rolled a portal back from version ${number}.`,
+    detail: { slug, version: number, portalId, versionId, fellBackToMaster: result.fellBackToMaster },
+  })
+  if (!result.changedLive && !result.fellBackToMaster) return 'Marked as rolled back. This portal was not using that version.'
+  return result.fellBackToMaster ? 'Rolled back. This portal uses the HEARTS version again.' : 'Rolled back. This portal uses the version from before that change.'
+}
+
 export async function setGrant(payload: Payload, actor: Person, allowed: boolean) {
   if (actor.role !== 'master') {
-    await audit(payload, 'ai.step.denied', { actor: actor.id, actorRole: actor.role, reason: 'Only the master grants editing.', detail: { attempted: allowed } })
+    const entry = deniedAudit({ actorId: actor.id, actorRole: actor.role || '', reason: 'Only the master grants editing.' })
+    await audit(payload, entry.event, { ...entry.fields, detail: { ...(entry.fields.detail as object), attempted: allowed } })
     throw Object.assign(new Error('Only the master can grant editing.'), { status: 403 })
   }
   const settings = await ensureSteps(payload)
@@ -295,10 +489,19 @@ function specOf(step: Doc): StepSpec {
   }
 }
 
-async function talkContext(payload: Payload, lesson: Doc, promptOverride?: { rubric?: string }): Promise<TalkContext> {
+async function liveRow(payload: Payload, stepId: number, portalId: number | null) {
+  if (portalId) {
+    const fork = await one(payload, 'ai-step-versions', { and: [{ step: { equals: stepId } }, { portal: { equals: portalId } }, { live: { equals: true } }] })
+    if (fork) return fork
+  }
+  return one(payload, 'ai-step-versions', { and: [{ step: { equals: stepId } }, { portal: { exists: false } }, { live: { equals: true } }] })
+}
+
+async function talkContext(payload: Payload, lesson: Doc, promptOverride?: { rubric?: string }, portalId: number | null = null): Promise<TalkContext> {
   const transcript = tierSourceText(lesson as { youtubeId?: string | null; transcript?: string | null })
   const tier = await one(payload, 'talk-tiers', { lesson: { equals: lesson.id } })
   const rubricStep = await one(payload, 'ai-steps', { slug: { equals: 'rubric' } })
+  const rubricVersion = rubricStep ? await liveRow(payload, rubricStep.id, portalId) : null
   const clauses = await many(payload, 'clauses', undefined, 50)
   const seats = await many(payload, 'seats', undefined, 200)
   const hook = String(tier?.hook || '')
@@ -323,7 +526,7 @@ async function talkContext(payload: Payload, lesson: Doc, promptOverride?: { rub
     landAt: Number(tier?.landAt ?? tier?.appetiserEnd ?? 0),
     appetiser: tier ? { start: Number(tier.appetiserStart), end: Number(tier.appetiserEnd) } : null,
     clauseCards: cards || 'No clause cards are loaded.',
-    rubric: promptOverride?.rubric ?? String(rubricStep?.prompt || ''),
+    rubric: promptOverride?.rubric ?? String(rubricVersion?.prompt || rubricStep?.prompt || ''),
     clip: clipText(hook, turn, land),
     captionLines: captionLinesOf(tier, hook, turn, land),
   }
@@ -364,22 +567,23 @@ function varsFor(talk: TalkContext): Record<string, string> {
 }
 
 /** Runs one registered step, using the live prompt, for callers outside the ingest pipeline. */
-export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null) {
+export async function runRegisteredStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null, portalId: number | null = null) {
   await ensureSteps(payload)
-  return runPreparedStep(payload, slug, talk, client)
+  return runPreparedStep(payload, slug, talk, client, portalId)
 }
 
-/** Loads the live prompt once, so a report can run the same step over many questions. */
-export async function loadLiveStep(payload: Payload, slug: string, client: LlmClient | null = null) {
+/** Loads the live prompt once, so a report can run the same step over many questions. A portal fork wins over HEARTS. */
+export async function loadLiveStep(payload: Payload, slug: string, client: LlmClient | null = null, portalId: number | null = null) {
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const spec = specOf(step)
-  const version = await one(payload, 'ai-step-versions', { and: [{ step: { equals: step.id } }, { live: { equals: true } }] })
+  const version = await liveRow(payload, step.id, portalId)
   const prompt = version ? String(version.prompt || spec.prompt) : spec.prompt
   const versionNumber = version ? Number(version.number) : Number(step.liveVersion || 1)
   return {
     versionNumber,
     spec,
+    prompt,
     run(talk: TalkContext) {
       return runSpec(spec, prompt, talk, client).then((result) => ({ ...result, versionNumber, spec }))
     },
@@ -387,8 +591,8 @@ export async function loadLiveStep(payload: Payload, slug: string, client: LlmCl
 }
 
 /** Same as runRegisteredStep after the registry is already in place, so a report can reuse it. */
-export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null) {
-  const live = await loadLiveStep(payload, slug, client)
+export async function runPreparedStep(payload: Payload, slug: string, talk: TalkContext, client: LlmClient | null = null, portalId: number | null = null) {
+  const live = await loadLiveStep(payload, slug, client, portalId)
   return live.run(talk)
 }
 
@@ -405,8 +609,8 @@ async function runSpec(spec: StepSpec, prompt: string, talk: TalkContext, client
   return { output, mock: false, problems }
 }
 
-export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string, client: LlmClient | null = null) {
-  await assertEdit(payload, actor)
+export async function tryStep(payload: Payload, actor: Person, slug: string, lessonId: number, prompt: string, client: LlmClient | null = null, portalId: number | null = null) {
+  await assertEdit(payload, actor, portalId)
   const step = await one(payload, 'ai-steps', { slug: { equals: slug } })
   if (!step) throw new Error('That step is not in the registry.')
   const lesson = await payload.findByID({ collection: 'lessons', id: lessonId, depth: 0, overrideAccess: true }).catch(() => null)
@@ -415,8 +619,9 @@ export async function tryStep(payload: Payload, actor: Person, slug: string, les
   const using = prompt.trim() || String(step.prompt || '')
   const problems = placeholderProblems(using, (step.placeholders as Placeholder[]) || spec.placeholders)
   if (problems.length) throw new Error(problems[0])
-  const talk = await talkContext(payload, lesson as unknown as Doc, spec.slug === 'rubric' ? { rubric: using } : undefined)
-  const liveSpec = { ...spec, prompt: String(step.prompt || spec.prompt) }
+  const talk = await talkContext(payload, lesson as unknown as Doc, spec.slug === 'rubric' ? { rubric: using } : undefined, portalId)
+  const current = await liveRow(payload, step.id, portalId)
+  const liveSpec = { ...spec, prompt: String(current?.prompt || step.prompt || spec.prompt) }
   const [draft, live] = await Promise.all([
     runSpec({ ...spec, prompt: using }, using, talk, client).catch((error: Error) => ({ output: null, mock: !client, problems: [error.message] })),
     runSpec(liveSpec, liveSpec.prompt, talk, client).catch((error: Error) => ({ output: null, mock: !client, problems: [error.message] })),
@@ -435,13 +640,16 @@ export async function tryStep(payload: Payload, actor: Person, slug: string, les
       output: { draft: draft.output, live: live.output, draftProblems: draft.problems, liveProblems: live.problems },
       error: draft.problems[0] || '',
       mock: draft.mock,
+      portal: portalId || undefined,
+      actorName: actor.name || actor.email || '',
     } as never,
   })
   await audit(payload, 'ai.step.try', {
     actor: actor.id,
     actorRole: actor.role,
+    portal: portalId || undefined,
     reason: 'Tried a prompt on one talk. Nothing was saved for learners.',
-    detail: { slug, lessonId, mock: draft.mock, version: versionNumber },
+    detail: { slug, lessonId, mock: draft.mock, version: versionNumber, portalId },
   })
   return { draft, live, mock: draft.mock, lessonTitle: talk.title }
 }
@@ -595,8 +803,17 @@ async function applyPoints(payload: Payload, spec: StepSpec, lesson: Doc, output
   return { disposition: 'applied', written: { ids: writtenIds, skipped } }
 }
 
-export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, prompt: string, jobId?: number, client: LlmClient | null = null) {
-  const talk = await talkContext(payload, lesson)
+export async function runOnLesson(
+  payload: Payload,
+  spec: StepSpec,
+  lesson: Doc,
+  versionNumber: number,
+  prompt: string,
+  jobId?: number,
+  client: LlmClient | null = null,
+  meta: { portalId?: number | null; actor?: Person | null } = {},
+) {
+  const talk = await talkContext(payload, lesson, undefined, meta.portalId || null)
   let output: unknown
   let mock = false
   try {
@@ -604,16 +821,26 @@ export async function runOnLesson(payload: Payload, spec: StepSpec, lesson: Doc,
     output = ran.output
     mock = ran.mock
     if (ran.problems.length) {
-      return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: ran.problems[0] }, output, mock)
+      return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: ran.problems[0] }, output, mock, meta)
     }
   } catch (error) {
-    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, !client)
+    return record(payload, spec, lesson, versionNumber, jobId, { disposition: 'failed', error: error instanceof Error ? error.message : 'The step failed.' }, null, !client, meta)
   }
   const applied = await applyToTalk(payload, spec, lesson, output, versionNumber)
-  return record(payload, spec, lesson, versionNumber, jobId, applied, output, mock)
+  return record(payload, spec, lesson, versionNumber, jobId, applied, output, mock, meta)
 }
 
-async function record(payload: Payload, spec: StepSpec, lesson: Doc, versionNumber: number, jobId: number | undefined, applied: ApplyResult, output: unknown, mock: boolean) {
+async function record(
+  payload: Payload,
+  spec: StepSpec,
+  lesson: Doc,
+  versionNumber: number,
+  jobId: number | undefined,
+  applied: ApplyResult,
+  output: unknown,
+  mock: boolean,
+  meta: { portalId?: number | null; actor?: Person | null } = {},
+) {
   const step = await one(payload, 'ai-steps', { slug: { equals: spec.slug } })
   await payload.create({
     collection: col('ai-step-outputs'),
@@ -633,8 +860,22 @@ async function record(payload: Payload, spec: StepSpec, lesson: Doc, versionNumb
       protectsId: applied.protectsId,
       protectsReason: applied.protectsReason || '',
       mock,
+      portal: meta.portalId || undefined,
+      actorName: meta.actor?.name || meta.actor?.email || '',
     } as never,
   })
+  if (meta.actor) {
+    const entry = runAudit({
+      actorId: meta.actor.id,
+      actorRole: meta.actor.role || '',
+      portalId: meta.portalId || null,
+      slug: spec.slug,
+      lessonId: lesson.id,
+      ok: applied.disposition !== 'failed',
+      error: applied.error,
+    })
+    await audit(payload, entry.event, entry.fields)
+  }
   return { ok: applied.disposition !== 'failed', error: applied.error, disposition: applied.disposition, mock }
 }
 
@@ -650,7 +891,7 @@ export async function startJob(
   actor: Person,
   input: { slug: string; scope: string; lessonIds: number[]; courseId?: number; gapMs?: number; portalId?: number | null },
 ) {
-  await assertEdit(payload, actor)
+  await assertEdit(payload, actor, input.portalId || null)
   const scope = ['talk', 'selection', 'course', 'all'].includes(input.scope) ? input.scope : 'talk'
   if (input.slug !== 'pipeline' && !stepBySlug(input.slug)) throw new Error('That step is not in the registry.')
   const lessons = await lessonsInScope(payload, scope, input.lessonIds, input.courseId)
@@ -671,11 +912,13 @@ export async function startJob(
         results: [],
         actor: actor.id,
         actorName: actor.name || actor.email || '',
+        portal: input.portalId && actor.role !== 'master' ? input.portalId : undefined,
         note: jobNote(input.slug === 'pipeline' ? 'Whole pipeline' : input.slug, input.portalId && actor.role !== 'master' ? input.portalId : null),
       } as never,
     }),
   )
-  await audit(payload, 'ai.job.start', { actor: actor.id, actorRole: actor.role, reason: `Re-run ${input.slug} on ${lessons.length} talk${lessons.length === 1 ? '' : 's'}.`, detail: { jobId: job.id, slug: input.slug, scope, total: lessons.length } })
+  const taggedPortal = input.portalId && actor.role !== 'master' ? input.portalId : null
+  await audit(payload, 'ai.job.start', { actor: actor.id, actorRole: actor.role, portal: taggedPortal || undefined, reason: `Re-run ${input.slug} on ${lessons.length} talk${lessons.length === 1 ? '' : 's'}.`, detail: { jobId: job.id, slug: input.slug, scope, total: lessons.length, portalId: taggedPortal } })
   const gap = process.env.HEARTS_E2E === '1' ? Math.min(2000, Math.max(0, input.gapMs || 0)) : 0
   return { job, run: () => processJob(payload, job.id, actor, gap) }
 }
@@ -684,7 +927,7 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
   const job = asDoc(await payload.findByID({ collection: col('ai-step-jobs'), id: jobId, depth: 0, overrideAccess: true }))
   if (job.status === 'done' || job.status === 'failed') return job
   await payload.update({ collection: col('ai-step-jobs'), id: jobId, overrideAccess: true, data: { status: 'running' } as never })
-  const portalId = actor.role === 'master' ? null : portalFromNote(String(job.note || ''))
+  const portalId = actor.role === 'master' ? null : idOf(job.portal) || portalFromNote(String(job.note || ''))
   const client = await clientForPortal(payload, portalId, actor.role, actor.role)
   const ids = Array.isArray(job.lessonIds) ? (job.lessonIds as unknown[]).map(Number).filter(Boolean) : []
   const lessons = await lessonsInScope(payload, 'selection', ids)
@@ -695,10 +938,9 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
       const fresh = asDoc(await payload.findByID({ collection: 'lessons', id: lesson.id, depth: 0, overrideAccess: true }))
       const stepResults: { slug: string; ok: boolean; error?: string; disposition?: string }[] = []
       for (const spec of steps) {
-        const current = await one(payload, 'ai-steps', { slug: { equals: spec.slug } })
-        const prompt = String(current?.prompt || spec.prompt)
-        const versionNumber = Number(current?.liveVersion || 1)
-        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, versionNumber, prompt, jobId, client)
+        const live = await loadLiveStep(payload, spec.slug, null, portalId)
+        const prompt = live.prompt || spec.prompt
+        const result = await runOnLesson(payload, { ...spec, prompt }, fresh, live.versionNumber, prompt, jobId, client, { portalId, actor })
         stepResults.push({ slug: spec.slug, ok: result.ok, error: result.error, disposition: result.disposition })
       }
       const failed = stepResults.filter((step) => !step.ok)
@@ -721,11 +963,11 @@ export async function processJob(payload: Payload, jobId: number, actor: Person,
       overrideAccess: true,
       data: { status: 'done', finished: progress.finished, failedCount: progress.failed, total: progress.total, results: progress.results } as never,
     })
-    await audit(payload, 'ai.job.finish', { actor: actor.id, actorRole: actor.role, reason: `${progress.finished} talks finished, ${progress.failed} with an error.`, detail: { jobId, failed: progress.failed, total: progress.total } })
+    await audit(payload, 'ai.job.finish', { actor: actor.id, actorRole: actor.role, portal: portalId || undefined, reason: `${progress.finished} talks finished, ${progress.failed} with an error.`, detail: { jobId, failed: progress.failed, total: progress.total, portalId } })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'The job stopped.'
     await payload.update({ collection: col('ai-step-jobs'), id: jobId, overrideAccess: true, data: { status: 'failed', error: message } as never })
-    await audit(payload, 'ai.job.finish', { actor: actor.id, actorRole: actor.role, reason: message, detail: { jobId, failed: true } })
+    await audit(payload, 'ai.job.finish', { actor: actor.id, actorRole: actor.role, portal: portalId || undefined, reason: message, detail: { jobId, failed: true, portalId } })
   }
   return payload.findByID({ collection: col('ai-step-jobs'), id: jobId, depth: 0, overrideAccess: true })
 }
@@ -752,6 +994,136 @@ export function statusCode(error: unknown) {
 
 export function actorOf(user: SessionUser): Person {
   return { id: user.id, role: user.role, name: user.name, email: user.email }
+}
+
+export type PortalChangeView = {
+  id: number
+  portalId: number
+  portalName: string
+  stepSlug: string
+  stepName: string
+  authorName: string
+  authorRole: string
+  note: string
+  at: string
+  before: string
+  after: string
+  live: boolean
+  kept: boolean
+  rolledBack: boolean
+}
+
+export type PortalRunView = {
+  id: number
+  portalId: number
+  portalName: string
+  stepSlug: string
+  stepName: string
+  talk: string
+  at: string
+  who: string
+  ok: boolean
+  output: unknown
+}
+
+export type PortalGroupView = {
+  portalId: number
+  portalName: string
+  changes: PortalChangeView[]
+  runs: PortalRunView[]
+  lastAt: string
+  fresh: number
+}
+
+export type ActivityFilter = { portalId?: number | null; stepSlug?: string | null; day?: string | null }
+
+/** Returns the previous "last looked" stamp, then stores now so the next visit only counts newer rows. */
+export async function touchActivitySeen(payload: Payload) {
+  const settings = await ensureSteps(payload)
+  const previous = settings.activitySeenAt ? String(settings.activitySeenAt) : null
+  await payload.update({ collection: col('ai-desk'), id: settings.id, overrideAccess: true, data: { activitySeenAt: now().toISOString() } as never })
+  return previous
+}
+
+export async function loadPortalActivity(payload: Payload, filter: ActivityFilter, seenAt: string | null) {
+  const [versionDocs, outputDocs, portals, steps] = await Promise.all([
+    many(payload, 'ai-step-versions', { portal: { exists: true } }, 400, '-createdAt'),
+    many(payload, 'ai-step-outputs', { and: [{ mode: { equals: 'run' } }, { portal: { exists: true } }] }, 400, '-createdAt'),
+    many(payload, 'portals', undefined, 100, 'name'),
+    many(payload, 'ai-steps', undefined, 40, 'pipelineOrder'),
+  ])
+  const portalName = new Map(portals.map((portal) => [portal.id, String(portal.name || 'A portal')]))
+  const stepById = new Map(steps.map((step) => [step.id, step]))
+  const stepName = new Map(steps.map((step) => [String(step.slug), String(step.name || step.slug)]))
+  const heartsPrompt = new Map(steps.map((step) => [step.id, String(step.prompt || '')]))
+  const changes: PortalChangeView[] = versionDocs
+    .map((row) => {
+      const portalId = idOf(row.portal) || 0
+      const stepId = idOf(row.step) || 0
+      const step = stepById.get(stepId)
+      const slug = String(step?.slug || '')
+      return {
+        id: row.id,
+        portalId,
+        portalName: portalName.get(portalId) || 'A portal',
+        stepSlug: slug,
+        stepName: stepName.get(slug) || slug || 'A step',
+        authorName: String(row.authorName || 'Someone'),
+        authorRole: String(row.authorRole || ''),
+        note: String(row.note || ''),
+        at: String(row.createdAt || ''),
+        before: String(row.beforePrompt || heartsPrompt.get(stepId) || ''),
+        after: String(row.prompt || ''),
+        live: Boolean(row.live),
+        kept: Boolean(row.kept),
+        rolledBack: Boolean(row.rolledBack),
+      }
+    })
+    .filter((row) => row.portalId)
+  const lessonIds = [...new Set(outputDocs.map((row) => idOf(row.lesson)).filter((id): id is number => Boolean(id)))]
+  const lessons = lessonIds.length ? await many(payload, 'lessons', { id: { in: lessonIds } }, 400) : []
+  const talkName = new Map(lessons.map((lesson) => [lesson.id, String(lesson.title || lesson.sourceTitle || 'A talk')]))
+  const runs: PortalRunView[] = outputDocs
+    .map((row) => {
+      const portalId = idOf(row.portal) || 0
+      const slug = String(row.stepSlug || '')
+      const lessonId = idOf(row.lesson)
+      return {
+        id: row.id,
+        portalId,
+        portalName: portalName.get(portalId) || 'A portal',
+        stepSlug: slug,
+        stepName: stepName.get(slug) || slug || 'A step',
+        talk: (lessonId && talkName.get(lessonId)) || 'A talk',
+        at: String(row.createdAt || ''),
+        who: String(row.actorName || 'Someone'),
+        ok: row.disposition !== 'failed',
+        output: row.output ?? null,
+      }
+    })
+    .filter((row) => row.portalId)
+  const hasAny = changes.length + runs.length > 0
+  const shownChanges = filterActivity(changes, filter)
+  const shownRuns = filterActivity(runs, filter)
+  const ids = [...new Set([...shownChanges.map((row) => row.portalId), ...shownRuns.map((row) => row.portalId)])]
+  const groups: PortalGroupView[] = ids
+    .map((portalId) => {
+      const ownChanges = shownChanges.filter((row) => row.portalId === portalId).sort((a, b) => (a.at < b.at ? 1 : -1))
+      const ownRuns = shownRuns.filter((row) => row.portalId === portalId).sort((a, b) => (a.at < b.at ? 1 : -1))
+      const times = [...ownChanges.map((row) => row.at), ...ownRuns.map((row) => row.at)]
+      const lastAt = [...times].sort().at(-1) || ''
+      return {
+        portalId,
+        portalName: ownChanges[0]?.portalName || ownRuns[0]?.portalName || portalName.get(portalId) || 'A portal',
+        changes: ownChanges,
+        runs: ownRuns,
+        lastAt,
+        fresh: countNewSince(times, seenAt),
+      }
+    })
+    .sort((a, b) => (a.lastAt < b.lastAt ? 1 : a.lastAt > b.lastAt ? -1 : 0))
+  const fresh = countNewSince([...changes.map((row) => row.at), ...runs.map((row) => row.at)], seenAt)
+  return { groups, fresh, hasAny, portals: portals.map((portal) => ({ id: portal.id, name: String(portal.name || 'A portal') })), steps: steps.map((step) => ({ slug: String(step.slug), name: String(step.name || step.slug) })) }
 }
 
 export async function latestTry(payload: Payload, slug: string, lessonId: number) {
