@@ -173,6 +173,47 @@ function Stage({ learnerSrc }: { learnerSrc: string }) {
     window.clearTimeout(timer.current)
   }, [])
 
+  useEffect(() => {
+    if (!introduced) return
+    const leave = () => {
+      setSpot(null)
+      const frame = document.querySelector<HTMLIFrameElement>('[data-testid="demo-learner-frame"]')
+      if (document.activeElement === frame) frame.blur()
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') leave()
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (target.closest('.demo-cell, .demo-cast-layer')) return
+      leave()
+    }
+    const frame = document.querySelector<HTMLIFrameElement>('[data-testid="demo-learner-frame"]')
+    const hookFrame = () => {
+      try {
+        frame?.contentWindow?.removeEventListener('keydown', onKey)
+        frame?.contentWindow?.addEventListener('keydown', onKey)
+      } catch {
+        // A cross-origin frame cannot be hooked. The parent listener still covers the desks.
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onPointerDown)
+    frame?.addEventListener('load', hookFrame)
+    hookFrame()
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onPointerDown)
+      frame?.removeEventListener('load', hookFrame)
+      try {
+        frame?.contentWindow?.removeEventListener('keydown', onKey)
+      } catch {
+        // The frame may already be gone.
+      }
+    }
+  }, [introduced])
+
   function drag(at: number, event: ReactPointerEvent) {
     event.preventDefault()
     setResized(true)
