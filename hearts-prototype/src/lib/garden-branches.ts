@@ -21,6 +21,8 @@ export type GardenBranch = {
   /** Tip of the twig, percent of the tree canvas. */
   tipX: number
   tipY: number
+  /** Which edge of the label sits on the tip, so the word grows back onto the tree. */
+  align: 'start' | 'center' | 'end'
   d: string
 }
 
@@ -47,20 +49,35 @@ function branchLabel(title: string) {
   return title.split(' ')[0]
 }
 
+/**
+ * Where a label sits once its edge is pinned to the twig tip.
+ * The back-right planter (Iman) is centred past the right of a phone, so its words
+ * have to hang back into the part of the tree that is still on screen.
+ */
+export function branchLabelBounds(input: { padX: number; tipX: number; align: GardenBranch['align']; sceneWidth: number; labelWidth: number }) {
+  const treeWidth = input.sceneWidth * 0.5
+  const treeLeft = (input.padX / 100) * input.sceneWidth - treeWidth / 2
+  const tip = treeLeft + treeWidth * (input.tipX / 100)
+  const left = input.align === 'end' ? tip - input.labelWidth : input.align === 'start' ? tip : tip - input.labelWidth / 2
+  return { left, right: left + input.labelWidth }
+}
+
 /** Twigs fan into the open side of the planter. Back-row trees stay higher so they clear the row in front. */
 function slots(count: number, art: GardenArtId) {
-  const side: -1 | 0 | 1 = art === 'quran' || art === 'hadith' ? -1 : art === 'character' ? 0 : 1
+  const align: GardenBranch['align'] = art === 'quran' || art === 'hadith' ? 'start' : art === 'character' ? 'center' : 'end'
   const back = art === 'spirituality' || art === 'quran'
   return Array.from({ length: count }, (_, index) => {
     const t = count === 1 ? 0.5 : index / (count - 1)
-    const tipX = side === 0 ? 38 + t * 24 : 50 + side * (16 + t * 10)
-    const tipY = back ? 18 + t * 16 : 36 + t * 16
+    // Iman reuses the back-right planter, whose right half is off a 360-wide phone.
+    const tipX = align === 'center' ? 40 + t * 20 : align === 'end' ? (art === 'spirituality' ? 46 + t * 16 : 58 + t * 10) : 16 + t * 12
+    const tipY = back ? 22 + t * 18 : 34 + t * 16
     const cX = (50 + tipX) / 2
     const cY = (74 + tipY) / 2 - 6
     return {
       d: `M 50 74 Q ${round(cX)} ${round(cY)} ${round(tipX)} ${round(tipY)}`,
       tipX: round(tipX),
       tipY: round(tipY),
+      align,
     }
   })
 }
@@ -114,6 +131,7 @@ export async function gardenBranches(base: string): Promise<GardenBranch[]> {
         example: LANE_BLURBS[row.lane.key] || grown.doorNames[0] || row.lane.title,
         tipX: slot.tipX,
         tipY: slot.tipY,
+        align: slot.align,
         d: slot.d,
       })
     }
