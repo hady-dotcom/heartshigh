@@ -18,7 +18,10 @@ import { ShareLinks } from '@/components/desk/share-links'
 import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { learnerEmbedSrc } from '@/lib/yt'
-import { type Ctx, type Row, clock, one, portalPeople, ref, rows, str } from '../common'
+import { counted, editorLink, youtubeThumb, youtubeWatch, type CourseUse } from '@/lib/library-catalogue'
+import { Pager } from '@/components/desk/pager'
+import { courseFilms, whoUsesCourse } from '@/server/library-catalogue'
+import { type Ctx, type Row, allDocs, clock, one, portalPeople, ref, rows, str } from '../common'
 import { FramingPreview } from '@/components/desk/framing-preview'
 import { trackForClip } from '@/lib/framing/store'
 import { fallbackTrack } from '@/lib/framing/validate'
@@ -192,26 +195,54 @@ export async function canOpenCourse(payload: Payload, user: SessionUser, portal:
   return { ok: localHere || linked, locked: !localHere }
 }
 
-export async function CourseEditorBody({ payload, user, portal, editorHref, courseId, part }: { payload: Payload; user: SessionUser; portal: PortalDoc | null; editorHref: string; courseId: number; part?: string }) {
+function UsedIn({ use }: { use: CourseUse }) {
+  if (!use.codes.length && !use.packs.length && !use.portals.length) return null
+  const block = (testId: string, heading: string, names: string[]) => names.length ? (
+    <div data-testid={testId}>
+      <h3>{heading}</h3>
+      <ul>{names.map((name) => <li key={name}>{name}</li>)}</ul>
+    </div>
+  ) : null
+  return (
+    <section className="panel used-in" data-testid="used-in">
+      <header><h2>Used in</h2></header>
+      <div className="body">
+        {block('used-codes', 'Join codes', use.codes)}
+        {block('used-packs', 'Packs', use.packs)}
+        {block('used-portals', 'Portals', use.portals)}
+      </div>
+    </section>
+  )
+}
+
+export async function CourseEditorBody({ payload, user, portal, editorHref, courseId, part, filmsPage }: { payload: Payload; user: SessionUser; portal: PortalDoc | null; editorHref: string; courseId: number; part?: string; filmsPage?: string }) {
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const access = await canOpenCourse(payload, user, portal, course)
   if (!access.ok) return null
   const locked = access.locked
-  const [units, lessons] = await Promise.all([
-    rows(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
-    rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' }),
-  ])
-  const lesson = lessons.find((row) => row.id === Number(part)) || lessons[0]
-  const here = `${editorHref}${lesson ? `?part=${lesson.id}` : ''}`
-  const [cuts, ladder, points, clauses, seats, people, doors] = await Promise.all([
-    lesson ? rows(payload, 'cuts', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
-    lesson ? rows(payload, 'ladder-items', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
-    lesson ? rows(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { sort: 'second', depth: 1 }) : Promise.resolve([]),
+  const [units, filmPage, clauses, seats, people, doors, usedIn] = await Promise.all([
+    allDocs(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
+    courseFilms(payload, courseId, filmsPage),
     rows(payload, 'clauses', undefined, { sort: 'number', limit: 50 }),
     rows(payload, 'seats', undefined, { sort: 'position', limit: 400 }),
     portal ? portalPeople(payload, portal.id) : Promise.resolve([]),
     loadDoors(payload),
+    !portal && user.role === 'master' ? whoUsesCourse(payload, courseId) : Promise.resolve(null),
+  ])
+  let lessons = filmPage.lessons
+  let lesson = lessons.find((row) => row.id === Number(part)) || null
+  if (part && (!lesson || lesson.id !== Number(part))) {
+    const picked = await one(payload, 'lessons', Number(part))
+    if (picked && ref(picked.course) === courseId) lesson = picked
+  }
+  if (!lesson) lesson = lessons[0]
+  if (lesson && !lessons.some((row) => row.id === lesson!.id)) lessons = [...lessons, lesson]
+  const here = editorLink(editorHref, { part: lesson?.id, films: filmPage.page })
+  const [cuts, ladder, points] = await Promise.all([
+    lesson ? allDocs(payload, 'cuts', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
+    lesson ? allDocs(payload, 'ladder-items', { lesson: { equals: lesson.id } }, { sort: 'start' }) : Promise.resolve([]),
+    lesson ? allDocs(payload, 'engagement-points', { lesson: { equals: lesson.id } }, { sort: 'second', depth: 1 }) : Promise.resolve([]),
   ])
   const visiblePoints = points.filter((point) => {
     const author = point.author as { role?: string; tenants?: { tenant?: unknown }[] } | null
@@ -221,12 +252,38 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   const learners = people.filter((person) => person.role === 'learner')
   const youtubeId = lesson ? str(lesson.youtubeId) || null : null
   const length = Number(lesson?.durationSeconds || 0) || Math.max(60, ...visiblePoints.map((point) => Number(point.second) + 30))
-  const lessonsByUnit = (units.length ? units : [{ id: 0, title: 'Topic 1' } as Row]).map((unit) => ({ unit, items: lessons.filter((row) => (units.length ? ref(row.unit) === unit.id : true)) }))
+  const lessonsByUnit = (units.length ? units : [{ id: 0, title: 'Topic 1' } as Row]).map((unit) => ({ unit, items: lessons.filter((row) => (units.length ? ref(row.unit) === unit.id : true)) })).filter((group) => group.items.length)
+  const courseTitle = str(course.title)
 
   return (
     <div data-testid="course-detail" data-locked={locked ? 'yes' : 'no'}>
       {locked ? <div className="flash notice" data-testid="readonly">This course comes from the library, so it is read only here. You can add your own questions on top; the original stays as it is for every portal.</div> : null}
-      {portal && !locked ? await CourseOnCodes({ payload, portalId: portal.id, portalSlug: portal.slug, courseId, courseTitle: str(course.title), next: editorHref, accessHref: `${editorHref.replace(/\/admin\/content.*/, '/admin/access')}` }) : null}
+      {portal && !locked ? await CourseOnCodes({ payload, portalId: portal.id, portalSlug: portal.slug, courseId, courseTitle, next: editorHref, accessHref: `${editorHref.replace(/\/admin\/content.*/, '/admin/access')}` }) : null}
+      {usedIn ? <UsedIn use={usedIn} /> : null}
+      {filmPage.total ? (
+        <section className="panel film-grid" data-testid="film-grid">
+          <header><div><h2>Films</h2><p data-testid="film-total">{counted(filmPage.total, 'film', 'films')}</p></div></header>
+          <div className="film-cards">
+            {filmPage.lessons.map((row) => {
+              const thumb = youtubeThumb(row.youtubeId)
+              const watch = youtubeWatch(row.youtubeId)
+              return (
+                <article key={row.id} className="film-card" data-testid="film-card" data-youtube={youtubeThumb(row.youtubeId) ? str(row.youtubeId) : ''}>
+                  {thumb && watch ? (
+                    <a href={watch} target="_blank" rel="noopener noreferrer" data-testid="film-watch">
+                      <img src={thumb} alt="" width={320} height={180} />
+                      <span>Watch</span>
+                    </a>
+                  ) : null}
+                  <Link href={editorLink(editorHref, { part: row.id, films: filmPage.page })}>{partTitle(row, courseTitle)}</Link>
+                  {row.durationSeconds ? <small>{clock(Number(row.durationSeconds))}</small> : null}
+                </article>
+              )
+            })}
+          </div>
+          <Pager page={filmPage.page} pages={filmPage.pages} hrefFor={(page) => editorLink(editorHref, { part: lesson?.id, films: page })} />
+        </section>
+      ) : null}
       <div className="builder">
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
@@ -236,7 +293,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                 <div key={unit.id}>
                   <div className="unit">{str(unit.title)}</div>
                   {items.map((row) => (
-                    <Link key={row.id} href={`${editorHref}?part=${row.id}`} className={row.id === lesson?.id ? 'on' : ''} data-testid="tree-lesson">
+                    <Link key={row.id} href={editorLink(editorHref, { part: row.id, films: filmPage.page })} className={row.id === lesson?.id ? 'on' : ''} data-testid="tree-lesson">
                       ▶ {partTitle(row, str(course.title))}<small>{row.publishState === 'draft' ? 'Draft' : ''}{row.durationSeconds ? ` ${clock(Number(row.durationSeconds))}` : ''}</small>
                     </Link>
                   ))}
@@ -543,7 +600,7 @@ export async function CourseEditorScreen(ctx: Ctx, courseId: number) {
   const { payload, user, portal, base, query } = ctx
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
-  const body = await CourseEditorBody({ payload, user, portal, editorHref: `${base}/admin/content/${courseId}`, courseId, part: query.part })
+  const body = await CourseEditorBody({ payload, user, portal, editorHref: `${base}/admin/content/${courseId}`, courseId, part: query.part, filmsPage: query.films })
   if (!body) redirect(`${base}/admin/content?error=${encodeURIComponent('That course is not in this portal.')}`)
   return (
     <AdminFrame ctx={ctx} active="content" title={str(course.title)} intro={<Link href={`${base}/admin/content`}>‹ All courses</Link>} testId="admin-course">

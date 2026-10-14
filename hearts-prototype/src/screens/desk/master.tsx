@@ -12,11 +12,14 @@ import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import type { SessionUser } from '@/server/context'
+import { counted, librarySummary, listLink, youtubeThumb, youtubeWatch } from '@/lib/library-catalogue'
+import { Pager } from '@/components/desk/pager'
+import { libraryPage, libraryTotals } from '@/server/library-catalogue'
 import { one, ref, rows, str } from '../common'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
 
-export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string } }
+export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()
@@ -146,39 +149,43 @@ export async function MasterPortals(ctx: MasterCtx) {
 
 export async function MasterLibrary(ctx: MasterCtx) {
   const { payload } = ctx
-  const [courses, packs] = await Promise.all([rows(payload, 'courses', { origin: { equals: 'master' } }, { sort: 'title' }), rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title' })])
-  const ids = courses.map((course) => course.id)
-  const [lessons, cuts, adoptions] = await Promise.all([
-    ids.length ? rows(payload, 'lessons', { course: { in: ids } }) : Promise.resolve([]),
-    ids.length ? rows(payload, 'cuts', { course: { in: ids } }, { limit: 2000 }) : Promise.resolve([]),
-    rows(payload, 'adoptions', undefined, { limit: 1000 }),
+  const [totals, listed, packs] = await Promise.all([
+    libraryTotals(payload),
+    libraryPage(payload, ctx.query.page),
+    rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title' }),
   ])
   return (
     <MasterFrame ctx={ctx} active="library" title="Library" intro="The shared courses every portal can link. Portals see changes made here straight away." testId="master-library">
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) 300px', alignItems: 'start' }}>
+      <p className="library-totals" data-testid="library-totals" data-courses={totals.courses} data-films={totals.films} data-playable={totals.playable} data-clips={totals.clips}>{librarySummary(totals)}</p>
+      <div className="library-layout">
         <section className="panel">
-          <div className="table-wrap">
-            <table className="data">
-              <thead><tr><th>Course</th><th>Speaker</th><th className="num">Films</th><th className="num">Approved</th><th className="num">To review</th><th className="num">Portals</th><th /></tr></thead>
-              <tbody>
-                {courses.map((course) => {
-                  const own = cuts.filter((cut) => ref(cut.course) === course.id)
-                  const linkedBy = new Set(adoptions.filter((row) => ref(row.course) === course.id || packs.some((pack) => ref(row.pack) === pack.id && ((pack.courses as unknown[]) || []).some((item) => ref(item) === course.id))).map((row) => ref(row.portal)))
-                  return (
-                    <tr key={course.id} data-testid="master-course">
-                      <td><Link href={`/master/library/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link></td>
-                      <td>{str(course.speaker)}</td>
-                      <td className="num">{lessons.filter((lesson) => ref(lesson.course) === course.id).length}</td>
-                      <td className="num">{own.filter((cut) => cut.status === 'approved').length}</td>
-                      <td className="num">{own.filter((cut) => cut.status === 'draft').length}</td>
-                      <td className="num">{linkedBy.size}</td>
-                      <td><Link className="btn ghost small" href={`/master/library/${course.id}`}>Edit</Link></td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          <div className="library-list" data-testid="library-list">
+            {listed.courses.map((course) => {
+              const stat = listed.stats.get(course.id) || { films: 0, approved: 0, youtubeId: null }
+              const thumb = youtubeThumb(stat.youtubeId)
+              const watch = youtubeWatch(stat.youtubeId)
+              return (
+                <article key={course.id} className={`library-course${thumb ? '' : ' no-thumb'}`} data-testid="master-course" data-films={stat.films} data-approved={stat.approved}>
+                  {thumb && watch ? (
+                    <a className="library-thumb" href={watch} target="_blank" rel="noopener noreferrer" data-testid="course-watch">
+                      <img src={thumb} alt="" width={320} height={180} data-testid="course-thumb" />
+                      <span>Watch</span>
+                    </a>
+                  ) : null}
+                  <div className="library-course-copy">
+                    <Link href={`/master/library/${course.id}`} data-testid="course-open">{str(course.title)}</Link>
+                    {str(course.speaker) ? <p>{str(course.speaker)}</p> : null}
+                    <p className="library-counts">
+                      <span data-testid="course-films">{counted(stat.films, 'film', 'films')}</span>
+                      <span data-testid="course-approved">{counted(stat.approved, 'approved clip', 'approved clips')}</span>
+                    </p>
+                    <Link href={`/master/library/${course.id}`}>Edit</Link>
+                  </div>
+                </article>
+              )
+            })}
           </div>
+          <Pager page={listed.page} pages={listed.pages} hrefFor={(page) => listLink('/master/library', page)} />
         </section>
         <section className="panel" id="new-library-course">
           <header><div><h2>New library course</h2></div></header>
@@ -201,7 +208,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
 export async function MasterCourse(ctx: MasterCtx, courseId: number) {
   const course = await one(ctx.payload, 'courses', courseId)
   if (!course) notFound()
-  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part })
+  const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part, filmsPage: ctx.query.films })
   return (
     <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course">
       {body}
