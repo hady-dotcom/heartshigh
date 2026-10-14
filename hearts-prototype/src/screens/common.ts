@@ -11,6 +11,10 @@ export type Query = {
   part?: string
   t?: string
   answer?: string
+  /** Reply queue: unanswered, all, or answered. */
+  queue?: string
+  /** Reply queue portal slug, or `all`. */
+  queuePortal?: string
   course?: string
   start?: string
   end?: string

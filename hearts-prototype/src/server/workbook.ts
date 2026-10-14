@@ -87,6 +87,7 @@ export type WorkbookAnswer = {
   correct: boolean | null
   shared: boolean
   reply: string | null
+  repliedAt: string | null
   kind: string
   imageId: number | null
   audioId: number | null
@@ -165,6 +166,7 @@ export async function workbookFor(payload: Payload, learner: SessionUser, reader
       correct: typeof row.correct === 'boolean' ? (row.correct as boolean) : null,
       shared: Boolean(row.shareWithTeacher),
       reply: owner || row.shareWithTeacher ? ((entry?.teacherReply as string) || null) : null,
+      repliedAt: owner || row.shareWithTeacher ? ((entry?.repliedAt as string) || null) : null,
       kind: String(point?.kind || ''),
       imageId: idOf(row.image),
       audioId: idOf(row.audio),

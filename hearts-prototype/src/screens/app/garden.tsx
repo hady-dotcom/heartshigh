@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
 import { Flower, LockIcon } from '@/components/icons'
 import { now } from '@/lib/clock'
+import { shownWhen } from '@/lib/reply-queue'
 import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
 import { workbookFor } from '@/server/workbook'
@@ -634,20 +635,24 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                 {[...videos.entries()].map(([video, rowsHere]) => (
                   <div className="wb-video" key={video} data-testid="workbook-video">
                     <p className="wb-video-title">{tidyTalkTitle(video)}</p>
-                    {rowsHere.map((row) => (
+                    {rowsHere.map((row) => {
+                      const when = shownWhen(row.repliedAt, now()) || shortDate(row.repliedAt)
+                      return (
                       <article className="wb-entry" key={row.id} data-testid="workbook-entry" data-consent={row.shared ? 'yes' : 'no'} data-point={row.pointId} data-kind={row.kind || 'question'}>
-                        <div className="when">{shortDate(row.answeredAt)}</div>
-                        <p className="asked">Video question was:</p>
-                        <p className="q">{row.question}</p>
-                        <blockquote data-testid="workbook-answer">{row.answer}</blockquote>
+                        <Link className="wb-hit" href={`${base}/garden/workbook/${row.id}`} data-testid="workbook-open">
+                          <div className="when">{shortDate(row.answeredAt)}</div>
+                          <p className="asked">The question</p>
+                          <p className="q">{row.question}</p>
+                          <blockquote data-testid="workbook-answer">{row.answer}</blockquote>
+                          {row.reply && featureOn(portal, 'feedback') ? (
+                            <div className="reply" data-testid="teacher-reply">
+                              <b>Your teacher wrote back{when ? ` · ${when}` : ''}</b>{row.reply}
+                            </div>
+                          ) : null}
+                        </Link>
                         {row.imageId ? <img data-testid="workbook-media" src={`/api/hearts/file/${row.imageId}`} alt="" style={{ maxWidth: '100%', borderRadius: 8, marginTop: 8 }} /> : null}
                         {row.audioId ? <audio data-testid="workbook-media" controls src={`/api/hearts/file/${row.audioId}`} style={{ width: '100%', marginTop: 8 }} /> : null}
                         {row.videoId ? <video data-testid="workbook-media" controls src={`/api/hearts/file/${row.videoId}`} style={{ width: '100%', marginTop: 8, borderRadius: 8 }} /> : null}
-                        {row.video && row.course ? (
-                          <Link className="from-lesson" href={`${base}/course/${row.course.id}?part=${row.video.id}&t=${Math.max(0, Number(row.atSecond || 0) - 5)}`}>
-                            <span>Back to the moment</span>
-                          </Link>
-                        ) : null}
                         {owner && row.entryId ? (
                           <form action="/api/hearts" method="post" style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                             <Hidden fields={{ action: 'workbook-consent', entry: row.entryId, consent: row.shared ? 'no' : 'yes', next: here }} />
@@ -655,14 +660,10 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
                             <button className="mini-btn" type="submit" data-testid="consent-toggle">{row.shared ? 'Make private' : 'Share with my teacher'}</button>
                           </form>
                         ) : null}
-                        {row.reply && featureOn(portal, 'feedback') ? (
-                          <div className="reply" data-testid="teacher-reply">
-                            <b>Your teacher replied</b>{row.reply}
-                            {row.entryId ? <ReportButton targetType="teacher-reply" targetId={row.entryId} next={here} /> : null}
-                          </div>
-                        ) : null}
+                        {row.reply && featureOn(portal, 'feedback') && row.entryId ? <ReportButton targetType="teacher-reply" targetId={row.entryId} next={here} /> : null}
                       </article>
-                    ))}
+                      )
+                    })}
                   </div>
                 ))}
               </div>
@@ -709,6 +710,50 @@ export async function GardenWorkbook({ payload, user, portal, base, query }: Ctx
           ))}
         </section>
       ) : null}
+      </div>
+    </Frame>
+  )
+}
+
+export async function GardenWorkbookEntry({ payload, user, portal, base, query }: Ctx, answerId: number) {
+  const session = await getSession()
+  const reader = session.actor || user
+  const [book, unread] = await Promise.all([workbookFor(payload, user, reader), unreadCount(payload, user)])
+  const row = book.answers.find((item) => item.id === answerId)
+  if (!row) notFound()
+  const owner = reader.id === user.id
+  const here = `${base}/garden/workbook/${row.id}`
+  const when = shownWhen(row.repliedAt, now()) || shortDate(row.repliedAt)
+  const watch = row.course && row.video
+    ? `${base}/course/${row.course.id}?part=${row.video.id}&t=${Math.max(0, Number(row.atSecond || 0))}`
+    : ''
+  return (
+    <Frame base={base} title="Workbook" testId="garden-workbook" unread={unread} evening portal={portal}>
+      <div className="workbook-page" data-testid="workbook-detail">
+        <Flash error={query.error} notice={query.notice} />
+        <Link className="back" href={`${base}/garden/workbook`} data-testid="workbook-back">‹ Back to your workbook</Link>
+        <article className="wb-entry">
+          <p className="asked">The question</p>
+          <p className="q" data-testid="detail-question">{row.question}</p>
+          <p className="asked">Your answer</p>
+          {owner ? (
+            <form action="/api/answers" method="post" className="wb-edit">
+              <input type="hidden" name="pointId" value={row.pointId} />
+              <input type="hidden" name="next" value={here} />
+              {row.shared ? <input type="hidden" name="shareWithTeacher" value="on" /> : <input type="hidden" name="keepPrivate" value="on" />}
+              <textarea name="body" required defaultValue={row.answer} data-testid="my-answer" rows={4} />
+              <button className="mini-btn" type="submit" data-testid="save-answer">Save</button>
+            </form>
+          ) : <blockquote data-testid="workbook-answer">{row.answer}</blockquote>}
+          {row.reply && featureOn(portal, 'feedback') ? (
+            <div className="reply" data-testid="teacher-reply">
+              <b>Your teacher wrote back{when ? ` · ${when}` : ''}</b>
+              <span data-testid="reply-when">{when}</span>
+              {row.reply}
+            </div>
+          ) : null}
+          {watch ? <Link className="from-lesson" href={watch} data-testid="watch-moment">Watch this moment</Link> : null}
+        </article>
       </div>
     </Frame>
   )

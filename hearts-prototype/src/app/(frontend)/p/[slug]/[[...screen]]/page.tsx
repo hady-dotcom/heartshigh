@@ -16,7 +16,7 @@ import { GatherDetailScreen, GatherDoorScreen, GatherListScreen, GatherProposeSc
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { LaneScreen } from '@/screens/app/lane'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
-import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
+import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook, GardenWorkbookEntry } from '@/screens/app/garden'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SavedScreen, SettingsScreen } from '@/screens/app/me'
 import { WeekScreen } from '@/screens/app/week'
@@ -248,7 +248,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
     case 'garden':
-      if (a === 'workbook') return gated(ctx, 'workbook') || GardenWorkbook(ctx)
+      if (a === 'workbook') return gated(ctx, 'workbook') || (b && /^\d+$/.test(b) ? GardenWorkbookEntry(ctx, Number(b)) : GardenWorkbook(ctx))
       {
         const closed = gated(ctx, 'garden')
         if (closed) return closed
