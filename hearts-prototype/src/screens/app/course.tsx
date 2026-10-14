@@ -205,7 +205,11 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     masterFlags(payload),
   ])
   const unitRank = new Map(units.map((unit, index) => [unit.id, index]))
-  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99).filter((row) => learnerLessonVisible({ publishState: str(row.publishState), transcriptNote: str(row.transcriptNote) }))
+  const lessons = sortParts(lessonRows, (row) => unitRank.get(ref(row.unit) || 0) ?? 99).filter((row) => learnerLessonVisible({
+    publishState: str(row.publishState),
+    transcriptNote: str(row.transcriptNote),
+    tooShort: row.tooShort === true,
+  }))
   if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
   if (!query.part) {
     return CourseOverview(ctx, course, lessons)

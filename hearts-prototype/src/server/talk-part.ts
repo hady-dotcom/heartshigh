@@ -19,7 +19,7 @@ async function readRow(payload: Payload, collection: 'courses' | 'lessons', id: 
 export async function learnerCanOpenTalk(payload: Payload, user: SessionUser, courseId: number, lessonId: number) {
   if (!user.id || !Number.isFinite(courseId) || courseId <= 0 || !Number.isFinite(lessonId) || lessonId <= 0) return false
   const [course, lesson] = await Promise.all([readRow(payload, 'courses', courseId), readRow(payload, 'lessons', lessonId)])
-  const row = lesson as { id: number; course?: unknown; publishState?: string | null; transcriptNote?: string | null } | null
+  const row = lesson as { id: number; course?: unknown; publishState?: string | null; transcriptNote?: string | null; tooShort?: boolean | null } | null
   return talkPartOpen({
     courseId,
     lessonId,
@@ -30,6 +30,7 @@ export async function learnerCanOpenTalk(payload: Payload, user: SessionUser, co
           courseId: idOf(row.course) || 0,
           publishState: row.publishState ?? null,
           transcriptNote: row.transcriptNote ?? null,
+          tooShort: row.tooShort === true,
         }
       : null,
   })

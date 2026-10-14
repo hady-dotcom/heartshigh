@@ -14,7 +14,7 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import type { FramingTrack } from '@/lib/framing/types'
 import { tidyTalkTitle } from '@/lib/talk-title'
 import { courseIsOpen, opensOnDay } from '@/lib/drip'
-import { learnerLessonVisible } from '@/lib/publish-state'
+import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
 
@@ -179,7 +179,7 @@ type Row = Record<string, unknown> & { id: number }
 export async function lessonsFor(payload: Payload, courseIds: number[]) {
   if (!courseIds.length) return [] as Row[]
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 400, where: { course: { in: courseIds } }, sort: 'order' })
-  return (found.docs as unknown as Row[]).filter((lesson) => learnerLessonVisible({ publishState: lesson.publishState as string | null, transcriptNote: lesson.transcriptNote as string | null }))
+  return (found.docs as unknown as Row[]).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
 }
 
 export async function courseCards(payload: Payload, user: SessionUser): Promise<CourseCard[]> {
@@ -189,7 +189,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
   const lessons = await lessonsFor(payload, courseIds)
   const lessonOrder = courses.flatMap((course) => lessons.filter((lesson) => idOf(lesson.course) === course.id).map((lesson) => lesson.id))
   const cuts = lessons.length
-    ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])
+    ? ((await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 400, where: { and: [{ lesson: { in: lessons.map((lesson) => lesson.id) } }, { tooShort: { not_equals: true } }] } })).docs as unknown as Row[])
     : []
   const tiers = lessons.length
     ? ((await payload.find({ collection: 'talk-tiers', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: lessons.map((lesson) => lesson.id) } } })).docs as unknown as Row[])

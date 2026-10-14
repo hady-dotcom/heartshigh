@@ -11,4 +11,5 @@ test('a full talk opens only when that lesson is a visible part of that course',
   assert.equal(talkPartOpen({ courseId: 47, lessonId: 91, courseExists: true, lesson }), false)
   assert.equal(talkPartOpen({ courseId: 12, lessonId: 90, courseExists: true, lesson }), false)
   assert.equal(talkPartOpen({ courseId: 47, lessonId: 90, courseExists: true, lesson: { ...lesson, publishState: 'draft' } }), false)
+  assert.equal(talkPartOpen({ courseId: 47, lessonId: 90, courseExists: true, lesson: { ...lesson, tooShort: true } }), false)
 })

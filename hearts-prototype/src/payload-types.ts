@@ -335,7 +335,7 @@ export interface Portal {
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
   /**
-   * Per-portal feature switches. Empty means every feature that exists today stays on, so live portals do not change.
+   * Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.
    */
   features?:
     | {
@@ -494,6 +494,10 @@ export interface Course {
   isPublic?: boolean | null;
   importToken?: string | null;
   hidden?: boolean | null;
+  /**
+   * Why this course is hidden. Set when every talk in it is under five minutes.
+   */
+  hiddenNote?: string | null;
   visibility?: ('draft' | 'published') | null;
   updatedAt: string;
   createdAt: string;
@@ -687,6 +691,14 @@ export interface Lesson {
   muxAssetId?: string | null;
   muxPlaybackId?: string | null;
   durationSeconds?: number | null;
+  /**
+   * Under five minutes. Hidden from learners, the feed, courses, lanes, the garden and Review. Kept so it can be restored.
+   */
+  tooShort?: boolean | null;
+  /**
+   * A person restored this talk. The five-minute marker will not hide it again.
+   */
+  shortWaived?: boolean | null;
   transcript?: string | null;
   transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
   transcriptNote?: string | null;
@@ -807,6 +819,10 @@ export interface Cut {
   course?: (number | null) | Course;
   status?: ('draft' | 'suggested' | 'approved' | 'rejected') | null;
   /**
+   * Cut from a talk under five minutes. Hidden with that talk.
+   */
+  tooShort?: boolean | null;
+  /**
    * A 0:00 to 0:20 stand-in until the cutting pass sets real in and out points.
    */
   placeholder?: boolean | null;
@@ -867,6 +883,10 @@ export interface LadderItem {
    */
   parentRef?: string | null;
   status?: ('draft' | 'approved' | 'rejected') | null;
+  /**
+   * Cut from a talk under five minutes. Hidden with that talk.
+   */
+  tooShort?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -2703,7 +2723,7 @@ export interface GatherPhoto {
   createdAt: string;
 }
 /**
- * A teacher going live for the learners of one portal.
+ * A video session for the learners of one portal.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "live-sessions".
@@ -3512,6 +3532,7 @@ export interface CoursesSelect<T extends boolean = true> {
   isPublic?: T;
   importToken?: T;
   hidden?: T;
+  hiddenNote?: T;
   visibility?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -3551,6 +3572,8 @@ export interface LessonsSelect<T extends boolean = true> {
   muxAssetId?: T;
   muxPlaybackId?: T;
   durationSeconds?: T;
+  tooShort?: T;
+  shortWaived?: T;
   transcript?: T;
   transcriptSource?: T;
   transcriptNote?: T;
@@ -3638,6 +3661,7 @@ export interface CutsSelect<T extends boolean = true> {
   lesson?: T;
   course?: T;
   status?: T;
+  tooShort?: T;
   placeholder?: T;
   presentation?: T;
   playable?: T;
@@ -3681,6 +3705,7 @@ export interface LadderItemsSelect<T extends boolean = true> {
   quote?: T;
   parentRef?: T;
   status?: T;
+  tooShort?: T;
   updatedAt?: T;
   createdAt?: T;
 }

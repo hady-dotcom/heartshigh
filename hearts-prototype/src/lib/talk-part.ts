@@ -5,6 +5,7 @@ export type TalkLessonRow = {
   courseId: number
   publishState?: string | null
   transcriptNote?: string | null
+  tooShort?: boolean | null
 }
 
 /**

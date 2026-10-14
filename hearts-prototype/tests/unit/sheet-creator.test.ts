@@ -72,13 +72,13 @@ test('pasted lines accept YouTube and Vimeo, and a file source is planned as pro
 
   const catalogue = emptyCatalogue({ courses: [{ id: 1, title: 'The Names', origin: 'master', portal: null, speaker: '', inScope: true }] })
   const plan = planSheet(await readWorkbook(await (await import('../../src/lib/master-sheet')).buildWorkbook({ talks: [vimeo.talk, file.talk], questions: [], resources: [] })), catalogue)
-  assert.deepEqual(plan.errors, [])
+  assert.equal(plan.errors.length, 1)
+  assert.match(plan.errors[0].message, /This talk is 1:30\. Talks need to be at least 5 minutes\./)
   const created = plan.ops.filter((op) => op.op === 'lesson.create')
-  assert.equal(created.length, 2)
+  assert.equal(created.length, 1)
   assert.equal(created[0].op === 'lesson.create' ? created[0].vimeoId : '', '76979871')
   assert.equal(created[0].op === 'lesson.create' ? created[0].provider : '', 'vimeo')
-  assert.equal(created[1].op === 'lesson.create' ? created[1].mediaId : 0, 4)
-  assert.equal(created[1].op === 'lesson.create' ? created[1].provider : '', 'file')
+  assert.equal(plan.ops.some((op) => op.op === 'lesson.create' && op.provider === 'file'), false)
 })
 
 test('resource drafts include a summary, timestamped quotes, a reading to verify and a discussion guide', () => {

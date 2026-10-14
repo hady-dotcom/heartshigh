@@ -128,7 +128,7 @@ export async function BringInBody({
           <header>
             <div>
               <h2>Films to bring in <HelpTip topic="bring-in-skip">{TOOL.bringInSkip}</HelpTip></h2>
-              <p>Untick any row you want to leave out. Short films, private or unavailable films, and ones already in the library start unticked.</p>
+              <p>Untick any row you want to leave out. Films under 5 minutes are refused. Private or unavailable films, and ones already in the library, start unticked.</p>
             </div>
           </header>
           <BusyForm className="body" action="/api/hearts" method="post">
@@ -290,7 +290,7 @@ export async function PortalBringInScreen(ctx: Ctx) {
 }
 
 function PreviewRow({ row }: { row: BringInRow }) {
-  const locked = row.skipReason === 'library' || row.skipReason === 'duplicate'
+  const locked = row.skipReason === 'library' || row.skipReason === 'duplicate' || row.skipReason === 'short' || row.skipReason === 'unavailable'
   return (
     <tr data-testid="bring-in-row" data-id={row.id} data-skip={row.skipReason || 'no'}>
       <td>
@@ -298,7 +298,7 @@ function PreviewRow({ row }: { row: BringInRow }) {
       </td>
       <td>
         {row.title}
-        {row.skipReason ? <div className="hint">{skipLabel(row.skipReason)}</div> : null}
+        {row.skipReason ? <div className="hint">{skipLabel(row.skipReason, row.durationSeconds)}</div> : null}
         <PlaceNotes row={row} />
       </td>
       <td>{row.durationSeconds ? clock(row.durationSeconds) : 'Length unknown'}</td>

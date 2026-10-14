@@ -143,7 +143,7 @@ export const TOOL: Record<string, string> = {
   bringInGhunya:
     'A Ghunya heading is the seat line you want on this talk. It is optional and stays on the desk. Learners do not see a draft talk, heading or not.',
   bringInSkip:
-    'Untick a row to leave that film out. Films under five minutes, private films, and films already in the library start unticked. You can tick a short film if you still want it.',
+    'Untick a row to leave that film out. Films under five minutes are refused. Private films, and films already in the library, start unticked.',
   bringInSpeaker:
     'The speaker on the row is saved on that film. It starts from the name on the line, then the course, then a channel you have matched. The YouTube channel name is never used on its own.',
   bringInPublish:

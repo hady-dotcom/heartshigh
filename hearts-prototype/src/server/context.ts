@@ -145,7 +145,8 @@ export async function visibleCourseIds(payload: Payload, user: SessionUser): Pro
     : { docs: [] }
   return courses.docs
     .filter((course) => {
-      const doc = course as { id: number; origin?: string; portal?: unknown; visibility?: string }
+      const doc = course as { id: number; origin?: string; portal?: unknown; visibility?: string; hidden?: boolean | null }
+      if (doc.hidden) return false
       if (doc.visibility === 'draft') return false
       if (doc.origin === 'local') return idOf(doc.portal) === portal
       return adopted.has(doc.id)

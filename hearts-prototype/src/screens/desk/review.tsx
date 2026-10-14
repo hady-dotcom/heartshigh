@@ -10,8 +10,10 @@ import { HORS_MAX, horsCapOf } from '@/lib/tiers'
 import { showUncheckedTalks } from '@/server/opening'
 import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
-import { rows, str } from '../common'
+import { listShortTalks } from '@/server/short-talks'
+import { type Row, rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
+import { TooShortFilter, TooShortTable } from './short-talks'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: Record<string, string | undefined> }
 
@@ -34,14 +36,25 @@ function Frame({ ctx, title, intro, children, testId }: { ctx: MasterCtx; title:
   )
 }
 
-function Tabs({ active, tiers, popups, swarm = 0 }: { active: 'tiers' | 'popups' | 'swarm'; tiers: number; popups: number; swarm?: number }) {
+function Tabs({ active, tiers, popups, swarm = 0, showShort = false }: { active: 'tiers' | 'popups' | 'swarm'; tiers: number; popups: number; swarm?: number; showShort?: boolean }) {
+  const kept = showShort ? '?show=too-short' : ''
   return (
     <div className="actions review-tabs" data-testid="review-tabs">
-      <Link className={`btn small ${active === 'tiers' ? 'ink' : 'ghost'}`} href="/master/review" data-testid="review-tab-tiers">Talk tiers ({tiers} to review)</Link>
-      <Link className={`btn small ${active === 'popups' ? 'ink' : 'ghost'}`} href="/master/review/popups" data-testid="review-tab-popups">Pop-ups ({popups} to review)</Link>
+      <Link className={`btn small ${active === 'tiers' ? 'ink' : 'ghost'}`} href={`/master/review${kept}`} data-testid="review-tab-tiers">Talk tiers ({tiers} to review)</Link>
+      <Link className={`btn small ${active === 'popups' ? 'ink' : 'ghost'}`} href={`/master/review/popups${kept}`} data-testid="review-tab-popups">Pop-ups ({popups} to review)</Link>
       <Link className={`btn small ${active === 'swarm' ? 'ink' : 'ghost'}`} href="/master/review/swarm" data-testid="review-tab-swarm">Swarm ({swarm} to review)</Link>
     </div>
   )
+}
+
+function reviewHref(path: string, showShort: boolean, extra: Record<string, string | number | undefined> = {}) {
+  const params = new URLSearchParams()
+  if (showShort) params.set('show', 'too-short')
+  for (const [key, value] of Object.entries(extra)) {
+    if (value != null && value !== '') params.set(key, String(value))
+  }
+  const text = params.toString()
+  return text ? `${path}?${text}` : path
 }
 
 function Decision({ action, idName, id, decision, label, keyName, tone, next, testId }: { action: string; idName: string; id: number; decision: string; label: string; keyName: string; tone: string; next: string; testId: string }) {
@@ -69,23 +82,33 @@ function Shortcuts({ extra }: { extra: string }) {
 
 export async function MasterReview(ctx: MasterCtx) {
   const { payload, query } = ctx
-  const [tiers, showUnchecked, drafts, flags] = await Promise.all([
+  const showShort = query.show === 'too-short'
+  const [tiers, showUnchecked, flags, shortTalks] = await Promise.all([
     rows(payload, 'talk-tiers', undefined, { limit: 500, depth: 0 }),
     showUncheckedTalks(payload),
-    payload.count({ collection: 'engagement-points', overrideAccess: true, where: { status: { equals: 'draft' } } }),
     payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null) as Promise<{ horsMaxSeconds?: number } | null>,
+    listShortTalks(payload),
   ])
+  const shortIds = new Set(shortTalks.map((talk) => talk.id))
+  const popupWhere = shortIds.size
+    ? { and: [{ status: { equals: 'draft' } }, { lesson: { not_in: [...shortIds] } }] }
+    : { status: { equals: 'draft' } }
+  const drafts = await payload.count({ collection: 'engagement-points', overrideAccess: true, where: popupWhere as never })
   const horsMax = horsCapOf(flags?.horsMaxSeconds)
-  const sorted = [...tiers].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(a.id) - Number(b.id))
-  const waiting = tiers.filter((tier) => (tier.status || 'draft') === 'draft').length
-  const approved = tiers.filter((tier) => tier.status === 'checked').length
-  const rejected = tiers.filter((tier) => tier.status === 'rejected').length
+  const inPool = (tier: Row) => shortIds.has(Number(idOf(tier.lesson))) === showShort
+  const sorted = [...tiers].filter(inPool).sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(a.id) - Number(b.id))
+  const listed = tiers.filter((tier) => !shortIds.has(Number(idOf(tier.lesson))))
+  const waiting = listed.filter((tier) => (tier.status || 'draft') === 'draft').length
+  const approved = sorted.filter((tier) => tier.status === 'checked').length
+  const rejected = sorted.filter((tier) => tier.status === 'rejected').length
+  const poolWaiting = sorted.filter((tier) => (tier.status || 'draft') === 'draft').length
   const wanted = Number(query.tier)
   const index = Math.max(0, wanted ? sorted.findIndex((tier) => Number(tier.id) === wanted) : 0)
   const tier = sorted[index]
   const lesson = tier ? (await rows(payload, 'lessons', { id: { equals: idOf(tier.lesson) } }, { limit: 1 }))[0] : null
-  const href = (at: number) => (sorted[at] ? `/master/review?tier=${sorted[at].id}` : null)
-  const following = href(index + 1) || href(0) || '/master/review'
+  const href = (at: number) => (sorted[at] ? reviewHref('/master/review', showShort, { tier: sorted[at].id }) : null)
+  const following = href(index + 1) || href(0) || reviewHref('/master/review', showShort)
+  const stay = tier ? reviewHref('/master/review', showShort, { tier: tier.id }) : reviewHref('/master/review', showShort)
   const status = str(tier?.status) || 'draft'
   const pending = lesson ? (await pendingForLesson(payload, lesson.id)).filter((row) => row.protectsKind === 'talk-tier' || row.stepSlug === 'hors-doeuvre' || row.stepSlug === 'appetiser-cut') : []
   return (
@@ -95,7 +118,8 @@ export async function MasterReview(ctx: MasterCtx) {
       intro="One talk at a time: watch the hors d'oeuvre and the appetiser, read the hook, turn and land, then approve, adjust or reject. Approved talks reach learners whatever the setting below; rejected talks never do."
       testId="master-review"
     >
-      <Tabs active="tiers" tiers={waiting} popups={drafts.totalDocs} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
+      <Tabs active="tiers" tiers={waiting} popups={drafts.totalDocs} showShort={showShort} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
+      <TooShortFilter base="/master/review" count={shortTalks.length} active={showShort} />
       <section className="panel review-flag" data-testid="review-flag">
         <div className="body review-flag-body">
           <div>
@@ -103,7 +127,7 @@ export async function MasterReview(ctx: MasterCtx) {
             <p className="hint" style={{ margin: 0 }}>{showUnchecked ? 'On: draft talks and their draft questions are served as well as approved ones. This is on for the demo; it is off by default in production.' : 'Off: learners see approved talks and published questions only. This is the default in production.'}</p>
           </div>
           <form action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'show-unchecked', value: showUnchecked ? 'off' : 'on', next: tier ? `/master/review?tier=${tier.id}` : '/master/review' }} />
+            <Hidden fields={{ action: 'show-unchecked', value: showUnchecked ? 'off' : 'on', next: stay }} />
             <button className={`btn small ${showUnchecked ? 'ghost' : 'teal'}`} type="submit" data-testid="show-unchecked" data-state={showUnchecked ? 'on' : 'off'}>{showUnchecked ? 'Turn off' : 'Turn on'}</button>
           </form>
         </div>
@@ -114,7 +138,7 @@ export async function MasterReview(ctx: MasterCtx) {
             <b>Hors d&apos;oeuvre cap</b>
             <p className="hint" style={{ margin: 0 }}>15 to 30 seconds is the usual length; longer is only a warning. It always sits inside the appetiser. Longer than this cap is refused. The cap is {horsMax} seconds.</p>
           </div>
-          <Hidden fields={{ action: 'hors-max', next: tier ? `/master/review?tier=${tier.id}` : '/master/review' }} />
+          <Hidden fields={{ action: 'hors-max', next: stay }} />
           <label className="stack" style={{ margin: 0 }}>
             Seconds
             <input name="horsMaxSeconds" type="number" min={HORS_MAX} max={180} step={1} defaultValue={horsMax} data-testid="hors-max" />
@@ -122,9 +146,10 @@ export async function MasterReview(ctx: MasterCtx) {
           <button className="btn small ghost" type="submit" data-testid="hors-max-save">Save cap</button>
         </form>
       </section>
-      <p className="hint" data-testid="review-counts">{approved} approved, {waiting} waiting, {rejected} rejected, of {tiers.length} talks.</p>
+      <p className="hint" data-testid="review-counts">{approved} approved, {showShort ? poolWaiting : waiting} waiting, {rejected} rejected, of {sorted.length} talks.</p>
+      <div data-testid="review-pool" data-show={showShort ? 'too-short' : 'all'}>
       {tier && lesson ? (
-        <section className="panel review-card" data-testid="review-card" data-tier={tier.id} data-status={status}>
+        <section className="panel review-card" data-testid="review-card" data-tier={tier.id} data-status={status} data-short={showShort ? 'yes' : 'no'}>
           <header className="light">
             <h2>{partTitle(lesson)}</h2>
             <span className={`badge ${status === 'checked' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'checked' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
@@ -153,39 +178,56 @@ export async function MasterReview(ctx: MasterCtx) {
                 <Decision action="tier-review" idName="tier" id={Number(tier.id)} decision="approve" label="Approve" keyName="a" tone="teal" next={following} testId="review-approve" />
                 <Link className="btn ghost" href={`/master/tiers/${tier.id}`} data-key="e" data-testid="review-adjust">Adjust <kbd>E</kbd></Link>
                 <Decision action="tier-review" idName="tier" id={Number(tier.id)} decision="reject" label="Reject" keyName="r" tone="ghost" next={following} testId="review-reject" />
-                {status !== 'draft' ? <Decision action="tier-review" idName="tier" id={Number(tier.id)} decision="reopen" label="Back to waiting" keyName="u" tone="ghost" next={`/master/review?tier=${tier.id}`} testId="review-reopen" /> : null}
+                {status !== 'draft' ? <Decision action="tier-review" idName="tier" id={Number(tier.id)} decision="reopen" label="Back to waiting" keyName="u" tone="ghost" next={stay} testId="review-reopen" /> : null}
               </div>
               <Stepper index={index} total={sorted.length} prev={href(index - 1)} next={href(index + 1)} />
               <Shortcuts extra="H plays the hors d'oeuvre, P plays the appetiser" />
             </div>
           </div>
         </section>
+      ) : showShort && shortTalks[0] ? (
+        <section className="panel review-card" data-testid="review-card" data-short="yes">
+          <header className="light"><h2>{shortTalks[0].title}</h2></header>
+          <div className="body"><p className="hint">{shortTalks[0].speaker}{shortTalks[0].length ? `, talk length ${shortTalks[0].length}` : ''}. This talk is under 5 minutes, so it stays out of the review queue.</p></div>
+        </section>
       ) : (
         <ExampleInUse desk title="The Names, class 19" action={{ href: '/master/tiers', label: 'Open tiers' }}><p>Hors d’oeuvre, appetiser and the full talk, waiting for a person to check.</p></ExampleInUse>
       )}
+      {showShort ? <TooShortTable talks={shortTalks} next={reviewHref('/master/review', true)} /> : null}
+      </div>
     </Frame>
   )
 }
 
 export async function MasterReviewPopups(ctx: MasterCtx) {
   const { payload, query } = ctx
-  const [points, tiers] = await Promise.all([rows(payload, 'engagement-points', undefined, { limit: 5000, depth: 0 }), rows(payload, 'talk-tiers', undefined, { limit: 500, depth: 0 })])
+  const showShort = query.show === 'too-short'
+  const [points, tiers, shortTalks] = await Promise.all([
+    rows(payload, 'engagement-points', undefined, { limit: 5000, depth: 0 }),
+    rows(payload, 'talk-tiers', undefined, { limit: 500, depth: 0 }),
+    listShortTalks(payload),
+  ])
+  const shortIds = new Set(shortTalks.map((talk) => talk.id))
   const tierLessons = new Set(tiers.map((tier) => idOf(tier.lesson)))
-  const own = points.filter((point) => tierLessons.has(idOf(point.lesson)))
+  const inPool = (point: Row) => shortIds.has(Number(idOf(point.lesson))) === showShort
+  const own = points.filter((point) => tierLessons.has(idOf(point.lesson)) && inPool(point))
+  const listed = points.filter((point) => tierLessons.has(idOf(point.lesson)) && !shortIds.has(Number(idOf(point.lesson))))
   const sorted = [...own].sort((a, b) => (STATUS_ORDER[str(a.status) || 'draft'] ?? 0) - (STATUS_ORDER[str(b.status) || 'draft'] ?? 0) || Number(idOf(a.lesson)) - Number(idOf(b.lesson)) || Number(a.second) - Number(b.second))
   const live = own.filter((point) => point.status === 'published').length
-  const waiting = own.filter((point) => (point.status || 'draft') === 'draft').length
-  const imported = points.filter((point) => isImportedSheetDraft(point)).length
-  const withLive = new Set(own.filter((point) => point.status === 'published').map((point) => idOf(point.lesson)))
-  const bare = tiers.filter((tier) => !withLive.has(idOf(tier.lesson))).length
-  const tiersWaiting = tiers.filter((tier) => (tier.status || 'draft') === 'draft').length
+  const waiting = listed.filter((point) => (point.status || 'draft') === 'draft').length
+  const imported = listed.filter((point) => isImportedSheetDraft(point)).length
+  const withLive = new Set(listed.filter((point) => point.status === 'published').map((point) => idOf(point.lesson)))
+  const listedTiers = tiers.filter((tier) => !shortIds.has(Number(idOf(tier.lesson))))
+  const bare = listedTiers.filter((tier) => !withLive.has(idOf(tier.lesson))).length
+  const tiersWaiting = listedTiers.filter((tier) => (tier.status || 'draft') === 'draft').length
   const wanted = Number(query.point)
   const index = Math.max(0, wanted ? sorted.findIndex((point) => Number(point.id) === wanted) : 0)
   const point = sorted[index]
   const lesson = point ? (await rows(payload, 'lessons', { id: { equals: idOf(point.lesson) } }, { limit: 1 }))[0] : null
   const tier = point ? tiers.find((row) => idOf(row.lesson) === idOf(point.lesson)) : null
-  const href = (at: number) => (sorted[at] ? `/master/review/popups?point=${sorted[at].id}` : null)
-  const following = href(index + 1) || href(0) || '/master/review/popups'
+  const href = (at: number) => (sorted[at] ? reviewHref('/master/review/popups', showShort, { point: sorted[at].id }) : null)
+  const following = href(index + 1) || href(0) || reviewHref('/master/review/popups', showShort)
+  const stay = point ? reviewHref('/master/review/popups', showShort, { point: point.id }) : reviewHref('/master/review/popups', showShort)
   const status = str(point?.status) || 'draft'
   const options = Array.isArray(point?.options) ? (point.options as unknown[]).map((option) => (typeof option === 'string' ? option : str((option as { label?: string })?.label))).filter(Boolean) : []
   const second = Number(point?.second || 0)
@@ -197,17 +239,19 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
       intro="Each pop-up pauses the main at its moment and asks the learner one thing. Watch the lead-in, read the question, then approve and publish, adjust or reject. Only published pop-ups reach learners, unless show-unchecked is on."
       testId="master-review-popups"
     >
-      <Tabs active="popups" tiers={tiersWaiting} popups={waiting} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
-      <p className="hint" data-testid="review-counts">{live} of {own.length} pop-ups are live. {bare} of {tiers.length} talks have none live yet.</p>
+      <Tabs active="popups" tiers={tiersWaiting} popups={waiting} showShort={showShort} swarm={(await payload.count({ collection: 'answers', overrideAccess: true, where: { swarmHidden: { equals: true } } })).totalDocs} />
+      <TooShortFilter base="/master/review/popups" count={shortTalks.length} active={showShort} />
+      <p className="hint" data-testid="review-counts">{live} of {own.length} pop-ups are live. {bare} of {listedTiers.length} talks have none live yet.</p>
       {imported > 0 ? (
         <form action="/api/hearts" method="post" style={{ margin: '0 0 14px' }}>
-          <Hidden fields={{ action: 'popup-approve-all', next: '/master/review/popups' }} />
+          <Hidden fields={{ action: 'popup-approve-all', next: reviewHref('/master/review/popups', showShort) }} />
           <button className="btn teal small" type="submit" data-testid="popup-approve-all">Approve {imported} imported question{imported === 1 ? '' : 's'}</button>
           <p className="hint">Only drafts that came in on the master sheet. Machine drafts and questions written on the desk stay waiting. Running it again changes nothing.</p>
         </form>
       ) : null}
+      <div data-testid="review-pool" data-show={showShort ? 'too-short' : 'all'}>
       {point && lesson ? (
-        <section className="panel review-card" data-testid="review-card" data-point={point.id} data-status={status}>
+        <section className="panel review-card" data-testid="review-card" data-point={point.id} data-status={status} data-short={showShort ? 'yes' : 'no'}>
           <header className="light">
             <h2>{partTitle(lesson)}</h2>
             <span className={`badge ${status === 'published' ? 'teal' : status === 'rejected' ? 'rose' : 'grey'}`} data-testid="review-status">{status === 'published' ? 'Live' : status === 'rejected' ? 'Rejected' : 'Waiting for review'}</span>
@@ -229,16 +273,23 @@ export async function MasterReviewPopups(ctx: MasterCtx) {
                 <Decision action="popup-review" idName="point" id={Number(point.id)} decision="approve" label="Approve and publish" keyName="a" tone="teal" next={following} testId="review-approve" />
                 {tier ? <Link className="btn ghost" href={`/master/tiers/${tier.id}`} data-key="e" data-testid="review-adjust">Adjust <kbd>E</kbd></Link> : null}
                 <Decision action="popup-review" idName="point" id={Number(point.id)} decision="reject" label="Reject" keyName="r" tone="ghost" next={following} testId="review-reject" />
-                {status !== 'draft' ? <Decision action="popup-review" idName="point" id={Number(point.id)} decision="reopen" label="Back to waiting" keyName="u" tone="ghost" next={`/master/review/popups?point=${point.id}`} testId="review-reopen" /> : null}
+                {status !== 'draft' ? <Decision action="popup-review" idName="point" id={Number(point.id)} decision="reopen" label="Back to waiting" keyName="u" tone="ghost" next={stay} testId="review-reopen" /> : null}
               </div>
               <Stepper index={index} total={sorted.length} prev={href(index - 1)} next={href(index + 1)} />
               <Shortcuts extra="P plays the lead-in" />
             </div>
           </div>
         </section>
+      ) : showShort && shortTalks[0] ? (
+        <section className="panel review-card" data-testid="review-card" data-short="yes">
+          <header className="light"><h2>{shortTalks[0].title}</h2></header>
+          <div className="body"><p className="hint">{shortTalks[0].speaker}{shortTalks[0].length ? `, talk length ${shortTalks[0].length}` : ''}. This talk is under 5 minutes, so its pop-ups stay out of review.</p></div>
+        </section>
       ) : (
         <ExampleInUse desk title="A question at 12:30" action={{ href: '/master/tiers', label: 'Open a talk' }}><p>“What will you keep from this?” · waiting for review</p></ExampleInUse>
       )}
+      {showShort ? <TooShortTable talks={shortTalks} next={reviewHref('/master/review/popups', true)} /> : null}
+      </div>
     </Frame>
   )
 }

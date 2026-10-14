@@ -4,6 +4,7 @@ import type { Payload } from 'payload'
 import {
   ghunyaHeading,
   jibrilSection,
+  bringInBlockMessage,
   looseBringInPaste,
   markBringInSkips,
   speakerForCandidate,
@@ -17,6 +18,7 @@ import { newHelperToken } from '@/lib/helper-token'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { withWorkLock } from '@/lib/work-lock'
 import { loadPlaceCatalogue, placeBringInRows } from '@/lib/bring-in-place'
+import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { bringInFlash, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
 import type { SessionUser } from './context'
@@ -105,6 +107,8 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     jibril,
     ghunya,
   }))
+  const blocked = bringInBlockMessage(marked)
+  if (blocked) return { error: blocked }
   const placed = await placeBringInRows(marked, {
     catalogue: loadPlaceCatalogue(),
     presetJibril: jibril,
@@ -196,8 +200,12 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
   if (user.role !== 'master' && idOf(preview.actor) !== user.id) return { error: 'That list belongs to another desk.' }
   const body = preview.body
   const picked = new Set(form.getAll('pick').map((value) => String(value)))
-  const chosen = body.rows.filter((row) => picked.has(String(row.index)) && row.skipReason !== 'library' && row.skipReason !== 'duplicate')
-  if (!chosen.length) return { error: 'Tick at least one film. Ones already in the library stay out.' }
+  const chosen = body.rows.filter((row) => picked.has(String(row.index)) && row.skipReason !== 'library' && row.skipReason !== 'duplicate' && row.skipReason !== 'short' && row.skipReason !== 'unavailable')
+  if (!chosen.length) {
+    const pickedRows = body.rows.filter((row) => picked.has(String(row.index)))
+    const blocked = bringInBlockMessage(pickedRows.length ? pickedRows : body.rows)
+    return { error: blocked || 'Tick at least one film. Ones already in the library, and talks under 5 minutes, stay out.' }
+  }
   const previousSpeaker = body.courseSpeaker
   if (!body.courseId) {
     if (form.has('newTitle')) body.newTitle = text(form, 'newTitle')
@@ -229,6 +237,7 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
     let waiting = 0
     let failed = 0
     let skipped = 0
+    const refused: string[] = []
     const lessonIds: number[] = []
     const lang = captionLang(body.lang)
     for (const row of rows) {
@@ -272,6 +281,13 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
       })
       const decision = decideBringInWrite(result, true, lang)
       const duration = result.durationSeconds && result.durationSeconds > 0 ? Math.round(result.durationSeconds) : row.durationSeconds || 0
+      const seconds = sourceTalkSeconds({ durationSeconds: duration || null, transcript: decision.transcript })
+      const refusal = refusalForTalk(seconds)
+      if (refusal) {
+        await payload.delete({ collection: 'lessons', id: created.id, overrideAccess: true }).catch(() => undefined)
+        refused.push(refusal)
+        continue
+      }
       const meta = result.meta
       await payload.update({
         collection: 'lessons',
@@ -307,7 +323,8 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
       else if (decision.bucket === 'waiting') waiting++
       else failed++
     }
-    const notice = bringInFlash({ saved, waiting, failed, skipped, clipsSetAside: 0, drafts: lessonIds.length })
+    if (!saved && !waiting && !failed && refused.length) return { error: [...new Set(refused)].join(' ') }
+    const notice = [bringInFlash({ saved, waiting, failed, skipped, clipsSetAside: 0, drafts: lessonIds.length }), ...new Set(refused)].filter(Boolean).join(' ')
     return { notice, lessons: lessonIds, courseId: course.id }
   })
 }
@@ -358,6 +375,11 @@ export async function publishTalks(payload: Payload, user: SessionUser, form: Fo
   if (lessons.docs.length !== ids.length) return { error: 'One of those talks could not be found.' }
   const courseIds = new Set<number>()
   let stillHidden = 0
+  for (const lesson of lessons.docs as unknown as Doc[]) {
+    const length = sourceTalkSeconds({ durationSeconds: Number(lesson.durationSeconds) || null, transcript: String(lesson.transcript || '') })
+    const refusal = refusalForTalk(length)
+    if (refusal || lesson.tooShort === true) return { error: refusal || 'This talk is under 5 minutes. Talks need to be at least 5 minutes.' }
+  }
   for (const lesson of lessons.docs as unknown as Doc[]) {
     const courseId = idOf(lesson.course)
     const course = courseId ? await payload.findByID({ collection: 'courses', id: courseId, depth: 0, overrideAccess: true }).catch(() => null) : null

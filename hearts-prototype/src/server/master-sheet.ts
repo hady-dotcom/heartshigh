@@ -8,6 +8,7 @@ import { audit } from '@/server/viewas'
 import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { readStoredMediaBytes } from '@/lib/stored-media'
 import { transcriptFileKind, transcriptFromFile } from '@/lib/transcript-file'
+import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { tierSourceText } from '@/server/tier-source'
 import {
   addNewCoursesToPack,
@@ -368,6 +369,8 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
     return
   }
   if (op.op === 'lesson.create') {
+    const refusal = refusalForTalk(sourceTalkSeconds({ durationSeconds: op.durationSeconds, transcript: op.transcript }))
+    if (refusal) throw new Error(refusal)
     const doc = (await payload.create({
       collection: 'lessons', overrideAccess: true,
       data: {

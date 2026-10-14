@@ -12,7 +12,7 @@ import { PlayIcon } from '@/components/icons'
 import { displayTalkTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { daysWithUsLabel } from '@/lib/days-with-us'
 import { learnerWords } from '@/lib/tidy-caption'
-import { learnerLessonVisible } from '@/lib/publish-state'
+import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -64,7 +64,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
     visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
     done,
   )
-  const openLessons = (openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []).filter((lesson) => learnerLessonVisible({ publishState: str(lesson.publishState), transcriptNote: str(lesson.transcriptNote) }))
+  const openLessons = (openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
   const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
   const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
   const carryOn = openIds
@@ -96,7 +96,7 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
   const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
   const planRow = slot?.lessonId ? (await rows(payload, 'lessons', { id: { equals: slot.lessonId } }, { limit: 1 }))[0] : null
-  const planLesson = planRow && learnerLessonVisible({ publishState: str(planRow.publishState), transcriptNote: str(planRow.transcriptNote) }) ? planRow : null
+  const planLesson = planRow && learnerLessonVisible(asLessonVisibility(planRow)) ? planRow : null
   const talkMinutes = Math.max(1, Math.round(Number(planLesson?.durationSeconds || 0) / 60))
   const tonight = planLesson
     ? { label: tonightLabel(Number(planLesson.order || 1), talkMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: learnerWords(displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), courseTitle: '', part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId), vimeoId: str(planLesson.vimeoId) })) }

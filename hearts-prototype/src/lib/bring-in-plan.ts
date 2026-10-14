@@ -1,11 +1,9 @@
 import { youtubeIdFromUrl } from './extractor'
 import type { FieldPlacement } from './bring-in-place'
+import { MIN_TALK_SECONDS, tooShortMessage } from './talk-length'
 import { publishedClockSeconds, type YoutubeIngest, bringInNote, cleanedTimedTranscript, captionLang, isUnavailableFilm } from './youtube'
 
-export { isUnavailableFilm }
-
-/** Films shorter than this stay unticked. Five minutes on the published clock. */
-export const MIN_BRING_IN_SECONDS = 300
+export { isUnavailableFilm, MIN_TALK_SECONDS as MIN_BRING_IN_SECONDS }
 
 export type CaptionFlag = 'yes' | 'no' | 'unknown' | 'unavailable'
 
@@ -96,7 +94,7 @@ export function markBringInSkips(
     if (seen.has(row.id)) skipReason = 'duplicate'
     else if (libraryIds.has(row.id)) skipReason = 'library'
     else if (row.captions === 'unavailable' || isUnavailableFilm({ title: row.title })) skipReason = 'unavailable'
-    else if (row.durationSeconds != null && row.durationSeconds < MIN_BRING_IN_SECONDS) skipReason = 'short'
+    else if (row.durationSeconds != null && row.durationSeconds < MIN_TALK_SECONDS) skipReason = 'short'
     seen.add(row.id)
     return { ...row, index, speaker: '', jibril: '', ghunya: '', skipReason, selected: skipReason === '' }
   })
@@ -250,12 +248,24 @@ export function decideBringInWrite(result: YoutubeIngest, wantTranscript: boolea
   }
 }
 
-export function skipLabel(reason: BringInRow['skipReason']) {
-  if (reason === 'short') return 'Under 5 minutes, left unticked'
+export function skipLabel(reason: BringInRow['skipReason'], durationSeconds?: number | null) {
+  if (reason === 'short') return durationSeconds != null && durationSeconds > 0 ? tooShortMessage(durationSeconds) : 'This talk is under 5 minutes. Talks need to be at least 5 minutes.'
   if (reason === 'library') return 'Already in the library'
   if (reason === 'duplicate') return 'Already in this list'
   if (reason === 'unavailable') return 'Not available, left unticked'
   return ''
+}
+
+/**
+ * A paste that cannot bring anything in because every new film is under five minutes.
+ * Mixed pastes stay on the preview, with the short rows refused.
+ */
+export function bringInBlockMessage(rows: BringInRow[]) {
+  if (rows.some((row) => row.selected)) return null
+  const shorts = rows.filter((row) => row.skipReason === 'short' && row.durationSeconds)
+  if (!shorts.length) return null
+  if (rows.some((row) => row.skipReason !== 'short' && row.skipReason !== 'duplicate')) return null
+  return [...new Set(shorts.map((row) => tooShortMessage(row.durationSeconds as number)))].join(' ')
 }
 
 /** Draft talks a desk can publish. Master sees every draft. A portal admin sees drafts made in that portal. */

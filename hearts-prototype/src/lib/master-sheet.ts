@@ -8,6 +8,7 @@ import { citationUrl, resolveSpeaker, speakerSlug, imageUrl, type SpeakerIdentit
 import { hasMarkup, httpsHref } from './text-safety'
 import { DOORS, clauseForDoor, doorCode, doorLabel, doorNumberOfClause, doorOfClause, parseDoor, type Door } from './doors'
 import { CIRCLE_COLUMNS, CIRCLE_NOTE, CIRCLE_TAB, circleSheetValues, readCircleRow, type CircleColumn } from './circle-sheet'
+import { refusalForTalk, sourceTalkSeconds, transcriptEndSeconds } from './talk-length'
 
 export const TALK_COLUMNS = [
   'talk_key', 'youtube_id', 'title', 'speaker', 'channel', 'course', 'part', 'order', 'lane', 'jibril_door', 'jibril_clause', 'ghunya_seat',
@@ -1087,6 +1088,15 @@ function planTalks(working: Working, rows: InputRow[]) {
       const portal = working.catalogue.scopeKind === 'portal' || (working.catalogue.scopeKind === 'course' && working.catalogue.portalId) ? working.catalogue.portalId : null
       const master = !portal
       const source = transcriptText ? (provider === 'file' || provider === 'vimeo' ? 'upload' : 'youtube') : undefined
+      const brought = sourceTalkSeconds({ durationSeconds, transcript: transcriptText })
+      const refusal = refusalForTalk(brought)
+      if (refusal) {
+        rollback(working, mark)
+        fail('duration', refusal)
+        working.errors.push(...problems)
+        working.skipped += 1
+        continue
+      }
       working.ops.push({
         op: 'lesson.create', temp, course: course.ref, unit, title, speaker: speakerText || undefined, speakerProfile: linked?.ref || undefined, youtubeId: youtubeId || undefined, order: order ?? undefined, lane: textOf(row, 'lane') || undefined, portal, master,
         provider: provider || undefined, vimeoId: vimeoId || undefined, mediaId: mediaId || undefined, durationSeconds, transcript: transcriptText || undefined, transcriptSource: source,
@@ -1140,6 +1150,9 @@ function planTalks(working: Working, rows: InputRow[]) {
     if (mediaId && mediaId !== (lesson.mediaId || 0)) lessonPatch.film = mediaId
     if (durationSeconds != null && !sameScalar(numOrNull(lesson.durationSeconds), durationSeconds)) lessonPatch.durationSeconds = durationSeconds
     if (present(row, 'transcript') && transcriptText !== (lesson.transcript || '')) lessonPatch.transcript = transcriptText
+    const nextLength = 'durationSeconds' in lessonPatch ? Number(lessonPatch.durationSeconds) : numOrNull(lesson.durationSeconds)
+    const lengthRefusal = refusalForTalk(nextLength && nextLength > 0 ? nextLength : transcriptEndSeconds('transcript' in lessonPatch ? transcriptText : ''))
+    if (lengthRefusal && ('durationSeconds' in lessonPatch || (!numOrNull(lesson.durationSeconds) && 'transcript' in lessonPatch))) fail('duration', lengthRefusal)
     if (order != null && !sameScalar(current.order, order)) lessonPatch.order = order
     if (present(row, 'lane') && !sameScalar(current.lane, textOf(row, 'lane'))) lessonPatch.starterLane = textOf(row, 'lane')
     let courseMove: Ref | null = null
