@@ -61,7 +61,7 @@ test.afterAll(async () => {
 
 test('the creator drafts a sheet, then a learner completes a task the imam can see', async ({ page }) => {
   await page.setViewportSize(DESK)
-  const course = (await json(await master.get('/api/courses?where[title][equals]=The%20Names%20Class%2020%3A%20Al-Nur&limit=1&depth=0'))).docs?.[0] as { id: number } | undefined
+  const course = (await json(await master.get('/api/courses?where[importToken][equals]=AL-NUR&limit=1&depth=0'))).docs?.[0] as { id: number } | undefined
   expect(course?.id, 'seeded Al-Nur course').toBeTruthy()
   const before = await json(await master.get('/api/lessons?where[youtubeId][equals]=ccccccccccc&limit=1&depth=0'))
   expect(before.docs || []).toHaveLength(0)
@@ -71,7 +71,7 @@ test('the creator drafts a sheet, then a learner completes a task the imam can s
   await page.getByTestId('creator-topic').fill('the light of the name')
   await page.getByTestId('creator-speaker').fill('Mikaeel Smith')
   await page.getByTestId('creator-search').click()
-  await expect(page.getByTestId('creator-candidate')).toHaveCount(3)
+  await expect(page.getByTestId('creator-candidate')).toHaveCount(2)
   await page.locator('[data-testid="creator-candidate"][data-id="ccccccccccc"] [data-testid="creator-include"]').check()
   await page.getByTestId('creator-paste').fill('https://vimeo.com/76979871')
   await page.getByTestId('creator-file').setInputFiles(path.join(process.cwd(), 'tests/fixtures/circle-recording.mp4'))
@@ -182,7 +182,7 @@ test('a portal admin searches for their own course and cannot draft the master l
   const search = await json(await admin.post('/api/hearts/sheet/create', { data: { intent: 'search', topic: 'the light of the name', speaker: 'Mikaeel Smith', count: 3, minSeconds: 60, maxSeconds: 3600 } }))
   expect(search.via).toBe('fixture')
   expect((search.candidates as { id: string }[]).map((item) => item.id)).toEqual(['ccccccccccc'])
-  const masterCourse = (await json(await master.get('/api/courses?where[title][equals]=The%20Names%20Class%2020%3A%20Al-Nur&limit=1&depth=0'))).docs?.[0] as { id: number }
+  const masterCourse = (await json(await master.get('/api/courses?where[importToken][equals]=AL-NUR&limit=1&depth=0'))).docs?.[0] as { id: number }
   const refused = await admin.post('/api/hearts/sheet/create', {
     data: { intent: 'draft', course: String(masterCourse.id), topic: 'the light of the name', part: 'Notes', sources: [{ provider: 'vimeo', id: '76979871', title: 'A vimeo film' }] },
   })

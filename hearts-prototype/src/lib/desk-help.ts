@@ -179,7 +179,7 @@ export const TOOL: Record<string, string> = {
   sheetPreview:
     'Preview lists every add, change and problem before anything is saved. Rows with a problem are reported and left out. Apply saves the clean rows. Undo takes back the last import.',
   creatorSearch:
-    'Search looks on YouTube for talks on this topic. Tick the ones you want, or paste links and upload a file. Build draft writes a workbook. Apply it on the sheet page when you are happy.',
+    'Search looks on YouTube for talks of at least five minutes. Select all ticks the list, and the count shows how many are ticked. Tick the ones you want, paste links, or upload a file, then build a draft workbook. Apply it on the sheet page when you are happy.',
   hideScene:
     'Leave this scene out hides it for your community only. The scene that opens the help screen cannot be hidden. The starter choices still mean what Hady Core set.',
   addOpeningScene:

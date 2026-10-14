@@ -19,7 +19,7 @@ import {
 } from '../../src/lib/bring-in-plan'
 import { cookieValue, helperTokenFlash } from '../../src/lib/helper-token-flash'
 import { hashHelperToken, helperRateOk, helperTokenAllows, helperTokenMatches, newHelperToken, resetHelperRates } from '../../src/lib/helper-token'
-import { helperAttachResult, packSaveNotice, publishNotice } from '../../src/lib/publish-state'
+import { helperAttachResult, learnerLessonVisible, packSaveNotice, publishNotice, sheetLessonPublishState } from '../../src/lib/publish-state'
 import { punctuateTimedCues } from '../../src/lib/punctuate'
 import { bringInFlash, hiddenFromLearners, ingestYoutubeUrl, interpretYtDlpOutput, noteAfterTranscriptUpload, transcriptFor, type TranscriptProvider } from '../../src/lib/youtube'
 import { captionFlagFromListing, expandBringInText, joinBringInErrors } from '../../src/lib/youtube-list'
@@ -367,10 +367,17 @@ test('two identical bring-ins wait their turn and the second sees the first writ
   assert.deepEqual(seen, ['write', 'skip'])
 })
 
-test('a sheet talk starts as a draft and an existing upload without a publish state stays visible', () => {
+test('a playable sheet talk is published, and one still waiting on its words stays a draft', () => {
+  assert.equal(sheetLessonPublishState({ provider: 'vimeo', vimeoId: '76979871' }), 'published')
+  assert.equal(sheetLessonPublishState({ provider: 'file', mediaId: 4 }), 'published')
+  assert.equal(sheetLessonPublishState({ youtubeId: 'ccccccccccc' }), 'published')
+  assert.equal(sheetLessonPublishState({ youtubeId: 'ccccccccccc', transcriptNote: 'Bring-in: waiting. [lang:en] none' }), 'draft')
+  assert.equal(sheetLessonPublishState({}), 'draft')
+  assert.equal(learnerLessonVisible({ transcriptNote: null }), true)
+  assert.equal(learnerLessonVisible({ publishState: 'draft', transcriptNote: null }), false)
   const source = readFileSync(path.join(process.cwd(), 'src/server/master-sheet.ts'), 'utf8')
   const create = source.slice(source.indexOf("op.op === 'lesson.create'"), source.indexOf("op.op === 'lesson.update'"))
-  assert.match(create, /publishState: 'draft'/)
+  assert.match(create, /sheetLessonPublishState/)
   assert.match(source, /const list = idList\(holder\.courseList\)/)
 })
 

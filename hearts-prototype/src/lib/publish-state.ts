@@ -36,6 +36,29 @@ export function asLessonVisibility(row: object | null | undefined) {
   }
 }
 
+/**
+ * A sheet talk that can already play is published, so Apply is when learners can open it.
+ * A talk still waiting on its words stays a draft. A row with no film stays a draft too.
+ */
+export function sheetLessonPublishState(op: {
+  youtubeId?: string | null
+  provider?: string | null
+  vimeoId?: string | null
+  mediaId?: number | null
+  transcriptNote?: string | null
+}) {
+  if (hiddenFromLearners(op.transcriptNote)) return 'draft' as const
+  const playable = Boolean(
+    String(op.youtubeId || '').trim()
+    || String(op.vimeoId || '').trim()
+    || (typeof op.mediaId === 'number' && op.mediaId > 0)
+    || op.provider === 'youtube'
+    || op.provider === 'vimeo'
+    || op.provider === 'file',
+  )
+  return playable ? 'published' as const : 'draft' as const
+}
+
 export function publishNotice(input: {
   published: number
   stillHidden: number

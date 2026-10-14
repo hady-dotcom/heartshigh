@@ -668,6 +668,22 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .saved-list { display: grid; gap: 8px; }
 .saved-item { display: flex; justify-content: space-between; gap: 10px; }
 
+.creator-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.creator-tools { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.creator-candidate { grid-template-columns: 88px minmax(0, 1fr) auto; align-items: center; }
+.creator-candidate b,
+.creator-queue span { display: block; overflow-wrap: anywhere; }
+.creator-candidate small { display: block; }
+.creator-thumb { width: 88px; height: 50px; object-fit: cover; border-radius: 8px; }
+.creator-queue { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.creator-queue li { display: flex; gap: 12px; align-items: center; justify-content: space-between; }
+@media (max-width: 700px) {
+  .creator-fields { grid-template-columns: 1fr; }
+  .creator-candidate { grid-template-columns: minmax(0, 1fr) auto; }
+  .creator-thumb { display: none; }
+  .desk.desk-phone .sheet-split { grid-template-columns: 1fr !important; }
+}
+
 .library-totals { margin: 0 0 16px; font-size: 16px; font-weight: 700; line-height: 1.4; }
 .library-layout { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 18px; align-items: start; }
 .library-list { display: grid; }

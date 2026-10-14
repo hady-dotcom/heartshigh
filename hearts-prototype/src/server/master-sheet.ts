@@ -4,6 +4,7 @@ import { APIError, type Payload, type Where } from 'payload'
 import { idOf } from '@/lib/ids'
 import { idList } from './context'
 import { now } from '@/lib/clock'
+import { sheetLessonPublishState } from '@/lib/publish-state'
 import { audit } from '@/server/viewas'
 import { horsCapOf, normaliseSpans, type AppetiserSpan } from '@/lib/tiers'
 import { readStoredMediaBytes } from '@/lib/stored-media'
@@ -378,7 +379,7 @@ async function applyOp(payload: Payload, op: SheetOp, temps: Map<string, number>
         youtubeUrl: op.youtubeId ? `https://www.youtube.com/watch?v=${op.youtubeId}` : undefined, order: op.order ?? 1, starterLane: op.lane, portal: op.portal || undefined, master: op.master,
         transcriptSource: op.transcriptSource || 'none', videoProvider: op.provider || undefined, vimeoId: op.vimeoId || undefined, film: op.mediaId || undefined,
         durationSeconds: op.durationSeconds ?? undefined, transcript: op.transcript || undefined, transcriptNote: op.transcriptNote || undefined,
-        publishState: 'draft',
+        publishState: sheetLessonPublishState(op),
       } as never,
     })) as unknown as Doc
     temps.set(op.temp, doc.id)

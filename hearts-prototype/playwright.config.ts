@@ -11,6 +11,8 @@ process.env.HEARTS_E2E = process.env.HEARTS_E2E || '1'
 
 export default defineConfig({
   testDir: 'tests/e2e',
+  // The mocked yt-dlp creator run starts its own server. The search fixture on this one hides the no-captions film.
+  testIgnore: '**/sheet-creator-ytdlp.spec.ts',
   timeout: 180_000,
   expect: { timeout: 20_000 },
   fullyParallel: false,
