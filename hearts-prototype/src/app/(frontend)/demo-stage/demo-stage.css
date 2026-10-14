@@ -194,9 +194,16 @@
   padding: 10px;
   box-sizing: border-box;
 }
-.layout-grid .demo-board { grid-template-rows: 1fr 1fr; }
+.layout-row .demo-board,
 .layout-phone .demo-board {
-  background: linear-gradient(90deg, transparent calc(100% - 446px), rgba(23, 21, 31, 0.06) calc(100% - 446px));
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(260px, 390px);
+}
+.layout-grid .demo-board {
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+}
+.layout-phone .demo-board {
+  background: linear-gradient(90deg, transparent calc(100% - 406px), rgba(23, 21, 31, 0.06) calc(100% - 406px));
 }
 .demo-cell { min-width: 0; min-height: 0; display: flex; position: relative; }
 
@@ -247,16 +254,16 @@
 }
 
 .demo-phone {
-  width: 390px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 390px;
   height: 100%;
   display: flex;
   padding: 8px 0;
   box-sizing: border-box;
 }
 .demo-bezel {
-  width: 390px;
-  max-width: 100%;
+  width: 100%;
+  max-width: 390px;
   height: 100%;
   background: #111018;
   border-radius: 28px;
@@ -425,7 +432,8 @@
   border-color: #1f4d3a;
   text-align: left;
 }
-.demo-steps button.on { background: #d4a84b; color: #1a1408; border-color: #d4a84b; }
+.demo-steps button.on, .demo-steps button.go { background: #d4a84b; color: #1a1408; border-color: #d4a84b; }
+.demo-play-row { display: flex; gap: 8px; margin-bottom: 12px; }
 .demo-steps li span { font-size: 12.5px; color: #48455e; line-height: 1.4; }
 .demo-say { background: #f6f0e4; border-radius: 10px; padding: 8px 10px; }
 
@@ -457,14 +465,72 @@
   white-space: nowrap;
 }
 
-@media (max-width: 1500px) {
-  .demo-steps {
-    position: absolute;
-    right: 8px;
-    top: 8px;
-    bottom: 8px;
-    z-index: 4;
-    margin: 0;
+.demo-form { display: grid; gap: 8px; }
+.demo-form input, .demo-form textarea, .demo-stack > textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border-radius: 10px;
+  border: 1px solid rgba(246, 238, 220, 0.28);
+  background: #102e2c;
+  color: #f6eedc;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  resize: vertical;
+}
+.demo-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.demo-card {
+  display: grid;
+  gap: 6px;
+  padding: 8px 0;
+  border-top: 1px solid rgba(246, 238, 220, 0.14);
+}
+.demo-card p { margin: 0; }
+.demo-card.is-fresh, .card.is-fresh {
+  animation: demo-flash 1.6s ease;
+  border-radius: 12px;
+}
+@keyframes demo-flash {
+  0% { box-shadow: 0 0 0 3px #d4a84b; background: rgba(212, 168, 75, 0.28); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 168, 75, 0); background: transparent; }
+}
+.demo-done {
+  justify-self: start;
+  margin: 0;
+  background: #1f8a78;
+  color: #f6f0e4;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.demo-app .card,
+.demo-app .demo-phone-card {
+  color: #1f1d36;
+  background: #fffdf8;
+  border-radius: 16px;
+  padding: 12px;
+}
+.demo-app .demo-phone-card { margin-bottom: 8px; }
+.demo-app .demo-phone-card p { margin: 0; }
+.demo-app .card textarea,
+.demo-app .card input,
+.demo-app .demo-form textarea,
+.demo-app .demo-form input {
+  background: #fff;
+  color: #1f1d36;
+  border-color: rgba(31, 29, 54, 0.2);
+}
+.demo-app .eyebrow { color: #8a6a22; }
+.demo-app .demo-done { color: #f6f0e4; }
+
+@media (max-width: 1400px) {
+  .demo-steps { width: 200px; padding: 12px; }
+  .demo-steps h2 { font-size: 24px; }
+  .demo-desk.desk { grid-template-columns: 86px minmax(0, 1fr); }
+  .demo-strip { font-size: 12px; }
+  .layout-row .demo-board,
+  .layout-phone .demo-board {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr) minmax(220px, 320px);
   }
-  .demo-body { position: relative; }
 }

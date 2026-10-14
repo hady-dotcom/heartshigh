@@ -1,122 +1,172 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
 import {
-  DEMO_ANNOUNCE,
-  DEMO_ANSWER,
-  DEMO_CHANNEL,
-  DEMO_COURSE,
-  DEMO_LATER,
-  DEMO_LIBRARY,
-  DEMO_QUESTION,
-  DEMO_REPLY,
-  DEMO_SCENARIOS,
-  DEMO_THUMB,
-  DEMO_VIDEO,
   CAST_FLOW,
+  DEMO_CHANNEL,
+  LOOP_ANSWER,
+  LOOP_BOOK_LINE,
+  LOOP_COMMENT,
+  LOOP_COURSE,
+  LOOP_NOTE,
+  LOOP_PLAY,
+  LOOP_QUESTION,
+  LOOP_REPLY,
+  LOOP_WORKBOOK,
+  SEED_COURSES,
+  SEED_NOTE,
   castFilled,
   castHeader,
   castPrompt,
   castReady,
-  clock,
   defaultCast,
   demoChannelMessage,
   fillCast,
-  learnerSeesCourse,
-  ownStats,
+  kindLabel,
+  learnerPrompts,
+  learnerThread,
+  loopCounts,
+  loopStepPlays,
+  playAll,
   readChannelMessage,
-  rollCast,
+  receiversFor,
   reduceDemo,
-  runDemoCommand,
-  scenarioPlays,
+  rollCast,
   seedDemo,
-  stageFor,
-  teacherQueue,
+  stuckRows,
   welcomeLine,
-  workbookEntries,
 } from '../../src/lib/demo-stage'
 
+const JARGON = ['payload', 'toggle', 'draft', 'publish', 'contingent', 'scenario', 'imported']
+
 describe('demo stage stays in memory', () => {
-  it('seeds sample data and never names a real account', () => {
+  it('starts with a full sample and never names a real account', () => {
     const seed = seedDemo()
     const packed = JSON.stringify(seed)
-    assert.equal(packed.includes('@hearts.test'), false)
-    assert.equal(packed.includes('@demo-stage.hearts'), false)
-    assert.equal(seed.visibility, 'draft')
-    assert.deepEqual(seed.library, [...DEMO_LIBRARY])
-    assert.equal(seed.videos.length, 0)
-    assert.equal(learnerSeesCourse(seed), false)
+    assert.equal(packed.includes('@'), false)
+    assert.equal(seed.courses.map((course) => course.title).join('|'), SEED_COURSES.join('|'))
+    assert.equal(seed.notes[0]?.body, SEED_NOTE)
+    assert.equal(loopCounts(seed).waiting, 3)
+    assert.equal(loopCounts(seed).done, 2)
+    assert.equal(loopCounts(seed).stuck, 5)
+    assert.ok(seed.activity.length >= 4)
+    assert.ok(seed.queue.some((row) => row.kind === 'comment' && !row.done))
+    assert.ok(seed.queue.some((row) => row.kind === 'workbook' && !row.done))
+    assert.ok(seed.queue.some((row) => row.kind === 'answer' && !row.done))
+    assert.equal(learnerThread(seed).some((row) => row.done && row.reply), true)
   })
 
-  it('leaves the previous state untouched and reset reloads the seed', () => {
+  it('leaves the previous state untouched and reset reloads the sample', () => {
     const before = seedDemo()
     const snapshot = structuredClone(before)
-    const published = reduceDemo(before, { type: 'publish' })
+    const added = reduceDemo(before, { type: 'add-course', title: 'River path' })
     assert.deepEqual(before, snapshot)
-    assert.equal(published.visibility, 'published')
-    assert.equal(before.visibility, 'draft')
-    const dirty = reduceDemo(reduceDemo(published, { type: 'add-video' }), { type: 'announce' })
-    assert.deepEqual(reduceDemo(dirty, { type: 'reset' }), seedDemo())
+    assert.equal(added.courses[0]?.title, 'River path')
+    assert.equal(before.courses[0]?.title, SEED_COURSES[0])
+    assert.deepEqual(reduceDemo(added, { type: 'reset' }), seedDemo())
   })
 })
 
-describe('the school-demo flow', () => {
-  it('adds a video with a sample thumbnail and the admin counts tick', () => {
-    const next = reduceDemo(seedDemo(), { type: 'add-video' })
-    assert.equal(next.videos[0]?.title, DEMO_VIDEO)
-    assert.equal(next.videos[0]?.thumb, DEMO_THUMB)
-    assert.equal(ownStats(next).videos, 1)
-    assert.equal(next.ticker[0]?.text, `Video added: ${DEMO_VIDEO}`)
-    assert.equal(reduceDemo(next, { type: 'add-video' }), next)
+describe('down the loop', () => {
+  it('adds a course into the library and the learner feed', () => {
+    const next = reduceDemo(seedDemo(), { type: 'add-course', title: `  ${LOOP_COURSE}  ` })
+    assert.equal(next.courses[0]?.title, LOOP_COURSE)
+    assert.equal(loopCounts(next).courses, SEED_COURSES.length + 1)
+    assert.equal(next.activity[0]?.text, `{master} added a course: ${LOOP_COURSE}.`)
+    assert.deepEqual(receiversFor({ type: 'add-course', title: LOOP_COURSE }), ['portal', 'learner'])
+    assert.equal(next.fresh[0], next.courses[0]?.id)
+    assert.equal(reduceDemo(next, { type: 'add-course', title: '   ' }), next)
   })
 
-  it('pins a question at the pause, then a later one', () => {
-    let state = reduceDemo(seedDemo(), { type: 'add-video' })
-    state = reduceDemo(state, { type: 'pause', at: 64 })
-    state = reduceDemo(state, { type: 'add-question', when: 'now' })
-    assert.equal(state.questions[0]?.prompt, DEMO_QUESTION)
-    assert.equal(state.questions[0]?.at, 64)
-    assert.equal(clock(64), '01:04')
-    assert.equal(ownStats(state).questions, 1)
-    state = reduceDemo(state, { type: 'add-question', when: 'later' })
-    assert.equal(state.questions[1]?.prompt, DEMO_LATER)
-    assert.equal(state.questions[1]?.contingentOn, 'q-now')
-    assert.equal(ownStats(state).questions, 2)
+  it('posts an announcement onto the phone', () => {
+    const next = reduceDemo(seedDemo(), { type: 'post-note', body: LOOP_NOTE })
+    assert.equal(next.notes[0]?.body, LOOP_NOTE)
+    assert.equal(next.notes[1]?.body, SEED_NOTE)
+    assert.deepEqual(receiversFor({ type: 'post-note', body: LOOP_NOTE }), ['learner'])
+    const quiet = seedDemo()
+    assert.equal(reduceDemo(quiet, { type: 'post-note', body: ' ' }), quiet)
   })
 
-  it('publishes into the learner phone, then the answer, the queue, the reply and the workbook', () => {
-    let state = stageFor('workbook')
-    assert.equal(learnerSeesCourse(state), true)
-    assert.equal(teacherQueue(state).length, 0)
-    state = runDemoCommand(state, 'send-answer')
-    assert.equal(fillCast(state.ticker[0]?.text || '', defaultCast()), `Abdallah answered: ${DEMO_ANSWER}`)
-    assert.equal(teacherQueue(state).length, 1)
-    assert.equal(ownStats(state).answers, 1)
-    assert.equal(workbookEntries(state)[0]?.reply, '')
-    state = runDemoCommand(state, 'send-reply')
-    assert.equal(fillCast(state.ticker[0]?.text || '', defaultCast()), 'Sami replied')
-    assert.equal(teacherQueue(state).length, 0)
-    assert.equal(workbookEntries(state)[0]?.reply, DEMO_REPLY)
-    assert.equal(workbookEntries(reduceDemo(state, { type: 'toggle', feature: 'workbook' })).length, 0)
+  it('sets a question and a workbook prompt the learner can open', () => {
+    let state = reduceDemo(seedDemo(), { type: 'set-prompt', kind: 'question', text: LOOP_QUESTION })
+    state = reduceDemo(state, { type: 'set-prompt', kind: 'workbook', text: LOOP_WORKBOOK })
+    assert.equal(learnerPrompts(state)[0]?.text, LOOP_WORKBOOK)
+    assert.equal(learnerPrompts(state)[1]?.text, LOOP_QUESTION)
+    assert.equal(stuckRows(state).filter((row) => row.name === '{learner}').length, 3)
+    assert.deepEqual(receiversFor({ type: 'set-prompt', kind: 'question', text: LOOP_QUESTION }), ['learner'])
+  })
+})
+
+describe('back up the loop', () => {
+  it('lands an answer, a workbook line, and a comment in the reply queue', () => {
+    let state = reduceDemo(seedDemo(), { type: 'set-prompt', kind: 'question', text: LOOP_QUESTION })
+    state = reduceDemo(state, { type: 'set-prompt', kind: 'workbook', text: LOOP_WORKBOOK })
+    const before = loopCounts(state)
+    state = reduceDemo(state, { type: 'write', kind: 'answer', body: LOOP_ANSWER })
+    state = reduceDemo(state, { type: 'write', kind: 'workbook', body: LOOP_BOOK_LINE })
+    state = reduceDemo(state, { type: 'write', kind: 'comment', body: LOOP_COMMENT })
+    assert.equal(state.queue[0]?.body, LOOP_COMMENT)
+    assert.equal(state.queue[0]?.kind, 'comment')
+    assert.equal(state.queue[1]?.body, LOOP_BOOK_LINE)
+    assert.equal(state.queue[2]?.body, LOOP_ANSWER)
+    assert.equal(state.queue[2]?.prompt, LOOP_QUESTION)
+    assert.equal(loopCounts(state).waiting, before.waiting + 3)
+    assert.equal(loopCounts(state).stuck, before.stuck + 1)
+    assert.equal(kindLabel('workbook'), 'Workbook')
+    const bare = seedDemo()
+    assert.equal(reduceDemo(bare, { type: 'write', kind: 'answer', body: 'No question is open' }), bare)
+    assert.equal(reduceDemo(bare, { type: 'write', kind: 'comment', body: '   ' }), bare)
   })
 
-  it('posts an announcement and toggles a feature without touching the course', () => {
-    const announced = reduceDemo(seedDemo(), { type: 'announce' })
-    assert.equal(announced.announcements[0]?.body, DEMO_ANNOUNCE)
-    assert.equal(announced.visibility, 'draft')
-    assert.equal(learnerSeesCourse(announced), false)
-    const live = reduceDemo(announced, { type: 'toggle', feature: 'live' })
-    assert.equal(live.features.live, true)
-    assert.equal(live.ticker[0]?.text, 'Feature toggled')
-    assert.equal(ownStats(live).published, 0)
+  it('sends the reply to the learner, marks it done, and moves the numbers', () => {
+    const seed = seedDemo()
+    const before = loopCounts(seed)
+    const next = reduceDemo(seed, { type: 'reply', id: 'wait-maryam', body: '  Yes, Friday.  ' })
+    const maryam = next.queue.find((row) => row.id === 'wait-maryam')
+    assert.equal(maryam?.done, true)
+    assert.equal(maryam?.reply, 'Yes, Friday.')
+    assert.equal(loopCounts(next).waiting, before.waiting - 1)
+    assert.equal(loopCounts(next).done, before.done + 1)
+    assert.equal(loopCounts(next).stuck, before.stuck - 1)
+    assert.equal(next.activity[0]?.text, '{teacher} wrote back to Maryam.')
+    assert.equal(reduceDemo(next, { type: 'reply', id: 'wait-maryam', body: 'Again' }), next)
+    assert.equal(reduceDemo(seed, { type: 'reply', id: 'missing', body: 'Hello' }), seed)
+    assert.deepEqual(receiversFor({ type: 'reply', id: 'wait-maryam', body: 'Yes' }), ['learner', 'portal', 'master'])
+  })
+})
+
+describe('play the loop', () => {
+  it('walks every step in plain words', () => {
+    assert.equal(LOOP_PLAY.length, 9)
+    assert.deepEqual(LOOP_PLAY.map((step) => step.actor), ['master', 'portal', 'teacher', 'teacher', 'learner', 'learner', 'learner', 'teacher', 'portal'])
+    for (const step of LOOP_PLAY) {
+      assert.equal(loopStepPlays(step.id), true, step.id)
+      const packed = step.say.toLowerCase()
+      for (const word of JARGON) assert.equal(packed.includes(word), false, word)
+    }
+    const done = playAll()
+    assert.equal(done.courses.some((course) => course.title === LOOP_COURSE), true)
+    assert.equal(done.notes.some((note) => note.body === LOOP_NOTE), true)
+    assert.equal(learnerPrompts(done).some((prompt) => prompt.text === LOOP_QUESTION), true)
+    assert.equal(learnerPrompts(done).some((prompt) => prompt.text === LOOP_WORKBOOK), true)
+    const thread = learnerThread(done)
+    assert.equal(thread.some((row) => row.body === LOOP_ANSWER && row.done && row.reply === LOOP_REPLY), true)
+    assert.equal(thread.some((row) => row.body === LOOP_BOOK_LINE && !row.done), true)
+    assert.equal(thread.some((row) => row.body === LOOP_COMMENT && !row.done), true)
+    assert.ok(loopCounts(done).courses > loopCounts(seedDemo()).courses)
+    assert.ok(loopCounts(done).done > loopCounts(seedDemo()).done)
+    assert.ok(stuckRows(done).length > 0)
   })
 
-  it('refuses an answer until the course is published', () => {
-    let state = reduceDemo(seedDemo(), { type: 'add-video' })
-    state = reduceDemo(state, { type: 'add-question', when: 'now' })
-    assert.equal(reduceDemo(state, { type: 'answer' }), state)
-    state = reduceDemo(state, { type: 'publish' })
-    assert.equal(state.ticker[0]?.text, `Course published: ${DEMO_COURSE}`)
-    assert.notEqual(reduceDemo(state, { type: 'answer' }), state)
+  it('shares one state over the demo channel', () => {
+    const next = reduceDemo(seedDemo(), { type: 'add-course', title: LOOP_COURSE })
+    const message = demoChannelMessage(next)
+    const current = seedDemo()
+    assert.equal(message.channel, DEMO_CHANNEL)
+    assert.equal(message.type, 'replace')
+    assert.deepEqual(readChannelMessage(current, message), next)
+    assert.equal(readChannelMessage(current, { type: 'nope' }), current)
+    assert.equal(readChannelMessage(next, null), next)
+    assert.equal(readChannelMessage(next, { type: 'replace', state: { courses: 'nope' } }), next)
   })
 })
 
@@ -145,27 +195,5 @@ describe('cast your demo', () => {
     const place = rollCast({ ...cast, kind: 'school' }, 'portal', 0)
     assert.equal(place.portalName, 'Willow Academy')
     assert.equal(fillCast('{learner} answered. {teacher} replied at {portal}.', cast), 'Abdallah answered. Sami replied at Al-Noor Mosque.')
-  })
-})
-
-describe('demo steps and the refresh bus', () => {
-  it('offers between six and ten click-throughs, and each one can be played', () => {
-    assert.ok(DEMO_SCENARIOS.length >= 6)
-    assert.ok(DEMO_SCENARIOS.length <= 10)
-    for (const scenario of DEMO_SCENARIOS) {
-      assert.equal(scenarioPlays(scenario.id), true, scenario.title)
-      assert.ok(scenario.steps.length >= 1)
-    }
-  })
-
-  it('shares one state over the demo channel', () => {
-    const next = reduceDemo(seedDemo(), { type: 'publish' })
-    const message = demoChannelMessage(next)
-    const current = seedDemo()
-    assert.equal(message.channel, DEMO_CHANNEL)
-    assert.equal(message.type, 'replace')
-    assert.deepEqual(readChannelMessage(current, message), next)
-    assert.equal(readChannelMessage(current, { type: 'nope' }), current)
-    assert.equal(readChannelMessage(next, null), next)
   })
 })

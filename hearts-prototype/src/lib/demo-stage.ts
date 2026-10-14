@@ -1,20 +1,13 @@
 /**
  * In-browser demo stage. Seeded sample data only.
  * Nothing here opens a database, a session, or a real account.
+ *
+ * One loop joins the four people:
+ * master adds a course, the portal posts a note, the teacher sets a prompt,
+ * the learner writes back, the teacher replies, and the numbers move up.
  */
 
 export const DEMO_CHANNEL = 'hearts-demo-stage'
-export const DEMO_COURSE = 'A quiet hour'
-export const DEMO_UNIT = 'The sitting'
-export const DEMO_VIDEO = 'The quiet hour'
-export const DEMO_THUMB = '/theme/evening-courtyard.jpg'
-export const DEMO_QUESTION = 'Name three things you will carry from this sitting.'
-export const DEMO_LATER = 'How has this changed your week?'
-export const DEMO_ANSWER = 'I will keep one quiet hour this week.'
-export const DEMO_REPLY = 'Keep that hour after Maghrib. I will look for it in your workbook.'
-export const DEMO_ANNOUNCE = 'Circle meets after Maghrib tonight.'
-export const DEMO_PAUSE_AT = 64
-export const DEMO_VIDEO_SECONDS = 132
 export const CAST_FLOW = ['master', 'portal', 'teacher', 'learner'] as const
 export type CastStep = (typeof CAST_FLOW)[number]
 export type PortalKind = 'mosque' | 'school' | 'company'
@@ -137,264 +130,385 @@ export function tidyCast(cast: DemoCast): DemoCast {
   }
 }
 
-export const DEMO_LIBRARY = [
-  'Preparing for the circle',
-  'A first night together',
-  'The doors of the week',
-] as const
-
 export const DEMO_PANELS = ['master', 'portal', 'teacher', 'learner'] as const
 export type DemoPanel = (typeof DEMO_PANELS)[number]
+export type QueueKind = 'answer' | 'workbook' | 'comment'
+export type PromptKind = 'question' | 'workbook'
 
-export type DemoVideo = {
-  id: string
-  title: string
-  thumb: string
-  seconds: number
-}
+export const LOOP_COURSE = 'Night walk'
+export const LOOP_NOTE = 'Bring a notebook to the circle tonight.'
+export const LOOP_QUESTION = 'What will you try before next week?'
+export const LOOP_WORKBOOK = 'Write one kind thing you did.'
+export const LOOP_ANSWER = 'I will try ten quiet minutes.'
+export const LOOP_BOOK_LINE = 'I held the door for someone.'
+export const LOOP_COMMENT = 'Can I ask about the last part?'
+export const LOOP_REPLY = 'Ten quiet minutes is enough. I will look for it.'
 
-export type DemoQuestion = {
+export const SEED_COURSES = ['A quiet hour', 'Preparing for the circle', 'The doors of the week'] as const
+export const SEED_NOTE = 'Circle meets after Maghrib tonight.'
+export const SEED_QUESTION = 'Name three things you will carry from this sitting.'
+export const SEED_LATER = 'How has this changed your week?'
+export const SEED_WORKBOOK = 'Write one line about a moment you want to keep.'
+
+export type DemoCourse = { id: string; title: string }
+export type DemoNote = { id: string; body: string }
+export type DemoPrompt = { id: string; kind: PromptKind; text: string; who: string }
+export type DemoOpen = { id: string; learner: string; promptId: string; why: string }
+export type DemoQueueItem = {
   id: string
-  videoId: string
+  learner: string
+  kind: QueueKind
   prompt: string
-  at: number
-  when: 'now' | 'later'
-  contingentOn?: string
-}
-
-export type DemoAnswer = {
-  id: string
-  questionId: string
   body: string
-  reply?: string
+  reply: string
+  done: boolean
+  promptId?: string
 }
-
-export type DemoTicker = {
-  id: number
-  slot: DemoPanel
-  text: string
-}
+export type DemoActivity = { id: string; text: string }
+export type DemoTicker = { id: number; text: string }
 
 export type DemoState = {
-  visibility: 'draft' | 'published'
-  library: string[]
-  videos: DemoVideo[]
-  questions: DemoQuestion[]
-  answers: DemoAnswer[]
-  announcements: { id: string; body: string }[]
-  features: { workbook: boolean; live: boolean }
-  pausedAt: number | null
+  courses: DemoCourse[]
+  notes: DemoNote[]
+  prompts: DemoPrompt[]
+  opens: DemoOpen[]
+  queue: DemoQueueItem[]
+  activity: DemoActivity[]
   ticker: DemoTicker[]
+  fresh: string[]
   seq: number
 }
 
 export type DemoAction =
   | { type: 'reset' }
-  | { type: 'add-video' }
-  | { type: 'pause'; at: number }
-  | { type: 'add-question'; when: 'now' | 'later' }
-  | { type: 'publish' }
-  | { type: 'announce' }
-  | { type: 'toggle'; feature: 'workbook' | 'live' }
-  | { type: 'answer' }
-  | { type: 'reply' }
+  | { type: 'add-course'; title: string }
+  | { type: 'post-note'; body: string }
+  | { type: 'set-prompt'; kind: PromptKind; text: string }
+  | { type: 'write'; kind: QueueKind; body: string; promptId?: string }
+  | { type: 'reply'; id: string; body: string }
+  | { type: 'reply-latest'; kind?: QueueKind; body: string }
 
-export type DemoStep = {
+export type LoopStep = {
   id: string
+  actor: DemoPanel
+  receivers: DemoPanel[]
   say: string
-  target: string
-  panel: DemoPanel
-  view: string
+  anchor: string
+  action?: DemoAction
 }
 
-export type DemoScenario = {
-  id: string
-  title: string
-  blurb: string
-  steps: DemoStep[]
-}
+export const LOOP_PLAY: LoopStep[] = [
+  {
+    id: 'course',
+    actor: 'master',
+    receivers: ['portal', 'learner'],
+    say: '{master} adds a new course. It shows in the library and on {learner}’s phone.',
+    anchor: 'demo-feed',
+    action: { type: 'add-course', title: LOOP_COURSE },
+  },
+  {
+    id: 'note',
+    actor: 'portal',
+    receivers: ['learner'],
+    say: '{admin} posts an announcement. {learner} sees it on the phone.',
+    anchor: 'demo-phone-notes',
+    action: { type: 'post-note', body: LOOP_NOTE },
+  },
+  {
+    id: 'question',
+    actor: 'teacher',
+    receivers: ['learner'],
+    say: '{teacher} sets a question. It reaches {learner}.',
+    anchor: 'demo-learner-prompts',
+    action: { type: 'set-prompt', kind: 'question', text: LOOP_QUESTION },
+  },
+  {
+    id: 'workbook',
+    actor: 'teacher',
+    receivers: ['learner'],
+    say: '{teacher} sets a workbook prompt. It reaches {learner} too.',
+    anchor: 'demo-learner-prompts',
+    action: { type: 'set-prompt', kind: 'workbook', text: LOOP_WORKBOOK },
+  },
+  {
+    id: 'answer',
+    actor: 'learner',
+    receivers: ['teacher', 'portal', 'master'],
+    say: '{learner} answers the question. It lands in {teacher}’s reply queue, and the numbers move.',
+    anchor: 'demo-queue',
+    action: { type: 'write', kind: 'answer', body: LOOP_ANSWER },
+  },
+  {
+    id: 'book',
+    actor: 'learner',
+    receivers: ['teacher', 'portal', 'master'],
+    say: '{learner} writes a workbook line. That lands in the queue as well.',
+    anchor: 'demo-queue',
+    action: { type: 'write', kind: 'workbook', body: LOOP_BOOK_LINE },
+  },
+  {
+    id: 'comment',
+    actor: 'learner',
+    receivers: ['teacher', 'portal', 'master'],
+    say: '{learner} writes a comment. {teacher} can see it in the same stream.',
+    anchor: 'demo-queue',
+    action: { type: 'write', kind: 'comment', body: LOOP_COMMENT },
+  },
+  {
+    id: 'reply',
+    actor: 'teacher',
+    receivers: ['learner', 'portal', 'master'],
+    say: '{teacher} writes back. {learner} gets it, and that note is marked done.',
+    anchor: 'demo-learner-replies',
+    action: { type: 'reply-latest', kind: 'answer', body: LOOP_REPLY },
+  },
+  {
+    id: 'rollup',
+    actor: 'portal',
+    receivers: ['master'],
+    say: 'Who is stuck shows for {admin}. The same numbers show for {master}.',
+    anchor: 'demo-master-numbers',
+  },
+]
 
-const VIEW_COMMANDS = new Set([
-  'show-library',
-  'show-imported',
-  'open-content',
-  'open-question',
-  'open-home',
-  'open-course',
-  'open-player',
-  'open-queue',
-  'open-workbook',
-  'open-announce',
-  'open-features',
-])
+const LEARNER = '{learner}'
+
+function clean(text: string) {
+  return text.replace(/\s+/g, ' ').trim()
+}
 
 export function seedDemo(): DemoState {
   return {
-    visibility: 'draft',
-    library: [...DEMO_LIBRARY],
-    videos: [],
-    questions: [],
-    answers: [],
-    announcements: [],
-    features: { workbook: true, live: false },
-    pausedAt: null,
-    ticker: [],
-    seq: 0,
+    courses: SEED_COURSES.map((title, index) => ({ id: `course-seed-${index}`, title })),
+    notes: [{ id: 'note-seed', body: SEED_NOTE }],
+    prompts: [
+      { id: 'prompt-now', kind: 'question', text: SEED_QUESTION, who: '*' },
+      { id: 'prompt-later', kind: 'question', text: SEED_LATER, who: 'Hamza' },
+      { id: 'prompt-book', kind: 'workbook', text: SEED_WORKBOOK, who: LEARNER },
+    ],
+    opens: [
+      { id: 'open-hamza', learner: 'Hamza', promptId: 'prompt-later', why: 'Has not answered yet' },
+      { id: 'open-book', learner: LEARNER, promptId: 'prompt-book', why: 'Has not written the workbook line yet' },
+    ],
+    queue: [
+      {
+        id: 'wait-layla',
+        learner: 'Layla',
+        kind: 'answer',
+        prompt: SEED_QUESTION,
+        body: 'I carried the quiet, the names, and one promise.',
+        reply: '',
+        done: false,
+        promptId: 'prompt-now',
+      },
+      {
+        id: 'wait-idris',
+        learner: 'Idris',
+        kind: 'workbook',
+        prompt: SEED_WORKBOOK,
+        body: 'I missed two days. I want to start again after Maghrib.',
+        reply: '',
+        done: false,
+        promptId: 'prompt-book',
+      },
+      {
+        id: 'wait-maryam',
+        learner: 'Maryam',
+        kind: 'comment',
+        prompt: 'A comment',
+        body: 'Can we sit with this again on Friday?',
+        reply: '',
+        done: false,
+      },
+      {
+        id: 'done-learner',
+        learner: LEARNER,
+        kind: 'answer',
+        prompt: SEED_QUESTION,
+        body: 'I will keep one quiet hour this week.',
+        reply: 'Keep that hour after Maghrib. I will look for it next week.',
+        done: true,
+        promptId: 'prompt-now',
+      },
+      {
+        id: 'done-yusuf',
+        learner: 'Yusuf',
+        kind: 'answer',
+        prompt: SEED_QUESTION,
+        body: 'I tried the quiet hour on Sunday.',
+        reply: 'That Sunday hour counts. Keep it short and keep it.',
+        done: true,
+        promptId: 'prompt-now',
+      },
+    ],
+    activity: [
+      { id: 'act-seed-1', text: 'Layla answered a question.' },
+      { id: 'act-seed-2', text: 'Idris wrote a workbook line.' },
+      { id: 'act-seed-3', text: 'Maryam sent a comment.' },
+      { id: 'act-seed-4', text: '{teacher} wrote back to {learner}.' },
+      { id: 'act-seed-5', text: 'Hamza has not answered yet.' },
+    ],
+    ticker: [
+      { id: 1, text: 'Layla answered a question.' },
+      { id: 2, text: 'Idris wrote a workbook line.' },
+      { id: 3, text: 'Maryam sent a comment.' },
+    ],
+    fresh: [],
+    seq: 3,
   }
 }
 
-function note(state: DemoState, slot: DemoPanel, text: string, patch: Partial<DemoState>): DemoState {
+function withNote(state: DemoState, text: string, patch: Partial<DemoState>, fresh: string[]): DemoState {
   const seq = state.seq + 1
   return {
     ...state,
     ...patch,
     seq,
-    ticker: [{ id: seq, slot, text }, ...state.ticker].slice(0, 12),
+    fresh,
+    activity: [{ id: `act-${seq}`, text }, ...state.activity].slice(0, 16),
+    ticker: [{ id: seq, text }, ...state.ticker].slice(0, 12),
   }
+}
+
+function promptKind(kind: QueueKind): PromptKind | null {
+  if (kind === 'answer') return 'question'
+  if (kind === 'workbook') return 'workbook'
+  return null
+}
+
+function newestOpenPrompt(state: DemoState, kind: QueueKind) {
+  const wanted = promptKind(kind)
+  if (!wanted) return undefined
+  return state.prompts.find((prompt) => prompt.kind === wanted && state.opens.some((row) => row.learner === LEARNER && row.promptId === prompt.id))
+}
+
+export function kindLabel(kind: QueueKind | PromptKind) {
+  if (kind === 'workbook') return 'Workbook'
+  if (kind === 'comment') return 'Comment'
+  return 'Answer'
+}
+
+export function receiversFor(action: DemoAction): DemoPanel[] {
+  if (action.type === 'add-course') return ['portal', 'learner']
+  if (action.type === 'post-note') return ['learner']
+  if (action.type === 'set-prompt') return ['learner']
+  if (action.type === 'write') return ['teacher', 'portal', 'master']
+  if (action.type === 'reply' || action.type === 'reply-latest') return ['learner', 'portal', 'master']
+  return []
 }
 
 export function reduceDemo(state: DemoState, action: DemoAction): DemoState {
   if (action.type === 'reset') return seedDemo()
-  if (action.type === 'add-video') {
-    if (state.videos.some((video) => video.id === 'quiet')) return state
-    return note(state, 'portal', `Video added: ${DEMO_VIDEO}`, {
-      videos: [...state.videos, { id: 'quiet', title: DEMO_VIDEO, thumb: DEMO_THUMB, seconds: DEMO_VIDEO_SECONDS }],
-    })
+  if (action.type === 'add-course') {
+    const title = clean(action.title)
+    if (!title) return state
+    const id = `course-${state.seq + 1}`
+    return withNote(state, `{master} added a course: ${title}.`, {
+      courses: [{ id, title }, ...state.courses],
+    }, [id])
   }
-  if (action.type === 'pause') {
-    if (state.pausedAt === action.at) return state
-    return { ...state, pausedAt: action.at }
+  if (action.type === 'post-note') {
+    const body = clean(action.body)
+    if (!body) return state
+    const id = `note-${state.seq + 1}`
+    return withNote(state, `{admin} posted an announcement.`, {
+      notes: [{ id, body }, ...state.notes],
+    }, [id])
   }
-  if (action.type === 'add-question') {
-    const video = state.videos[0]
-    if (!video) return state
-    if (action.when === 'now') {
-      if (state.questions.some((question) => question.when === 'now')) return state
-      const at = state.pausedAt ?? DEMO_PAUSE_AT
-      return note(state, 'portal', `Question added at ${clock(at)}`, {
-        questions: [...state.questions, { id: 'q-now', videoId: video.id, prompt: DEMO_QUESTION, at, when: 'now' }],
-      })
+  if (action.type === 'set-prompt') {
+    const text = clean(action.text)
+    if (!text) return state
+    const id = `prompt-${state.seq + 1}`
+    const why = action.kind === 'workbook' ? 'Has not written the workbook line yet' : 'Has not answered yet'
+    const label = action.kind === 'workbook' ? 'a workbook prompt' : 'a question'
+    return withNote(state, `{teacher} set ${label}.`, {
+      prompts: [{ id, kind: action.kind, text, who: LEARNER }, ...state.prompts],
+      opens: [{ id: `open-${id}`, learner: LEARNER, promptId: id, why }, ...state.opens],
+    }, [id])
+  }
+  if (action.type === 'write') {
+    const body = clean(action.body)
+    if (!body) return state
+    const prompt = action.kind === 'comment'
+      ? null
+      : state.prompts.find((row) => row.id === action.promptId) || newestOpenPrompt(state, action.kind)
+    if (action.kind !== 'comment' && !prompt) return state
+    const id = `item-${state.seq + 1}`
+    const item: DemoQueueItem = {
+      id,
+      learner: LEARNER,
+      kind: action.kind,
+      prompt: prompt?.text || 'A comment',
+      body,
+      reply: '',
+      done: false,
+      promptId: prompt?.id,
     }
-    const first = state.questions.find((question) => question.when === 'now')
-    if (!first || state.questions.some((question) => question.when === 'later')) return state
-    return note(state, 'portal', 'Question added for two weeks later', {
-      questions: [
-        ...state.questions,
-        {
-          id: 'q-later',
-          videoId: video.id,
-          prompt: DEMO_LATER,
-          at: Math.min(video.seconds - 4, first.at + 58),
-          when: 'later',
-          contingentOn: first.id,
-        },
-      ],
+    const wrote = action.kind === 'comment' ? 'sent a comment' : action.kind === 'workbook' ? 'wrote a workbook line' : 'answered a question'
+    return withNote(state, `{learner} ${wrote}.`, {
+      queue: [item, ...state.queue],
+      opens: prompt ? state.opens.filter((row) => !(row.learner === LEARNER && row.promptId === prompt.id)) : state.opens,
+    }, [id])
+  }
+  if (action.type === 'reply' || action.type === 'reply-latest') {
+    const body = clean(action.body)
+    if (!body) return state
+    const waiting = state.queue.find((row) => {
+      if (row.done) return false
+      if (action.type === 'reply') return row.id === action.id
+      if (row.learner !== LEARNER) return false
+      return action.kind ? row.kind === action.kind : true
     })
-  }
-  if (action.type === 'publish') {
-    if (state.visibility === 'published') return state
-    return note(state, 'portal', `Course published: ${DEMO_COURSE}`, { visibility: 'published' })
-  }
-  if (action.type === 'announce') {
-    if (state.announcements.some((row) => row.body === DEMO_ANNOUNCE)) return state
-    return note(state, 'portal', `Announcement posted: ${DEMO_ANNOUNCE}`, {
-      announcements: [...state.announcements, { id: 'a-circle', body: DEMO_ANNOUNCE }],
-    })
-  }
-  if (action.type === 'toggle') {
-    return note(state, 'portal', 'Feature toggled', {
-      features: { ...state.features, [action.feature]: !state.features[action.feature] },
-    })
-  }
-  if (action.type === 'answer') {
-    const question = state.questions.find((row) => row.when === 'now')
-    if (!question || state.visibility !== 'published') return state
-    if (state.answers.some((row) => row.questionId === question.id)) return state
-    return note(state, 'learner', `{learner} answered: ${DEMO_ANSWER}`, {
-      answers: [...state.answers, { id: 'ans-1', questionId: question.id, body: DEMO_ANSWER }],
-    })
-  }
-  if (action.type === 'reply') {
-    const waiting = state.answers.find((row) => !row.reply)
     if (!waiting) return state
-    return note(state, 'teacher', '{teacher} replied', {
-      answers: state.answers.map((row) => (row.id === waiting.id ? { ...row, reply: DEMO_REPLY } : row)),
-    })
+    return withNote(state, `{teacher} wrote back to ${waiting.learner}.`, {
+      queue: state.queue.map((row) => (row.id === waiting.id ? { ...row, reply: body, done: true } : row)),
+    }, [waiting.id])
   }
   return state
 }
 
-export function runDemoCommand(state: DemoState, id: string): DemoState {
-  switch (id) {
-    case 'add-video':
-      return reduceDemo(state, { type: 'add-video' })
-    case 'pause-moment':
-      return reduceDemo(state, { type: 'pause', at: DEMO_PAUSE_AT })
-    case 'save-question':
-      return reduceDemo(state, { type: 'add-question', when: 'now' })
-    case 'save-later':
-      return reduceDemo(state, { type: 'add-question', when: 'later' })
-    case 'publish':
-      return reduceDemo(state, { type: 'publish' })
-    case 'post-announce':
-      return reduceDemo(state, { type: 'announce' })
-    case 'toggle-live':
-      return reduceDemo(state, { type: 'toggle', feature: 'live' })
-    case 'toggle-workbook':
-      return reduceDemo(state, { type: 'toggle', feature: 'workbook' })
-    case 'send-answer':
-      return reduceDemo(state, { type: 'answer' })
-    case 'send-reply':
-      return reduceDemo(state, { type: 'reply' })
-    default:
-      return state
-  }
+export function playAll(state: DemoState = seedDemo()) {
+  return LOOP_PLAY.reduce((current, step) => (step.action ? reduceDemo(current, step.action) : current), state)
 }
 
-export function commandChangesState(id: string) {
-  return !VIEW_COMMANDS.has(id) && id !== 'unknown'
+export function loopStepPlays(id: string) {
+  const index = LOOP_PLAY.findIndex((step) => step.id === id)
+  const step = LOOP_PLAY[index]
+  if (!step?.action) return index >= 0
+  const before = LOOP_PLAY.slice(0, index).reduce((current, item) => (item.action ? reduceDemo(current, item.action) : current), seedDemo())
+  return reduceDemo(before, step.action) !== before
 }
 
-export function isViewCommand(id: string) {
-  return VIEW_COMMANDS.has(id)
-}
-
-export function ownStats(state: DemoState) {
-  return {
-    courses: 1,
-    videos: state.videos.length,
-    questions: state.questions.length,
-    answers: state.answers.length,
-    published: state.visibility === 'published' ? 1 : 0,
-  }
-}
-
-export function learnerSeesCourse(state: DemoState) {
-  return state.visibility === 'published'
-}
-
-export function teacherQueue(state: DemoState) {
-  return state.answers.filter((row) => !row.reply)
-}
-
-export function workbookEntries(state: DemoState) {
-  if (!state.features.workbook) return []
-  return state.answers.map((row) => ({
-    prompt: state.questions.find((question) => question.id === row.questionId)?.prompt || '',
-    body: row.body,
-    reply: row.reply || '',
+export function stuckRows(state: DemoState) {
+  const waiting = state.queue.filter((row) => !row.done).map((row) => ({
+    id: `stuck-${row.id}`,
+    name: row.learner,
+    why: 'Waiting for a reply',
   }))
+  const open = state.opens
+    .filter((row) => !state.queue.some((item) => item.promptId === row.promptId && item.learner === row.learner))
+    .map((row) => ({ id: row.id, name: row.learner, why: row.why }))
+  return [...waiting, ...open]
 }
 
-export function glowFor(slot: DemoPanel): DemoPanel[] {
-  return [slot]
+export function loopCounts(state: DemoState) {
+  const waiting = state.queue.filter((row) => !row.done).length
+  const done = state.queue.filter((row) => row.done).length
+  return {
+    courses: state.courses.length,
+    notes: state.notes.length,
+    waiting,
+    done,
+    stuck: stuckRows(state).length,
+  }
 }
 
-export function clock(seconds: number) {
-  const safe = Math.max(0, Math.floor(seconds))
-  const minutes = Math.floor(safe / 60)
-  const rest = safe % 60
-  return `${String(minutes).padStart(2, '0')}:${String(rest).padStart(2, '0')}`
+export function learnerPrompts(state: DemoState) {
+  return state.prompts.filter((prompt) => prompt.who === '*' || prompt.who === LEARNER)
+}
+
+export function learnerThread(state: DemoState) {
+  return state.queue.filter((row) => row.learner === LEARNER)
 }
 
 export function demoChannelMessage(state: DemoState) {
@@ -404,137 +518,6 @@ export function demoChannelMessage(state: DemoState) {
 export function readChannelMessage(current: DemoState, message: unknown): DemoState {
   if (!message || typeof message !== 'object') return current
   const row = message as { type?: string; state?: DemoState }
-  if (row.type !== 'replace' || !row.state || !Array.isArray(row.state.library)) return current
+  if (row.type !== 'replace' || !row.state || !Array.isArray(row.state.courses) || !Array.isArray(row.state.queue)) return current
   return row.state
-}
-
-const PRELUDE: Record<string, DemoAction[]> = {
-  library: [],
-  hold: [],
-  upload: [],
-  question: [{ type: 'add-video' }],
-  later: [{ type: 'add-video' }, { type: 'add-question', when: 'now' }],
-  publish: [
-    { type: 'add-video' },
-    { type: 'add-question', when: 'now' },
-    { type: 'add-question', when: 'later' },
-  ],
-  workbook: [
-    { type: 'add-video' },
-    { type: 'pause', at: DEMO_PAUSE_AT },
-    { type: 'add-question', when: 'now' },
-    { type: 'publish' },
-  ],
-  announce: [],
-  feature: [],
-}
-
-export function stageFor(scenarioId: string): DemoState {
-  const folded = (PRELUDE[scenarioId] || []).reduce(reduceDemo, seedDemo())
-  return { ...folded, ticker: [], seq: 0 }
-}
-
-export const DEMO_SCENARIOS: DemoScenario[] = [
-  {
-    id: 'library',
-    title: 'The library is already here',
-    blurb: '{master} has already put the HEARTS courses on {portal}. The community picks what people see.',
-    steps: [
-      { id: 'lib-1', say: 'Open the shared library on the master desk.', target: 'show-library', panel: 'master', view: 'portals' },
-      { id: 'lib-2', say: 'On the portal, these stay read-only. Your own course is separate.', target: 'show-imported', panel: 'portal', view: 'overview' },
-    ],
-  },
-  {
-    id: 'hold',
-    title: 'Hold the course until it is ready',
-    blurb: 'Build it in private. Staff do not see a course while you are still making it.',
-    steps: [
-      { id: 'hold-1', say: 'Open the draft. A quiet hour is not published yet.', target: 'open-content', panel: 'portal', view: 'overview' },
-      { id: 'hold-2', say: 'Look at {learner}’s phone. The course is not there.', target: 'open-home', panel: 'learner', view: 'home' },
-    ],
-  },
-  {
-    id: 'upload',
-    title: 'Upload a video',
-    blurb: 'Drop in a film the way you would from the computer. This one uses a sample thumbnail.',
-    steps: [
-      { id: 'up-1', say: 'Open the sitting.', target: 'open-content', panel: 'portal', view: 'overview' },
-      { id: 'up-2', say: 'Add the sample video. The thumbnail stands in for the upload.', target: 'add-video', panel: 'portal', view: 'content' },
-    ],
-  },
-  {
-    id: 'question',
-    title: 'A question where you pause',
-    blurb: 'Play the film, stop it, and the question sits on that moment.',
-    steps: [
-      { id: 'q-1', say: 'Open the film.', target: 'open-question', panel: 'portal', view: 'overview' },
-      { id: 'q-2', say: 'Pause at 1:04. The timestamp fills in from the pause.', target: 'pause-moment', panel: 'portal', view: 'question' },
-      { id: 'q-3', say: 'Save the question: name three things you will carry from this sitting.', target: 'save-question', panel: 'portal', view: 'question' },
-    ],
-  },
-  {
-    id: 'later',
-    title: 'A question two weeks later',
-    blurb: 'The second question waits, so you can show the training made a difference.',
-    steps: [
-      { id: 'later-1', say: 'Save the later question. It unlocks two weeks after the first answer.', target: 'save-later', panel: 'portal', view: 'question' },
-    ],
-  },
-  {
-    id: 'publish',
-    title: 'Publish, and the phone shows it',
-    blurb: 'When the course is ready, publish it. {learner}’s phone gains it straight away.',
-    steps: [
-      { id: 'pub-1', say: 'Publish A quiet hour.', target: 'publish', panel: 'portal', view: 'content' },
-      { id: 'pub-2', say: 'Open it on {learner}’s phone.', target: 'open-course', panel: 'learner', view: 'home' },
-    ],
-  },
-  {
-    id: 'workbook',
-    title: 'Follow the answer into the workbook',
-    blurb: '{learner} answers, {teacher}’s queue lights up, and the reply lands in the workbook.',
-    steps: [
-      { id: 'wb-1', say: 'Open the film on {learner}’s phone.', target: 'open-player', panel: 'learner', view: 'course' },
-      { id: 'wb-2', say: '{learner} sends the answer.', target: 'send-answer', panel: 'learner', view: 'player' },
-      { id: 'wb-3', say: 'Open {teacher}’s queue. {learner} answered.', target: 'open-queue', panel: 'teacher', view: 'queue' },
-      { id: 'wb-4', say: '{teacher} replies.', target: 'send-reply', panel: 'teacher', view: 'queue' },
-      { id: 'wb-5', say: 'Open {learner}’s workbook.', target: 'open-workbook', panel: 'learner', view: 'player' },
-    ],
-  },
-  {
-    id: 'announce',
-    title: 'Post an announcement',
-    blurb: 'A note from {admin} shows on {learner}’s home.',
-    steps: [
-      { id: 'an-1', say: 'Open announcements.', target: 'open-announce', panel: 'portal', view: 'overview' },
-      { id: 'an-2', say: 'Post the circle note.', target: 'post-announce', panel: 'portal', view: 'announce' },
-      { id: 'an-3', say: 'Look at the phone home.', target: 'open-home', panel: 'learner', view: 'home' },
-    ],
-  },
-  {
-    id: 'feature',
-    title: 'Switch a feature on',
-    blurb: 'Go live is a portal switch. The phone follows it.',
-    steps: [
-      { id: 'ft-1', say: 'Open features.', target: 'open-features', panel: 'portal', view: 'overview' },
-      { id: 'ft-2', say: 'Turn Go live on.', target: 'toggle-live', panel: 'portal', view: 'features' },
-      { id: 'ft-3', say: 'The phone home shows the circle is live.', target: 'open-home', panel: 'learner', view: 'home' },
-    ],
-  },
-]
-
-export function scenarioById(id: string) {
-  return DEMO_SCENARIOS.find((scenario) => scenario.id === id) || null
-}
-
-/** A click-through can run from its prelude without a dead button. */
-export function scenarioPlays(id: string) {
-  const scenario = scenarioById(id)
-  if (!scenario) return false
-  let state = stageFor(id)
-  for (const step of scenario.steps) {
-    if (!isViewCommand(step.target) && runDemoCommand(state, step.target) === state) return false
-    state = runDemoCommand(state, step.target)
-  }
-  return true
 }
