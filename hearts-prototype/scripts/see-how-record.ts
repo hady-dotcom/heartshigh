@@ -205,6 +205,13 @@ async function runStep(page: Page, step: SeeHowStep, say: (text: string) => Prom
     await page.waitForTimeout(HOLD_MS)
     return
   }
+  const wanted = page.locator(step.selector).first()
+  const appeared = await wanted.waitFor({ state: 'attached', timeout: step.optional ? 1200 : 8000 }).then(() => true).catch(() => false)
+  if (!appeared) {
+    if (!step.optional) throw new Error(`Missing ${step.selector}`)
+    await page.waitForTimeout(HOLD_MS)
+    return
+  }
   const loc = await pointAt(page, step.selector)
   if (!loc) {
     if (!step.optional) throw new Error(`Missing ${step.selector}`)
@@ -213,10 +220,17 @@ async function runStep(page: Page, step: SeeHowStep, say: (text: string) => Prom
   }
   await page.waitForTimeout(280)
   try {
-    if (step.op === 'click' || step.op === 'check') {
-      await loc.click({ timeout: 8000 })
+    if (step.op === 'click' && step.selector?.includes('more-board')) {
+      let opened = false
+      for (let attempt = 0; attempt < 4 && !opened; attempt++) {
+        await loc.click({ timeout: 4000, noWaitAfter: true }).catch(() => {})
+        opened = await page.locator('[data-testid=learn-more], [data-testid=feed-board]').first().waitFor({ state: 'visible', timeout: 1500 }).then(() => true).catch(() => false)
+      }
+      if (!opened && !step.optional) throw new Error('The More tab did not open')
+    } else if (step.op === 'click' || step.op === 'check') {
+      await loc.click({ timeout: 8_000, noWaitAfter: true })
     } else if (step.op === 'fill') {
-      await loc.click({ timeout: 8000 })
+      await loc.click({ timeout: 25_000 })
       await loc.fill('')
       await loc.pressSequentially(step.value || '', { delay: 28 })
     } else if (step.op === 'select') {
@@ -226,7 +240,17 @@ async function runStep(page: Page, step: SeeHowStep, say: (text: string) => Prom
         const next = options.find((option) => option.value && option.value !== select.value) || options.find((option) => option.value)
         return next?.value || ''
       })
-      if (value) await loc.selectOption(value)
+      if (value) {
+        const picked = await loc.selectOption(value, { timeout: 3000 }).then(() => true).catch(() => false)
+        if (!picked) {
+          await loc.evaluate((el, next) => {
+            const select = el as HTMLSelectElement
+            select.value = next
+            select.dispatchEvent(new Event('input', { bubbles: true }))
+            select.dispatchEvent(new Event('change', { bubbles: true }))
+          }, value)
+        }
+      }
     }
   } catch (error) {
     if (!step.optional) throw error
@@ -238,7 +262,8 @@ async function runStep(page: Page, step: SeeHowStep, say: (text: string) => Prom
 
 async function hrefOf(page: Page, selector: string) {
   const loc = page.locator(selector).first()
-  if (!(await loc.count())) return null
+  await loc.waitFor({ state: 'attached', timeout: 8000 }).catch(() => {})
+  if (!(await loc.count().catch(() => 0))) return null
   const href = await loc.getAttribute('href')
   return href || null
 }
@@ -256,7 +281,7 @@ async function discoverPath(browser: Browser, spec: SeeHowPageSpec, storage?: st
   try {
     if (kind === 'course') {
       await page.goto('/p/east-london/course/1')
-      return hrefOf(page, '[data-testid=start-part]')
+      return await hrefOf(page, '[data-testid=start-part]')
     }
     if (kind === 'gather-detail' || kind === 'gather-reflect' || kind === 'gather-door') {
       await page.goto('/p/east-london/gather')
@@ -265,33 +290,34 @@ async function discoverPath(browser: Browser, spec: SeeHowPageSpec, storage?: st
       if (kind === 'gather-detail') return open
       if (kind === 'gather-reflect') return open.replace(/\/?$/, '') + '/reflect'
       await page.goto(open)
-      return hrefOf(page, '[data-testid=door-link]')
+      return await hrefOf(page, '[data-testid=door-link]')
     }
     if (kind === 'live') {
       await page.goto('/p/east-london')
-      return hrefOf(page, 'a[href*="/live/"]')
+      return await hrefOf(page, 'a[href*="/live/"]')
     }
     if (kind === 'mission') {
       await page.goto('/p/east-london')
-      return hrefOf(page, 'a[href*="/mission/"]')
+      return await hrefOf(page, 'a[href*="/mission/"]')
     }
     if (kind === 'compass-learner') {
       await page.goto('/p/east-london/admin/compass')
-      return hrefOf(page, '[data-testid=compass-learner]')
+      return await hrefOf(page, '[data-testid=compass-learner]')
     }
     if (kind === 'ai-step') {
       await page.goto('/master/ai')
-      return hrefOf(page, '[data-testid=ai-step]')
+      return await hrefOf(page, '[data-testid=ai-step]')
     }
     if (kind === 'tier') {
       await page.goto('/master/tiers')
-      return hrefOf(page, '[data-testid=tier-open]')
+      return await hrefOf(page, '[data-testid=tier-open]')
     }
     return spec.path
-  } catch {
+  } catch (error) {
+    console.log(`discover ${spec.id}: ${error instanceof Error ? error.message.split('\n')[0] : error}`)
     return null
   } finally {
-    await context.close()
+    await context.close().catch(() => {})
   }
 }
 
@@ -403,8 +429,15 @@ async function main() {
 
   const code = learnerCode()
   const pages = SEE_HOW_PAGES.filter((page) => !only.size || only.has(page.id))
-  const browser = await chromium.launch({ headless: true })
+  const launch = () => chromium.launch({ headless: true, args: ['--disable-dev-shm-usage'] })
+  let browser = await launch()
   const storage = new Map<string, string>()
+  const connected = async () => {
+    if (browser.isConnected()) return browser
+    console.log('Browser closed. Opening another.')
+    browser = await launch()
+    return browser
+  }
   const manifest: SeeHowManifest = only.size
     ? JSON.parse(readFileSync(path.join(ROOT, 'src/lib/see-how-manifest.json'), 'utf8'))
     : { pages: {}, keys: {}, skipped: {} }
@@ -416,13 +449,26 @@ async function main() {
       const role = spec.role
       if (role !== 'anon' && !storage.has(role)) {
         console.log(`Signing in ${role}`)
-        storage.set(role, await signIn(browser, role))
+        storage.set(role, await signIn(await connected(), role))
       }
       const state = role === 'anon' ? undefined : storage.get(role)
       let target = spec.path.replace('{{learnerCode}}', encodeURIComponent(code))
       if (spec.discover) {
-        const found = await discoverPath(browser, spec, state)
+        let found: string | null = null
+        try {
+          found = await discoverPath(await connected(), spec, state)
+        } catch (error) {
+          const message = error instanceof Error ? error.message.split('\n')[0] : String(error)
+          failures.push(`${spec.id}: ${message}`)
+          console.log(`FAIL ${spec.id}: ${message}`)
+          continue
+        }
         if (!found) {
+          if (!spec.soft) {
+            failures.push(`${spec.id}: could not find the screen`)
+            console.log(`FAIL ${spec.id}: could not find the screen`)
+            continue
+          }
           const reason = `The seeded demo has no ${spec.title} screen to open.`
           for (const key of spec.keys) {
             delete manifest.keys[key]
@@ -437,7 +483,7 @@ async function main() {
       }
       process.stdout.write(`film ${spec.id} … `)
       try {
-        const filmed = await film(browser, spec, state, target)
+        const filmed = await film(await connected(), spec, state, target)
         if (filmed.seconds > 32) throw new Error(`Video is ${filmed.seconds}s, over 30s.`)
         manifest.pages[spec.id] = {
           title: spec.title,

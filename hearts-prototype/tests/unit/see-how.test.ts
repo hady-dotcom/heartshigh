@@ -52,14 +52,26 @@ test('help keys are filmed once, or listed as skipped', () => {
   for (const key of literals(joined, /\bseeHowKey="([^"]+)"/g)) expectKey(key)
 
   for (const source of sources) {
-    for (const match of source.matchAll(/<(?:AdminFrame|MasterFrame|DeskFrame|Frame|AppFrame)\b([^>]*?)>/gs)) {
-      const blob = match[1]
+    const opener = /<(?:AdminFrame|MasterFrame|DeskFrame|Frame|AppFrame)\b/g
+    for (const match of source.matchAll(opener)) {
+      let depth = 0
+      let blob = ''
+      const from = (match.index ?? 0) + match[0].length
+      let end = from
+      for (; end < source.length; end++) {
+        const ch = source[end]
+        if (ch === '{') depth++
+        else if (ch === '}') depth = Math.max(0, depth - 1)
+        else if (ch === '>' && depth === 0) break
+        blob += ch
+      }
       const testId = blob.match(/\btestId="([^"]+)"/)?.[1]
       const active = blob.match(/\bactive="([^"]+)"/)?.[1]
-      if (match[0].startsWith('<AppFrame') && testId) expectKey(testId)
-      if (!testId && !active) continue
-      const topic = testId || active || ''
-      if (pageHelp(active, testId)) expectKey(topic)
+      if (match[0] === '<AppFrame' && testId) expectKey(testId)
+      if (/\btestId=\{/.test(blob)) continue
+      if (testId) {
+        if (pageHelp(active, testId)) expectKey(testId)
+      } else if (active && pageHelp(active)) expectKey(active)
     }
   }
 

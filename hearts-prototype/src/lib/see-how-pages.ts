@@ -154,8 +154,7 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     ready: '[data-testid=home]',
     steps: [
       hold('Home is where you come back. A note from your mosque sits at the top when there is one.'),
-      click('Tap a talk you already started, if one is waiting.', '[data-testid=continue-row]', true),
-      click('Or tap Watch today’s clips for a short film.', '[data-testid=open-feed]'),
+      click('Tap Watch today’s clips for a short film.', '[data-testid=open-feed]'),
     ],
   }),
   clip({
@@ -168,6 +167,7 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     ready: '[data-testid=journey][data-phase=feed]',
     steps: [
       hold('The short film sits at the top. The words being said sit underneath.'),
+      click('Pull the More tab up. Like, Save and Ready for more? sit under the words.', '[data-testid=more-board]', true, '[data-testid=feed-board]'),
       click('Tap the heart to keep this clip.', '[data-testid=fave]', true),
       click('Tap Ready for more? when you want the longer cut.', '[data-testid=learn-more]', true),
     ],
@@ -181,8 +181,10 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     viewport: phone,
     ready: '[data-testid=journey][data-phase=feed]',
     steps: [
-      click('From a short clip, tap Ready for more?.', '[data-testid=learn-more]', false, '[data-testid=journey][data-mode=appetiser]'),
-      hold('This is the longer cut of the same talk. Tap Back when you want the short clips again.'),
+      hold('A short clip is playing. The longer cut is under More.'),
+      click('Pull the More tab up.', '[data-testid=more-board]', false, '[data-testid=learn-more]'),
+      click('Tap Ready for more?. This is the longer cut of the same talk.', '[data-testid=learn-more]', false, '[data-testid=journey][data-mode=appetiser]'),
+      hold('Tap Back when you want the short clips again.'),
     ],
   }),
   clip({
@@ -432,7 +434,6 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     viewport: phone,
     ready: '[data-testid=plan]',
     steps: [
-      click('Open Make a new plan if it is folded.', '[data-testid=make-new-plan]', true),
       pick('Pick a course. The talks stay in order.', '[data-testid=schedule-course]'),
       check('Tick the days that suit you. Leave a day unticked and nothing lands on it.', '[data-testid=weekday-1]', true),
       click('Tap the button to put the talks on your week. It is a guide. You can still watch at your own pace.', '[data-testid=schedule-submit]'),
@@ -646,7 +647,7 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
   clip({
     id: 'feedback-desk',
     title: 'Feedback',
-    keys: ['feedback-desk', 'export', 'filters', 'anonymise', 'ai-summary', 'weak-questions'],
+    keys: ['feedback-desk', 'feedback-denied', 'export', 'filters', 'anonymise', 'ai-summary', 'weak-questions'],
     path: '/p/east-london/admin/feedback',
     role: 'teacher',
     viewport: desk,
@@ -1014,7 +1015,7 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     ready: '[data-testid=wizard]',
     steps: [
       fill('Three short steps. First, a line of welcome.', '[data-testid=wizard-welcome]', 'Short films, a few minutes a day, and a circle that meets in person.'),
-      click('Tap Next. You can run this again from Settings. Nothing here deletes what you already made.', 'button[type=submit]'),
+      click('Tap Next. You can run this again from Settings. Nothing here deletes what you already made.', '[data-testid=wizard] button[type=submit]'),
     ],
   }),
   clip({
@@ -1199,14 +1200,14 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
   clip({
     id: 'master-simulator',
     title: 'Simulator',
-    keys: ['master-simulator'],
+    keys: ['master-simulator', 'simulator'],
     path: '/master/simulator',
     role: 'master',
     viewport: desk,
     ready: '[data-testid=master-simulator]',
     steps: [
       hold('Walk the opening as a newcomer would, without making an account. Nothing here is saved against a real person.'),
-      pick('Pick a tap for a scene and see what the phone would work out.', '[data-testid=sim-extra]', true),
+      pick('Pick a tap for a scene and see what the phone would work out.', 'select[data-testid^="sim-"]'),
     ],
   }),
   clip({
