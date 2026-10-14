@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
 import { portalIdOf } from '@/lib/ids'
 
 /** Desk actions on a learner account. Move is master-only. */
@@ -57,8 +58,8 @@ export function planActionRefusal(actor: ActorScope, planPortalId: number | null
 
 export function diaryDeleteRefusal(actor: ActorScope, entryPortalId: number | null): string | null {
   if (actor.role === 'master') return null
-  if (actor.role !== 'portal-admin') return 'Only a portal admin or the master desk can delete a diary entry.'
-  if (!actor.portalId || actor.portalId !== entryPortalId) return 'That diary is in another portal.'
+  if (actor.role !== 'portal-admin') return `Only a portal admin or the master desk can delete a ${JOURNAL_LABEL.one.toLowerCase()} entry.`
+  if (!actor.portalId || actor.portalId !== entryPortalId) return `That ${JOURNAL_LABEL.one.toLowerCase()} is in another portal.`
   return null
 }
 

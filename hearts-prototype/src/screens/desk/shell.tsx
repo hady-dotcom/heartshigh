@@ -11,6 +11,7 @@ import { deskAppHref } from '@/lib/landing'
 import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { deskLead, type DeskPrimary } from '@/lib/desk-lead'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
 import { deskNavAllowed, type FeatureSource } from '@/lib/features'
 import { rows, shortDate, str } from '../common'
 import { DeskNav } from './desk-nav'
@@ -22,7 +23,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
   const keep = (items: NavItem[]) => items.filter((item) => deskNavAllowed(portal, item.key))
   const teach: NavItem[] = keep([
     { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
-    { key: 'diaries', label: 'Diaries', href: `${base}/admin/diaries`, icon: <BookIcon /> },
+    { key: 'diaries', label: JOURNAL_LABEL.many, href: `${base}/admin/diaries`, icon: <BookIcon /> },
     { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
     { key: 'compass', label: 'Compass', href: `${base}/admin/compass`, icon: <HeartIcon /> },
     { key: 'plans', label: 'Study plans', href: `${base}/admin/plans`, icon: <CalendarIcon /> },
@@ -42,7 +43,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
       items: keep([
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
         { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
-        { key: 'diaries', label: 'Diaries', href: `${base}/admin/diaries`, icon: <BookIcon /> },
+        { key: 'diaries', label: JOURNAL_LABEL.many, href: `${base}/admin/diaries`, icon: <BookIcon /> },
         { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
         { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
         { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
@@ -91,7 +92,7 @@ export function masterNav(): NavGroup[] {
       items: [
         { key: 'portals', label: 'Portals', href: '/master', icon: <GlobeIcon /> },
         { key: 'learners', label: 'Learners', href: '/master/learners', icon: <PeopleIcon /> },
-        { key: 'diaries', label: 'Diaries', href: '/master/diaries', icon: <BookIcon /> },
+        { key: 'diaries', label: JOURNAL_LABEL.many, href: '/master/diaries', icon: <BookIcon /> },
         { key: 'codes', label: 'Codes', href: '/master/codes', icon: <KeyIcon /> },
         { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
         { key: 'announcements', label: 'Announcements', href: '/master/announcements', icon: <BellIcon /> },

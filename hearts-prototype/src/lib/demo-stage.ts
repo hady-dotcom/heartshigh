@@ -1,3 +1,5 @@
+import { JOURNAL_LABEL } from './journal-copy'
+
 /**
  * In-browser demo stage. Seeded sample data only.
  * Nothing here opens a database, a session, or a real account.
@@ -168,7 +170,7 @@ export type DemoActivity = { id: string; text: string }
 export type DemoTicker = { id: number; text: string }
 export type DemoAlert = { id: string; to: DemoPanel; text: string }
 export type DemoEvent = { id: string; kind: 'calendar' | 'gathering' | 'night'; title: string }
-export type DemoLine = { id: string; text: string }
+export type DemoLine = { id: string; text: string; at?: string }
 export type DemoSafety = { id: string; body: string; reply: string }
 
 export type DemoState = {
@@ -389,7 +391,7 @@ export function seedDemo(): DemoState {
     scenes: [{ id: 'scene-seed', text: 'Start with one still minute.' }],
     joining: [{ id: 'join-seed', text: 'What brought you here?' }],
     review: [{ id: 'rev-seed', text: 'Which name stayed with you?', approved: false }],
-    diary: [{ id: 'diary-seed', text: 'I sat for ten minutes on Sunday.' }],
+    diary: [{ id: 'diary-seed', text: 'I sat for ten minutes on Sunday.', at: '2026-10-11T09:00:00.000Z' }],
     safety: [{ id: 'safe-seed', body: 'I would like someone to check on me.', reply: '' }],
     compass: [{ id: 'compass-seed', text: 'Steady' }],
     liveTitle: '',
@@ -578,7 +580,8 @@ export function reduceDemo(state: DemoState, action: DemoAction): DemoState {
     const text = clean(action.text)
     if (!text) return state
     const id = `diary-${state.seq + 1}`
-    return withNote(state, `{learner} wrote in the diary.`, { diary: [{ id, text }, ...state.diary] }, [id], ['teacher', 'portal', 'master'])
+    const at = new Date().toISOString()
+    return withNote(state, `{learner} wrote in the ${JOURNAL_LABEL.one.toLowerCase()}.`, { diary: [{ id, text, at }, ...state.diary] }, [id], ['teacher', 'portal', 'master'])
   }
   if (action.type === 'add-safety') {
     const text = clean(action.text)
@@ -739,7 +742,7 @@ const event = (kind: DemoEvent['kind']) => (text: string): DemoAction => ({ type
 export const COVERAGE: CoverageRow[] = [
   { role: 'master', group: 'People', key: 'portals', nav: 'Portals', creates: 'Looks at this place', down: 'Nothing new is sent', back: 'Course, waiting, done and stuck numbers move when people write', status: 'shown', reason: 'This demo is one place. The page shows its live numbers.' },
   { role: 'master', group: 'People', key: 'learners', nav: 'Learners', creates: 'Pause a learner', down: 'The phone says the place is paused. The admin sees it too.', back: 'Stuck and waiting numbers stay on this page', status: 'works', reason: '', sample: 'paused', check: 'paused', make: () => ({ type: 'pause-learner' }) },
-  { role: 'master', group: 'People', key: 'diaries', nav: 'Diaries', creates: 'Reads diary lines', down: 'Nothing new is sent', back: 'A line the learner writes on the phone shows here', status: 'shown', reason: 'The learner writes the diary. This page reads it.' },
+  { role: 'master', group: 'People', key: 'diaries', nav: JOURNAL_LABEL.many, creates: `Reads ${JOURNAL_LABEL.one.toLowerCase()} lines`, down: 'Nothing new is sent', back: 'A line the learner writes on the phone shows here', status: 'shown', reason: `The learner writes the ${JOURNAL_LABEL.one.toLowerCase()}. This page reads it.` },
   { role: 'master', group: 'People', key: 'codes', nav: 'Codes', creates: 'A join code', down: 'The admin and the phone show the code', back: 'The same code is listed for the admin', status: 'works', reason: '', sample: 'NOOR-NEW', make: (text) => ({ type: 'add-code', text }) },
   { role: 'master', group: 'People', key: 'safety', nav: 'Care and safety', creates: 'A reply that someone will look today', down: 'The phone shows that reply', back: 'The learner’s ask is already on this page', status: 'works', reason: '', sample: 'Someone will look today', make: (text) => ({ type: 'answer-safety', text }) },
   { role: 'master', group: 'People', key: 'announcements', nav: 'Announcements', creates: 'An announcement', down: 'The phone and the admin show it', back: 'Nothing comes back from an announcement', status: 'works', reason: '', sample: 'Master note for tonight', make: note('master') },
@@ -771,7 +774,7 @@ export const COVERAGE: CoverageRow[] = [
 
   { role: 'portal', group: 'People', key: 'overview', nav: 'Overview', creates: 'Reads the place', down: 'Nothing new is sent', back: 'Activity, who is stuck, and the numbers stay on this page', status: 'shown', reason: 'Overview reads who is here and what just happened.' },
   { role: 'portal', group: 'People', key: 'teach', nav: 'Learners', creates: 'Pause a learner', down: 'The phone says the place is paused', back: 'Who is stuck stays on this page', status: 'works', reason: '', sample: 'paused', check: 'paused', make: () => ({ type: 'pause-learner' }) },
-  { role: 'portal', group: 'People', key: 'diaries', nav: 'Diaries', creates: 'Reads diary lines', down: 'Nothing new is sent', back: 'A line the learner writes shows here', status: 'shown', reason: 'The learner writes the diary. This page reads it.' },
+  { role: 'portal', group: 'People', key: 'diaries', nav: JOURNAL_LABEL.many, creates: `Reads ${JOURNAL_LABEL.one.toLowerCase()} lines`, down: 'Nothing new is sent', back: 'A line the learner writes shows here', status: 'shown', reason: `The learner writes the ${JOURNAL_LABEL.one.toLowerCase()}. This page reads it.` },
   { role: 'portal', group: 'People', key: 'access', nav: 'Codes', creates: 'A join code', down: 'The phone and the master show the code', back: 'The same code is on the master desk', status: 'works', reason: '', sample: 'DOOR-4', make: (text) => ({ type: 'add-code', text }) },
   { role: 'portal', group: 'People', key: 'feedback', nav: 'Feedback', creates: 'A reply', down: 'The phone shows the reply and the note is marked done', back: 'The queue is the learner’s answers and comments', status: 'works', reason: '', sample: 'Yes, Friday.', make: () => ({ type: 'reply', id: 'wait-maryam', body: 'Yes, Friday.' }) },
   { role: 'portal', group: 'People', key: 'safety', nav: 'Care and safety', creates: 'A reply that someone will look today', down: 'The phone shows that reply', back: 'The learner’s ask shows here', status: 'works', reason: '', sample: 'We will sit with you today', make: (text) => ({ type: 'answer-safety', text }) },
@@ -798,7 +801,7 @@ export const COVERAGE: CoverageRow[] = [
 
   { role: 'teacher', group: 'Teaching', key: 'overview', nav: 'Overview', creates: 'Reads the class', down: 'Nothing new is sent', back: 'Waiting and done counts stay on this page', status: 'shown', reason: 'Overview reads who is waiting. Setting a question is on Feedback.' },
   { role: 'teacher', group: 'Teaching', key: 'teach', nav: 'Learners', creates: 'Reads who is waiting', down: 'Nothing new is sent', back: 'Who is stuck, and the reply queue, stay in view', status: 'shown', reason: 'The teacher sees who is waiting. A pause is done by the admin.' },
-  { role: 'teacher', group: 'Teaching', key: 'diaries', nav: 'Diaries', creates: 'Reads diary lines', down: 'Nothing new is sent', back: 'A line the learner writes shows here', status: 'shown', reason: 'The learner writes the diary. This page reads it.' },
+  { role: 'teacher', group: 'Teaching', key: 'diaries', nav: JOURNAL_LABEL.many, creates: `Reads ${JOURNAL_LABEL.one.toLowerCase()} lines`, down: 'Nothing new is sent', back: 'A line the learner writes shows here', status: 'shown', reason: `The learner writes the ${JOURNAL_LABEL.one.toLowerCase()}. This page reads it.` },
   { role: 'teacher', group: 'Teaching', key: 'feedback', nav: 'Feedback', creates: 'A question, a workbook prompt, or a reply', down: 'The phone shows the question and, later, the reply', back: 'Answers, workbook lines and comments land in the reply queue', status: 'works', reason: '', sample: 'What will you keep?', make: ask('teacher') },
   { role: 'teacher', group: 'Teaching', key: 'compass', nav: 'Compass', creates: 'Reads feelings', down: 'Nothing new is sent', back: 'A feeling the learner logs shows here', status: 'shown', reason: 'The learner logs the feeling. This page reads it.' },
   { role: 'teacher', group: 'Teaching', key: 'plans', nav: 'Study plans', creates: 'A line on the study plan', down: 'The phone shows today’s line', back: 'Nothing until the learner writes about it', status: 'works', reason: '', sample: 'Write one line before sleep', make: (text) => ({ type: 'add-plan', text }) },
