@@ -5,18 +5,15 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import {
   LOOP_PLAY,
   fillCast,
-  receiversFor,
   reduceDemo,
   seedDemo,
   tidyCast,
   type DemoAction,
   type DemoCast,
   type DemoPanel,
-  type PromptKind,
-  type QueueKind,
 } from '@/lib/demo-stage'
 import { CastScreen } from './cast'
-import { Board } from './panels'
+import { RealScreen } from './frames'
 import { DemoProvider, useDemo } from './store'
 
 const PANELS: { slot: DemoPanel; phone?: boolean }[] = [
@@ -130,15 +127,15 @@ function Strip({ cast, slot, setCast }: { cast: DemoCast; slot: DemoPanel; setCa
   )
 }
 
-export function DemoStage() {
+export function DemoStage({ sources }: { sources: Record<DemoPanel, string> }) {
   return (
     <DemoProvider>
-      <Stage />
+      <Stage sources={sources} />
     </DemoProvider>
   )
 }
 
-function Stage() {
+function Stage({ sources }: { sources: Record<DemoPanel, string> }) {
   const { state, cast, setCast, glow, replace, pulse } = useDemo()
   const stateRef = useRef(state)
   stateRef.current = state
@@ -154,7 +151,6 @@ function Stage() {
   const [spot, setSpot] = useState<Spot | null>(null)
   const [index, setIndex] = useState(-1)
   const [status, setStatus] = useState<'idle' | 'playing' | 'done'>('idle')
-  const [homeTick, setHomeTick] = useState(0)
   const playing = useRef(false)
   const timer = useRef(0)
   const step = index >= 0 ? LOOP_PLAY[index] : null
@@ -166,6 +162,61 @@ function Stage() {
     const id = window.setTimeout(() => setReveal(false), 1100)
     return () => window.clearTimeout(id)
   }, [reveal])
+
+  useEffect(() => {
+    if (!introduced) return
+    const leave = () => {
+      setSpot(null)
+      document.querySelectorAll<HTMLIFrameElement>('.demo-frame-clip iframe').forEach((frame) => {
+        if (document.activeElement === frame) frame.blur()
+      })
+    }
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') leave()
+    }
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target
+      if (!(target instanceof Element)) return
+      if (target.closest('.demo-cell, .demo-cast-layer')) return
+      leave()
+    }
+    const hooked = new Set<HTMLIFrameElement>()
+    const hookFrame = (frame: HTMLIFrameElement) => {
+      try {
+        frame.contentWindow?.removeEventListener('keydown', onKey)
+        frame.contentWindow?.addEventListener('keydown', onKey)
+        hooked.add(frame)
+      } catch {
+        /* The frame is not ready yet. */
+      }
+    }
+    const scan = () => {
+      document.querySelectorAll<HTMLIFrameElement>('.demo-frame-clip iframe').forEach(hookFrame)
+    }
+    const onLoad = (event: Event) => {
+      const target = event.target
+      if (target instanceof HTMLIFrameElement && target.closest('.demo-frame-clip')) hookFrame(target)
+    }
+    const watch = new MutationObserver(scan)
+    watch.observe(document.body, { childList: true, subtree: true })
+    window.addEventListener('keydown', onKey)
+    window.addEventListener('pointerdown', onPointerDown)
+    document.addEventListener('load', onLoad, true)
+    scan()
+    return () => {
+      watch.disconnect()
+      window.removeEventListener('keydown', onKey)
+      window.removeEventListener('pointerdown', onPointerDown)
+      document.removeEventListener('load', onLoad, true)
+      hooked.forEach((frame) => {
+        try {
+          frame.contentWindow?.removeEventListener('keydown', onKey)
+        } catch {
+          /* The frame has gone. */
+        }
+      })
+    }
+  }, [introduced])
 
   useEffect(() => () => {
     playing.current = false
@@ -249,7 +300,6 @@ function Stage() {
     setIndex(0)
     playing.current = true
     setStatus('playing')
-    setHomeTick((tick) => tick + 1)
     timer.current = window.setTimeout(() => arm(0), 350)
   }
 
@@ -261,24 +311,12 @@ function Stage() {
     land(next.action, next.actor, next.receivers, next.anchor)
   }
 
-  function apply(action: DemoAction, actor: DemoPanel) {
-    stopPlay()
-    const receivers = receiversFor(action)
-    const next = reduceDemo(stateRef.current, action)
-    if (next === stateRef.current) return
-    stateRef.current = next
-    replace(next, receivers)
-    setSpot({ actor, receivers })
-    setIndex(-1)
-  }
-
   function reset() {
     stopPlay()
     replace(seedDemo())
     setSpot(null)
     setIndex(-1)
     setStatus('idle')
-    setHomeTick((tick) => tick + 1)
   }
 
   function showCast(next: DemoCast) {
@@ -330,34 +368,11 @@ function Stage() {
               >
                 <Strip cast={cast} slot={panel.slot} setCast={setCast} />
                 <div className="demo-view">
-                  {panel.phone ? (
-                    <div className="demo-phone" data-testid="demo-phone">
-                      <div className="demo-bezel">
-                        <div className="demo-notch" />
-                        <Board
-                          only="learner"
-                          homeTick={homeTick}
-                          onRun={(action) => apply(action, 'learner')}
-                          onCourse={(title) => apply({ type: 'add-course', title }, 'master')}
-                          onNote={(body) => apply({ type: 'post-note', body }, 'portal')}
-                          onPrompt={(kind, text) => apply({ type: 'set-prompt', kind, text }, 'teacher')}
-                          onWrite={(kind, body, promptId) => apply({ type: 'write', kind, body, promptId }, 'learner')}
-                          onReply={(id, body) => apply({ type: 'reply', id, body }, 'teacher')}
-                        />
-                      </div>
-                    </div>
-                  ) : (
-                    <Board
-                      only={panel.slot}
-                      homeTick={homeTick}
-                      onRun={(action) => apply(action, panel.slot)}
-                      onCourse={(title) => apply({ type: 'add-course', title }, 'master')}
-                      onNote={(body) => apply({ type: 'post-note', body }, 'portal')}
-                      onPrompt={(kind: PromptKind, text: string) => apply({ type: 'set-prompt', kind, text }, 'teacher')}
-                      onWrite={(kind: QueueKind, body: string, promptId?: string) => apply({ type: 'write', kind, body, promptId }, 'learner')}
-                      onReply={(id, body) => apply({ type: 'reply', id, body }, 'teacher')}
-                    />
-                  )}
+                  <RealScreen
+                    src={sources[panel.slot]}
+                    panel={panel.slot}
+                    testId={panel.phone ? 'demo-learner-frame' : `demo-${panel.slot}-frame`}
+                  />
                 </div>
               </section>
             </div>

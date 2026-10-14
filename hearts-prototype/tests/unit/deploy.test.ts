@@ -106,8 +106,9 @@ test('a platform header is used instead of a spoofed X-Forwarded-For', () => {
 test('security headers are set, and they do not trust a frame from another site', () => {
   const headers = Object.fromEntries(securityHeaders.map((header) => [header.key, header.value]))
   assert.equal(headers['X-Content-Type-Options'], 'nosniff')
-  assert.equal(headers['X-Frame-Options'], 'DENY')
-  assert.match(headers['Content-Security-Policy'], /frame-ancestors 'none'/)
+  assert.equal(headers['X-Frame-Options'], 'SAMEORIGIN')
+  assert.match(headers['Content-Security-Policy'], /frame-ancestors 'self'/)
+  assert.doesNotMatch(headers['Content-Security-Policy'], /frame-ancestors 'none'/)
   assert.match(headers['Content-Security-Policy'], /youtube-nocookie/)
   assert.match(headers['Content-Security-Policy'], /challenges\.cloudflare\.com/)
   assert.match(headers['Strict-Transport-Security'], /max-age=/)

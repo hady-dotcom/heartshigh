@@ -157,7 +157,9 @@
 
 .demo-board.is-focusing .demo-cell { transition: opacity 0.35s ease; }
 .demo-board.is-focusing .demo-cell.is-dim { opacity: 0.34; }
-.demo-board.is-focusing .demo-cell.is-live { opacity: 1; z-index: 1; }
+.demo-board.is-focusing .demo-cell.is-dim,
+.demo-board.is-focusing .demo-cell.is-live { pointer-events: auto; }
+.demo-board.is-focusing .demo-cell.is-live { opacity: 1; }
 .demo-board.is-focusing .demo-cell.is-live .demo-panel {
   box-shadow: 0 0 0 3px var(--tint), 0 18px 40px rgba(31, 29, 54, 0.16);
 }
@@ -205,7 +207,7 @@
 .layout-phone .demo-board {
   background: linear-gradient(90deg, transparent calc(100% - 406px), rgba(23, 21, 31, 0.06) calc(100% - 406px));
 }
-.demo-cell { min-width: 0; min-height: 0; display: flex; position: relative; }
+.demo-cell { min-width: 0; min-height: 0; display: flex; position: relative; isolation: isolate; }
 
 .demo-panel {
   --tint: #25214a;
@@ -244,13 +246,74 @@
 .demo-view {
   flex: 1;
   min-height: 0;
-  overflow: auto;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
   background: #0e2a2b;
 }
 .demo-panel.is-phone .demo-view {
   background: #ece7dc;
+  overflow: hidden;
+}
+.demo-phone-slot,
+.demo-desk-slot {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
   display: flex;
+  flex-direction: column;
+}
+.demo-frame-fit {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  position: relative;
+}
+.demo-frame-fit.is-phone {
+  display: flex;
+  align-items: center;
   justify-content: center;
+}
+.demo-frame-clip {
+  position: relative;
+  overflow: hidden;
+  flex: none;
+  contain: paint;
+}
+.demo-frame-fit.is-phone .demo-frame-clip {
+  border-radius: 28px;
+  clip-path: inset(0 round 28px);
+  box-shadow: inset 0 0 0 2px #2a2836;
+  background: #111018;
+}
+.demo-frame-clip iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  display: block;
+}
+.demo-phone-toasts {
+  position: absolute;
+  z-index: 8;
+  left: 8px;
+  right: 8px;
+  top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  pointer-events: none;
+}
+.demo-phone-toasts p {
+  margin: 0;
+  background: #1f1d36;
+  color: #f6f0e4;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  box-shadow: 0 8px 20px rgba(31, 29, 54, 0.25);
 }
 
 .demo-phone {

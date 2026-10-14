@@ -13,6 +13,7 @@ import { themeBootScript } from '@/lib/daypart'
 import { installBootScript } from '@/lib/install-prompt'
 import type { Metadata, Viewport } from 'next'
 import type { ReactNode } from 'react'
+import { StageFrameGuard } from '@/components/stage-frame-guard'
 import { ViewAsBanner } from '@/components/viewas-banner'
 
 export const dynamic = 'force-dynamic'
@@ -57,6 +58,7 @@ export default function Layout({ children }: { children: ReactNode }) {
         />
       </head>
       <body suppressHydrationWarning>
+        <StageFrameGuard />
         <ViewAsBanner />
         {children}
       </body>
