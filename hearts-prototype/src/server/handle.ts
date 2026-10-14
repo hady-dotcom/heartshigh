@@ -1857,12 +1857,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Posted to the board.')
   }
 
-  if (action === 'reply') {
+  if (action === 'reply' || action === 'reply-done') {
     if (user.role === 'learner') return redirectTo(req, '/', 'Learners do not reply on this desk.')
-    const entryId = Number(text(form, 'entry'))
+    const doneOnly = action === 'reply-done'
     const reply = text(form, 'reply')
-    if (!reply) return redirectTo(req, text(form, 'next') || '/', 'Write a reply first.')
-    const entry = await findDoc(payload, 'workbook-entries', entryId)
+    if (!doneOnly && !reply) return redirectTo(req, text(form, 'next') || '/', 'Write a reply first.')
+    let entry = await findDoc(payload, 'workbook-entries', Number(text(form, 'entry')))
+    if (!entry) {
+      const answerId = Number(text(form, 'answer'))
+      if (answerId) {
+        const found = await payload.find({ collection: 'workbook-entries', overrideAccess: true, depth: 0, limit: 1, where: { answer: { equals: answerId } } })
+        entry = (found.docs[0] as unknown as Doc) || null
+      }
+    }
     if (!entry) return redirectTo(req, text(form, 'next') || '/', 'That workbook entry could not be found.')
     if (user.role !== 'master' && idOf(entry.portal) !== portalIdOf(user)) {
       return redirectTo(req, '/', 'That workbook is not in your portal.')
@@ -1871,14 +1878,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (refuseFeature(await loadPortalById(payload, idOf(entry.portal) || portalIdOf(user) || 0), 'feedback')) {
       return redirectTo(req, text(form, 'next') || '/', FEATURE_UNAVAILABLE)
     }
+    const when = now().toISOString()
     await payload.update({
       collection: 'workbook-entries',
-      id: entryId,
+      id: entry.id,
       overrideAccess: true,
-      data: { teacherReply: reply, repliedAt: new Date().toISOString() },
+      data: doneOnly ? { doneAt: when } : { teacherReply: reply, repliedAt: when, doneAt: null },
     })
     const learnerId = idOf((entry as { user?: unknown }).user)
-    if (learnerId) {
+    if (!doneOnly && learnerId) {
       const portal = idOf((entry as { portal?: unknown }).portal)
       await payload.create({
         collection: 'notifications',
@@ -1905,7 +1913,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         },
       })
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Reply saved.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, doneOnly ? 'Marked done.' : 'Reply saved.')
   }
 
   if (action === 'browse') {

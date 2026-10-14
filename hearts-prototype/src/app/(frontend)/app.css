@@ -934,6 +934,11 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .harvest-card blockquote { margin: 0 0 10px; font-size: 18px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
 .harvest-card small { color: var(--muted); display: block; line-height: 1.5; }
 .wb-entry { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+.wb-hit { display: block; color: inherit; text-decoration: none; }
+.wb-edit { display: grid; gap: 8px; }
+.wb-edit textarea { width: 100%; box-sizing: border-box; min-height: 96px; font: inherit; border-radius: 12px; padding: 10px 12px; background: #fff; color: #1a1408; border: 1px solid #c9b48a; }
+.wb-edit .mini-btn { min-height: 44px; }
+.wb-entry .from-lesson { min-height: 44px; }
 .wb-entry .when { font-size: 11.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
 .wb-entry .asked { color: var(--gold-deep, var(--gold)); font-weight: 700; font-size: 13px; margin: 10px 0 2px; }
 .wb-entry .q { font-size: 14px; color: var(--ink-2); margin: 0 0 10px; }

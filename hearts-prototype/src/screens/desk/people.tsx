@@ -21,11 +21,13 @@ import { AdminFrame } from './overview'
 import { featureOn } from '@/lib/features'
 import { ExampleInUse } from '@/components/app/care'
 import { AnswerFocus } from '@/components/desk/answer-focus'
-import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
+import { sharedAnswersNewestFirst } from '@/lib/shared-answers'
 import { ClickRow } from '@/components/desk/row-link'
 import { portalDisplayName } from '@/lib/portal-name'
 import { managesLearnerAccounts, matchesLearnerSearch } from '@/lib/learner-desk'
 import { BulkBar, LearnerFilters } from './learner-desk'
+import { ReplyQueueView } from '@/components/desk/reply-queue-view'
+import { buildQueueCards } from '@/lib/reply-queue'
 
 export async function TeachScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
@@ -50,6 +52,28 @@ export async function TeachScreen(ctx: Ctx) {
     return id == null ? [] : [id]
   }))
   const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
+  const portalDocs = user.role === 'master'
+    ? await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
+    : [portal]
+  let queueAnswers = answers
+  let queueEntries = entries
+  if (user.role === 'master') {
+    const extras = await Promise.all(portalDocs.filter((item) => item.id !== portal.id).map(async (item) => {
+      const [moreAnswers, moreEntries] = await Promise.all([
+        rows(payload, 'answers', { portal: { equals: item.id } }, { depth: 1, sort: '-createdAt', limit: 200 }),
+        rows(payload, 'workbook-entries', { portal: { equals: item.id } }, { depth: 0, sort: '-createdAt', limit: 200 }),
+      ])
+      return { moreAnswers, moreEntries }
+    }))
+    queueAnswers = [...answers, ...extras.flatMap((item) => item.moreAnswers)]
+    queueEntries = [...entries, ...extras.flatMap((item) => item.moreEntries)]
+  }
+  const queueCards = buildQueueCards(queueAnswers, queueEntries, portalDocs.map((item) => ({
+    id: item.id,
+    name: str(item.name),
+    slug: str(item.slug),
+    organisationName: str(item.organisationName),
+  })))
   const evidence = sharedAnswers.filter((answer) => answer.video || answer.audio)
   const focusId = Number(query.answer) || 0
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
@@ -142,29 +166,19 @@ export async function TeachScreen(ctx: Ctx) {
         </div>
       </section>
 
-      {focusId ? <AnswerFocus id={`shared-answer-${focusId}`} /> : null}
+      {focusId ? <AnswerFocus id="reply-focus" /> : null}
       <section className="panel" data-testid="shared-answers" style={{ marginBottom: 18 }}>
-        <header><div><h2>Answers shared with you ({sharedAnswers.length})</h2><p>Newest first. Typed answers and recordings. Anything a learner kept private stays in their workbook.</p></div></header>
-        <div className="body" style={{ display: 'grid', gap: 12 }}>
-          {sharedAnswers.map((answer) => {
-            const point = answer.point as { prompt?: string; second?: number } | null
-            const prompt = point?.prompt
-            const second = Number(answer.atSecond ?? point?.second ?? 0)
-            const talk = cleanTitle(str((answer.lesson as { title?: string } | null)?.title))
-            const focused = answer.id === focusId
-            return (
-              <article key={answer.id} id={`shared-answer-${answer.id}`} className="lib-card" data-testid="shared-answer" data-focused={focused ? 'yes' : 'no'}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                  <b>{(answer.user as { name?: string } | null)?.name || 'A learner'}</b>
-                  <span className="hint">{shortDate(answer.createdAt)}</span>
-                </div>
-                <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-place">{talk || 'This talk'} · {clock(second)}</p>
-                {prompt ? <p className="hint" style={{ margin: 0 }} data-testid="shared-answer-question">{prompt}</p> : null}
-                <p data-testid="shared-answer-text" style={{ margin: 0 }}>{sharedAnswerText({ body: answer.body, choice: answer.choice, video: answer.video, audio: answer.audio, image: answer.image })}</p>
-              </article>
-            )
-          })}
-          {!sharedAnswers.length ? <ExampleInUse desk title="After Fajr" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Maryam · How to Live Like the Prophet</p><p>Sending salawat before I pick up my phone.</p></ExampleInUse> : null}
+        <header><div><h2>Reply queue</h2><p>Newest first. Tap a card to reply. Anything a learner kept private stays in their workbook.</p></div></header>
+        <div className="body">
+          <ReplyQueueView
+            base={here}
+            cards={queueCards}
+            portals={portalDocs.map((item) => ({ id: item.id, slug: str(item.slug), label: portalDisplayName(item) }))}
+            query={query}
+            currentSlug={portal.slug}
+            canSeeAllPortals={user.role === 'master'}
+            canReply={featureOn(portal, 'feedback')}
+          />
         </div>
       </section>
 

@@ -1040,6 +1040,10 @@ export interface WorkbookEntry {
   consent?: boolean | null;
   teacherReply?: string | null;
   repliedAt?: string | null;
+  /**
+   * Set when a teacher marks the answer done without writing a reply.
+   */
+  doneAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3808,6 +3812,7 @@ export interface WorkbookEntriesSelect<T extends boolean = true> {
   consent?: T;
   teacherReply?: T;
   repliedAt?: T;
+  doneAt?: T;
   updatedAt?: T;
   createdAt?: T;
 }

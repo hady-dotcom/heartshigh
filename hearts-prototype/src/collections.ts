@@ -941,6 +941,7 @@ export const WorkbookEntries: CollectionConfig = {
     { name: 'consent', type: 'checkbox', defaultValue: false },
     { name: 'teacherReply', type: 'textarea' },
     { name: 'repliedAt', type: 'date' },
+    { name: 'doneAt', type: 'date', admin: { description: 'Set when a teacher marks the answer done without writing a reply.' } },
   ],
 }
 
