@@ -150,6 +150,11 @@ test('a transcript on a failed film stays hidden, and a waiting film becomes vis
   assert.equal(waiting.hidden, false)
   assert.equal(hiddenFromLearners(waiting.transcriptNote), false)
   assert.match(waiting.transcriptNote, /Uploaded from notes\.vtt/)
+  const share = noteAfterTranscriptUpload('Bring-in: failed. [lang:en] The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.', 'fahmy-session6.md', 'published')
+  assert.equal(share.hidden, false)
+  assert.equal(hiddenFromLearners(share.transcriptNote), false)
+  assert.match(share.transcriptNote, /Uploaded from fahmy-session6\.md/)
+  assert.match(share.notice, /can see this talk/)
 })
 
 test('Try again keeps the speaker named on the film', () => {

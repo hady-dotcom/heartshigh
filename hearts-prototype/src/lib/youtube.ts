@@ -198,13 +198,21 @@ export function hiddenFromLearners(note: string | null | undefined) {
   return status === 'failed' || status === 'waiting' || status === 'processing' || status === 'queued'
 }
 
+/** A non-YouTube link was saved. There is no film file yet. A transcript is the way learners can see the part. */
+export const SHARE_LINK_DETAIL = 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.'
+
+export function savedShareLink(note: string | null | undefined) {
+  return bringInStatus(note) === 'failed' && /did not fetch the file/i.test(String(note || ''))
+}
+
 /**
  * A transcript on a failed or dead-link film stays hidden. Learners see a part only when the film plays.
+ * A saved share link has no film file; the transcript is the part, so it becomes visible.
  * A film that was waiting (the video exists, the captions did not) becomes visible once a transcript is attached.
  */
 export function noteAfterTranscriptUpload(existingNote: string | null | undefined, fileName: string, publishState?: string | null) {
   const name = String(fileName || 'the file').slice(0, 80)
-  if (bringInStatus(existingNote) === 'failed') {
+  if (bringInStatus(existingNote) === 'failed' && !savedShareLink(existingNote)) {
     return {
       hidden: true,
       transcriptNote: bringInNote('failed', `A transcript from ${name} was saved. The film does not play, so learners do not see this part.`, bringInLang(existingNote)),

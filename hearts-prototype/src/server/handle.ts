@@ -26,7 +26,7 @@ import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, ra
 import { deskScreenName, escapeHtml } from '@/lib/action-error'
 import { humanDayMonth } from '@/lib/human-date'
 import { isUnavailableFilm } from '@/lib/bring-in-plan'
-import { CAPTION_QUEUE_DETAIL, bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, fetchYoutubeMeta, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
+import { CAPTION_QUEUE_DETAIL, SHARE_LINK_DETAIL, bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, fetchYoutubeMeta, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
 import { runTranscriptAction } from './transcript-desk'
 import { packSaveNotice } from '@/lib/publish-state'
 import { bringInAndPublish, commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker, settleAutoPublish } from './bring-in'
@@ -1255,8 +1255,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             overrideAccess: true,
             data: {
               sourceUrl: url,
-              transcriptNote: bringInNote('failed', 'The link is saved. This server did not fetch the file. Upload a transcript, or paste a YouTube link.', lang),
-              ...draftPatch,
+              transcriptNote: bringInNote('failed', SHARE_LINK_DETAIL, lang),
+              // The empty part stays hidden by the failed note. Do not also turn a published local talk into a draft:
+              // uploading the transcript is what makes this part visible.
+              ...(makingDraft ? { publishState: 'published' as const } : {}),
             },
           })
           outcomes.push('A share link was saved without a film file.')
