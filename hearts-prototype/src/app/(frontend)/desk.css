@@ -696,3 +696,45 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
   .library-thumb img { width: 112px; height: 63px; }
   .film-cards { grid-template-columns: 1fr 1fr; }
 }
+
+/* Kinetic side of the clip editor: one line of type, graphic background, no film picture. */
+.kinetic-desk-grid { display: grid; grid-template-columns: minmax(220px, 280px) minmax(0, 1fr); gap: 18px; align-items: start; }
+.kinetic-desk-note { margin: 0 0 10px; }
+.kinetic-stage { position: relative; aspect-ratio: 9 / 16; width: 100%; border-radius: 18px; overflow: hidden; background: #14121c; color: #F6F2E8; }
+.kinetic-bg, .kinetic-mask, .kinetic-audio { position: absolute; inset: 0; }
+.kinetic-bg { z-index: 0; }
+.kinetic-mask { z-index: 1; opacity: 0; pointer-events: none; }
+.kinetic-audio, .kinetic-audio iframe { width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; inset: auto; top: 0; left: 0; }
+.kinetic-line { position: absolute; left: 8%; right: 8%; top: 14%; bottom: 18%; z-index: 3; margin: 0; display: none; align-items: center; justify-content: center; text-align: center; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.03em; }
+.kinetic-line.now { display: flex; }
+.kinetic-line[hidden] { display: none; }
+.kinetic-line-land.now { color: #E4C27A; }
+.kinetic-clock { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(17, 16, 24, 0.5); padding: 4px 8px; border-radius: 999px; }
+.kinetic-play { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5; min-height: 36px; padding: 6px 14px; border: 0; border-radius: 999px; background: #D4A84B; color: #1A1408; font-weight: 800; }
+.kinetic-scrub { width: 100%; margin: 8px 0; accent-color: var(--gold); }
+.kinetic-jumps, .kinetic-picks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+.kinetic-jumps { flex-wrap: nowrap; }
+.kinetic-jumps button, .kinetic-picks button { display: grid; gap: 1px; padding: 6px 10px; border-radius: 999px; border: 1.5px solid var(--line); background: transparent; color: var(--ink); font-weight: 700; font-size: 12.5px; min-height: 36px; }
+.kinetic-jumps button { flex: 1 1 0; min-width: 0; padding: 6px 8px; }
+.kinetic-jumps button span { font-weight: 650; font-size: 11px; font-variant-numeric: tabular-nums; opacity: 0.8; }
+.kinetic-jumps button.on, .kinetic-picks button.on { background: var(--gold); color: var(--gold-ink); border-color: transparent; }
+.kinetic-stage[data-bg="gradient"][data-gradient="dusk"] .kinetic-bg { background: linear-gradient(180deg, #2B2356 0%, #7A3E6B 58%, #E8793A 100%); }
+.kinetic-stage[data-bg="gradient"][data-gradient="oasis"] .kinetic-bg { background: linear-gradient(135deg, #16324A 0%, #1F6F78 55%, #D9A441 100%); }
+.kinetic-stage[data-bg="gradient"][data-gradient="nightgold"] .kinetic-bg { background: linear-gradient(165deg, #111018 10%, #2B2356 48%, #8A6230 100%); }
+.kinetic-stage[data-bg="solid"][data-solid="ground"] .kinetic-bg { background: #16201D; }
+.kinetic-stage[data-bg="solid"][data-solid="night"] .kinetic-bg { background: #111018; }
+.kinetic-stage[data-bg="solid"][data-solid="plum"] .kinetic-bg { background: #2B2356; }
+.kinetic-stage[data-bg="solid"][data-solid="cream"] .kinetic-bg { background: #F6EFE3; }
+.kinetic-stage[data-bg="mask"] .kinetic-bg { background: #14121c; }
+.kinetic-stage[data-bg="mask"] .kinetic-mask { opacity: 1; }
+.kinetic-stage[data-bg="mask"][data-mask="arch"] .kinetic-mask { background: linear-gradient(180deg, #F0D7A2 0%, #7A4FA3 78%); clip-path: ellipse(46% 40% at 50% 46%); }
+.kinetic-stage[data-bg="mask"][data-mask="circle"] .kinetic-mask { background: radial-gradient(circle at 50% 42%, #F6EFE3, #1F8A84 72%); clip-path: circle(34% at 50% 46%); }
+.kinetic-stage[data-bg="mask"][data-mask="diamond"] .kinetic-mask { background: linear-gradient(145deg, #E8793A, #2B2356 70%); clip-path: polygon(50% 8%, 90% 46%, 50% 86%, 10% 46%); }
+.kinetic-stage[data-bg="mask"][data-mask="window"] .kinetic-mask { background: linear-gradient(180deg, #F6F2E8, #D9A441); clip-path: inset(16% 12% 22% 12% round 28px); }
+.kinetic-stage[data-light="1"] { color: #1E1B3A; }
+.kinetic-stage[data-light="1"] .kinetic-line-land.now { color: #7A4FA3; }
+.kinetic-stage[data-light="1"] .kinetic-clock { background: rgba(255, 255, 255, 0.7); color: #1E1B3A; }
+@media (max-width: 899px) {
+  .kinetic-desk-grid { grid-template-columns: 1fr; }
+  .kinetic-stage { width: min(100%, 280px); }
+}

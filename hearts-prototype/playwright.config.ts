@@ -20,6 +20,7 @@ export default defineConfig({
     baseURL: E2E_BASE,
     ...devices['Desktop Chrome'],
     viewport: { width: 390, height: 844 },
+    ...(process.env.HEARTS_PW_CHANNEL ? { channel: process.env.HEARTS_PW_CHANNEL as 'chrome' } : {}),
   },
   webServer: {
     command: `npx next dev --hostname 127.0.0.1 --port ${E2E_PORT}`,
