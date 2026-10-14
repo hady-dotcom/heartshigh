@@ -1,8 +1,6 @@
 'use client'
 
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
-import { Hidden } from '@/components/app/shell'
-import { DeletePick } from '@/components/desk/delete-controls'
 import { ClickRow } from '@/components/desk/row-link'
 import { JOURNAL_LABEL } from '@/lib/journal-copy'
 import { journalUnanswered, journalUnansweredLabel, journalWhen, sortJournalEntries, type JournalOrder } from '@/lib/journal-list'
@@ -54,7 +52,8 @@ export function JournalList({
       </div>
       {picking ? (
         <form id="diary-bulk" className="bulk-bar" action="/api/hearts" method="post" data-testid="diary-bulk">
-          <Hidden fields={{ action: 'diary-bulk-delete', next: bulkNext || '' }} />
+          <input type="hidden" name="action" value="diary-bulk-delete" />
+          <input type="hidden" name="next" value={bulkNext || ''} />
           <p data-testid="diary-bulk-copy">Delete these {JOURNAL_LABEL.one.toLowerCase()} entries? People will no longer see them. This can't be undone.</p>
           <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="diary-bulk-sure" /> Yes, delete the ticked ones</label>
           <button className="btn danger small" type="submit" data-testid="diary-bulk-go">Delete selected</button>
@@ -80,7 +79,11 @@ export function JournalList({
                 const href = row.href || '#'
                 return (
                   <ClickRow key={row.id} href={href} testId="diary-row">
-                    {picking ? <td data-label="Select"><DeletePick formId="diary-bulk" id={Number(row.id)} label={row.name || `${JOURNAL_LABEL.one.toLowerCase()} entry`} /></td> : null}
+                    {picking ? (
+                      <td data-label="Select">
+                        <input form="diary-bulk" type="checkbox" name="id" value={row.id} data-testid="delete-pick" aria-label={`Select ${row.name || `${JOURNAL_LABEL.one.toLowerCase()} entry`}`} />
+                      </td>
+                    ) : null}
                     <td data-label="Learner"><a href={href} data-testid="diary-open"><b>{row.name || 'A learner'}</b></a></td>
                     <td data-label="Portal" data-testid="diary-portal">{row.portal || '—'}</td>
                     <td data-label="When" data-testid="journal-when">{journalWhen(row.at)}</td>
