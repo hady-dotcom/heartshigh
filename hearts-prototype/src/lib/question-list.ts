@@ -24,6 +24,15 @@ export function questionMomentReached(input: { second: number; time: number; ans
   return input.time + 0.01 >= input.second
 }
 
+/**
+ * An open question can be tapped early, which jumps the film to it.
+ * A waiting or countdown question stays shut until the film reaches it, then opens so the learner can read why.
+ */
+export function questionDotLocked(input: { answered?: boolean; state: string; reached: boolean }) {
+  if (input.answered || input.state === 'open') return false
+  return !input.reached
+}
+
 export function comingAnswerLabel() {
   return 'Keep watching'
 }

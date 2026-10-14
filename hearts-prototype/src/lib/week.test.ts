@@ -57,6 +57,11 @@ test('the plan toast names the actual sitting dates', () => {
 
 test('the plan form path keeps the chosen course and days', () => {
   assert.deepEqual(parseWeekdays('3,5'), [3, 5])
+  assert.deepEqual(parseWeekdays('0,3'), [0, 3])
+  assert.deepEqual(parseWeekdays(''), [])
+  assert.deepEqual(parseWeekdays(undefined), [])
+  assert.deepEqual(parseWeekdays('  '), [])
+  assert.deepEqual(parseWeekdays(['']), [])
   assert.equal(
     planKeepPath('/p/east-london/week', { course: 12, start: '2026-10-07', end: '2026-10-16', weekdays: [3, 5], minutes: 20 }),
     '/p/east-london/week?course=12&start=2026-10-07&end=2026-10-16&days=3%2C5&minutes=20&view=new',

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import path from 'node:path'
 import { test } from 'node:test'
-import { comingAnswerLabel, comingQuestionLabel, filmClock, questionMomentReached, questionRowRevealed } from '../../src/lib/question-list'
+import { comingAnswerLabel, comingQuestionLabel, filmClock, questionDotLocked, questionMomentReached, questionRowRevealed } from '../../src/lib/question-list'
 
 test('a hidden row names the question and the time on its dot, never the prompt', () => {
   assert.equal(filmClock(760), '12:40')
@@ -15,6 +15,14 @@ test('a row stays hidden until the film reaches it, then stays revealed', () => 
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 90, revealedIds: [] }), true)
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 0, revealedIds: [2] }), true)
   assert.equal(questionRowRevealed({ id: 2, second: 90, time: 0, revealedIds: [], answered: true }), true)
+})
+
+test('a reached waiting question opens, and one the film has not reached stays shut', () => {
+  assert.equal(questionDotLocked({ state: 'open', reached: false }), false)
+  assert.equal(questionDotLocked({ state: 'waiting', reached: true }), false)
+  assert.equal(questionDotLocked({ state: 'countdown', reached: true }), false)
+  assert.equal(questionDotLocked({ state: 'waiting', reached: false }), true)
+  assert.equal(questionDotLocked({ state: 'waiting', reached: true, answered: true }), false)
 })
 
 test('a question stays unanswerable until its timestamp, even if a row was revealed earlier', () => {

@@ -117,7 +117,8 @@ export function planToast(talks: number, dates: string[]) {
 
 export function parseWeekdays(raw: string | string[] | undefined | null): number[] {
   const bits = Array.isArray(raw) ? raw : String(raw || '').split(/[,\s]+/)
-  return [...new Set(bits.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))]
+  // Number('') is 0, which is Sunday. A missing days query must stay empty, not pre-tick Sunday.
+  return [...new Set(bits.map((bit) => String(bit).trim()).filter(Boolean).map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6))]
 }
 
 /** Keep the course, days and dates on the plan form after it is shared out, so they can be adjusted. */

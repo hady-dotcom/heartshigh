@@ -234,8 +234,9 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('go-feed').click()
     await expect(page.getByTestId('journey')).toHaveAttribute('data-cuts', new RegExp(`(^| )${shared.cutId}( |$)`))
     await page.goto(`/p/${slug}/lanes`)
-    await expect(page.getByTestId('visible-courses')).toContainText('1 course open to you')
+    await expect(page.getByTestId('visible-courses')).toContainText('1 course in your library')
     await expect(page.getByTestId('path-course')).toHaveCount(1)
+    await expect(page.getByTestId('path-course')).toHaveAttribute('data-open', 'yes')
     await expect(page.getByText('How to Live Like the Prophet')).toHaveCount(0)
 
     await join(page, seedCode('elm-learner'), 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
@@ -303,7 +304,7 @@ test.describe.serial('HEARTS journeys', () => {
     shared.lessonId = (await page.locator('form.watched-form input[name=lesson]').getAttribute('value')) || undefined
     const tooSoon = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '1', next: `/p/${slug}/course/${shared.courseId}` })
     expect(tooSoon).toContain('error=')
-    const done = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '8', ended: 'yes', next: `/p/${slug}/course/${shared.courseId}` })
+    const done = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '480', ended: 'yes', next: `/p/${slug}/course/${shared.courseId}` })
     expect(done).toContain('notice=')
   })
 
@@ -477,7 +478,8 @@ test.describe.serial('HEARTS journeys', () => {
       await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
       const box = (await page.getByTestId('gesture-layer').boundingBox())!
       const cx = box.x + box.width / 2
-      const cy = box.y + box.height / 2
+      // The open More board docks over the lower half. A swipe has to start on the film.
+      const cy = box.y + box.height / 3
       await page.mouse.move(cx, cy)
       await page.mouse.down()
       await page.mouse.move(cx + dx, cy + dy, { steps: 8 })
