@@ -559,6 +559,26 @@
           "notNull": false,
           "default": false
         },
+        "paused": {
+          "name": "paused",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "must_change_password": {
+          "name": "must_change_password",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_by_id": {
           "name": "updated_by_id",
           "type": "integer",
@@ -23780,6 +23800,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "c69177a6-2330-4173-d377-61747a000008",
+  "id": "d7a288b7-2330-4284-e488-72858b000009",
   "prevId": "d4a7e2b1-2100-4c18-9a44-0c14e2100001"
 }
