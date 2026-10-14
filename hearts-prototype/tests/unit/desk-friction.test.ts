@@ -6,13 +6,13 @@ import { humanDate, broughtInCourseName } from '../../src/lib/human-date'
 import { bringInStatusLabel, CAPTION_QUEUE_DETAIL, readBringInFlags, stampBringInFlags } from '../../src/lib/youtube'
 
 test('plain tips and status labels match the desk brief', () => {
-  assert.equal(TOOL.bringInGiveHolders, 'Ticked: people who already joined get this course too. Untick only if you want it for new joiners only.')
-  assert.equal(TOOL.bringInSpeaker, 'Who is speaking. We fill it from the line, the course, then the channel.')
-  assert.equal(TOOL.bringInHelper, 'Runs on your computer to fetch captions YouTube blocks from our server. Leave it alone unless support asks.')
-  assert.equal(TOOL.bringInPublish, 'Publish = learners can see it. Talks still fetching captions publish themselves once ready')
+  assert.equal(TOOL.bringInGiveHolders, 'Tick this to add the course to learners who already hold a pack that contains it and who keep a saved course list. Leave it unticked and those learners keep the list they joined with. People who read the pack live already see new courses in that pack.')
+  assert.equal(TOOL.bringInSpeaker, 'The speaker on the row is saved on that film. It starts from the name on the line, then the course, then a channel you have matched. The YouTube channel name is never used on its own.')
+  assert.equal(TOOL.bringInHelper, 'The caption helper runs on your own machine, where YouTube is not blocked. The code can only list talks waiting for their words, and attach them. It is stored scrambled, shown once, and you can cancel it here.')
+  assert.equal(TOOL.bringInPublish, 'Publish makes a draft visible to learners who already have this course, including a draft from the master sheet. Talks still waiting for their words stay hidden until those words are attached. You can publish one row or several at once.')
   assert.equal(TOOL.requiredCourses, 'Optional. Tick courses everyone with this code must finish.')
-  assert.equal(TOOL.extract, "Free, built-in. (Optional: use your own AI account; that's billed to you.)")
-  assert.equal(TOOL.sheetScope, 'Download the blank template to start. "This portal" only includes courses you made.')
+  assert.equal(TOOL.extract, 'This drafts clips from the words of the talk. Clips you have already approved stay. The built-in run needs no account. A portal admin can tick the portal AI box, confirm the one call, and that run is billed to the portal.')
+  assert.equal(TOOL.sheetScope, 'This says what the workbook covers: the whole library, this portal’s own courses, or one course. A portal export skips library courses, so it can be empty. The blank template is always safe to download.')
   assert.equal(bringInStatusLabel('waiting'), 'Getting captions… (usually under 30 min)')
   assert.equal(bringInStatusLabel('processed'), 'Ready to publish')
   assert.equal(bringInStatusLabel('failed'), "Couldn't get captions: upload a transcript")
