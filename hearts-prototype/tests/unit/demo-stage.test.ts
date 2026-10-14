@@ -34,6 +34,11 @@ import {
   seedDemo,
   stuckRows,
   welcomeLine,
+  COVERAGE,
+  alertsFor,
+  coverageMarkdown,
+  coverageWorks,
+  learnerVisible,
 } from '../../src/lib/demo-stage'
 
 const JARGON = ['payload', 'toggle', 'draft', 'publish', 'contingent', 'scenario', 'imported']
@@ -195,5 +200,58 @@ describe('cast your demo', () => {
     const place = rollCast({ ...cast, kind: 'school' }, 'portal', 0)
     assert.equal(place.portalName, 'Willow Academy')
     assert.equal(fillCast('{learner} answered. {teacher} replied at {portal}.', cast), 'Abdallah answered. Sami replied at Al-Noor Mosque.')
+  })
+})
+
+const MASTER_NAV = ['portals', 'learners', 'diaries', 'codes', 'safety', 'announcements', 'library', 'bring-in', 'packs', 'plans', 'live', 'nights', 'circle', 'missions', 'opening', 'lanes', 'insights', 'trends', 'simulator', 'personas', 'experiments', 'calendar', 'review', 'tiers', 'questions', 'ai', 'framing', 'see-how', 'sheet', 'transcripts', 'create']
+const PORTAL_NAV = ['overview', 'teach', 'diaries', 'access', 'feedback', 'safety', 'announcements', 'library', 'content', 'bring-in', 'plans', 'gather', 'nights', 'live', 'circle', 'missions', 'insights', 'compass', 'experiments', 'calendar', 'ai', 'opening', 'questions', 'sheet', 'create', 'settings']
+const TEACHER_NAV = ['overview', 'teach', 'diaries', 'feedback', 'compass', 'plans', 'gather', 'nights', 'live', 'safety', 'announcements']
+
+describe('every left-nav item is covered', () => {
+  it('lists the master, portal and teacher menus in the same order as the desks', () => {
+    assert.deepEqual(COVERAGE.filter((row) => row.role === 'master').map((row) => row.key), MASTER_NAV)
+    assert.deepEqual(COVERAGE.filter((row) => row.role === 'portal').map((row) => row.key), PORTAL_NAV)
+    assert.deepEqual(COVERAGE.filter((row) => row.role === 'teacher').map((row) => row.key), TEACHER_NAV)
+    assert.equal(COVERAGE.length, MASTER_NAV.length + PORTAL_NAV.length + TEACHER_NAV.length)
+  })
+
+  it('makes every works row change the shared place, and gives shown or not-applicable rows a reason', () => {
+    for (const row of COVERAGE) {
+      if (row.status === 'works') {
+        assert.equal(coverageWorks(row), true, `${row.role} ${row.key}`)
+        assert.equal(typeof row.make, 'function', row.key)
+      } else {
+        assert.equal(row.reason.trim().length > 0, true, `${row.role} ${row.key}`)
+        assert.equal(row.status === 'shown' || row.status === 'na', true)
+      }
+    }
+    const ai = COVERAGE.filter((row) => row.key === 'ai' || row.key === 'create')
+    assert.equal(ai.length, 4)
+    assert.equal(ai.every((row) => row.status === 'na'), true)
+    const table = coverageMarkdown()
+    assert.equal(table.includes('| Master · Library |'), true)
+    assert.equal(table.split('\n').length, COVERAGE.length + 2)
+  })
+
+  it('sends a learner diary, a feeling and a help ask back up, and a night down to the phone', () => {
+    const diary = reduceDemo(seedDemo(), { type: 'add-diary', text: 'I wrote this on the phone.' })
+    assert.equal(diary.diary[0]?.text, 'I wrote this on the phone.')
+    assert.deepEqual(alertsFor(diary, 'teacher').map((row) => row.text), ['{learner} wrote in the diary.', '3 notes are waiting for a reply.'])
+    assert.equal(alertsFor(diary, 'portal')[0]?.text, '{learner} wrote in the diary.')
+    assert.equal(alertsFor(diary, 'master')[0]?.text, '{learner} wrote in the diary.')
+    assert.equal(diary.activity[0]?.text, '{learner} wrote in the diary.')
+
+    const feeling = reduceDemo(seedDemo(), { type: 'add-compass', text: 'Hopeful' })
+    assert.equal(feeling.compass[0]?.text, 'Hopeful')
+    assert.equal(alertsFor(feeling, 'teacher')[0]?.text.includes('Hopeful'), true)
+
+    const ask = reduceDemo(seedDemo(), { type: 'add-safety', text: 'Please check on me tonight.' })
+    assert.equal(ask.safety[0]?.body, 'Please check on me tonight.')
+    assert.equal(alertsFor(ask, 'portal')[0]?.text, '{learner} asked for someone to look today.')
+
+    const night = reduceDemo(seedDemo(), { type: 'add-event', kind: 'calendar', title: 'Open evening' })
+    assert.equal(learnerVisible(night).includes('Open evening'), true)
+    assert.equal(alertsFor(night, 'learner')[0]?.text, 'Added an event: Open evening.')
+    assert.equal(loopCounts(night).courses, loopCounts(seedDemo()).courses)
   })
 })

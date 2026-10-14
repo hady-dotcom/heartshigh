@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react'
 import {
+  COVERAGE,
+  alertsFor,
   fillCast,
   kindLabel,
   learnerPrompts,
@@ -9,8 +11,12 @@ import {
   loopCounts,
   stuckRows,
   welcomeLine,
+  type CoverageRole,
+  type CoverageRow,
+  type DemoAction,
   type DemoPanel,
   type DemoQueueItem,
+  type DemoState,
   type PromptKind,
   type QueueKind,
 } from '@/lib/demo-stage'
@@ -51,18 +57,6 @@ function Desk({
   )
 }
 
-function Jump({ id, children }: { id: string; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      className="nav"
-      onClick={() => document.querySelector(`[data-anchor="${id}"]`)?.scrollIntoView({ block: 'start', behavior: 'smooth' })}
-    >
-      {children}
-    </button>
-  )
-}
-
 function Numbers({ testId }: { testId: string }) {
   const { state } = useDemo()
   const counts = loopCounts(state)
@@ -83,8 +77,16 @@ function Numbers({ testId }: { testId: string }) {
   )
 }
 
+const HOME: Record<CoverageRole, string> = {
+  master: 'library',
+  portal: 'overview',
+  teacher: 'feedback',
+}
+
 export function Board({
   only,
+  homeTick,
+  onRun,
   onCourse,
   onNote,
   onPrompt,
@@ -92,16 +94,167 @@ export function Board({
   onReply,
 }: {
   only: DemoPanel
+  homeTick: number
+  onRun: (action: DemoAction) => void
   onCourse: (title: string) => void
   onNote: (body: string) => void
   onPrompt: (kind: PromptKind, text: string) => void
   onWrite: (kind: QueueKind, body: string, promptId?: string) => void
   onReply: (id: string, body: string) => void
 }) {
-  if (only === 'master') return <Master onCourse={onCourse} />
-  if (only === 'portal') return <Portal onNote={onNote} />
-  if (only === 'teacher') return <Teacher onPrompt={onPrompt} onReply={onReply} />
-  return <Learner onWrite={onWrite} />
+  if (only === 'master') return <Master homeTick={homeTick} onRun={onRun} onCourse={onCourse} />
+  if (only === 'portal') return <Portal homeTick={homeTick} onRun={onRun} onNote={onNote} />
+  if (only === 'teacher') return <Teacher homeTick={homeTick} onRun={onRun} onPrompt={onPrompt} onReply={onReply} />
+  return <Learner onRun={onRun} onWrite={onWrite} />
+}
+
+function rowsFor(role: CoverageRole) {
+  return COVERAGE.filter((row) => row.role === role)
+}
+
+function SideNav({ role, page, onPick }: { role: CoverageRole; page: string; onPick: (key: string) => void }) {
+  let group = ''
+  return (
+    <>
+      {rowsFor(role).map((row) => {
+        const head = row.group !== group
+        group = row.group
+        return (
+          <span key={row.key}>
+            {head ? <p className="demo-nav-group">{row.group}</p> : null}
+            <button type="button" className={`nav${page === row.key ? ' on' : ''}`} data-testid={`demo-nav-${role}-${row.key}`} aria-current={page === row.key ? 'page' : undefined} onClick={() => onPick(row.key)}>
+              {row.nav}
+            </button>
+          </span>
+        )
+      })}
+    </>
+  )
+}
+
+function Alerts({ panel }: { panel: DemoPanel }) {
+  const { state, cast } = useDemo()
+  const rows = alertsFor(state, panel).slice(0, 3)
+  if (!rows.length) return null
+  return (
+    <div className="demo-alerts" data-testid={`demo-alerts-${panel}`}>
+      {rows.map((row) => (
+        <p key={row.id}>{fillCast(row.text, cast)}</p>
+      ))}
+    </div>
+  )
+}
+
+function usePage(role: CoverageRole, homeTick: number) {
+  const [page, setPage] = useState(HOME[role])
+  useEffect(() => {
+    setPage(HOME[role])
+  }, [homeTick, role])
+  return [page, setPage] as const
+}
+
+function needsText(row: CoverageRow) {
+  if (!row.make) return false
+  const action = row.make('x')
+  return action.type !== 'pause-learner' && action.type !== 'toggle-garden' && action.type !== 'approve-review' && action.type !== 'reply'
+}
+
+function goLabel(row: CoverageRow, state: DemoState) {
+  if (!row.make) return 'Add it'
+  const action = row.make('x')
+  if (action.type === 'pause-learner') return state.paused ? 'Let this learner back in' : 'Pause this learner'
+  if (action.type === 'toggle-garden') return state.garden ? 'Turn the garden path off' : 'Turn the garden path on'
+  if (action.type === 'approve-review') return 'Let this question through'
+  if (action.type === 'reply') return 'Send the waiting reply'
+  if (action.type === 'post-note') return 'Post announcement'
+  if (action.type === 'add-course') return 'Add course'
+  if (action.type === 'set-prompt') return 'Set question'
+  if (action.type === 'start-live') return 'Go live'
+  if (action.type === 'answer-safety') return 'Send the reply'
+  return 'Add it'
+}
+
+function liveLines(row: CoverageRow, state: DemoState, castName: (text: string) => string): string[] {
+  const key = row.key
+  if (key === 'codes' || key === 'access') return state.codes.map((item) => item.text)
+  if (key === 'diaries') return state.diary.map((item) => item.text)
+  if (key === 'safety') return state.safety.map((item) => (item.reply ? `${item.body} — ${item.reply}` : item.body))
+  if (key === 'announcements') return state.notes.map((item) => item.body)
+  if (key === 'library' || key === 'content' || key === 'sheet' || key === 'bring-in' || key === 'tiers') return state.courses.map((item) => item.title)
+  if (key === 'packs') return state.packs.map((item) => item.text)
+  if (key === 'plans') return state.plans.map((item) => item.text)
+  if (key === 'live') return state.liveTitle ? [`Live now: ${state.liveTitle}`] : ['Nothing is live yet.']
+  if (key === 'nights') return state.events.filter((item) => item.kind === 'night').map((item) => item.title)
+  if (key === 'gather') return state.events.filter((item) => item.kind === 'gathering').map((item) => item.title)
+  if (key === 'calendar') return state.events.filter((item) => item.kind === 'calendar').map((item) => item.title)
+  if (key === 'circle') return state.queue.filter((item) => item.kind === 'answer').map((item) => `${castName(item.learner)}: ${item.body}`)
+  if (key === 'missions') return state.missions.map((item) => item.text)
+  if (key === 'opening' && row.role === 'master') return state.scenes.map((item) => item.text)
+  if (key === 'opening') return state.prompts.filter((item) => item.kind === 'question').map((item) => item.text)
+  if (key === 'lanes') return state.lanes.map((item) => item.text)
+  if (key === 'experiments' || key === 'settings') return [state.garden ? 'Garden path is on' : 'Garden path is off']
+  if (key === 'review') return state.review.map((item) => `${item.text}${item.approved ? ' — let through' : ' — held'}`)
+  if (key === 'questions' && row.role === 'portal') return state.joining.map((item) => item.text)
+  if (key === 'questions') return state.prompts.map((item) => item.text)
+  if (key === 'compass' || key === 'personas') return state.compass.map((item) => item.text)
+  if (key === 'learners' || key === 'teach') {
+    const people = stuckRows(state).map((item) => `${castName(item.name)} — ${item.why}`)
+    return [state.paused ? 'This learner is paused' : 'This learner can come in', ...people]
+  }
+  if (key === 'feedback') return state.queue.filter((item) => !item.done).map((item) => `${castName(item.learner)}: ${item.body}`)
+  if (key === 'overview' && row.role === 'teacher') {
+    const counts = loopCounts(state)
+    return [`Waiting ${counts.waiting}`, `Done ${counts.done}`, ...state.activity.map((item) => castName(item.text))]
+  }
+  if (key === 'overview' || key === 'portals' || key === 'insights' || key === 'trends' || key === 'simulator') {
+    const counts = loopCounts(state)
+    return [`Courses ${counts.courses}`, `Waiting ${counts.waiting}`, `Done ${counts.done}`, `Stuck ${counts.stuck}`, ...state.activity.map((item) => castName(item.text))]
+  }
+  if (key === 'framing' || key === 'transcripts') return ['A quiet hour — words would show here once a film is playing.']
+  return []
+}
+
+function CoveragePage({ row, onRun }: { row: CoverageRow; onRun: (action: DemoAction) => void }) {
+  const { state, cast } = useDemo()
+  const typed = needsText(row)
+  const [text, setText] = useState(typed ? row.sample || '' : '')
+  const lines = liveLines(row, state, (value) => fillCast(value, cast))
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    if (!row.make) return
+    if (typed && !text.trim()) return
+    onRun(row.make(text))
+  }
+  return (
+    <section className="panel" data-testid={`demo-page-${row.role}-${row.key}`}>
+      <header>
+        <div>
+          <h2>{row.nav}</h2>
+          <p>{row.creates}</p>
+        </div>
+      </header>
+      <div className="body demo-stack">
+        {row.status !== 'works' ? <p className="hint" data-testid={`demo-reason-${row.role}-${row.key}`}>{row.reason}</p> : null}
+        <p><b>Goes down.</b> {row.down}</p>
+        <p><b>Comes back.</b> {row.back}</p>
+        {row.status === 'works' && row.make ? (
+          <form className="demo-form" onSubmit={submit}>
+            {typed ? (
+              <input data-testid={`demo-cover-input-${row.role}-${row.key}`} value={text} aria-label={row.nav} onChange={(event) => setText(event.target.value)} />
+            ) : null}
+            <button type="submit" className="btn small" data-testid={`demo-cover-go-${row.role}-${row.key}`} disabled={typed && !text.trim()}>{goLabel(row, state)}</button>
+          </form>
+        ) : null}
+        {lines.length ? (
+          <div className="demo-list" data-testid={`demo-live-${row.role}-${row.key}`}>
+            {lines.map((line, index) => (
+              <p key={`${line}-${index}`}>{line}</p>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    </section>
+  )
 }
 
 function Fresh({ id, children, className = '' }: { id: string; children: ReactNode; className?: string }) {
@@ -110,9 +263,11 @@ function Fresh({ id, children, className = '' }: { id: string; children: ReactNo
   return <div className={`demo-card${className ? ` ${className}` : ''}${fresh ? ' is-fresh' : ''}`} data-fresh={fresh ? '1' : '0'}>{children}</div>
 }
 
-function Master({ onCourse }: { onCourse: (title: string) => void }) {
+function Master({ homeTick, onRun, onCourse }: { homeTick: number; onRun: (action: DemoAction) => void; onCourse: (title: string) => void }) {
   const { state, cast } = useDemo()
+  const [page, setPage] = usePage('master', homeTick)
   const [title, setTitle] = useState('')
+  const row = rowsFor('master').find((item) => item.key === page)
   function submit(event: FormEvent) {
     event.preventDefault()
     const next = title.trim()
@@ -124,8 +279,11 @@ function Master({ onCourse }: { onCourse: (title: string) => void }) {
     <Desk
       who={cast.master}
       role="Runs the whole system"
-      nav={<><Jump id="demo-add-course">Add a course</Jump><Jump id="demo-master-numbers">Numbers</Jump></>}
+      nav={<SideNav role="master" page={page} onPick={setPage} />}
     >
+      <Alerts panel="master" />
+      {page !== 'library' && row ? <CoveragePage row={row} onRun={onRun} /> : null}
+      {page === 'library' ? <>
       <section className="panel" data-anchor="demo-add-course">
         <header><div><h2>Add a course</h2><p>It shows in the library and on the phone straight away.</p></div></header>
         <div className="body">
@@ -151,14 +309,17 @@ function Master({ onCourse }: { onCourse: (title: string) => void }) {
           <Numbers testId="demo-master-numbers" />
         </div>
       </section>
+      </> : null}
     </Desk>
   )
 }
 
-function Portal({ onNote }: { onNote: (body: string) => void }) {
+function Portal({ homeTick, onRun, onNote }: { homeTick: number; onRun: (action: DemoAction) => void; onNote: (body: string) => void }) {
   const { state, cast } = useDemo()
+  const [page, setPage] = usePage('portal', homeTick)
   const [body, setBody] = useState('')
   const stuck = stuckRows(state)
+  const row = rowsFor('portal').find((item) => item.key === page)
   function submit(event: FormEvent) {
     event.preventDefault()
     const next = body.trim()
@@ -170,8 +331,11 @@ function Portal({ onNote }: { onNote: (body: string) => void }) {
     <Desk
       who={cast.portalAdmin}
       role="Looks after this place"
-      nav={<><Jump id="demo-library">Library</Jump><Jump id="demo-post-note">Announcement</Jump><Jump id="demo-stuck">Who is stuck</Jump></>}
+      nav={<SideNav role="portal" page={page} onPick={setPage} />}
     >
+      <Alerts panel="portal" />
+      {page !== 'overview' && row ? <CoveragePage row={row} onRun={onRun} /> : null}
+      {page === 'overview' ? <>
       <section className="panel" data-anchor="demo-library">
         <header><div><h2>Library</h2><p>Courses people can open.</p></div></header>
         <div className="body demo-list" data-testid="demo-library">
@@ -214,15 +378,18 @@ function Portal({ onNote }: { onNote: (body: string) => void }) {
           ))}
         </div>
       </section>
+      </> : null}
     </Desk>
   )
 }
 
-function Teacher({ onPrompt, onReply }: { onPrompt: (kind: PromptKind, text: string) => void; onReply: (id: string, body: string) => void }) {
+function Teacher({ homeTick, onRun, onPrompt, onReply }: { homeTick: number; onRun: (action: DemoAction) => void; onPrompt: (kind: PromptKind, text: string) => void; onReply: (id: string, body: string) => void }) {
   const { state, cast } = useDemo()
+  const [page, setPage] = usePage('teacher', homeTick)
   const [text, setText] = useState('')
   const waiting = state.queue.filter((row) => !row.done)
   const done = state.queue.filter((row) => row.done)
+  const row = rowsFor('teacher').find((item) => item.key === page)
   function setPrompt(kind: PromptKind) {
     const next = text.trim()
     if (!next) return
@@ -233,8 +400,11 @@ function Teacher({ onPrompt, onReply }: { onPrompt: (kind: PromptKind, text: str
     <Desk
       who={cast.teacher}
       role="Guides the learners"
-      nav={<><Jump id="demo-ask">Ask</Jump><Jump id="demo-queue">Reply queue</Jump></>}
+      nav={<SideNav role="teacher" page={page} onPick={setPage} />}
     >
+      <Alerts panel="teacher" />
+      {page !== 'feedback' && row ? <CoveragePage row={row} onRun={onRun} /> : null}
+      {page === 'feedback' ? <>
       <section className="panel" data-anchor="demo-ask">
         <header><div><h2>Ask {cast.learner}</h2><p>A question or a workbook prompt shows on the phone.</p></div></header>
         <div className="body demo-stack">
@@ -262,6 +432,7 @@ function Teacher({ onPrompt, onReply }: { onPrompt: (kind: PromptKind, text: str
           ))}
         </div>
       </section>
+      </> : null}
     </Desk>
   )
 }
@@ -298,9 +469,12 @@ function QueueCard({ row, onReply }: { row: DemoQueueItem; onReply: (id: string,
   )
 }
 
-function Learner({ onWrite }: { onWrite: (kind: QueueKind, body: string, promptId?: string) => void }) {
+function Learner({ onRun, onWrite }: { onRun: (action: DemoAction) => void; onWrite: (kind: QueueKind, body: string, promptId?: string) => void }) {
   const { state, cast } = useDemo()
   const [comment, setComment] = useState('')
+  const [diary, setDiary] = useState('')
+  const [feeling, setFeeling] = useState('')
+  const [help, setHelp] = useState('')
   const prompts = learnerPrompts(state)
   const thread = learnerThread(state)
   function sendComment(event: FormEvent) {
@@ -318,6 +492,7 @@ function Learner({ onWrite }: { onWrite: (kind: QueueKind, body: string, promptI
       </header>
       <div className="app-scroll">
         <div className="demo-stack">
+          <Alerts panel="learner" />
           <section data-anchor="demo-phone-notes" data-testid="demo-phone-notes">
             {state.notes.map((note) => (
               <Fresh id={note.id} key={note.id} className="demo-phone-card">
@@ -357,14 +532,126 @@ function Learner({ onWrite }: { onWrite: (kind: QueueKind, body: string, promptI
               </article>
             ))}
           </section>
+          <PhonePlace />
+          <PhoneWrite
+            label="Diary"
+            placeholder="Write a diary line"
+            testId="demo-diary-body"
+            buttonId="demo-add-diary"
+            button="Save diary line"
+            value={diary}
+            setValue={setDiary}
+            onSend={(text) => onRun({ type: 'add-diary', text })}
+          />
+          <PhoneWrite
+            label="How you feel"
+            placeholder="Name the feeling"
+            testId="demo-compass-body"
+            buttonId="demo-add-compass"
+            button="Log feeling"
+            value={feeling}
+            setValue={setFeeling}
+            onSend={(text) => onRun({ type: 'add-compass', text })}
+          />
+          <PhoneWrite
+            label="Ask for help"
+            placeholder="Tell someone you need a look today"
+            testId="demo-safety-body"
+            buttonId="demo-add-safety"
+            button="Ask for help"
+            value={help}
+            setValue={setHelp}
+            onSend={(text) => onRun({ type: 'add-safety', text })}
+          />
+          <section data-testid="demo-phone-safety">
+            {state.safety.map((row) => (
+              <Fresh id={row.id} key={row.id} className="demo-phone-card">
+                <p className="eyebrow">Care</p>
+                <p>{row.body}</p>
+                {row.reply ? <p data-testid="demo-safety-reply"><b>Reply:</b> {row.reply}</p> : <p className="hint">Waiting for someone to look</p>}
+              </Fresh>
+            ))}
+          </section>
         </div>
       </div>
       <nav className="tabbar dark demo-tabs">
         <button type="button" className="tab" onClick={() => document.querySelector('[data-anchor="demo-phone-notes"]')?.scrollIntoView({ block: 'start' })}>Home</button>
         <button type="button" className="tab" onClick={() => document.querySelector('[data-anchor="demo-learner-prompts"]')?.scrollIntoView({ block: 'start' })}>Write</button>
         <button type="button" className="tab" onClick={() => document.querySelector('[data-anchor="demo-learner-replies"]')?.scrollIntoView({ block: 'start' })}>Replies</button>
+        <button type="button" className="tab" onClick={() => document.querySelector('[data-anchor="demo-phone-place"]')?.scrollIntoView({ block: 'start' })}>Place</button>
       </nav>
     </div>
+  )
+}
+
+function PhonePlace() {
+  const { state } = useDemo()
+  const bits = [
+    ...state.packs.map((item) => ({ id: item.id, eyebrow: 'Pack', text: item.text })),
+    ...state.events.map((item) => ({ id: item.id, eyebrow: item.kind === 'night' ? 'Night' : item.kind === 'gathering' ? 'Gathering' : 'Event', text: item.title })),
+    ...state.plans.map((item) => ({ id: item.id, eyebrow: 'Study plan', text: item.text })),
+    ...state.codes.map((item) => ({ id: item.id, eyebrow: 'Join code', text: item.text })),
+    ...state.joining.map((item) => ({ id: item.id, eyebrow: 'At the door', text: item.text })),
+    ...state.missions.map((item) => ({ id: item.id, eyebrow: 'Mission', text: item.text })),
+    ...state.lanes.map((item) => ({ id: item.id, eyebrow: 'Lane', text: item.text })),
+    ...state.scenes.map((item) => ({ id: item.id, eyebrow: 'Opening', text: item.text })),
+    ...state.diary.map((item) => ({ id: item.id, eyebrow: 'Diary', text: item.text })),
+    ...state.compass.map((item) => ({ id: item.id, eyebrow: 'Feeling', text: item.text })),
+  ]
+  return (
+    <section data-anchor="demo-phone-place" data-testid="demo-phone-place">
+      {state.liveTitle ? (
+        <Fresh id="live" className="demo-phone-card">
+          <p className="eyebrow">Live now</p>
+          <p>{state.liveTitle}</p>
+        </Fresh>
+      ) : null}
+      <p className="hint">{state.garden ? 'Garden path is on' : 'Garden path is off'}</p>
+      {state.paused ? <p className="demo-paused">Your place is paused</p> : null}
+      {bits.map((bit) => (
+        <Fresh id={bit.id} key={bit.id} className="demo-phone-card">
+          <p className="eyebrow">{bit.eyebrow}</p>
+          <p>{bit.text}</p>
+        </Fresh>
+      ))}
+    </section>
+  )
+}
+
+function PhoneWrite({
+  label,
+  placeholder,
+  testId,
+  buttonId,
+  button,
+  value,
+  setValue,
+  onSend,
+}: {
+  label: string
+  placeholder: string
+  testId: string
+  buttonId: string
+  button: string
+  value: string
+  setValue: (next: string) => void
+  onSend: (text: string) => void
+}) {
+  function submit(event: FormEvent) {
+    event.preventDefault()
+    const next = value.trim()
+    if (!next) return
+    onSend(next)
+    setValue('')
+  }
+  return (
+    <section className="card">
+      <p className="eyebrow">{label}</p>
+      <form className="demo-form" onSubmit={submit}>
+        <textarea data-testid={testId} value={value} placeholder={placeholder} aria-label={label} rows={2} onChange={(event) => setValue(event.target.value)} />
+        <button type="submit" className="pill gold small" data-testid={buttonId} disabled={!value.trim()}>{button}</button>
+      </form>
+    </section>
   )
 }
 

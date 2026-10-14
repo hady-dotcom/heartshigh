@@ -154,6 +154,7 @@ function Stage() {
   const [spot, setSpot] = useState<Spot | null>(null)
   const [index, setIndex] = useState(-1)
   const [status, setStatus] = useState<'idle' | 'playing' | 'done'>('idle')
+  const [homeTick, setHomeTick] = useState(0)
   const playing = useRef(false)
   const timer = useRef(0)
   const step = index >= 0 ? LOOP_PLAY[index] : null
@@ -248,6 +249,7 @@ function Stage() {
     setIndex(0)
     playing.current = true
     setStatus('playing')
+    setHomeTick((tick) => tick + 1)
     timer.current = window.setTimeout(() => arm(0), 350)
   }
 
@@ -264,6 +266,7 @@ function Stage() {
     const receivers = receiversFor(action)
     const next = reduceDemo(stateRef.current, action)
     if (next === stateRef.current) return
+    stateRef.current = next
     replace(next, receivers)
     setSpot({ actor, receivers })
     setIndex(-1)
@@ -275,6 +278,7 @@ function Stage() {
     setSpot(null)
     setIndex(-1)
     setStatus('idle')
+    setHomeTick((tick) => tick + 1)
   }
 
   function showCast(next: DemoCast) {
@@ -332,6 +336,8 @@ function Stage() {
                         <div className="demo-notch" />
                         <Board
                           only="learner"
+                          homeTick={homeTick}
+                          onRun={(action) => apply(action, 'learner')}
                           onCourse={(title) => apply({ type: 'add-course', title }, 'master')}
                           onNote={(body) => apply({ type: 'post-note', body }, 'portal')}
                           onPrompt={(kind, text) => apply({ type: 'set-prompt', kind, text }, 'teacher')}
@@ -343,6 +349,8 @@ function Stage() {
                   ) : (
                     <Board
                       only={panel.slot}
+                      homeTick={homeTick}
+                      onRun={(action) => apply(action, panel.slot)}
                       onCourse={(title) => apply({ type: 'add-course', title }, 'master')}
                       onNote={(body) => apply({ type: 'post-note', body }, 'portal')}
                       onPrompt={(kind: PromptKind, text: string) => apply({ type: 'set-prompt', kind, text }, 'teacher')}

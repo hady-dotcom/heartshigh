@@ -180,6 +180,39 @@ test('the loop on a 1920 screen and a 1280 screen', async ({ page }) => {
   await page.screenshot({ path: `${dir}/demo-loop-1280x800.png`, fullPage: false })
 })
 
+test('a nav change reaches the phone and a learner note comes back up', async ({ page }) => {
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await signIn(page, 'master@hearts.test', 'hearts-master', '/demo-stage')
+  await showCast(page)
+
+  await page.getByTestId('demo-nav-master-calendar').click()
+  await page.getByTestId('demo-cover-input-master-calendar').fill('Open evening')
+  await page.getByTestId('demo-cover-go-master-calendar').click()
+  await expect(page.getByTestId('demo-phone-place')).toContainText('Open evening')
+  await expect(page.getByTestId('demo-alerts-learner')).toContainText('Open evening')
+  await page.getByTestId('demo-nav-portal-calendar').click()
+  await expect(page.getByTestId('demo-live-portal-calendar')).toContainText('Open evening')
+
+  await page.getByTestId('demo-nav-master-learners').click()
+  await page.getByTestId('demo-cover-go-master-learners').click()
+  await expect(page.getByTestId('demo-phone-place')).toContainText('Your place is paused')
+
+  await page.getByTestId('demo-nav-portal-safety').click()
+  await page.getByTestId('demo-cover-input-portal-safety').fill('We will sit with you today')
+  await page.getByTestId('demo-cover-go-portal-safety').click()
+  await expect(page.getByTestId('demo-phone-safety')).toContainText('We will sit with you today')
+
+  await page.getByTestId('demo-diary-body').fill('I wrote this on the phone.')
+  await page.getByTestId('demo-add-diary').click()
+  await page.getByTestId('demo-nav-teacher-diaries').click()
+  await expect(page.getByTestId('demo-live-teacher-diaries')).toContainText('I wrote this on the phone.')
+  await page.getByTestId('demo-nav-portal-overview').click()
+  await expect(page.getByTestId('demo-activity')).toContainText('Abdallah wrote in the diary.')
+  await page.getByTestId('demo-nav-master-library').click()
+  await expect(page.getByTestId('demo-course-title')).toBeVisible()
+  await expect(page.getByTestId('demo-num-courses')).toHaveText('3')
+})
+
 test('a learner cannot open the demo stage', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/demo-stage')
