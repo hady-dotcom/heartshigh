@@ -1,3 +1,65 @@
+.demo-door {
+  min-height: 100vh;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 18px;
+  padding: 48px 24px;
+  text-align: center;
+  color: #f6f0e4;
+  background:
+    radial-gradient(900px 420px at 50% -10%, rgba(196, 143, 44, 0.18), transparent 60%),
+    #12101c;
+}
+.demo-door-kicker {
+  margin: 0;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 12px;
+  color: #dca643;
+}
+.demo-door-dots {
+  display: flex;
+  gap: 22px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.demo-door-dots li {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+}
+.demo-door-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(246, 240, 228, 0.45);
+}
+.demo-door h1 {
+  max-width: 38rem;
+  margin: 0;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 600;
+  line-height: 1.2;
+}
+.demo-door-note { margin: 0; max-width: 28rem; color: rgba(246, 240, 228, 0.78); }
+.demo-door-start {
+  border: 0;
+  border-radius: 999px;
+  padding: 14px 22px;
+  background: #dca643;
+  color: #1f1d36;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.demo-door-start:hover { background: #f0c36a; }
+
 .demo-stage {
   --demo-bar: 64px;
   --demo-ticker: 42px;

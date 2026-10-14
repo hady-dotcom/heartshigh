@@ -35,6 +35,8 @@ import {
   stuckRows,
   welcomeLine,
   COVERAGE,
+  DEMO_ENTRY_START,
+  DEMO_ENTRY_TITLE,
   alertsFor,
   coverageMarkdown,
   coverageWorks,
@@ -206,6 +208,19 @@ describe('cast your demo', () => {
 const MASTER_NAV = ['portals', 'learners', 'diaries', 'codes', 'safety', 'announcements', 'library', 'bring-in', 'packs', 'plans', 'live', 'nights', 'circle', 'missions', 'opening', 'lanes', 'insights', 'trends', 'simulator', 'personas', 'experiments', 'calendar', 'review', 'tiers', 'questions', 'ai', 'framing', 'see-how', 'sheet', 'transcripts', 'create']
 const PORTAL_NAV = ['overview', 'teach', 'diaries', 'access', 'feedback', 'safety', 'announcements', 'library', 'content', 'bring-in', 'plans', 'gather', 'nights', 'live', 'circle', 'missions', 'insights', 'compass', 'experiments', 'calendar', 'ai', 'opening', 'questions', 'sheet', 'create', 'settings']
 const TEACHER_NAV = ['overview', 'teach', 'diaries', 'feedback', 'compass', 'plans', 'gather', 'nights', 'live', 'safety', 'announcements']
+
+describe('the demo door', () => {
+  it('says this is practice data and does not ask for a login', () => {
+    assert.equal(DEMO_ENTRY_TITLE.includes('HEARTS Demo stage'), true)
+    assert.equal(DEMO_ENTRY_TITLE.includes('master, portal admin, teacher, learner'), true)
+    assert.equal(DEMO_ENTRY_TITLE.includes('Practice data only'), true)
+    assert.equal(DEMO_ENTRY_TITLE.includes('nothing you do here changes real portals'), true)
+    assert.equal(DEMO_ENTRY_START, 'Start the Demo stage')
+    const packed = `${DEMO_ENTRY_TITLE} ${DEMO_ENTRY_START}`.toLowerCase()
+    assert.equal(packed.includes('password'), false)
+    assert.equal(packed.includes('sign in'), false)
+  })
+})
 
 describe('every left-nav item is covered', () => {
   it('lists the master, portal and teacher menus in the same order as the desks', () => {

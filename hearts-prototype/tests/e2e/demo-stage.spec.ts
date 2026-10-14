@@ -3,12 +3,16 @@ import { mkdirSync } from 'node:fs'
 
 const dir = process.env.SCREENSHOT_DIR || 'artifacts/screenshots'
 
-async function signIn(page: Page, email: string, password: string, next: string) {
-  await page.goto(`/login?next=${encodeURIComponent(next)}`)
-  await page.getByTestId('login-email').fill(email)
-  await page.getByTestId('login-password').fill(password)
-  await page.getByTestId('login-submit').click()
-  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 60_000 })
+async function openDemo(page: Page) {
+  await page.goto('/demo-stage')
+  await expect(page).toHaveURL(/\/demo-stage$/)
+  await expect(page.getByTestId('login')).toHaveCount(0)
+  await expect(page.getByTestId('demo-entry')).toBeVisible()
+  await expect(page.getByTestId('demo-entry-title')).toContainText('Practice data only')
+  await expect(page.getByTestId('demo-entry-title')).toContainText('nothing you do here changes real portals')
+  await page.getByTestId('demo-start').click()
+  await expect(page.getByTestId('demo-stage')).toBeVisible()
+  await expect(page.getByTestId('demo-cast')).toBeVisible()
 }
 
 test.describe.configure({ timeout: 180_000 })
@@ -120,9 +124,7 @@ async function downAndUp(page: Page, course: string, note: string, learner = 'Ab
 test('the loop on a 1920 screen and a 1280 screen', async ({ page }) => {
   mkdirSync(dir, { recursive: true })
   await page.setViewportSize({ width: 1920, height: 1080 })
-  await signIn(page, 'master@hearts.test', 'hearts-master', '/demo-stage')
-  await expect(page.getByTestId('demo-stage')).toBeVisible()
-  await expect(page.getByTestId('demo-cast')).toBeVisible()
+  await openDemo(page)
   await showCast(page)
   for (const slot of ['master', 'portal', 'teacher', 'learner']) {
     await expect(page.getByTestId(`demo-panel-${slot}`)).toBeVisible()
@@ -182,7 +184,7 @@ test('the loop on a 1920 screen and a 1280 screen', async ({ page }) => {
 
 test('a nav change reaches the phone and a learner note comes back up', async ({ page }) => {
   await page.setViewportSize({ width: 1920, height: 1080 })
-  await signIn(page, 'master@hearts.test', 'hearts-master', '/demo-stage')
+  await openDemo(page)
   await showCast(page)
 
   await page.getByTestId('demo-nav-master-calendar').click()
@@ -213,9 +215,26 @@ test('a nav change reaches the phone and a learner note comes back up', async ({
   await expect(page.getByTestId('demo-num-courses')).toHaveText('3')
 })
 
-test('a learner cannot open the demo stage', async ({ page }) => {
+test('a signed-out person gets the demo door, not the app login', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
-  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/demo-stage')
-  await expect(page.getByTestId('demo-stage')).toHaveCount(0)
-  await expect(page).not.toHaveURL(/\/demo-stage$/)
+  await page.goto('/demo-stage')
+  await expect(page).toHaveURL(/\/demo-stage$/)
+  await expect(page.getByTestId('login-email')).toHaveCount(0)
+  await expect(page.locator('.garden-door')).toHaveCount(0)
+  await expect(page.getByTestId('demo-entry-title')).toHaveText('HEARTS Demo stage: a live four-screen walk-through (master, portal admin, teacher, learner). Practice data only; nothing you do here changes real portals.')
+  await expect(page.getByTestId('demo-start')).toHaveText('Start the Demo stage')
+  const colours = {
+    master: 'rgb(37, 33, 74)',
+    portal: 'rgb(31, 138, 120)',
+    teacher: 'rgb(196, 143, 44)',
+    learner: 'rgb(122, 79, 168)',
+  }
+  for (const [key, colour] of Object.entries(colours)) {
+    await expect.poll(() => page.getByTestId(`demo-dot-${key}`).evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(colour)
+  }
+  const door = await page.getByTestId('demo-entry').evaluate((el) => getComputedStyle(el).backgroundColor)
+  expect(door).not.toBe('rgb(243, 238, 228)')
+  await page.getByTestId('demo-start').click()
+  await expect(page.getByTestId('demo-cast')).toBeVisible()
+  await expect(page.getByTestId('demo-entry')).toHaveCount(0)
 })
