@@ -263,7 +263,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
       ctx={ctx}
       master={master}
       title={experiment.name}
-      intro={experiment.description || slot?.description || ''}
+      intro={slot?.description || ''}
       testId="experiment-detail"
       tools={<Link className="btn ghost" href={base}>All experiments</Link>}
     >
