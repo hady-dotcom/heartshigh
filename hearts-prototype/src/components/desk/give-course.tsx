@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { Hidden } from '@/components/app/shell'
 import { CourseTree } from '@/components/desk/course-tree'
 import type { DoorGroup, PlacedCourse } from '@/lib/curriculum-groups'
@@ -37,7 +38,7 @@ function asTree(courses: GiveCourseRow[]): DoorGroup[] {
   })
 }
 
-export function GiveCourse({
+function GiveSeveral({
   learners,
   courses,
   next,
@@ -74,4 +75,61 @@ export function GiveCourse({
       <button className="btn" data-testid="grant-course" type="submit">Give to several learners</button>
     </form>
   )
+}
+
+/** One learner, from their row. The panel above gives the same course to several people. */
+function GiveOne({
+  learnerId,
+  learnerName,
+  courses,
+  next,
+}: {
+  learnerId: number
+  learnerName: string
+  courses: { id: number; title: string }[]
+  next: string
+}) {
+  const [course, setCourse] = useState('')
+  return (
+    <form
+      className="give-course"
+      action="/api/hearts"
+      method="post"
+      data-testid="give-one-course"
+      onSubmit={(event) => {
+        if (!course) {
+          event.preventDefault()
+          return
+        }
+        if (!window.confirm(`Give this course to ${learnerName}?`)) event.preventDefault()
+      }}
+    >
+      <Hidden fields={{ action: 'grant', learner: learnerId, next }} />
+      <select
+        name="course"
+        required
+        value={course}
+        onChange={(event) => setCourse(event.target.value)}
+        data-testid="grant-course-select"
+        aria-label="Give a course"
+      >
+        <option value="">Choose a course…</option>
+        {courses.map((row) => (
+          <option key={row.id} value={row.id}>{row.title}</option>
+        ))}
+      </select>
+      <button className="btn small" data-testid="grant-learner" type="submit" disabled={!course}>Give</button>
+    </form>
+  )
+}
+
+export function GiveCourse(
+  props:
+    | { learners: { id: number; name: string }[]; courses: GiveCourseRow[]; next: string; learnerId?: undefined }
+    | { learnerId: number; learnerName: string; courses: { id: number; title: string }[]; next: string; learners?: undefined },
+) {
+  if (props.learnerId != null) {
+    return <GiveOne learnerId={props.learnerId} learnerName={props.learnerName} courses={props.courses} next={props.next} />
+  }
+  return <GiveSeveral learners={props.learners} courses={props.courses} next={props.next} />
 }
