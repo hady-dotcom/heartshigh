@@ -293,7 +293,15 @@
   overflow: hidden;
 }
 .demo-phone .app-scroll { flex: 1; min-height: 0; overflow: auto; padding-bottom: 78px; }
-.demo-phone-real { align-items: center; justify-content: center; padding: 0; }
+.demo-phone-slot {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.demo-phone-alerts { flex: none; margin: 8px 8px 0; }
+.demo-phone-real { align-items: center; justify-content: center; padding: 0; height: auto; flex: 1; min-height: 0; }
 .demo-bezel-real {
   max-width: none;
   height: auto;
