@@ -63,18 +63,17 @@ const PAGES: Record<string, HelpCopy> = {
   lanes: {
     title: 'How to use Lanes',
     body: [
-      'Each lane is one theme, so you walk one subject at a time.',
-      'Tap a lane to watch its clips.',
-      'Courses already in those clips are open now. The others open one a day.',
+      'Each lane is a friendly way in, like Trust or Patience.',
+      'It says which tree it grows, and the doors of the hadith it walks. Tap a lane to watch its clips.',
+      'Courses that already appear in those clips are open now. Others open one a day.',
     ],
   },
   garden: {
     title: 'How to use the Garden',
     body: [
       'The garden is a quiet picture of time you have given.',
-      'Finished counts a talk once you watch it to the end, or tap I have watched this part.',
-      'Short clips do not count, and your path is this course only.',
-      'Each planter is one theme, and it grows as you finish a talk and sit with a question.',
+      'Five trees grow here: Islam, Iman, Ihsan, the Hour and the Sitting. A tree grows when you finish a talk on its doors and answer a question there.',
+      'Finished counts a talk once you watch it to the end or tap I have watched this part. Short clips do not count. Your path is this course only.',
     ],
   },
   'garden-general': {

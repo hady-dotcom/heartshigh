@@ -21,11 +21,11 @@ One combined file per area, per stage. Stage 0 is a sapling. Stage 4 is full. Th
 | --- | --- | --- |
 | `/garden/trees/{area}/stage-{stage}.webp` | 512 × 640 | Transparent |
 
-`{area}` is `quran`, `hadith`, `character`, `society` or `spirituality`. `{stage}` is `0` to `4`.
+`{area}` is the painted planter: `quran`, `hadith`, `character`, `society` or `spirituality`. `{stage}` is `0` to `4`. The plaques no longer use those old names. Islam reuses `society`, Iman reuses `spirituality`, Ihsan reuses `character`, The Hour reuses `quran`, and The Sitting reuses `hadith`.
 
-Plaques in the art are blank. The page draws the name in the learner sans (`--sans`), small enough to sit inside the dark banner on a 390-wide phone. Qur’an uses a real apostrophe: QUR’AN.
+Plaques in the art are blank. The page draws the name in capitals in the learner sans (`--sans`), small enough to sit inside the dark banner on a 390-wide phone. A one-line note sits under each name.
 
-The five pads are a smile. Qur’an is back-left, Spirituality back-right, Hadith middle-left, Society middle-right, Character front-centre and in front. A sapling (stage 0 or 1) paints above a fuller tree so a small one is not hidden, and the outer plaques stay out to the sides.
+The five pads are a smile. The Hour is back-left, Iman back-right, The Sitting middle-left, Islam middle-right, Ihsan front-centre and in front. A sapling (stage 0 or 1) paints above a fuller tree so a small one is not hidden, and the outer plaques stay out to the sides.
 
 ## Split layers and sway
 
@@ -40,13 +40,15 @@ The page draws the planter first, then the canopy. Both use the same canvas and 
 
 Medallions are children of the canopy, so they sway with it. `prefers-reduced-motion: reduce` leaves the canopy still. The lantern keeps its glow pulse unless reduced motion is on.
 
-| Area | stage 0 | stage 1 | stage 2 | stage 3 | stage 4 |
-| --- | --- | --- | --- | --- | --- |
-| Qur’an | 265.5, 506 | 263, 506 | 267, 506 | 262.5, 506 | 262, 506 |
-| Hadith | 257, 505 | 257, 505 | 263.5, 506 | 267.5, 505 | 267.5, 506 |
-| Character | 257, 504 | 262, 506 | 265, 506 | 266.5, 506 | 266, 506 |
-| Society | 258, 506 | 251.5, 505 | 268.5, 506 | 268.5, 507 | 268.5, 507 |
-| Spirituality | 257.3, 506 | 261, 506 | 262.5, 506 | 264, 506 | 264, 506 |
+The pivot files keep the planter folder names.
+
+| Planter folder | Tree now | stage 0 | stage 1 | stage 2 | stage 3 | stage 4 |
+| --- | --- | --- | --- | --- | --- | --- |
+| quran | The Hour | 265.5, 506 | 263, 506 | 267, 506 | 262.5, 506 | 262, 506 |
+| hadith | The Sitting | 257, 505 | 257, 505 | 263.5, 506 | 267.5, 505 | 267.5, 506 |
+| character | Ihsan | 257, 504 | 262, 506 | 265, 506 | 266.5, 506 | 266, 506 |
+| society | Islam | 258, 506 | 251.5, 505 | 268.5, 506 | 268.5, 507 | 268.5, 507 |
+| spirituality | Iman | 257.3, 506 | 261, 506 | 262.5, 506 | 264, 506 | 264, 506 |
 
 ## Medallions and props
 
@@ -66,11 +68,11 @@ Every working door belongs to one tree.
 
 | Tree | Doors |
 | --- | --- |
-| Qur’an | 12, His Books |
-| Hadith | 1, 2, 19, 20, the sitting and the close |
-| Character | 16, ihsan |
-| Society | 3–8, Islam as it is lived with other people |
-| Spirituality | 9–11, 13–15, 17, 18, iman apart from His Books, and the Hour |
+| Islam | 3–8, what you do |
+| Iman | 9–15, including 12 His Books, what you believe |
+| Ihsan | 16, worship as though you see Him |
+| The Hour | 17, 18, what's coming |
+| The Sitting | 1, 2, 19, 20, how Jibril came to teach |
 
 A lesson is sown by its cut's best clause, and if that is empty, by a confirmed clause tag. A lesson with no door grows no tree.
 

@@ -1,6 +1,6 @@
 // Heart state and routing for the opening (build spec sections 2.6, 3 and 4).
 // Pure functions shared by the browser, the server, the master simulator and the tests. No path aliases here.
-// Lanes and talks keep their Jibril clause; routing and the spine work in the 20 doors those clauses fold into.
+// Talks still remember a clause. Routing, the spine and the lanes work in the 20 doors those clauses fold into.
 import { DOOR_COUNT, doorNumberOfClause, doorOfClause } from './doors'
 
 export type ScaleKey = 'desire' | 'greed' | 'anger' | 'ego' | 'worry' | 'belonging' | 'gratitude' | 'faith' | 'compassion' | 'discipline'
@@ -252,14 +252,25 @@ export function cutDoor(cut: Pick<CutInfo, 'clause' | 'door'>): number | null {
   return cut.door !== undefined ? cut.door : doorNumberOfClause(cut.clause)
 }
 
+/** One row per door, keeping the best (lowest) rank when several clauses share a door. */
 export function laneDoors(lane: LaneDef): { door: number; rank: number }[] {
-  if (lane.doors) return lane.doors
-  return lane.clauses.map((row) => ({ door: doorNumberOfClause(row.clause) || 0, rank: row.rank })).filter((row) => row.door)
+  const rows = lane.doors?.length
+    ? lane.doors
+    : (lane.clauses || []).map((row) => ({ door: doorNumberOfClause(row.clause) || 0, rank: row.rank })).filter((row) => row.door)
+  const best = new Map<number, number>()
+  for (const row of rows) {
+    if (!row.door) continue
+    const rank = row.rank || 1
+    best.set(row.door, Math.min(best.get(row.door) ?? rank, rank))
+  }
+  return [...best.entries()].map(([door, rank]) => ({ door, rank })).sort((a, b) => a.rank - b.rank || a.door - b.door)
 }
 
 export function laneExcludedDoors(lane: LaneDef): number[] {
-  if (lane.excludeDoors) return lane.excludeDoors
-  return [...new Set(lane.excludeClauses.map((clause) => doorNumberOfClause(clause) || 0).filter(Boolean))]
+  const doors = lane.excludeDoors?.length
+    ? lane.excludeDoors
+    : (lane.excludeClauses || []).map((clause) => doorNumberOfClause(clause) || 0).filter(Boolean)
+  return [...new Set(doors)].sort((a, b) => a - b)
 }
 
 /** A lane ranks a door by the best rank of any of its clauses in that door. */

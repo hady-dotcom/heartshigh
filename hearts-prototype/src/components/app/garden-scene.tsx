@@ -2,11 +2,12 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import type { AreaFruit, AreaView } from '@/lib/garden-areas'
+import { readStoredGarden, type AreaFruit, type AreaView } from '@/lib/garden-areas'
 import { CANOPY_SPLIT, TREE_FRAME, TREE_PADS, medallionSpots, sceneBackground, treeDepth, treeSources, trunkPivot, type GardenTheme } from '@/lib/garden-art'
 
 const MEDALLION_CAP = 6
 const SEEN_KEY = 'hearts-garden-bloom'
+const AREAS_KEY = 'hearts-garden-areas'
 
 /** Glow medallions that this browser has not shown before. */
 function useFreshBloom(ids: string[]) {
@@ -34,12 +35,12 @@ function hanging(area: AreaView): AreaFruit[] {
 }
 
 function Tree({ area }: { area: AreaView }) {
-  const pad = TREE_PADS[area.id]
-  const art = treeSources(area.id, area.stage)
+  const pad = TREE_PADS[area.art]
+  const art = treeSources(area.art, area.stage)
   const marks = hanging(area)
   const spots = medallionSpots(marks.length, area.stage)
   const fresh = useFreshBloom(marks.filter((mark) => mark.earned).map((mark) => mark.id))
-  const pivot = trunkPivot(area.id, area.stage)
+  const pivot = trunkPivot(area.art, area.stage)
   const pivotX = `${(pivot.x / TREE_FRAME.width) * 100}%`
   const pivotY = `${(pivot.y / TREE_FRAME.height) * 100}%`
   return (
@@ -47,12 +48,13 @@ function Tree({ area }: { area: AreaView }) {
       className="garden-tree"
       data-testid="garden-tree"
       data-area={area.id}
+      data-art={area.art}
       data-stage={area.stage}
       data-canopy={art.split ? 'split' : 'combined'}
       style={{
         ['--pad-x' as string]: pad.x,
         ['--pad-y' as string]: pad.y,
-        ['--z' as string]: String(treeDepth(area.id, area.stage)),
+        ['--z' as string]: String(treeDepth(area.art, area.stage)),
         ['--sway' as string]: pad.sway,
         ['--sway-dur' as string]: pad.dur,
         ['--sway-delay' as string]: pad.delay,
@@ -62,7 +64,8 @@ function Tree({ area }: { area: AreaView }) {
     >
       <div className="tree-planter">
         <img src={art.planter} alt="" />
-        <Link className="plaque-name" href={area.workbookHref}>{area.plaque}</Link>
+        <Link className="plaque-name" href={area.workbookHref} style={{ ['--plaque-chars' as string]: String(area.plaque.length) }} aria-label={`${area.title}. ${area.note}`}>{area.plaque}</Link>
+        <p className="plaque-note" data-testid="plaque-note">{area.note}</p>
       </div>
       <div className={`tree-canopy${art.split ? ' sway' : ''}`}>
         {art.canopy ? <img src={art.canopy} alt="" /> : null}
@@ -109,6 +112,17 @@ function useAppTheme(pinned?: GardenTheme): GardenTheme {
 
 export function GardenScene({ areas, theme: pinned }: { areas: AreaView[]; theme?: GardenTheme }) {
   const theme = useAppTheme(pinned)
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(AREAS_KEY)
+      if (!raw) return
+      const migrated = readStoredGarden(raw)
+      if (!migrated) return
+      localStorage.setItem(AREAS_KEY, JSON.stringify(migrated))
+    } catch {
+      // Private browsing can refuse storage. The trees still grow from the talks themselves.
+    }
+  }, [])
   return (
     <section
       className="garden-scene"

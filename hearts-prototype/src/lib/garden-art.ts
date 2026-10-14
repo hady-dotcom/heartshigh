@@ -1,4 +1,4 @@
-import type { GardenAreaId, GrowthStage } from './garden-areas'
+import type { GardenArtId, GrowthStage } from './garden-areas'
 
 /**
  * Painted garden frames.
@@ -19,7 +19,7 @@ export const TREE_FRAME = { width: 512, height: 640, anchorX: 256, anchorY: 622 
  * Trunk centre on the soil line, canvas pixels, top-left origin, y down.
  * From trees/pivots.json. x is the trunk centre; y is the soil line.
  */
-const TRUNK_PIVOTS: Record<GardenAreaId, Record<GrowthStage, readonly [number, number]>> = {
+const TRUNK_PIVOTS: Record<GardenArtId, Record<GrowthStage, readonly [number, number]>> = {
   quran: { 0: [265.5, 506], 1: [263, 506], 2: [267, 506], 3: [262.5, 506], 4: [262, 506] },
   hadith: { 0: [257, 505], 1: [257, 505], 2: [263.5, 506], 3: [267.5, 505], 4: [267.5, 506] },
   character: { 0: [257, 504], 1: [262, 506], 2: [265, 506], 3: [266.5, 506], 4: [266, 506] },
@@ -30,7 +30,7 @@ const TRUNK_PIVOTS: Record<GardenAreaId, Record<GrowthStage, readonly [number, n
 /** Planter and canopy are separate files, so the crown can sway and the planter cannot. */
 export const CANOPY_SPLIT = true
 
-export function trunkPivot(id: GardenAreaId, stage: GrowthStage) {
+export function trunkPivot(id: GardenArtId, stage: GrowthStage) {
   const [x, y] = TRUNK_PIVOTS[id][stage]
   return { x, y }
 }
@@ -38,7 +38,7 @@ export function trunkPivot(id: GardenAreaId, stage: GrowthStage) {
 export type GardenTheme = 'evening' | 'dawn'
 
 /** Smile of stone pads on a 390×844 scene. Each crown has its own angle, sine period and phase. */
-export const TREE_PADS: Record<GardenAreaId, { x: string; y: string; z: number; sway: string; dur: string; delay: string }> = {
+export const TREE_PADS: Record<GardenArtId, { x: string; y: string; z: number; sway: string; dur: string; delay: string }> = {
   quran: { x: '12.56%', y: '62.2%', z: 2, sway: '0.75deg', dur: '5.2s', delay: '-1.1s' },
   spirituality: { x: '88.21%', y: '62.2%', z: 2, sway: '0.9deg', dur: '5.7s', delay: '-3.4s' },
   hadith: { x: '30.77%', y: '67.3%', z: 3, sway: '1.1deg', dur: '4.3s', delay: '-2.2s' },
@@ -47,7 +47,7 @@ export const TREE_PADS: Record<GardenAreaId, { x: string; y: string; z: number; 
 }
 
 /** A sapling paints in front of a full tree, so a small one is not lost behind a big canopy. */
-export function treeDepth(id: GardenAreaId, stage: GrowthStage) {
+export function treeDepth(id: GardenArtId, stage: GrowthStage) {
   const row = TREE_PADS[id].z
   return stage <= 1 ? row + 6 : row
 }
@@ -56,7 +56,7 @@ export function sceneBackground(theme: GardenTheme) {
   return theme === 'dawn' ? '/garden/bg/garden-dawn.webp' : '/garden/bg/garden-evening.webp'
 }
 
-export function treeSources(id: GardenAreaId, stage: GrowthStage) {
+export function treeSources(id: GardenArtId, stage: GrowthStage) {
   const base = `/garden/trees/${id}/stage-${stage}`
   if (CANOPY_SPLIT) {
     return { planter: `${base}-planter.webp`, canopy: `${base}-canopy.webp`, split: true as const }

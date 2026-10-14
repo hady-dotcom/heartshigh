@@ -84,7 +84,7 @@ export const Lanes: CollectionConfig = {
     { name: 'seats', type: 'relationship', relationTo: 'seats', hasMany: true },
     { name: 'seriesNote', type: 'textarea' },
     { name: 'optInOnly', type: 'checkbox', defaultValue: false },
-    { name: 'excludeClauses', type: 'relationship', relationTo: 'clauses', hasMany: true, admin: { description: 'Never served in this lane during a learner’s first 7 days.' } },
+    { name: 'excludeClauses', type: 'relationship', relationTo: 'clauses', hasMany: true, admin: { description: 'Doors never offered in this lane during a learner’s first 7 days.' } },
     { name: 'order', type: 'number', defaultValue: 1 },
     { name: 'reachPhrase', type: 'text' },
     { name: 'pseudo', type: 'checkbox', defaultValue: false, admin: { description: 'The default lane behind “Just show me something”. Never scored or shown.' } },

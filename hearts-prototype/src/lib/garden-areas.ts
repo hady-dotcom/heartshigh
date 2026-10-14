@@ -1,45 +1,66 @@
 /**
  * The garden's five trees, and how a learner's real progress fills them.
  *
- * The curriculum's 20 working doors are the only growth areas the app has. They already sit in six
- * sections (the sitting, Islam, iman, ihsan, the Hour, the trunk). Five trees read more clearly on a
- * phone, so the doors are grouped as below. Every door belongs to exactly one tree.
+ * The trees are the hadith of Jibril's own sections. His Books (door 12) sits inside Iman.
+ * The Hour is its own tree. The Sitting holds how Jibril came, and the close. Every door
+ * belongs to exactly one tree.
  *
- * | Tree          | Doors        | What it holds                                      |
- * |---------------|--------------|----------------------------------------------------|
- * | Qur'an        | 12           | His Books                                          |
- * | Hadith        | 1, 2, 19, 20 | The sitting, and the close: it was Jibril         |
- * | Character     | 16           | Ihsan: worship as though you see Him               |
- * | Society       | 3–8          | Islam as it is lived with other people             |
- * | Spirituality  | 9–11, 13–15, 17, 18 | Iman, apart from His Books, and the Hour    |
+ * | Tree         | Doors              | Note                                      |
+ * |--------------|--------------------|-------------------------------------------|
+ * | Islam        | 3–8                | what you do                               |
+ * | Iman         | 9–15, including 12 | what you believe                          |
+ * | Ihsan        | 16                 | worship as though you see Him             |
+ * | The Hour     | 17, 18             | what's coming                             |
+ * | The Sitting  | 1, 2, 19, 20       | how Jibril came to teach                  |
+ *
+ * The painted planters stay where they are. Islam reuses the society planter, Iman the
+ * spirituality planter, Ihsan the character planter, The Hour the old Qur'an planter
+ * (that tree folded into Iman), and The Sitting the hadith planter.
  *
  * Only a full talk finished inside its course, and that course's questions answered there, fill a
  * tree. A hors d'oeuvre or an appetiser never does: those watches are not completions, and an answer
  * given while browsing a short clip is left out by the caller (see `answerCounts`).
  */
 
-export type GardenAreaId = 'quran' | 'hadith' | 'character' | 'society' | 'spirituality'
+export type GardenAreaId = 'islam' | 'iman' | 'ihsan' | 'hour' | 'sitting'
+
+/** Folder names of the five painted planters. The pictures are not renamed. */
+export type GardenArtId = 'quran' | 'hadith' | 'character' | 'society' | 'spirituality'
 
 export type GardenArea = {
   id: GardenAreaId
   title: string
-  /** Painted on the blank plaque in the learner sans, with a real apostrophe in Qur’an. */
+  /** Painted on the blank plaque in the learner sans, in capitals. */
   plaque: string
-  /** One line under the plaque. */
+  /** One plain line under the plaque. */
   note: string
   doors: number[]
+  /** Which painted planter and stone pad this tree reuses. */
+  art: GardenArtId
   /** Foliage for the drawn placeholder, until a painted stage image is dropped in. */
   leaf: string
   blossom: string
 }
 
 export const GARDEN_AREAS: GardenArea[] = [
-  { id: 'quran', title: "Qur'an", plaque: 'QUR’AN', note: 'His Books', doors: [12], leaf: '#1f6b45', blossom: '#f0d78c' },
-  { id: 'hadith', title: 'Hadith', plaque: 'HADITH', note: 'How he came and taught', doors: [1, 2, 19, 20], leaf: '#3d6b3a', blossom: '#f2a3c0' },
-  { id: 'character', title: 'Character', plaque: 'CHARACTER', note: 'Ihsan', doors: [16], leaf: '#2f6a32', blossom: '#f0a04a' },
-  { id: 'society', title: 'Society', plaque: 'SOCIETY', note: 'Islam, lived together', doors: [3, 4, 5, 6, 7, 8], leaf: '#3a5c38', blossom: '#c9a6e8' },
-  { id: 'spirituality', title: 'Spirituality', plaque: 'SPIRITUALITY', note: 'Iman and the Hour', doors: [9, 10, 11, 13, 14, 15, 17, 18], leaf: '#4a6230', blossom: '#d6e27a' },
+  { id: 'islam', title: 'Islam', plaque: 'ISLAM', note: 'Islam: what you do', doors: [3, 4, 5, 6, 7, 8], art: 'society', leaf: '#3a5c38', blossom: '#c9a6e8' },
+  { id: 'iman', title: 'Iman', plaque: 'IMAN', note: 'Iman: what you believe', doors: [9, 10, 11, 12, 13, 14, 15], art: 'spirituality', leaf: '#4a6230', blossom: '#d6e27a' },
+  { id: 'ihsan', title: 'Ihsan', plaque: 'IHSAN', note: 'Ihsan: worship as though you see Him', doors: [16], art: 'character', leaf: '#2f6a32', blossom: '#f0a04a' },
+  { id: 'hour', title: 'The Hour', plaque: 'THE HOUR', note: "The Hour: what's coming", doors: [17, 18], art: 'quran', leaf: '#1f6b45', blossom: '#f0d78c' },
+  { id: 'sitting', title: 'The Sitting', plaque: 'THE SITTING', note: 'The Sitting: how Jibril came to teach', doors: [1, 2, 19, 20], art: 'hadith', leaf: '#3d6b3a', blossom: '#f2a3c0' },
 ]
+
+/**
+ * Doors each old tree name held, before the plaques took the hadith's own words.
+ * His Books (door 12) was its own tree. The Hour shared a tree with iman.
+ */
+const LEGACY_AREA_DOORS: Record<string, number[]> = {
+  quran: [12],
+  hadith: [1, 2, 19, 20],
+  character: [16],
+  society: [3, 4, 5, 6, 7, 8],
+  spirituality: [9, 10, 11, 13, 14, 15, 17, 18],
+}
 
 export type GrowthStage = 0 | 1 | 2 | 3 | 4
 
@@ -75,6 +96,7 @@ export type AreaView = {
   title: string
   plaque: string
   note: string
+  art: GardenArtId
   leaf: string
   blossom: string
   done: number
@@ -155,6 +177,7 @@ export function areaGrowth(input: {
       title: area.title,
       plaque: area.plaque,
       note: area.note,
+      art: area.art,
       leaf: area.leaf,
       blossom: area.blossom,
       done,
@@ -165,4 +188,95 @@ export function areaGrowth(input: {
       workbookHref: input.workbookHref,
     }
   })
+}
+
+export type StoredGardenArea = {
+  id: string
+  done?: number
+  doors?: number[]
+}
+
+export type MigratedGardenArea = { id: GardenAreaId; done: number; doors: number[] }
+
+/** Share a saved count across trees by how many of its doors each tree now holds. The shares add back up. */
+function splitCount(total: number, weights: number[]) {
+  const sum = weights.reduce((count, weight) => count + weight, 0)
+  if (!sum || total <= 0) return weights.map(() => 0)
+  const raw = weights.map((weight) => (total * weight) / sum)
+  const floors = raw.map((value) => Math.floor(value))
+  let left = total - floors.reduce((count, value) => count + value, 0)
+  const order = raw
+    .map((value, index) => ({ index, frac: value - Math.floor(value) }))
+    .sort((a, b) => b.frac - a.frac || a.index - b.index)
+  for (const row of order) {
+    if (left <= 0) break
+    floors[row.index] += 1
+    left -= 1
+  }
+  return floors
+}
+
+function doorsOfStored(row: StoredGardenArea) {
+  const listed = [...new Set((row.doors || []).filter((door) => Number.isInteger(door) && door >= 1 && door <= 20))]
+  if (listed.length) return listed
+  if (LEGACY_AREA_DOORS[row.id]) return [...LEGACY_AREA_DOORS[row.id]]
+  const current = GARDEN_AREAS.find((area) => area.id === row.id)
+  return current ? [...current.doors] : []
+}
+
+/**
+ * Old saved tree ids become the hadith sections those doors belong to now.
+ * Door 12 (the old Qur'an tree) joins Iman. Doors 17 and 18 leave the old iman-and-Hour
+ * tree for The Hour. A door is kept once, and a saved count is shared so none of it is dropped.
+ */
+export function migrateGardenProgress(stored: StoredGardenArea[]): MigratedGardenArea[] {
+  const buckets = new Map<GardenAreaId, { done: number; doors: number[] }>(GARDEN_AREAS.map((area) => [area.id, { done: 0, doors: [] }]))
+  const seen = new Set<number>()
+  for (const row of stored) {
+    const doors = doorsOfStored(row).filter((door) => areaOfDoor(door) && !seen.has(door))
+    if (!doors.length) continue
+    const groups = new Map<GardenAreaId, number[]>()
+    for (const door of doors) {
+      const area = areaOfDoor(door)!
+      const list = groups.get(area.id) || []
+      list.push(door)
+      groups.set(area.id, list)
+      seen.add(door)
+    }
+    const ids = [...groups.keys()]
+    const shares = splitCount(Math.max(0, Math.round(Number(row.done) || 0)), ids.map((id) => groups.get(id)!.length))
+    ids.forEach((id, index) => {
+      const bucket = buckets.get(id)!
+      bucket.doors.push(...groups.get(id)!)
+      bucket.done += shares[index] || 0
+    })
+  }
+  return GARDEN_AREAS.map((area) => {
+    const bucket = buckets.get(area.id)!
+    return { id: area.id, done: bucket.done, doors: [...bucket.doors].sort((a, b) => a - b) }
+  })
+}
+
+/** Read a device's saved garden trees. Old ids are rewritten onto the hadith sections. Rubbish is ignored. */
+export function readStoredGarden(raw: string | null): MigratedGardenArea[] | null {
+  if (!raw) return null
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) return null
+    const rows: StoredGardenArea[] = []
+    for (const item of parsed) {
+      if (typeof item === 'string') rows.push({ id: item, done: 0 })
+      else if (item && typeof item === 'object') {
+        const row = item as { id?: unknown; done?: unknown; doors?: unknown }
+        rows.push({
+          id: String(row.id || ''),
+          done: Number(row.done || 0),
+          doors: Array.isArray(row.doors) ? row.doors.map(Number).filter((door) => Number.isInteger(door)) : [],
+        })
+      }
+    }
+    return migrateGardenProgress(rows)
+  } catch {
+    return null
+  }
 }

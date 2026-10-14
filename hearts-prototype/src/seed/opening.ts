@@ -11,6 +11,7 @@ import { PERSONA_BANDS } from '../lib/persona-data'
 import { DRAFT_NOTE, draftTiers, timingProblems, type TimingRow } from '../lib/tiers'
 import { buildLineTidy } from '../lib/tidy-caption'
 import { formatTimestamp } from '../lib/transcript'
+import { doorNumberOfClause } from '../lib/doors'
 import { STARTERS } from './starters-data'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -254,15 +255,16 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
     }
   }
 
-  // Lane tags suggested from each cut's best clause (rank 1 weight 1, lower ranks 0.6), at most two per cut.
+  // Lane tags suggested from each cut's door (rank 1 weight 1, lower ranks 0.6), at most two per cut.
   // Approved cuts are marked confirmed, standing in for the human pass in the tagging queue.
   const clauseNumber = new Map([...clauseIds.entries()].map(([number, id]) => [id, number]))
   const allCuts = (await payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 1000, where: { placeholder: { not_equals: true } } })).docs as unknown as Doc[]
   for (const cut of allCuts) {
     const clause = Number(cut.bestClause || 0)
-    if (!clause) continue
+    const door = doorNumberOfClause(clause)
+    if (!door) continue
     const matches = LANES.filter((lane) => !lane.optInOnly)
-      .map((lane) => ({ lane, rank: lane.clauses.find((row) => row.clause === clause)?.rank }))
+      .map((lane) => ({ lane, rank: (lane.doors || []).find((row) => row.door === door)?.rank }))
       .filter((row): row is { lane: (typeof LANES)[number]; rank: number } => Boolean(row.rank))
       .sort((a, b) => a.rank - b.rank || a.lane.order - b.lane.order)
       .slice(0, 2)
@@ -282,7 +284,7 @@ export async function seedOpening(payload: Payload, opts: { clauseIds: Map<numbe
           scale,
           weight: match.rank === 1 ? 1 : 0.6,
           state: cut.status === 'approved' ? 'confirmed' : 'suggested',
-          note: `Clause ${clause} sits in ${match.lane.title} at rank ${match.rank}.`,
+          note: `Door ${door} sits in ${match.lane.title} at rank ${match.rank}.`,
         } as never,
       })
     }

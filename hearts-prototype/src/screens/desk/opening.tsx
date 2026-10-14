@@ -142,7 +142,7 @@ export async function MasterLanes(ctx: MasterCtx) {
   }
   const laneTitle = (value: unknown) => str(lanes.find((lane) => lane.id === idOf(value))?.title)
   return (
-    <Frame ctx={ctx} active="lanes" title="Lanes" intro="A lane is a thread of clips for one part of the heart. A clip is routed in a lane only once its tag is confirmed here." testId="master-lanes">
+    <Frame ctx={ctx} active="lanes" title="Lanes" intro="A lane is a friendly way in. It grows one of the five trees and walks the doors of the hadith. A clip joins a lane only once its tag is confirmed here." testId="master-lanes">
       <section className="panel" style={{ marginBottom: 18 }} data-testid="tag-queue">
         <header className="light"><h2>Waiting for a lane ({queue.length})</h2><span className="hint">Suggested by the desk, or written by someone here</span></header>
         <div className="table-wrap">

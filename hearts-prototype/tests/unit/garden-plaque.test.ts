@@ -14,11 +14,16 @@ test('garden plaques use the learner sans and keep every lane name', () => {
   assert.match(rule, /max-width:\s*36%/)
   assert.match(rule, /white-space:\s*nowrap/)
   assert.match(rule, /left:\s*50%;/)
-  assert.deepEqual(GARDEN_AREAS.map((area) => area.plaque), ['QUR’AN', 'HADITH', 'CHARACTER', 'SOCIETY', 'SPIRITUALITY'])
+  assert.deepEqual(GARDEN_AREAS.map((area) => area.plaque), ['ISLAM', 'IMAN', 'IHSAN', 'THE HOUR', 'THE SITTING'])
+  for (const area of GARDEN_AREAS) {
+    assert.equal(area.plaque, area.plaque.toUpperCase())
+    assert.ok(area.plaque.length <= 12, `${area.plaque} stays on the ribbon`)
+  }
 })
 
 test('garden plaque ribbons tuck their corners into the round pot', async () => {
-  const lanes = ['quran', 'hadith', 'character', 'society', 'spirituality']
+  const lanes = GARDEN_AREAS.map((area) => area.art)
+  assert.deepEqual([...lanes].sort(), ['character', 'hadith', 'quran', 'society', 'spirituality'])
   const lum = (r: number, g: number, b: number) => 0.2126 * r + 0.7152 * g + 0.0722 * b
   for (const lane of lanes) {
     for (const stage of [0, 4]) {

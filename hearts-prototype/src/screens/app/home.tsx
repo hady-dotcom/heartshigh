@@ -225,6 +225,8 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
               <div>
                 <small>Lane</small>
                 <h3>{learnerWords(lane.title)}</h3>
+                {lane.tree ? <p className="lane-grows" data-testid="lane-grows">Grows your {lane.tree} tree</p> : null}
+                {lane.doorNames.length ? <p className="lane-doors" data-testid="lane-doors">{lane.doorNames.join(' · ')}</p> : null}
                 <p>{LANE_BLURBS[lane.key] || snippet(first?.hookTidy || first?.hook || first?.scenic?.hook || first?.land || first?.lessonTitle || first?.courseTitle || '', 64)}</p>
                 <p>{(() => { const who = laneCardSpeaker(lane.clips); return `${who}${who ? ' · ' : ''}${count} ${count === 1 ? 'clip' : 'clips'}` })()}</p>
               </div>

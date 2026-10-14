@@ -72,7 +72,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The Garden shows time someone has given: rings, this course, harvest and the doors of Hadith Jibril. Every portal includes it. Learners can see what they have watched, sown and harvested.',
+    help: 'The Garden shows time someone has given: five trees from the hadith of Jibril (Islam, Iman, Ihsan, the Hour and the Sitting), rings, this course, harvest and the twenty doors. Every portal includes it. Learners can see what they have watched, sown and harvested.',
     plugIn: [
       'Learner /p/:slug/garden and garden/* (except workbook, which is its own switch)',
       'Home grow banner, rings and “See what you have sown”',

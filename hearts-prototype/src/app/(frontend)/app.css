@@ -984,6 +984,8 @@ button.list-link { width: 100%; background: none; border-left: 0; border-right: 
 .lane-card small { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; opacity: 0.85; }
 .lane-card h3 { font-family: var(--serif); font-size: 26px; line-height: 1.1; margin: 8px 0 6px; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .lane-card p { margin: 0; font-size: 13px; opacity: 0.85; }
+.lane-card .lane-grows { margin-top: 6px; font-size: 13px; font-weight: 750; color: #f1d58a; opacity: 1; }
+.lane-card .lane-doors { margin: 2px 0 6px; font-size: 12px; line-height: 1.35; opacity: 0.95; }
 .drip { font-size: 12px; font-weight: 700; color: var(--purple); }
 
 /* Me, circle and night */
