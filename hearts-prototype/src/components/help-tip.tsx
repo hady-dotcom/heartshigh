@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { SeeHowLink } from '@/components/see-how'
 import styles from './help-tip.module.css'
 
 const OPEN = 'hearts:help-tip'
@@ -117,6 +118,7 @@ export function HelpTip({ children, topic, label = 'What is this?', place = 'sta
             style={{ top: box.top, left: box.left, width: box.width }}
           >
             {children}
+            <SeeHowLink helpKey={topic} />
           </div>,
           document.body,
         )

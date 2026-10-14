@@ -44,7 +44,8 @@
     "framing:analyse": "tsx scripts/framing-analyse.ts",
     "framing:record": "tsx scripts/record-framing.mts",
     "framing:clip-words": "tsx scripts/clip-words-from-work.ts",
-    "framing:check-clip-words": "tsx scripts/check-clip-words.ts"
+    "framing:check-clip-words": "tsx scripts/check-clip-words.ts",
+    "see-how:record": "tsx scripts/see-how-record.ts"
   },
   "license": "UNLICENSED",
   "dependencies": {

@@ -2,9 +2,10 @@
 
 import { useEffect, useId, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { SeeHowLink } from '@/components/see-how'
 import { helpFor, learnerHelp } from '@/lib/page-help'
 
-function HelpSheet({ title, body, titleId, onClose }: { title: string; body: string[]; titleId: string; onClose: () => void }) {
+function HelpSheet({ title, body, titleId, helpKey, onClose }: { title: string; body: string[]; titleId: string; helpKey?: string; onClose: () => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -19,6 +20,7 @@ function HelpSheet({ title, body, titleId, onClose }: { title: string; body: str
         {body.map((line) => (
           <p key={line}>{line}</p>
         ))}
+        <SeeHowLink helpKey={helpKey} />
         <button type="button" className="pill gold block" data-testid="page-help-close" onClick={onClose}>
           Close
         </button>
@@ -39,7 +41,7 @@ export function PageHelp({ page }: { page?: string }) {
         ?
       </button>
       {open && mounted
-        ? createPortal(<HelpSheet title={copy.title} body={copy.body} titleId={titleId} onClose={() => setOpen(false)} />, document.body)
+        ? createPortal(<HelpSheet title={copy.title} body={copy.body} titleId={titleId} helpKey={page} onClose={() => setOpen(false)} />, document.body)
         : null}
     </div>
   )
@@ -78,7 +80,7 @@ export function TopicHelp({ topic, label = 'What is this?' }: { topic: string; l
       </button>
       {open && mounted
         ? createPortal(
-            <HelpSheet title={label} body={[text]} titleId={titleId} onClose={() => setOpen(false)} />,
+            <HelpSheet title={label} body={[text]} titleId={titleId} helpKey={topic} onClose={() => setOpen(false)} />,
             document.body,
           )
         : null}

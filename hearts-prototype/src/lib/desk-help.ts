@@ -222,7 +222,7 @@ export const EXPERIMENT_HELP: { title?: string; body: string }[] = [
   { body: 'A sheikh’s words are never tested. The talk, the Qur’an, the hadith, and the meaning of a question stay as they are.' },
 ]
 
-const TEST_IDS: Record<string, string> = {
+export const TEST_IDS: Record<string, string> = {
   'admin-overview': 'overview',
   'admin-teach': 'teach',
   'feedback-desk': 'feedback',
@@ -287,6 +287,14 @@ export function pageHelp(active?: string, testId?: string) {
   if (testId && PAGE[TEST_IDS[testId] || testId]) return PAGE[TEST_IDS[testId] || testId]
   if (active && PAGE[active]) return PAGE[active]
   return ''
+}
+
+export function deskPageCopyKeys() {
+  return Object.keys(PAGE)
+}
+
+export function deskTestIdKeys() {
+  return Object.keys(TEST_IDS)
 }
 
 export function helpSentenceCount(text: string) {
