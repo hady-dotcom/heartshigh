@@ -3,11 +3,13 @@ import { ExampleInUse } from '@/components/app/care'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
+import { ExperimentPhones } from '@/components/desk/experiment-mock'
 import { ExperimentHelp } from '@/components/desk/help'
 import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
 import { estimatePortalCalls } from '@/lib/portal-ai'
 import { portalIdOf } from '@/lib/ids'
 import { safetyLabel } from '@/lib/experiment-guard'
+import { mockFaces } from '@/lib/experiment-mock'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
@@ -196,6 +198,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
                           <span className="badge grey">{item.allocation === 'auto' ? 'Auto' : 'Fixed split'}</span>
                         </div>
                         <h3>{item.name}</h3>
+                        <ExperimentPhones slot={item.slot} versions={mockFaces(item.variants)} compact />
                         <p>{item.description || `${item.variants.length} versions · ${metricLabel(item.primaryMetric)}`}</p>
                         <p className={styles.quiet}>{item.variants.length} versions · {idOfPortal(item) ? 'One portal' : 'Every portal'}</p>
                       </Link>
@@ -282,6 +285,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
           <div className={styles.tile}><b data-testid="stat-assignments">{totals.assignments}</b><span>Kept on one version</span></div>
           <div className={styles.tile}><b>{variants.length}</b><span>Versions</span></div>
         </section>
+        <ExperimentPhones slot={experiment.slot} versions={mockFaces(experiment.variants)} />
         <section className={styles.facts} data-testid="experiment-facts">
           <article className={styles.fact}>
             <b>What is being tested</b>
@@ -512,6 +516,7 @@ async function PreviewPage({ ctx, master, base, id, goal }: { ctx: Ctx | null; m
         <header><h2>Check this, then start</h2></header>
         <div className="body">
           <Hidden fields={{ action: 'launch', id: String(experiment.id), next: `${base}/new?draft=${experiment.id}`, goal }} />
+          <ExperimentPhones slot={experiment.slot} versions={mockFaces(experiment.variants)} live />
           <article className={styles.fact} data-testid="experiment-explanation">
             <b>In plain words</b>
             <p>{explanation}</p>
