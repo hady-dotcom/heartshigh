@@ -1,7 +1,8 @@
 /**
- * Thompson sampling on a Bernoulli primary metric, with a traffic floor so no
- * variant drops below 10% until the experiment is finished. Plain-English verdicts
- * never name a winner on a small sample.
+ * Thompson sampling on a Bernoulli primary metric.
+ * Traffic stays an even split until 100 learners have seen each version, then
+ * weights follow P(best) with a 10% floor. A run stops at a 95% probability of
+ * best, or after 4 weeks. Plain-English verdicts never name a winner on a small sample.
  */
 
 export type Arm = {
@@ -21,10 +22,14 @@ export type BanditOptions = {
   rng?: () => number
 }
 
-export const BANDIT_MIN_TRAFFIC = 40
+/** Learners who must see each version before the split leaves 50/50 (or 1/n). */
+export const BANDIT_WARMUP_PER_ARM = 100
+export const BANDIT_MIN_TRAFFIC = BANDIT_WARMUP_PER_ARM
 export const BANDIT_FLOOR = 0.1
 export const BANDIT_CLAIM_CHANCE = 0.95
 export const BANDIT_CLAIM_PER_ARM = 200
+export const BANDIT_MAX_WEEKS = 4
+export const BANDIT_WEEK_MS = 7 * 24 * 60 * 60 * 1000
 
 export function mulberry32(seed: number) {
   let state = seed >>> 0
@@ -127,22 +132,54 @@ export function applyFloor(weights: Record<string, number>, keys: string[], floo
 }
 
 /**
- * Effective weights for the next learner. Equal (or the original split) until every
- * arm has `minTraffic` exposures, then P(best) with a 10% floor.
+ * Effective weights for the next learner. An even split until every arm has
+ * `minTraffic` exposures (100 by default), then P(best) with a 10% floor.
  */
 export function autoWeights(arms: Arm[], original: Record<string, number>, options: BanditOptions = {}): Record<string, number> {
   const keys = arms.map((arm) => arm.key)
   const minTraffic = options.minTraffic ?? BANDIT_MIN_TRAFFIC
   const floor = options.floor ?? BANDIT_FLOOR
-  const fallback = applyFloor(
-    Object.fromEntries(keys.map((key) => [key, original[key] > 0 ? original[key] : 1])),
-    keys,
-    0,
-  )
   if (!keys.length) return {}
-  if (arms.some((arm) => arm.exposures < minTraffic)) return applyFloor(fallback, keys, 0)
+  if (arms.some((arm) => arm.exposures < minTraffic)) {
+    const even = 1 / keys.length
+    return Object.fromEntries(keys.map((key) => [key, even]))
+  }
   const chance = chanceOfBeingBest(arms, options)
-  return applyFloor(chance, keys, floor)
+  const total = keys.reduce((sum, key) => sum + (chance[key] || 0), 0)
+  const shaped = total > 0 ? chance : Object.fromEntries(keys.map((key) => [key, original[key] > 0 ? original[key] : 1]))
+  return applyFloor(shaped, keys, floor)
+}
+
+export type BanditStop = {
+  stop: boolean
+  reason: 'best' | 'time' | null
+  leaderKey: string | null
+  chance: number
+}
+
+/**
+ * Stop when one version is at least 95% likely to be best after the warm-up,
+ * or when the run has reached its week limit (4 by default).
+ */
+export function banditStop(arms: Arm[], options: BanditOptions & { startedAt?: string | number | Date | null; now?: number; maxWeeks?: number } = {}): BanditStop {
+  const usable = arms.filter((arm) => arm.key)
+  const idle: BanditStop = { stop: false, reason: null, leaderKey: null, chance: 0 }
+  if (usable.length < 2) return idle
+  const nowMs = options.now ?? Date.now()
+  const started = options.startedAt
+  const startMs = started == null ? Number.NaN : started instanceof Date ? started.getTime() : typeof started === 'number' ? started : Date.parse(started)
+  const weeks = options.maxWeeks ?? BANDIT_MAX_WEEKS
+  const timedOut = Number.isFinite(startMs) && nowMs >= startMs + weeks * BANDIT_WEEK_MS
+  const minTraffic = options.minTraffic ?? BANDIT_WARMUP_PER_ARM
+  const warmed = usable.every((arm) => arm.exposures >= minTraffic)
+  if (!warmed && !timedOut) return idle
+  const chance = chanceOfBeingBest(usable, options)
+  const ranked = [...usable].sort((a, b) => (chance[b.key] || 0) - (chance[a.key] || 0))
+  const leader = ranked[0]
+  const p = leader ? chance[leader.key] || 0 : 0
+  if (timedOut) return { stop: true, reason: 'time', leaderKey: leader?.key || null, chance: p }
+  if (p >= BANDIT_CLAIM_CHANCE) return { stop: true, reason: 'best', leaderKey: leader?.key || null, chance: p }
+  return { stop: false, reason: null, leaderKey: leader?.key || null, chance: p }
 }
 
 export function remainingLearners(arms: Arm[], chance: Record<string, number>): number {

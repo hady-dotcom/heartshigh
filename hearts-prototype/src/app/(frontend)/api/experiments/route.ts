@@ -9,15 +9,18 @@ import {
   canEditExperiments,
   canViewExperiments,
   createExperiment,
+  createFromPreset,
   createLabelExperiment,
   csvFor,
   experimentsKilled,
   fillTestNumbers,
   finishExperiment,
+  launchDesigned,
   logExposure,
   parseVariants,
   pauseExperiment,
   promoteWinner,
+  proposeExperiment,
   recordLearnerEvent,
   resultsFor,
   setKillSwitch,
@@ -46,6 +49,8 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string,
       const value = String(form.get(name) || '')
       if (value) url.searchParams.set(name, value.slice(0, 800))
     }
+    const goal = String(form.get('goal') || '')
+    if (goal) url.searchParams.set('goal', goal.slice(0, 400))
   }
   return NextResponse.redirect(url, 303)
 }
@@ -118,7 +123,7 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const { payload, user } = await getSession()
+  const { payload, user, actor } = await getSession()
   const wantsJson = (req.headers.get('accept') || '').includes('application/json')
   let form: FormData
   try {
@@ -131,7 +136,8 @@ export async function POST(req: Request) {
   const device = await deviceId()
   const portal = portalIdOf(user)
 
-  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ ok: false, error: message }, { status: action === 'create' || action === 'update' || action === 'suggest' ? 200 : status }) : redirectTo(req, next, message, undefined, action === 'create' || action === 'update' ? form : undefined))
+  const fail = (message: string, status = 400) => (wantsJson ? NextResponse.json({ ok: false, error: message }, { status: action === 'create' || action === 'update' || action === 'suggest' ? 200 : status }) : redirectTo(req, next, message, undefined, action === 'create' || action === 'update' || action === 'design' ? form : undefined))
+  const signedIn = actor?.id ? actor : user
   const ok = (notice: string, extra?: unknown) => (wantsJson ? NextResponse.json({ ok: true, notice, ...(extra && typeof extra === 'object' ? extra : {}) }) : redirectTo(req, next, undefined, notice))
 
   try {
@@ -160,6 +166,44 @@ export async function POST(req: Request) {
       })
       const dest = `/master/experiments/${created.id}`
       return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'Draft saved. Approve the versions, then start it.')
+    }
+    if (action === 'design') {
+      if (!signedIn) return fail('Sign in on the desk first.', 401)
+      const stem = (next.replace(/\/new\/?$/, '') || '/master/experiments').split('?')[0]
+      const draft = await proposeExperiment(payload, signedIn, text(form, 'goal'), Number(text(form, 'portal')) || null, text(form, 'confirmAi') === 'yes')
+      const dest = `${stem}/new?draft=${draft.id}`
+      return wantsJson ? NextResponse.json({ ok: true, id: draft.id }) : redirectTo(req, dest, undefined, 'Here is a setup from your words. Read it, change the lines if you want, then start it.')
+    }
+    if (action === 'launch') {
+      if (!signedIn) return fail('Sign in on the desk first.', 401)
+      const labels: Record<string, string> = {}
+      for (const [key, value] of form.entries()) {
+        if (key.startsWith('label_')) labels[key.slice(6)] = String(value)
+      }
+      const started = await launchDesigned(payload, signedIn, Number(text(form, 'id')), {
+        name: text(form, 'name'),
+        who: text(form, 'who'),
+        labels,
+      })
+      const stem = (next.split('?')[0].replace(/\/new\/?$/, '') || '/master/experiments')
+      const dest = `${stem}/${started.id}`
+      return wantsJson ? NextResponse.json({ ok: true, id: started.id }) : redirectTo(req, dest, undefined, 'The test is running. Learners are not told. It stops when one version is about 95% likely to be best, or after 4 weeks.')
+    }
+    if (action === 'preset') {
+      if (!canEditExperiments(user)) return fail('Only the master can start an experiment.', 403)
+      const stem = (next.replace(/\/new\/?$/, '') || '/master/experiments').split('?')[0]
+      try {
+        const created = await createFromPreset(payload, user, text(form, 'preset'), Number(text(form, 'portal')) || null)
+        const dest = `${stem}/${created.id}`
+        return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'The test is running. Learners are not told. The split is automatic and it runs for 14 days.')
+      } catch (error) {
+        const existing = (error as { experimentId?: number }).experimentId
+        if (existing) {
+          const message = error instanceof Error ? error.message : 'Another test is already running.'
+          return wantsJson ? NextResponse.json({ ok: true, id: existing, notice: message }) : redirectTo(req, `${stem}/${existing}`, undefined, message)
+        }
+        throw error
+      }
     }
     if (action === 'create') {
       if (!canEditExperiments(user)) return fail('Only the master can create an experiment.', 403)
@@ -205,7 +249,7 @@ export async function POST(req: Request) {
     }
     if (action === 'promote') {
       await promoteWinner(payload, user, Number(text(form, 'id')), text(form, 'variant') || undefined)
-      return ok('That version is now the default for this slot.')
+      return ok('The winning version is now what learners see.')
     }
     if (action === 'approve-variant' || action === 'reject-variant') {
       await setVariantApproval(payload, user, Number(text(form, 'id')), text(form, 'variant'), action === 'approve-variant')

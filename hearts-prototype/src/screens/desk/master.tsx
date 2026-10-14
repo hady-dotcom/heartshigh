@@ -27,9 +27,9 @@ function kindLabel(value: unknown) {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
 
-export function MasterFrame({ ctx, active, title, intro, children, testId }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string }) {
+export function MasterFrame({ ctx, active, title, intro, children, testId, showOnPhone }: { ctx: MasterCtx; active: string; title: string; intro?: ReactNode; children: ReactNode; testId?: string; showOnPhone?: boolean }) {
   return (
-    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId}>
+    <DeskFrame payload={ctx.payload} user={ctx.user} title={title} intro={intro} active={active} nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={ctx.query} testId={testId} showOnPhone={showOnPhone}>
       {children}
     </DeskFrame>
   )
@@ -210,7 +210,7 @@ export async function MasterCourse(ctx: MasterCtx, courseId: number) {
   if (!course) notFound()
   const body = await CourseEditorBody({ payload: ctx.payload, user: ctx.user, portal: null, editorHref: `/master/library/${courseId}`, courseId, part: ctx.query.part, filmsPage: ctx.query.films })
   return (
-    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course">
+    <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course" showOnPhone>
       {body}
     </MasterFrame>
   )

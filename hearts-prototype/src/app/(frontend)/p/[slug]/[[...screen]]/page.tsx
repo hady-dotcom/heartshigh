@@ -166,7 +166,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return gated(ctx, 'experiments', true) || ExperimentPages({ ctx, path: screen.slice(2) })
       case 'insights':
         guardAdmin(ctx)
-        return gated(ctx, 'insights', true) || InsightPages({ ctx })
+        return gated(ctx, 'insights', true) || InsightPages({ ctx, path: screen.slice(2) })
       case 'calendar':
         guardAdmin(ctx)
         return CalendarPages({ ctx })
