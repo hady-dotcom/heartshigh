@@ -106,7 +106,6 @@ export function masterNav(): NavGroup[] {
       items: [
         { key: 'library', label: 'Library', href: '/master/library', icon: <LibraryIcon /> },
         { key: 'bring-in', label: 'Bring in', href: '/master/bring-in', icon: <ClapperIcon /> },
-        { key: 'packs', label: 'Course packs', href: '/master/packs', icon: <BookIcon /> },
         { key: 'plans', label: 'Study plans', href: '/master/plans', icon: <CalendarIcon /> },
         { key: 'live', label: 'Live recordings', href: '/master/live', icon: <MicIcon /> },
         { key: 'nights', label: 'Live in person', href: '/master/nights', icon: <MoonIcon /> },

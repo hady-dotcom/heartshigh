@@ -451,6 +451,10 @@ export interface AccessCode {
   code: string;
   role: 'learner' | 'teacher' | 'admin' | 'parent';
   packs?: (number | Pack)[] | null;
+  /**
+   * The courses this code opens. Copied from its packs so an existing join code keeps opening the same courses.
+   */
+  courses?: (number | Course)[] | null;
   requiredCourses?: (number | Course)[] | null;
   linkedTeacherCode?: (number | null) | AccessCode;
   parentMentorCode?: (number | null) | AccessCode;
@@ -472,6 +476,8 @@ export interface AccessCode {
   createdAt: string;
 }
 /**
+ * Hidden. The desk picks courses on each code. This list stays so older codes can still be read.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "packs".
  */
@@ -3939,6 +3945,7 @@ export interface AccessCodesSelect<T extends boolean = true> {
   code?: T;
   role?: T;
   packs?: T;
+  courses?: T;
   requiredCourses?: T;
   linkedTeacherCode?: T;
   parentMentorCode?: T;

@@ -35,6 +35,7 @@ import * as migration_20261014_231000_learner_desk from './20261014_231000_learn
 import * as migration_20261014_233000_reply_done from './20261014_233000_reply_done';
 import * as migration_20261014_235000_see_how_clips from './20261014_235000_see_how_clips';
 import * as migration_20261015_120000_desk_bin from './20261015_120000_desk_bin';
+import * as migration_20261015_130000_code_courses from './20261015_130000_code_courses';
 
 export const migrations = [
   {
@@ -221,5 +222,10 @@ export const migrations = [
     up: migration_20261015_120000_desk_bin.up,
     down: migration_20261015_120000_desk_bin.down,
     name: '20261015_120000_desk_bin',
+  },
+  {
+    up: migration_20261015_130000_code_courses.up,
+    down: migration_20261015_130000_code_courses.down,
+    name: '20261015_130000_code_courses',
   },
 ];

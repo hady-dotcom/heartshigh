@@ -25,7 +25,6 @@ const PAGES = [
   'portals',
   'review',
   'tiers',
-  'packs',
   'questions',
   'lanes',
   'simulator',

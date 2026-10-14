@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import { mkdirSync } from 'node:fs'
-import { expect, request as playwrightRequest, test, type Page } from '@playwright/test'
-import { E2E_BASE, E2E_DATABASE } from '../env'
+import { expect, test, type Page } from '@playwright/test'
+import { E2E_DATABASE } from '../env'
 import { artifactDir } from './artifact-dir'
 
 const DESK = { width: 1440, height: 900 }
@@ -23,51 +23,17 @@ async function shot(page: Page, name: string) {
 
 test.describe.configure({ mode: 'serial' })
 
-test('library packs are summaries, and the course picker is the door tree', async ({ page }) => {
+test('the library says who can open each course, and a new code picks from that list', async ({ page }) => {
   await page.setViewportSize(DESK)
   await signIn(page, 'elm-admin@hearts.test', 'portal-admin', '/p/east-london/admin/library')
-  const pack = page.getByTestId('library-pack').filter({ hasText: 'Jibril sittings' })
-  await pack.scrollIntoViewIfNeeded()
-  await expect(pack.getByTestId('pack-counts')).toContainText(/\d+ talks · \d+ courses/)
-  await expect(pack.getByTestId('pack-summary')).toBeVisible()
-  await expect(pack.getByTestId('pack-summary')).not.toContainText(/,.*,.*,/)
-  await expect(pack.getByText('In this portal')).toBeVisible()
-  await expect(page.getByText('Link this pack')).toHaveCount(0)
-  await expect(pack.getByTestId('adopt-help')).toContainText('Learners only see them once an access code or a personal grant includes them.')
-  await expect(page.getByTestId('pack-open')).toHaveCount(0)
-  await shot(page, 'library-pack-closed')
-
-  const master = await playwrightRequest.newContext({ baseURL: E2E_BASE })
-  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
-  const created = await master.post('/api/packs', { data: { title: 'Evening sample', owner: 'master', summary: 'A short pack that is not in this portal yet.', courses: [] } })
-  expect(created.ok()).toBeTruthy()
-  await master.dispose()
-  await page.reload()
-
-  await pack.getByText('Show the courses').click()
-  const opened = page.getByTestId('pack-open')
-  await expect(opened).toBeVisible()
-  await opened.locator('[data-testid=door-tile][data-empty=no]').first().click()
-  const course = opened.getByTestId('pack-course').first()
-  if (!(await course.isVisible())) await opened.getByTestId('seat-group').first().locator('summary').click()
-  await expect(course).toBeVisible()
-  const fresh = page.getByTestId('library-pack').filter({ hasText: 'Evening sample' })
-  await fresh.scrollIntoViewIfNeeded()
-  await shot(page, 'library-pack-open')
-  await fresh.scrollIntoViewIfNeeded()
-  await expect(fresh.getByTestId('adopt-pack')).toHaveText('Add to this portal (stays in sync)')
-  await expect(fresh.getByTestId('adopt-help')).toContainText('Learners only see them once an access code or a personal grant includes them.')
-
-  const tree = page.getByTestId('split-tree')
-  await tree.scrollIntoViewIfNeeded()
-  await tree.getByTestId('course-tree-search').fill('zzzz-no-course')
-  await expect(tree).toContainText('No courses match.')
-  await tree.getByTestId('course-tree-search').fill('Names')
-  await expect(tree.getByTestId('tree-door').first()).toBeVisible()
-  await tree.getByTestId('door-select-all').first().check()
-  await expect(tree.getByTestId('selected-count')).not.toHaveText('0 courses selected')
-  await expect(tree.getByTestId('split-course').first()).toBeVisible()
-  await shot(page, 'smaller-pack')
+  await expect(page.getByTestId('library-pack')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Library packs' })).toHaveCount(0)
+  const course = page.getByTestId('library-course').first()
+  await expect(course.getByTestId('opened-by')).toBeVisible()
+  await expect(course.getByTestId('opened-by')).toContainText(/can open|No code or portal opens this yet/)
+  const size = await course.getByTestId('opened-by').evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize))
+  expect(size).toBeGreaterThanOrEqual(16)
+  await shot(page, 'library-opened-by')
 
   await page.goto('/p/east-london/admin/access')
   const required = page.getByTestId('required-tree')

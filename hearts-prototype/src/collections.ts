@@ -14,7 +14,7 @@ import { APIError } from 'payload'
 import { openingCollections } from './collections-opening'
 import { mediaReadAccess } from './collections-safety'
 import { circleProblems } from './lib/circle'
-import { cookiesSecure } from './lib/env'
+import { cookiesSecure, isBuildPhase } from './lib/env'
 import { clientIp, hitAuth, limitsRelaxed } from './lib/rate-limit'
 import { DOOR_SECTIONS } from './lib/doors'
 
@@ -26,6 +26,15 @@ const masterOnly = { read: master, create: master, update: master, delete: maste
 
 function refuse(problems: string[]) {
   if (problems.length) throw new APIError(problems[0], 400, null, true)
+}
+
+/** After a pack or a code is saved, every code keeps the courses it already had plus the courses on its packs. */
+async function carryPackCourses({ req }: { req: { payload: import('payload').Payload } }) {
+  if (isBuildPhase()) return
+  const { copyPackCoursesOntoCodes } = await import('./server/code-courses')
+  await copyPackCoursesOntoCodes(req.payload).catch((error: unknown) => {
+    req.payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
+  })
 }
 
 /** Markup is refused on every save of these fields: they reach learners as text. */
@@ -569,8 +578,13 @@ export const Resources: CollectionConfig = {
 export const Packs: CollectionConfig = {
   slug: 'packs',
   labels: { singular: 'Course pack', plural: 'Course packs' },
-  admin: { useAsTitle: 'title' },
+  admin: {
+    useAsTitle: 'title',
+    hidden: true,
+    description: 'Hidden. The desk picks courses on each code. This list stays so older codes can still be read.',
+  },
   access: masterOnly,
+  hooks: { afterChange: [carryPackCourses] },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
@@ -984,6 +998,7 @@ export const AccessCodes: CollectionConfig = {
   labels: { singular: 'Access code', plural: 'Access codes' },
   admin: { useAsTitle: 'code' },
   access: masterOnly,
+  hooks: { afterChange: [carryPackCourses] },
   fields: [
     { name: 'code', type: 'text', required: true, unique: true, index: true },
     {
@@ -998,6 +1013,13 @@ export const AccessCodes: CollectionConfig = {
       ],
     },
     { name: 'packs', type: 'relationship', relationTo: 'packs', hasMany: true },
+    {
+      name: 'courses',
+      type: 'relationship',
+      relationTo: 'courses',
+      hasMany: true,
+      admin: { description: 'The courses this code opens. Copied from its packs so an existing join code keeps opening the same courses.' },
+    },
     { name: 'requiredCourses', type: 'relationship', relationTo: 'courses', hasMany: true },
     { name: 'linkedTeacherCode', type: 'relationship', relationTo: 'access-codes' },
     { name: 'parentMentorCode', type: 'relationship', relationTo: 'access-codes' },

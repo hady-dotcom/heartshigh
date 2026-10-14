@@ -20,6 +20,7 @@ import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, isBuildPhase, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
+import { copyPackCoursesOntoCodes } from './server/code-courses'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
@@ -67,6 +68,9 @@ export default buildConfig({
     if (result.marked || result.coursesHidden) {
       payload.logger.info(`Marked ${result.marked} talks under 5 minutes. Hid ${result.coursesHidden} courses that had only those talks.`)
     }
+    await copyPackCoursesOntoCodes(payload).catch((error) => {
+      payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
+    })
   },
   db:
     kind === 'postgres'

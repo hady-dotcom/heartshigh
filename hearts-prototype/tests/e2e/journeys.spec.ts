@@ -127,7 +127,7 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('error')).toBeVisible()
   })
 
-  test('master opens a portal, a pack and its codes', async ({ page }) => {
+  test('master opens a portal and its codes', async ({ page }) => {
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
     await expect(page.getByTestId('master')).toBeVisible()
@@ -137,15 +137,10 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('notice')).toBeVisible()
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Active')
     await enableGather(slug)
-    await page.getByTestId('pack-portal').selectOption(slug)
-    await page.getByTestId('portal-pack-title').fill('Harbour sittings')
-    await page.getByTestId('portal-pack-save').click()
-    await expect(page.getByTestId('notice')).toBeVisible()
     for (const [code, role, teacher] of [[adminCode, 'admin', ''], [teacherCode, 'teacher', ''], [learnerCode, 'learner', teacherCode]]) {
       await page.getByTestId('code-portal').selectOption(slug)
       await page.getByTestId('code-value').fill(code)
       await page.getByTestId('code-role').selectOption(role)
-      await page.getByTestId('code-pack').selectOption({ label: 'Harbour sittings' })
       if (teacher) await page.getByTestId('code-teacher').selectOption({ label: teacher })
       await page.getByTestId('create-code').click()
       await expect(page.getByTestId('notice')).toContainText(code)
@@ -167,7 +162,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('nav-content').click()
     await page.getByTestId('local-course-title').fill('Night class')
     await page.getByTestId('local-course-duration').fill('8:00')
-    await page.getByTestId('local-course-pack').selectOption({ label: 'Harbour sittings' })
+    await page.getByTestId('local-course-code').selectOption({ label: learnerCode })
     await page.getByTestId('local-course-submit').click()
     await expect(page.getByTestId('notice')).toBeVisible()
     const row = page.getByTestId('course-row').filter({ hasText: 'Night class' })

@@ -126,7 +126,6 @@ test('portal desk at desktop size', async ({ page }) => {
     ['portals', '/master'],
     ['library', '/master/library'],
     ['library-course', '/master/library/2'],
-    ['packs', '/master/packs'],
     ['questions', '/master/questions'],
     ['opening', '/master/opening'],
     ['lanes', '/master/lanes'],

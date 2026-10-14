@@ -550,6 +550,9 @@ async function main() {
   if (shorts.marked || shorts.coursesHidden) {
     console.log(`Marked ${shorts.marked} talk${shorts.marked === 1 ? '' : 's'} under 5 minutes. Hid ${shorts.coursesHidden} course${shorts.coursesHidden === 1 ? '' : 's'} that had only those talks.`)
   }
+  const { copyPackCoursesOntoCodes } = await import('../server/code-courses')
+  const copied = await copyPackCoursesOntoCodes(payload)
+  if (copied.updated) console.log(`Copied pack courses onto ${copied.updated} access codes.`)
 
   const problems = await timingCheck(payload)
   if (problems.length) {

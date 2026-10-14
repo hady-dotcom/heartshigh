@@ -198,7 +198,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const visible = await visibleCourseIds(payload, user)
-  if (!visible.includes(courseId)) redirect(`${base}/lanes?error=${encodeURIComponent('That course is not in your pack. Ask your teacher if you would like it.')}`)
+  if (!visible.includes(courseId)) redirect(`${base}/lanes?error=${encodeURIComponent('That course is not on your code. Ask your teacher if you would like it.')}`)
   const [lessonRows, units, flags] = await Promise.all([
     rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' }),
     rows(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),

@@ -5,6 +5,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { forcedPasswordDestination } from '@/lib/password-gate'
+import { openedCourseIdsForCode } from './code-courses'
 import { presentPortal } from '@/lib/portal-public'
 import { cookieValue, loadViewAs, type EndReason, type ViewAs } from './viewas'
 
@@ -203,34 +204,19 @@ export async function learnerCourseIds(payload: Payload, user: SessionUser) {
 
 async function grantedCourseIds(payload: Payload, user: SessionUser) {
   const packIds = new Set<number>()
+  const direct: number[] = []
   const codeId = idOf(user.accessCode)
   if (codeId) {
     const code = await payload.findByID({ collection: 'access-codes', id: codeId, overrideAccess: true, depth: 0 })
-    for (const pack of (code as { packs?: unknown[] }).packs || []) {
-      const id = idOf(pack)
-      if (id) packIds.add(id)
-    }
+    direct.push(...(await openedCourseIdsForCode(payload, code as { courses?: unknown; packs?: unknown })))
   }
   for (const pack of user.extraPacks || []) {
     const id = idOf(pack)
     if (id) packIds.add(id)
   }
-  if (!packIds.size) return []
-  const packs = await payload.find({
-    collection: 'packs',
-    overrideAccess: true,
-    depth: 0,
-    limit: 100,
-    where: { id: { in: [...packIds] } },
-  })
-  const courseIds: number[] = []
-  for (const pack of packs.docs) {
-    for (const course of (pack as { courses?: unknown[] }).courses || []) {
-      const id = idOf(course)
-      if (id) courseIds.push(id)
-    }
-  }
-  return courseIds
+  if (!packIds.size) return [...new Set(direct)]
+  const fromPacks = await coursesInPacks(payload, [...packIds])
+  return [...new Set([...direct, ...fromPacks])]
 }
 
 export async function adoptedCourseIds(payload: Payload, portalId: number) {

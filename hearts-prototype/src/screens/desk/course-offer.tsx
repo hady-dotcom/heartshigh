@@ -37,7 +37,7 @@ export async function CourseOnCodes({
             <Hidden fields={{ action: 'offer-on-code', course: courseId, portalSlug, next }} />
             <label className="stack">Add it to a code
               <select name="code" data-testid="offer-code" required defaultValue={choices[0]?.id}>
-                {choices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label} · {choice.packTitle}</option>)}
+                {choices.map((choice) => <option key={choice.id} value={choice.id}>{choice.label}</option>)}
               </select>
             </label>
             <label className="check">

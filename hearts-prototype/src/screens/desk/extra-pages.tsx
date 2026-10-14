@@ -1,10 +1,14 @@
 import Link from 'next/link'
 import { ExampleInUse } from '@/components/app/care'
+import { Hidden } from '@/components/app/shell'
+import { LibraryCoursePicker } from '@/components/desk/library-picker'
+import { CodeLimits, CodeStatus } from '@/components/desk/codes'
+import { loadLibraryPicker } from '@/server/code-courses'
 import type { Payload } from 'payload'
 import { ShareLinks } from '@/components/desk/share-links'
 import { Qr } from '@/components/qr'
+import { portalDisplayName } from '@/lib/portal-name'
 import type { SessionUser } from '@/server/context'
-import { CodeStatus } from '@/components/desk/codes'
 import { ref, rows, shortDate, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
@@ -22,9 +26,10 @@ function Frame({ ctx, active, title, intro, testId, showOnPhone, primary, childr
 }
 
 export async function MasterCodes(ctx: MasterCtx) {
-  const [codes, portals] = await Promise.all([
+  const [codes, portals, library] = await Promise.all([
     rows(ctx.payload, 'access-codes', undefined, { sort: 'code', limit: 1000 }),
     rows(ctx.payload, 'portals', undefined, { sort: 'name' }),
+    loadLibraryPicker(ctx.payload),
   ])
   const origin = (ctx.origin || '').replace(/\/$/, '')
   return (
@@ -52,7 +57,7 @@ export async function MasterCodes(ctx: MasterCtx) {
                         <ShareLinks value={share} testId="code-copy" />
                         <div className="qr-small"><Qr value={share} testId="code-qr" /></div>
                       </div>
-                      {slug ? <Link className="btn ghost small" href={`/p/${slug}/admin/access`} data-testid="change-pack">Change pack</Link> : null}
+                      {slug ? <Link className="btn ghost small" href={`/p/${slug}/admin/access`} data-testid="change-pack">Change courses</Link> : null}
                       <DeletePick formId="bulk-code" id={code.id} label={str(code.code)} />
                       <DeleteInline kind="code" id={code.id} next="/master/codes" testId={`delete-code-${code.id}`} />
                     </td>
@@ -63,6 +68,38 @@ export async function MasterCodes(ctx: MasterCtx) {
             </tbody>
           </table>
         </div>
+      </section>
+      <section className="panel" id="new-code">
+        <header><div><h2>New access code</h2><p>Tick the library courses this code can open. A whole door is there when courses are tagged.</p></div></header>
+        <form className="body form" action="/api/hearts" method="post">
+          <Hidden fields={{ action: 'create-code', next: '/master/codes' }} />
+          <div className="cols">
+            <label className="stack">Portal
+              <select name="portalSlug" data-testid="master-new-code-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{portalDisplayName(portal)}</option>)}</select>
+            </label>
+            <label className="stack">Code<input type="text" data-testid="master-new-code" name="code" placeholder="Leave empty for a random code" /></label>
+          </div>
+          <div className="cols">
+            <label className="stack">Label<input type="text" data-testid="master-new-code-label" name="label" placeholder="A name you will recognise" /></label>
+            <label className="stack">For
+              <select data-testid="master-new-code-role" name="role" defaultValue="learner">
+                <option value="learner">Learner</option><option value="teacher">Teacher</option><option value="admin">Admin</option><option value="parent">Parent (one course)</option>
+              </select>
+            </label>
+          </div>
+          <label className="stack">Teacher code
+            <select data-testid="master-new-code-teacher" name="linkedTeacherCode">
+              <option value="">None</option>
+              {codes.filter((code) => code.role === 'teacher').map((code) => {
+                const portal = portals.find((row) => row.id === ref(code.portal))
+                return <option key={code.id} value={code.id}>{str(code.code)}{portal ? ` · ${portalDisplayName(portal)}` : ''}</option>
+              })}
+            </select>
+          </label>
+          <LibraryCoursePicker courses={library} testId="master-new-code-courses" />
+          <CodeLimits />
+          <div className="actions"><button className="btn ink" data-testid="master-new-code-submit" type="submit">Create access code</button></div>
+        </form>
       </section>
     </Frame>
   )

@@ -66,6 +66,7 @@ import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, defaultFeatures, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
+import { openedCourseIdsForCode } from './code-courses'
 import { ensurePackAdopted } from './pack-adopt'
 
 type Payload = Awaited<ReturnType<typeof getSession>>['payload']
@@ -650,7 +651,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const slug = (portalDoc as { slug?: string }).slug || ''
     const packIds = (access.packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
     for (const packId of packIds) await ensurePackAdopted(payload, portal, packId)
-    const courseList = await coursesInPacks(payload, packIds)
+    const courseList = await openedCourseIdsForCode(payload, access as { courses?: unknown; packs?: unknown })
+    await adoptLibraryCourses(payload, portal, courseList)
     const codeRole = access.role || 'learner'
     const usesBefore = access.uses || 0
     const claimed = await payload.update({
@@ -825,10 +827,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot make an access code.')
     const role = text(form, 'role')
     const packId = Number(text(form, 'pack'))
+    const courseIds = [...new Set(form.getAll('course').map((value) => Number(value)).filter((id) => Number.isInteger(id) && id > 0))]
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
     const code = text(form, 'code').toUpperCase().replace(/\s+/g, '') || randomCode(acting.portal.slug || '')
-    if (!role || !packId) return redirectTo(req, text(form, 'next') || '/master', 'An access code needs a role and a course pack.')
+    if (!role) return redirectTo(req, text(form, 'next') || '/master', 'Choose who the code is for.')
     if (!['admin', 'teacher', 'learner', 'parent'].includes(role)) return redirectTo(req, text(form, 'next') || '/master', 'Choose who the code is for.')
     if (!/^[A-Z0-9-]{8,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/master', 'Use 8 to 32 letters, numbers or dashes for the code, or leave it empty for a random one.')
     const maxUsesText = text(form, 'maxUses')
@@ -838,8 +841,35 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const days = daysText ? Number(daysText) : null
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
     const expiresAt = days ? new Date(now().getTime() + days * 86_400_000).toISOString() : null
-    if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
-    await ensurePackAdopted(payload, acting.portal.id, packId)
+    const picking = text(form, 'coursesForm') === 'yes' || courseIds.length > 0
+    let storedCourses: number[] | undefined
+    let storedPacks: number[] | undefined
+    if (picking) {
+      if (courseIds.length) {
+        const found = await payload.find({
+          collection: 'courses',
+          overrideAccess: true,
+          depth: 0,
+          limit: courseIds.length,
+          where: { and: [{ id: { in: courseIds } }, { origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
+        })
+        if (found.docs.length !== courseIds.length) return redirectTo(req, text(form, 'next') || '/master', 'Tick courses from the library.')
+      }
+      if (role === 'parent' && courseIds.length !== 1) return redirectTo(req, text(form, 'next') || '/master', 'A parent code opens one course.')
+      await adoptLibraryCourses(payload, acting.portal.id, courseIds)
+      storedCourses = courseIds
+      storedPacks = []
+    } else if (packId) {
+      if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
+      await ensurePackAdopted(payload, acting.portal.id, packId)
+      if (role === 'parent') {
+        const packed = await coursesInPacks(payload, [packId])
+        if (packed.length !== 1) return redirectTo(req, text(form, 'next') || '/master', 'A parent code opens one course.')
+      }
+      storedPacks = [packId]
+    } else if (role === 'parent') {
+      return redirectTo(req, text(form, 'next') || '/master', 'A parent code opens one course.')
+    }
     const linkedId = Number(text(form, 'linkedTeacherCode') || 0)
     if (linkedId) {
       const teacherCode = await findDoc(payload, 'access-codes', linkedId)
@@ -849,10 +879,6 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     if ((role === 'learner' || role === 'parent') && !text(form, 'linkedTeacherCode')) {
       return redirectTo(req, text(form, 'next') || '/master', 'A learner code needs a teacher code, so someone can see their progress.')
-    }
-    if (role === 'parent') {
-      const packed = await coursesInPacks(payload, [packId])
-      if (packed.length !== 1) return redirectTo(req, text(form, 'next') || '/master', 'A parent code carries exactly one course.')
     }
     const clash = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { code: { equals: code } } })
     if (clash.docs.length) return redirectTo(req, text(form, 'next') || '/master', 'That access code is already taken.')
@@ -864,7 +890,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data: {
         code,
         role: role as 'learner',
-        packs: [packId],
+        ...(storedPacks ? { packs: storedPacks } : {}),
+        ...(storedCourses ? { courses: storedCourses } : {}),
         portal: acting.portal.id,
         linkedTeacherCode: linked ? Number(linked) : undefined,
         parentMentorCode: role === 'parent' && linked ? Number(linked) : undefined,
@@ -1006,6 +1033,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         durationSeconds: length.seconds,
       },
     })
+    const onCode = Number(text(form, 'onCode') || 0)
+    if (onCode && portal) {
+      const linked = await findDoc(payload, 'access-codes', onCode)
+      if (linked && idOf(linked.portal) === portal) {
+        const opened = await openedCourseIdsForCode(payload, linked as { courses?: unknown; packs?: unknown })
+        if (!opened.includes(course.id)) {
+          await payload.update({
+            collection: 'access-codes',
+            id: linked.id,
+            overrideAccess: true,
+            data: { courses: [...opened, course.id] },
+          })
+        }
+      }
+    }
     const packId = Number(text(form, 'pack') || 0)
     if (packId && (await packUsable(payload, user, portal || 0, packId))) {
       const pack = await payload.findByID({ collection: 'packs', id: packId, overrideAccess: true, depth: 0 })
@@ -2403,15 +2445,45 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const codeId = Number(text(form, 'codeId'))
     const code = await findDoc(payload, 'access-codes', codeId)
     if (!code || idOf(code.portal) !== acting.portal.id) return redirectTo(req, '/', 'That access code is not in your portal.')
+    const picking = text(form, 'coursesForm') === 'yes'
     const packId = Number(text(form, 'pack') || 0)
-    if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
-    const packIds = packId ? [packId] : ((code as { packs?: unknown[] }).packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
-    for (const id of packIds) await ensurePackAdopted(payload, acting.portal.id, id)
-    if (packId) {
-      await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { packs: packIds } })
+    let nextIds: number[] = []
+    if (picking) {
+      const picked = [...new Set(form.getAll('course').map((value) => Number(value)).filter((id) => Number.isInteger(id) && id > 0))]
+      const libraryDocs = picked.length
+        ? await payload.find({
+            collection: 'courses',
+            overrideAccess: true,
+            depth: 0,
+            limit: picked.length,
+            where: { and: [{ id: { in: picked } }, { origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
+          })
+        : { docs: [] as { id: number }[] }
+      if (libraryDocs.docs.length !== picked.length) return redirectTo(req, text(form, 'next') || '/', 'Tick courses from the library.')
+      const previous = await openedCourseIdsForCode(payload, code as { courses?: unknown; packs?: unknown })
+      const libraryAll = await payload.find({
+        collection: 'courses',
+        overrideAccess: true,
+        depth: 0,
+        limit: 500,
+        where: { and: [{ origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
+      })
+      const inLibrary = new Set(libraryAll.docs.map((course) => course.id))
+      const preserved = previous.filter((id) => !inLibrary.has(id))
+      nextIds = [...new Set([...picked, ...preserved])]
+      if ((code as { role?: string }).role === 'parent' && nextIds.length !== 1) return redirectTo(req, text(form, 'next') || '/', 'A parent code opens one course.')
+      await adoptLibraryCourses(payload, acting.portal.id, picked)
+      await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { courses: nextIds, packs: [] } })
+    } else {
+      if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
+      const packIds = packId ? [packId] : ((code as { packs?: unknown[] }).packs || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+      for (const id of packIds) await ensurePackAdopted(payload, acting.portal.id, id)
+      if (packId) {
+        await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { packs: packIds } })
+      }
+      nextIds = await coursesInPacks(payload, packIds)
     }
     const apply = text(form, 'apply') || 'leave'
-    const nextIds = await coursesInPacks(payload, packIds)
     if (apply !== 'leave') {
       const holders = await payload.find({
         collection: 'users',
