@@ -1,8 +1,8 @@
 import { requireMaster } from '@/server/context'
-import { TranscriptFilesScreen } from '@/screens/desk/transcripts'
+import { TranscriptsScreen } from '@/screens/desk/transcripts'
 
-export default async function TranscriptFilesPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
+export default async function TranscriptsPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string; q?: string; missing?: string; untimed?: string; short?: string }> }) {
   const query = await searchParams
   const { payload, user } = await requireMaster()
-  return TranscriptFilesScreen({ payload, user, query })
+  return TranscriptsScreen({ payload, user, query })
 }

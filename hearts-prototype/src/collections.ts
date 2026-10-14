@@ -491,6 +491,7 @@ export const Lessons: CollectionConfig = {
       ],
     },
     { name: 'transcriptNote', type: 'textarea' },
+    { name: 'transcriptEdits', type: 'json', admin: { description: 'Earlier copies of this transcript, so a save on the Transcripts desk can be undone.' } },
     {
       name: 'publishState',
       type: 'select',

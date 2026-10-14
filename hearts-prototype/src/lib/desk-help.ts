@@ -79,6 +79,8 @@ export const PAGE: Record<string, string> = {
     'Care and safety is where the team looks at concerns people raise, and at words the screen held back. Hide or keep an item, and send a short note. A gold box at the top is for the named person when someone needs support.',
   announcements:
     'Write a short note for everyone, for teachers, or for one access code. It appears on Home until they dismiss it. Learners cannot reply here. They write to their teacher.',
+  transcripts:
+    'Every talk is listed with the speaker, the length and a picture. Open a talk to fix a line, replace a word, or save. Talks with no transcript can pull captions from YouTube. Learners hear these lines on the clips.',
 }
 
 export const TOOL: Record<string, string> = {
@@ -167,7 +169,7 @@ export const TOOL: Record<string, string> = {
   replaceFilm:
     'Replace this film changes the open part to the new link. If learners can already see that part, it stays published. Clips from the old film are set aside, including ones you already approved. Leave it unticked to add the links as new parts.',
   transcriptFiles:
-    'Upload the timed word files the master sheet points at. Each file is stored and its number is shown, so you can paste that number into the sheet. You do not need the raw data screen.',
+    'Pick a talk by its title, then add a .vtt, .srt or .txt file. The words land on that talk, and you can undo the save. Open the talk to fix one line or replace a word everywhere.',
   extract:
     'This drafts clips from the words of the talk. Clips you have already approved stay. The built-in run needs no account. A portal admin can tick the portal AI box, confirm the one call, and that run is billed to the portal.',
   portalAi:

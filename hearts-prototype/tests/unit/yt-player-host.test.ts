@@ -16,6 +16,22 @@ test('the learner player is created on www.youtube.com with origin and widget_re
   assert.equal('widget_referrer' in vars, true)
 })
 
+test('a desk preview keeps the same embed address on the server and in the browser', () => {
+  const extra = { start: 2, autoplay: 1, controls: 1, playsinline: 1, rel: 0, skipOrigin: 1 as const }
+  const src = learnerEmbedSrc('ccccccccccc', extra)
+  assert.equal(src.includes('skipOrigin'), false)
+  assert.equal(src.includes('origin='), false)
+  assert.match(src, /[?&]start=2(?:&|$)/)
+  const previous = (globalThis as { window?: unknown }).window
+  ;(globalThis as { window?: { location: { origin: string } } }).window = { location: { origin: 'http://127.0.0.1:3100' } }
+  try {
+    assert.equal(learnerEmbedSrc('ccccccccccc', extra), src)
+  } finally {
+    if (previous === undefined) delete (globalThis as { window?: unknown }).window
+    else (globalThis as { window?: unknown }).window = previous
+  }
+})
+
 test('playWithSoundFallback mutes, plays, then unmutes when sound is wanted', () => {
   const calls: string[] = []
   let muted = true
