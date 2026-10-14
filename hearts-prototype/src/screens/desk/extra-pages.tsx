@@ -131,7 +131,7 @@ export async function MasterNights(ctx: MasterCtx) {
   ])
   const slug = str(portals[0]?.slug)
   return (
-    <Frame ctx={ctx} active="nights" title="Nights" intro="Nights and gatherings across the portals." testId="master-nights" primary={slug ? { label: 'Plan a night', href: `/p/${slug}/admin/nights` } : undefined}>
+    <Frame ctx={ctx} active="nights" title="Live in person" intro="Nights and gatherings across the portals." testId="master-nights" primary={slug ? { label: 'Plan a night', href: `/p/${slug}/admin/nights` } : undefined}>
       <section className="panel">
         <div className="table-wrap">
           <table className="data">
@@ -144,7 +144,7 @@ export async function MasterNights(ctx: MasterCtx) {
                   <td>{str(event.place)}</td>
                 </tr>
               ))}
-              {!events.length ? <tr><td colSpan={3}><ExampleInUse desk title="Circle after Isha" action={{ href: '/master/live', label: 'See live sessions' }}><p>East London · the hall · Thursday</p></ExampleInUse></td></tr> : null}
+              {!events.length ? <tr><td colSpan={3}><ExampleInUse desk title="Circle after Isha" action={{ href: '/master/live', label: 'See Live recordings' }}><p>East London · the hall · Thursday</p></ExampleInUse></td></tr> : null}
             </tbody>
           </table>
         </div>

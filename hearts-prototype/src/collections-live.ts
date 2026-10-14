@@ -5,8 +5,8 @@ const masterOnly = { read: master, create: master, update: master, delete: maste
 
 export const LiveSessions: CollectionConfig = {
   slug: 'live-sessions',
-  labels: { singular: 'Live session', plural: 'Live sessions' },
-  admin: { useAsTitle: 'title', description: 'A teacher going live for the learners of one portal.' },
+  labels: { singular: 'Live recording', plural: 'Live recordings' },
+  admin: { useAsTitle: 'title', description: 'A video session for the learners of one portal.' },
   access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },

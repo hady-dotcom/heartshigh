@@ -101,7 +101,7 @@ function LiveStage({
       ) : null}
       {!playing ? (
         <div className="live-poster" data-testid="live-poster" style={{ backgroundImage: `url(${poster})` }}>
-          <span className="live-poster-pill">Live</span>
+          <span className="live-poster-pill">Live recordings</span>
           <b>{session.title}</b>
           <small>Starting…</small>
         </div>

@@ -36,6 +36,8 @@ test('each learner surface keeps its own ? copy', () => {
     ['course-overview', 'How to use this course'],
     ['support-page', 'How to ask for help'],
     ['gather', 'How to use Gather'],
+    ['live-home', 'How to use Live recordings'],
+    ['live-screen', 'How to use Live recordings'],
   ]
   for (const [page, title] of pairs) {
     assert.equal(helpFor(page).title, title, page)
@@ -46,6 +48,9 @@ test('each learner surface keeps its own ? copy', () => {
   assert.match(helpFor('help').body.join(' '), /call now/)
   assert.doesNotMatch(helpFor('help').body.join(' '), /first talk/)
   assert.match(helpFor('me').body.join(' '), /install card/)
+  assert.match(helpFor('circle').body.join(' '), /Live in person/)
+  assert.match(helpFor('live-home').body.join(' '), /Live recordings/)
+  assert.match(helpFor('settings').body.join(' '), /Live in person/)
 })
 
 test('screen test ids alias to the matching page, never a stranger', () => {

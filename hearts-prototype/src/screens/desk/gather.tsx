@@ -147,7 +147,7 @@ export async function GatherAttendanceScreen(ctx: Ctx) {
         <div className="stat-chip"><b data-testid="stat-newcomers">{report.newcomers}</b><span>Newcomers</span></div>
         <div className="stat-chip"><b data-testid="stat-regulars">{report.regulars}</b><span>Regulars</span></div>
         <div className="stat-chip"><b>{report.brought.length}</b><span>Brought by someone</span></div>
-        <div className="stat-chip"><b>{report.series.length}</b><span>Nights held</span></div>
+        <div className="stat-chip"><b>{report.series.length}</b><span>Evenings held</span></div>
       </div>
       <section className="panel" data-testid="attendance-chart">
         <header><h2>Over time</h2></header>

@@ -2082,7 +2082,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (action === 'create-event') {
-    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot open a night.')
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, '/', 'You cannot open Live in person.')
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
@@ -2101,9 +2101,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
     const alerted = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500, where: { and: [{ 'tenants.tenant': { equals: portal } }, { nightAlerts: { equals: true } }] } })
     for (const person of alerted.docs) {
-      await notify(payload, { user: person.id, portal, title: 'A new night is open', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
+      await notify(payload, { user: person.id, portal, title: 'Live in person has a new evening', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Night saved.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Live in person saved.')
   }
 
   if (action === 'pack-courses') {
@@ -2335,7 +2335,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'night-alerts') {
     const on = form.get('nightAlerts') === 'on'
     await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { nightAlerts: on } })
-    return redirectTo(req, text(form, 'next') || '/', undefined, on ? 'We will let you know when a new night opens.' : 'Night alerts are off.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, on ? 'We will let you know when Live in person opens a new evening.' : 'Live in person alerts are off.')
   }
 
   if (action === 'my-list') {

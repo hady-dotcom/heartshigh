@@ -22,7 +22,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
   const mux = muxStatus()
   const here = `${base}/admin/live`
   return (
-    <AdminFrame ctx={ctx} active="live" tone="evening" title="Go live" intro="Start a live session for the learners of this portal. Paste a YouTube or Vimeo link, or use Mux when it is configured." testId="desk-live">
+    <AdminFrame ctx={ctx} active="live" tone="evening" title="Live recordings" intro="Video sessions for the learners of this portal, including ones already held. Paste a YouTube or Vimeo link, or use Mux when it is configured." testId="desk-live">
       <div className="stats-strip" data-testid="live-summary">
         <div className="stat-chip"><b>{live ? 1 : 0}</b><span>Live now</span></div>
         <div className="stat-chip"><b>{scheduled.length}</b><span>Coming up</span></div>
@@ -50,7 +50,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
                 ) : null}
                 <form action="/api/live" method="post">
                   <Hidden fields={{ action: 'end', id: live.id, portal: portal.slug, next: here }} />
-                  <button className="btn" type="submit" data-testid="desk-end-live" data-write>End live</button>
+                  <button className="btn" type="submit" data-testid="desk-end-live" data-write>End recording</button>
                 </form>
               </div>
             </section>
@@ -86,10 +86,10 @@ export async function LiveDeskScreen(ctx: Ctx) {
               ))}
               {live && !questions.length ? <p className="hint">Questions will appear here as people send them.</p> : null}
               {!live && !scheduled.length && !ended.length ? (
-                <ExampleInUse desk title="Circle after Isha" action={{ href: '#go-live', label: 'Go live' }}>
+                <ExampleInUse desk title="Circle after Isha" action={{ href: '#go-live', label: 'Live recordings' }}>
                   <p>Coming up · Thursday evening · questions appear here while it is on.</p>
                 </ExampleInUse>
-              ) : !live ? <p className="hint">Go live and the questions will land here.</p> : null}
+              ) : !live ? <p className="hint">Start a recording and the questions will land here.</p> : null}
             </div>
           </section>
           {scheduled.length ? (
@@ -102,7 +102,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
                     <p className="hint" style={{ margin: '4px 0' }}>{card.when}{card.doorLabel ? ` · ${card.doorLabel}` : ''}</p>
                     <form action="/api/live" method="post">
                       <Hidden fields={{ action: 'start', id: card.id, portal: portal.slug, next: here }} />
-                      <button className="btn small" type="submit" data-testid="desk-start-scheduled" data-write>Go live now</button>
+                      <button className="btn small" type="submit" data-testid="desk-start-scheduled" data-write>Start recording</button>
                     </form>
                   </article>
                 ))}
@@ -128,7 +128,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
         </div>
         <section className="panel">
           <header>
-            <h2>Go live</h2>
+            <h2>Live recordings</h2>
             <Link href={`${base}/live`} data-testid="desk-open-live">Open the learner page</Link>
           </header>
           <form id="go-live" className="body form" action="/api/live" method="post" data-testid="desk-live-form">
@@ -171,7 +171,7 @@ export async function MasterLiveScreen({ payload, user, query }: { payload: Payl
   const sessions = await rows(payload, 'live-sessions', undefined, { sort: '-createdAt', limit: 80 })
   const first = portals[0]
   return (
-    <DeskFrame payload={payload} user={user} title="Live" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live" primary={first ? { label: 'Open a live desk', href: `/p/${str(first.slug)}/admin/live` } : undefined}>
+    <DeskFrame payload={payload} user={user} title="Live recordings" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live" primary={first ? { label: 'Open a live desk', href: `/p/${str(first.slug)}/admin/live` } : undefined}>
       <section className="panel">
         <header><h2>All portals</h2></header>
         <div className="body">

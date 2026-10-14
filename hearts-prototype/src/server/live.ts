@@ -276,7 +276,7 @@ export async function saveSession(
   },
 ): Promise<{ ok: true; card: LiveCard } | { ok: false; error: string }> {
   if (!canGoLive(input.user.role, portalIdOf(input.user), input.portal.id)) {
-    return { ok: false, error: 'Only a teacher or the portal admin can go live here.' }
+    return { ok: false, error: 'Only a teacher or the portal admin can start Live recordings here.' }
   }
   const title = text(input.title)
   if (title.length < 3) return { ok: false, error: 'Give the session a title.' }
@@ -320,7 +320,7 @@ export async function startSession(
   user: SessionUser,
   id: number,
 ): Promise<{ ok: true; card: LiveCard } | { ok: false; error: string }> {
-  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can go live here.' }
+  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can start Live recordings here.' }
   const row = await sessionById(payload, id)
   if (!row || idOf(row.portal) !== portal.id) return { ok: false, error: 'That session could not be found.' }
   if (text(row.status) === 'ended') return { ok: false, error: 'That session has already ended.' }
@@ -412,7 +412,7 @@ export async function endSession(
   user: SessionUser,
   id: number,
 ): Promise<{ ok: true; card: LiveCard } | { ok: false; error: string }> {
-  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can end a live session.' }
+  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can end a Live recordings session.' }
   const row = await sessionById(payload, id)
   if (!row || idOf(row.portal) !== portal.id) return { ok: false, error: 'That session could not be found.' }
   if (text(row.status) === 'ended') return { ok: true, card: await publicCard(payload, portal, row, user.id) }
@@ -468,7 +468,7 @@ export async function askQuestion(
   sessionId: number,
   raw: string,
 ): Promise<{ ok: true; question: LiveQuestionCard } | { ok: false; error: string }> {
-  if (!canSeeLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'That live session is not for this portal.' }
+  if (!canSeeLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'That Live recordings session is not for this portal.' }
   const session = await sessionById(payload, sessionId)
   if (!session || idOf(session.portal) !== portal.id) return { ok: false, error: 'That session could not be found.' }
   if (text(session.status) !== 'live') return { ok: false, error: 'Questions can be sent while it is live.' }
@@ -566,7 +566,7 @@ export async function deleteSession(
   user: SessionUser,
   id: number,
 ): Promise<{ ok: true } | { ok: false; error: string }> {
-  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can remove a live session.' }
+  if (!canGoLive(user.role, portalIdOf(user), portal.id)) return { ok: false, error: 'Only a teacher or the portal admin can remove a Live recordings session.' }
   const row = await sessionById(payload, id)
   if (!row || idOf(row.portal) !== portal.id) return { ok: false, error: 'That session could not be found.' }
   const related = ['live-questions', 'live-reminders', 'live-presence'] as const
@@ -582,7 +582,7 @@ export async function deleteSession(
 }
 
 export function muxStatus() {
-  return { configured: muxConfigured(), message: muxConfigured() ? 'Mux is ready. A stream key will be made when you go live with Mux.' : 'Mux is not configured. Paste a YouTube or Vimeo link, or add MUX_TOKEN_ID and MUX_TOKEN_SECRET.' }
+  return { configured: muxConfigured(), message: muxConfigured() ? 'Mux is ready. A stream key will be made when you start a Live recordings session with Mux.' : 'Mux is not configured. Paste a YouTube or Vimeo link, or add MUX_TOKEN_ID and MUX_TOKEN_SECRET.' }
 }
 
 export function questionsCsv(title: string, questions: LiveQuestionCard[]) {

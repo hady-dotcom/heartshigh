@@ -64,7 +64,7 @@ export async function GET(req: Request) {
     const row = await sessionById(session.payload, id)
     if (!row) return json({ error: 'That session could not be found.' }, 404)
     const questions = await listQuestions(session.payload, id, session.user, true)
-    const csv = questionsCsv(String(row.title || 'Live session'), questions)
+    const csv = questionsCsv(String(row.title || 'Live recordings'), questions)
     return new NextResponse(csv, {
       headers: {
         ...noStore,

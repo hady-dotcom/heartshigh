@@ -30,7 +30,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
     ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
-    ['settings', 'Settings', 'Night alerts, watch history and logging out', 'me/settings'],
+    ['settings', 'Settings', 'Live in person alerts, watch history and logging out', 'me/settings'],
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
@@ -63,9 +63,9 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <Hidden fields={{ action: 'logout' }} />
           <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
         </form>
-        <p className="eyebrow" style={{ marginTop: 18 }}>Circle and nights</p>
+        <p className="eyebrow" style={{ marginTop: 18 }}>Circle and Live in person</p>
         <Link className="list-link" href={`${base}/me/circle`} data-testid="me-circle">
-          <span className="grow">Circle and nights<small>Your board, and the evenings you can come to</small></span>›
+          <span className="grow">Circle and Live in person<small>Your board, and the evenings you can come to</small></span>›
         </Link>
         <p className="eyebrow" style={{ marginTop: 18 }}>Your opening and this phone</p>
         <section className="card prefs" data-testid="me-prefs">
@@ -107,7 +107,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}
             example={{ title: 'Your teacher replied', body: <p>Amina wrote back on the answer you shared. Open your workbook to read it.</p> }}
           >
-            Nothing new. Replies from your teacher and new nights will show here.
+            Nothing new. Replies from your teacher and Live in person evenings will show here.
           </EmptyState>
         )}
         <p className="eyebrow" style={{ marginTop: 22 }}>Opening questions</p>
@@ -137,7 +137,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Nights</p>
+        {featureOn(portal, 'gather') ? <><p className="eyebrow" style={{ marginTop: 6 }}>Live in person</p>
         {events.length ? events.map((event) => {
           const mine = rsvps.find((row) => ref(row.event) === event.id && ref(row.user) === user.id)
           const coming = rsvps.filter((row) => ref(row.event) === event.id).length
@@ -218,7 +218,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
         </section>
         <p className="eyebrow">Notifications</p>
         <section className="card prefs">
-          <PrefToggle name="nightAlerts" label="Tell me when a new night opens" checked={Boolean(user.nightAlerts)} next={here} />
+          <PrefToggle name="nightAlerts" label="Tell me when Live in person opens a new evening" checked={Boolean(user.nightAlerts)} next={here} />
         </section>
         <p className="eyebrow">Account</p>
         <section className="card">

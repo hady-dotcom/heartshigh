@@ -123,7 +123,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use Settings',
     body: [
       'Each switch saves as you flip it.',
-      'Sound, privacy, nights and the account sit in their own groups.',
+      'Sound, privacy, Live in person alerts and the account sit in their own groups.',
     ],
   },
   plan: {
@@ -160,7 +160,7 @@ const PAGES: Record<string, HelpCopy> = {
   circle: {
     title: 'How to use Circle',
     body: [
-      'Nights are the evenings you can come to in person.',
+      'Live in person is the evenings you can come to.',
       'The board is a note for everyone in your circle.',
     ],
   },
@@ -235,10 +235,19 @@ const PAGES: Record<string, HelpCopy> = {
       'Open the screen the ask is about if you want to try it now.',
     ],
   },
-  'live-screen': {
-    title: 'How to sit with a live talk',
+  'live-home': {
+    title: 'How to use Live recordings',
     body: [
-      'When it is live you can watch and send a question.',
+      'Live recordings are the video sessions for your portal.',
+      'When one is on you can watch and send a question.',
+      'After it ends, a replay sits here if the teacher kept one.',
+    ],
+  },
+  'live-screen': {
+    title: 'How to use Live recordings',
+    body: [
+      'Live recordings are the video sessions with your teacher.',
+      'When one is on you can watch and send a question.',
       'After it ends, a replay sits here if the teacher kept one.',
     ],
   },

@@ -23,19 +23,21 @@ test('a learner can open Gather from Home and Lanes, and the bottom bar stays as
   await expect(page.getByTestId('gather')).toBeVisible()
 })
 
-test('the learner live page opens, and Go live links to it', async ({ page }) => {
+test('the learner live page opens, and Live recordings links to it', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
-  await expect(page.getByTestId('open-live')).toBeVisible()
+  await expect(page.getByTestId('open-live')).toHaveText('Live recordings')
   await page.getByTestId('open-live').click()
   await expect(page).toHaveURL(/\/p\/east-london\/live$/)
   await expect(page.getByTestId('live-home')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Live recordings' })).toBeVisible()
   await page.goto('/p/east-london/live')
   await expect(page.getByTestId('live-home')).toBeVisible()
 
   await page.setViewportSize({ width: 1280, height: 900 })
   await signIn(page, 'elm-teacher@hearts.test', 'portal-teacher', '/p/east-london/admin/live')
   await expect(page.getByTestId('desk-live')).toBeVisible()
+  await expect(page.locator('h1').first()).toContainText('Live recordings')
   await expect(page.getByTestId('desk-open-live')).toHaveAttribute('href', '/p/east-london/live')
   await page.getByTestId('desk-open-live').click()
   await expect(page.getByTestId('live-home')).toBeVisible()

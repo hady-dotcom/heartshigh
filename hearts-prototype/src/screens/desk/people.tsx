@@ -299,7 +299,7 @@ export async function NightsScreen(ctx: Ctx) {
   const here = `${base}/admin/nights`
   const name = (id: unknown) => str(people.find((person) => person.id === ref(id))?.name) || 'Someone'
   return (
-    <AdminFrame ctx={ctx} active="nights" title="Nights" intro="Evenings in person. Learners who watched a part in the last week get a ticket they can use themselves; anyone else has a place held and you welcome them in at the door." testId="admin-nights">
+    <AdminFrame ctx={ctx} active="nights" title="Live in person" intro="Evenings in person. Learners who watched a part in the last week get a ticket they can use themselves; anyone else has a place held and you welcome them in at the door." testId="admin-nights">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           {events.map((event) => {
@@ -343,11 +343,11 @@ export async function NightsScreen(ctx: Ctx) {
               </section>
             )
           })}
-          {!events.length ? <section className="panel"><div className="body"><ExampleInUse desk title="Circle after Isha" action={{ href: '#plan-a-night', label: 'Plan a night' }}><p>Thursday · the hall · a short note for people coming</p></ExampleInUse></div></section> : null}
+          {!events.length ? <section className="panel"><div className="body"><ExampleInUse desk title="Circle after Isha" action={{ href: '#plan-a-night', label: 'Plan Live in person' }}><p>Thursday · the hall · a short note for people coming</p></ExampleInUse></div></section> : null}
         </div>
         {user.role !== 'teacher' ? (
           <section className="panel">
-            <header><div><h2>Plan a night</h2><p>People with night alerts on are told straight away</p></div></header>
+            <header><div><h2>Plan Live in person</h2><p>People with evening alerts on are told straight away</p></div></header>
             <form id="plan-a-night" className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'create-event', portalSlug: portal.slug, next: here }} />
               <label className="stack">Name<input type="text" data-testid="event-title" name="title" required placeholder="Circle after Isha" /></label>
