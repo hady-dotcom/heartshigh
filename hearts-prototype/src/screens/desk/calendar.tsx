@@ -7,6 +7,7 @@ import { now } from '@/lib/clock'
 import { DEFAULT_TIME_ZONE, isTimeZone, PORTAL_TIME_ZONES, portalTimeZone, wallClock, zoneCity } from '@/lib/zone-time'
 import type { SessionUser } from '@/server/context'
 import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, loadSeasons, resolveContextLabel, seedDefaultCopy } from '@/server/calendar'
+import { SEASONAL_APPROVAL } from '@/lib/ai-honesty'
 import { flagsOfSafe } from './calendar-flags'
 import type { Ctx } from '../common'
 import { AdminFrame } from './overview'
@@ -193,7 +194,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
         <section className="panel">
           <header><h2>Seasonal lines</h2></header>
           <div className="body">
-            <p className={styles.quiet}>AI drafts need your approval. They never change a sheikh’s words.</p>
+            <p className={styles.quiet} data-testid="seasonal-approval">{SEASONAL_APPROVAL}</p>
             {masterUser ? (
               <form className="form" action="/api/calendar" method="post" data-testid="copy-form">
                 <Hidden fields={{ action: 'copy', next: base }} />

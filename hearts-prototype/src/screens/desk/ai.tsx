@@ -11,6 +11,7 @@ import { ref, rows, str } from '../common'
 import { PortalActivity } from './ai-activity'
 import { HelpTip } from '@/components/desk/help'
 import { PortalAiConfirm } from '@/components/desk/paid-ai'
+import { aiSpendIsOff, rerunScopes, tryOutputLabel } from '@/lib/ai-honesty'
 import { TOOL } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
@@ -66,6 +67,25 @@ async function Frame({
 
 function queryOf(ctx: Ctx | null, master: { query: Query } | null) {
   return (ctx?.query || master?.query || {}) as Query
+}
+
+/** The spend tick sits above the button. The off note sits under it, so the button is not the last word. */
+function SpendConfirm({
+  connected,
+  master,
+  calls,
+  perTalk = 1,
+  place,
+}: {
+  connected: boolean
+  master: boolean
+  calls: number | null
+  perTalk?: number
+  place: 'above' | 'under'
+}) {
+  const off = aiSpendIsOff({ master, connected })
+  if (off !== (place === 'under')) return null
+  return <PortalAiConfirm connected={connected} master={master} calls={calls} perTalk={perTalk} />
 }
 
 export async function AiPages({ ctx, master, path }: { ctx?: Ctx | null; master?: { payload: Payload; user: SessionUser; query: Query } | null; path: string[] }) {
@@ -304,18 +324,21 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
               <label className="stack">Draft prompt
                 <textarea name="prompt" rows={8} defaultValue={promptValue} data-testid="ai-try-prompt" />
               </label>
-              <PortalAiConfirm connected={desk.connected} master={desk.master} calls={2} />
+              <SpendConfirm place="above" connected={desk.connected} master={desk.master} calls={2} />
               <button className="btn ink" type="submit" data-testid="ai-try-submit">Compare with the live output</button>
+              <SpendConfirm place="under" connected={desk.connected} master={desk.master} calls={2} />
             </form>
             {compared ? (
-              <div className={styles.compare} style={{ marginTop: 14 }} data-testid="ai-try-compare" data-different={pretty(compared.draft) === pretty(compared.live) ? 'no' : 'yes'}>
+              <div className={styles.compare} style={{ marginTop: 14 }} data-testid="ai-try-compare" data-builtin={attempt?.mock ? 'yes' : 'no'} data-different={pretty(compared.draft) === pretty(compared.live) ? 'no' : 'yes'}>
                 <div>
-                  <b>This draft</b>
+                  <b data-testid="try-draft-label">{tryOutputLabel(Boolean(attempt?.mock), 'draft')}</b>
+                  {attempt?.mock ? <p className={styles.quiet}>From the box above.</p> : null}
                   {compared.draftProblems?.length ? <p className="hint">{compared.draftProblems[0]}</p> : null}
                   <pre className={styles.schema} data-testid="try-draft">{pretty(compared.draft)}</pre>
                 </div>
                 <div>
-                  <b>Live version</b>
+                  <b data-testid="try-live-label">{tryOutputLabel(Boolean(attempt?.mock), 'live')}</b>
+                  {attempt?.mock ? <p className={styles.quiet}>From the saved words.</p> : null}
                   {compared.liveProblems?.length ? <p className="hint">{compared.liveProblems[0]}</p> : null}
                   <pre className={styles.schema} data-testid="try-live">{pretty(compared.live)}</pre>
                 </div>
@@ -343,11 +366,8 @@ function RerunForm({ base, slug, lessons, courses, lessonId, connected, master, 
     <form action="/api/ai-steps" method="post" className="form" data-testid="ai-rerun">
       <Hidden fields={{ action: 'start-job', slug, jobBase: base, next: base }} />
       <label className="stack">Scope
-        <select name="scope" defaultValue={lessonId ? 'talk' : 'talk'} data-testid="ai-scope">
-          <option value="talk">One talk</option>
-          <option value="selection">A selection</option>
-          <option value="course">A course</option>
-          <option value="all">Everything</option>
+        <select name="scope" defaultValue="talk" data-testid="ai-scope">
+          {rerunScopes({ master, connected }).map((scope) => <option key={scope.value} value={scope.value}>{scope.label}</option>)}
         </select>
       </label>
       <label className="stack">Talk
@@ -366,8 +386,9 @@ function RerunForm({ base, slug, lessons, courses, lessonId, connected, master, 
           {courses.map((course) => <option key={course.id} value={course.id}>{str(course.title)}</option>)}
         </select>
       </label>
-      <PortalAiConfirm connected={connected} master={master} calls={null} perTalk={perTalk} />
+      <SpendConfirm place="above" connected={connected} master={master} calls={null} perTalk={perTalk} />
       <button className="btn teal" type="submit" data-testid="ai-rerun-submit">Re-run</button>
+      <SpendConfirm place="under" connected={connected} master={master} calls={null} perTalk={perTalk} />
     </form>
   )
 }
@@ -466,8 +487,9 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
       {desk.canEdit ? (
         <form action="/api/ai-steps" method="post" className="actions" style={{ marginBottom: 14 }}>
           <Hidden fields={{ action: 'start-job', slug: 'pipeline', scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
-          <PortalAiConfirm connected={desk.connected} master={desk.master} calls={steps.length} />
+          <SpendConfirm place="above" connected={desk.connected} master={desk.master} calls={steps.length} />
           <button className="btn ink" type="submit" data-testid="ai-run-pipeline">Run every job on this talk</button>
+          <SpendConfirm place="under" connected={desk.connected} master={desk.master} calls={steps.length} />
         </form>
       ) : null}
       <div className={styles.pipe}>
@@ -494,8 +516,9 @@ async function IngestPage({ ctx, master, base, lessonId, desk }: { ctx: Ctx | nu
                 {desk.canEdit ? (
                   <form action="/api/ai-steps" method="post">
                     <Hidden fields={{ action: 'start-job', slug: str(step.slug), scope: 'talk', lesson: lesson.id, jobBase: base, next: `${base}/ingest/${lesson.id}` }} />
-                    <PortalAiConfirm connected={desk.connected} master={desk.master} calls={1} />
+                    <SpendConfirm place="above" connected={desk.connected} master={desk.master} calls={1} />
                     <button className="btn small ghost" type="submit" data-testid="ingest-run">{status === 'not-run' ? 'Run' : 'Re-run'}</button>
+                    <SpendConfirm place="under" connected={desk.connected} master={desk.master} calls={1} />
                   </form>
                 ) : null}
                 {!ctx ? <Link className="btn small ghost" href={step.fillsTier || step.fillsPoints ? reviewHref : `${base}/${step.slug}`} data-testid="ingest-review">Open review</Link> : <Link className="btn small ghost" href={`${base}/${step.slug}`}>Open the step</Link>}

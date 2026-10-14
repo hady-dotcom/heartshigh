@@ -106,10 +106,13 @@ export async function POST(req: Request) {
     if (action === 'try') {
       const lesson = Number(text(form, 'lesson'))
       const slug = text(form, 'slug')
-      await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), client, portalId)
+      const compared = await tryStep(payload, actor, slug, lesson, text(form, 'prompt'), client, portalId)
       const url = new URL(next, 'http://localhost')
       url.searchParams.set('tried', String(lesson))
-      return redirectTo(req, `${url.pathname}${url.search}`, undefined, 'Compared with the live version. Nothing was saved for learners.')
+      const notice = compared.mock
+        ? 'Compared two practice drafts. No AI was used, and nothing was saved for learners.'
+        : 'Compared with the live version. Nothing was saved for learners.'
+      return redirectTo(req, `${url.pathname}${url.search}`, undefined, notice)
     }
     if (action === 'start-job') {
       const slug = text(form, 'slug') || 'pipeline'

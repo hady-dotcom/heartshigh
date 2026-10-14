@@ -1,38 +1,34 @@
 import { HelpTip } from '@/components/desk/help'
+import { AI_OFF_NOTE, aiSpendIsOff } from '@/lib/ai-honesty'
 import { TOOL } from '@/lib/desk-help'
 import { estimatePortalCalls, portalAiPerTalkLabel } from '@/lib/portal-ai'
 
+function AiOffNote() {
+  return <p className="hint" data-testid="portal-ai-off">{AI_OFF_NOTE}</p>
+}
+
 /**
  * Shown beside a desk action that can use this portal's own AI account.
- * With no connection, on the master desk, or for a teacher, the box is absent and the built-in path runs.
- * A portal admin sees the call count, a rough estimate, and must confirm before the run.
+ * On the master desk, or when no account is connected, the same plain note says this is a practice draft.
+ * A teacher never spends. A portal admin with an account sees the call count and must confirm first.
  */
 export function PortalAiChoice({
   connected,
   master = false,
   teacher = false,
-  settingsHref,
   calls = 1,
 }: {
   connected: boolean
   master?: boolean
   teacher?: boolean
+  /** Kept so older callers can still pass a Settings link. The off note no longer needs it. */
   settingsHref?: string
   /** How many model calls this submit will make if the box is ticked. */
   calls?: number
 }) {
-  if (master) {
-    return <p className="hint" data-testid="portal-ai-off">The master desk does not call a model. This uses the built-in path.</p>
-  }
+  if (master || (!teacher && !connected)) return <AiOffNote />
   if (teacher) {
     return <p className="hint" data-testid="portal-ai-off">AI runs are for the portal admin. This uses the built-in path.</p>
-  }
-  if (!connected) {
-    return (
-      <p className="hint" data-testid="portal-ai-off">
-        AI is off for this portal. A portal admin connects their own account in {settingsHref ? <a href={settingsHref}>Settings</a> : 'Settings'}. This uses the built-in path.
-      </p>
-    )
   }
   return (
     <div data-testid="portal-ai-opt-in">
@@ -48,9 +44,9 @@ export function PortalAiChoice({
   )
 }
 
-/** The run button itself is the spend (AI steps). Shown only to a portal admin with a connection. */
+/** The run button itself is the spend (AI steps). A master, or a portal with no account, sees the same off note as PortalAiChoice. */
 export function PortalAiConfirm({ connected, master = false, calls, perTalk = 1 }: { connected: boolean; master?: boolean; calls: number | null; perTalk?: number }) {
-  if (master || !connected) return null
+  if (aiSpendIsOff({ master, connected })) return <AiOffNote />
   return (
     <div data-testid="portal-ai-confirm-block">
       <p className="hint" data-testid="portal-ai-estimate">{calls == null ? portalAiPerTalkLabel(perTalk) : estimatePortalCalls(calls).label}</p>
