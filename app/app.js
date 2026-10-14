@@ -26,6 +26,17 @@ const CAN_H264 = (() => {
 })();
 const pickSrc = (mp4, webm) => (CAN_H264 || !webm) ? mp4 : webm;
 
+function clipMediaSrc(clip) {
+  if (!clip || clip.source !== 'file' || !clip.src) return '';
+  return pickSrc(clip.src, clip.srcAlt);
+}
+function clipPoster(clip) {
+  if (!clip) return '';
+  if (clip.appetiser && clip.appetiser.thumb) return clip.appetiser.thumb;
+  if (clip.videoId) return thumb(clip.videoId);
+  return '';
+}
+
 const CREATOR = {}; D.creators.forEach(c => CREATOR[c.handle] = c);
 const VIDEO = {};   D.videos.forEach(v => VIDEO[v.id] = v);
 const SERIES = {};  D.series.forEach(s => SERIES[s.id] = s);
@@ -716,10 +727,90 @@ function animateFallbackProgress(bar, len) {
   })(t0);
 }
 
+/* Kinetic hors d'oeuvre: the three lines land on this moment's own audio.
+   Used once an editor has saved "Kinetic cards" for the clip. */
+function buildKineticCard(clip, choice) {
+  const card = el('div', 'cardclip slide htl-feed');
+  card.dataset.delivery = 'kinetic';
+  card.dataset.style = choice.style || 'cinema';
+  card.dataset.bg = choice.background || 'gradient';
+  const host = el('div', 'htl-stage-host');
+  card.appendChild(host);
+
+  const prog = el('div', 'cc-prog', '<i></i>');
+  card.appendChild(prog);
+  const progBar = $('i', prog);
+
+  const top = el('div', 'cc-top');
+  top.appendChild(el('span', 'pill lane', 'Lane · ' + esc(clip.lane || '')));
+  top.appendChild(el('span', 'pill dur', esc(sname(clip.speaker))));
+  card.appendChild(top);
+
+  const foot = el('div', 'sl-foot');
+  const cta = el('button', 'sl-cta', 'Learn more →');
+  cta.onclick = e => { e.stopPropagation(); openAppetiser(clip); };
+  foot.appendChild(cta);
+  card.appendChild(foot);
+
+  const arrows = el('div', 'sl-arrows');
+  [['up', '↑', 'replay'], ['right', '→', 'same sheikh'],
+   ['down', '↓', 'something else'], ['left', '←', 'same topic']]
+    .forEach(([dir, glyph, label]) => {
+      const a = el('button', 'sl-arrow ' + dir, '<b>' + glyph + '</b><span>' + esc(label) + '</span>');
+      a.setAttribute('aria-label', label);
+      a.onclick = e => {
+        e.stopPropagation();
+        card.dispatchEvent(new CustomEvent('hudhud:nav', { detail: dir, bubbles: true }));
+      };
+      arrows.appendChild(a);
+    });
+  card.appendChild(arrows);
+
+  let asked = false, prev = 0, armed = false;
+  const player = window.HTL.mount(host, {
+    src: clipMediaSrc(clip),
+    poster: clipPoster(clip),
+    burnedIn: !!clip.burnedIn,
+    captionText: clip.land || '',
+    getState: () => choice,
+    autoplay: true,
+    onTime: (t, len) => {
+      progBar.style.width = Math.min(100, (t / len) * 100) + '%';
+      if (t > 0.4) armed = true;
+      const looped = prev > len * 0.75 && t + 0.5 < prev;
+      if (armed && !asked && clip.prompt && (t >= len - 0.3 || looped)) {
+        asked = true;
+        player.pause();
+        askAboutClip(clip, () => { asked = false; armed = false; prev = 0; player.play(); });
+      }
+      prev = t;
+    },
+  });
+
+  card.__clip = clip;
+  card.__mount = () => player.play();
+  card.__unmount = () => player.pause();
+  card.__destroy = () => player.destroy();
+  card.__replay = () => { asked = false; armed = false; prev = 0; player.play(); };
+  card.__ghost = el('div', 'swipe-ghost', '<b></b>');
+  card.appendChild(card.__ghost);
+  return card;
+}
+
 /* ------------------------------------------------------------------ deck + gestures */
 function buildDeck(startClip, kind) {
   const wrap = el('div', 'deck');
-  const make = c => (kind === 'hors' ? buildSlideCard(c) : buildClipCard(c, kind));
+  const make = c => {
+    if (kind !== 'hors') return buildClipCard(c, kind);
+    const choice = window.HTL && HTL.forFeed(c);
+    if (choice && choice.delivery === 'video') {
+      const card = buildClipCard(c, 'hors');
+      card.dataset.delivery = 'video';
+      return card;
+    }
+    if (choice && choice.delivery === 'kinetic') return buildKineticCard(c, choice);
+    return buildSlideCard(c);
+  };
   let current = make(startClip);
   wrap.appendChild(current);
   requestAnimationFrame(() => current.__mount());
@@ -789,7 +880,7 @@ function buildDeck(startClip, kind) {
       old.style.opacity = '.4';
     });
     setTimeout(() => {
-      old.__unmount(); old.remove();
+      old.__unmount(); old.__destroy && old.__destroy(); old.remove();
       incoming.style.transition = '';
       busy = false;
       pulse(label[dir]);
@@ -809,7 +900,7 @@ function buildDeck(startClip, kind) {
     if (m) { e.preventDefault(); m === 'up' ? current.__replay() : go(m); }
   });
   wrap.tabIndex = 0;
-  wrap.__teardown = () => { current && current.__unmount(); };
+  wrap.__teardown = () => { if (!current) return; current.__unmount(); current.__destroy && current.__destroy(); };
   wrap.__current = () => current.__clip;
   return wrap;
 }
@@ -2140,6 +2231,19 @@ function meScreen() {
   });
   s.appendChild(fl);
 
+  s.appendChild(el('div', 'section-title', 'Editorial'));
+  const editorial = [
+    ['edit', 'Talk / clip editor', 'Hook, turn and land on the clip'],
+    ['review', 'Review', 'Long lines and windows that miss'],
+  ];
+  editorial.forEach(([mode, title, sub]) => {
+    const r = el('button', 'rowcard');
+    r.appendChild(el('div', 'meta', '<b>' + esc(title) + '</b><i>' + esc(sub) + '</i>'));
+    r.appendChild(el('span', '', '<svg width="16" height="16" viewBox="0 0 24 24" style="stroke:#8A8499;fill:none;stroke-width:2.4;stroke-linecap:round"><path d="m9 5 7 7-7 7"/></svg>'));
+    r.onclick = () => { window.HUDHUD_CMS && HUDHUD_CMS.open(mode); };
+    s.appendChild(r);
+  });
+
   s.appendChild(el('div', 'section-title', 'Settings'));
   const SETTINGS = [
     ['Answers are private by default', 'rgba(217,164,65,.16)', '#D9A441', true,
@@ -2208,7 +2312,17 @@ $('#snCounts').innerHTML =
   '<div><b>' + c.playableVideos + '</b> real HLS streams from Hearts CMS</div>' +
   '<div><b>' + c.quran + '</b> āyāt · <b>' + c.hadith + '</b> aḥādīth with real provenance</div>';
 
+window.HUDHUD_UI = {
+  el: el, esc: esc, mmss: mmss, sname: sname, openHors: openHors, toast: toast,
+  clipMediaSrc: clipMediaSrc, clipPoster: clipPoster,
+  reel: REEL, hero: D.appetiserHero, videos: D.videos,
+};
+
 (function boot() {
+  if (/^#\/(edit|review)/.test(location.hash)) {
+    document.documentElement.dataset.cmsBoot = '1';
+    return;
+  }
   let saved = null;
   try { saved = JSON.parse(localStorage.getItem('hudhud.user') || 'null'); } catch (e) {}
   if (saved && saved.name) {

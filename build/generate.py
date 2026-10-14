@@ -598,7 +598,7 @@ def main():
     import shutil
     docs = os.path.join(ROOT, "docs")
     os.makedirs(os.path.join(docs, "vendor"), exist_ok=True)
-    for f in ("index.html", "app.css", "app.js", "data.js"):
+    for f in ("index.html", "app.css", "app.js", "data.js", "htl.js", "editor.js"):
         src_f = os.path.join(ROOT, "app", f)
         if os.path.exists(src_f): shutil.copy2(src_f, os.path.join(docs, f))
     v = os.path.join(ROOT, "app", "vendor", "hls.min.js")
