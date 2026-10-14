@@ -20,6 +20,7 @@ import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, isBuildPhase, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
+import { copyPackCoursesOntoCodes } from './server/code-courses'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
@@ -52,6 +53,11 @@ export default buildConfig({
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
   globals: [MasterFlags].map((global) => ({ ...global, hooks: { ...global.hooks, beforeChange: [viewAsGlobalGuard as never, ...(global.hooks?.beforeChange || [])] } })),
+  onInit: async (payload) => {
+    await copyPackCoursesOntoCodes(payload).catch((error) => {
+      console.error('Could not copy pack courses onto access codes.', error)
+    })
+  },
   editor: lexicalEditor(),
   secret: payloadSecret(),
   serverURL: origins[0],

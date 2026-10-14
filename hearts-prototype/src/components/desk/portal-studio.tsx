@@ -2,7 +2,9 @@
 
 import { useMemo, useState } from 'react'
 import { HelpTip } from '@/components/desk/help'
+import { LibraryCoursePicker } from '@/components/desk/library-picker'
 import { Hidden } from '@/components/app/shell'
+import type { LibraryCoursePick } from '@/lib/code-courses'
 import {
   DEPTH_ORDER,
   DEPTH_SECTION,
@@ -19,8 +21,6 @@ import {
 } from '@/lib/features'
 import { TOOL } from '@/lib/desk-help'
 
-type Course = { id: number; title: string }
-
 type Props = {
   mode: 'create' | 'edit'
   action: string
@@ -29,7 +29,7 @@ type Props = {
   slug?: string
   kind?: string
   welcome?: string
-  courses: Course[]
+  courses: LibraryCoursePick[]
   selectedCourses?: number[]
   features?: FeatureMap
 }
@@ -55,7 +55,6 @@ export function PortalStudio({
   features,
 }: Props) {
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'features' : 'details')
-  const [picked, setPicked] = useState<number[]>(selectedCourses)
   const [on, setOn] = useState<FeatureMap>(lockBeginner(features || defaultFeatures()))
 
   const preset = matchingPreset(on)
@@ -63,9 +62,6 @@ export function PortalStudio({
   const toggle = (key: FeatureKey) => {
     if (featureLocked(key)) return
     setOn((current) => ({ ...current, [key]: !current[key] }))
-  }
-  const toggleCourse = (id: number) => {
-    setPicked((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]))
   }
   const go = (next: Step) => {
     window.setTimeout(() => setStep(next), 0)
@@ -126,28 +122,11 @@ export function PortalStudio({
         <header>
           <div>
             <h2>Courses <HelpTip topic="portal-courses">{TOOL.portalCourses}</HelpTip></h2>
-            <p>Tick the library courses this portal may use. You can add more later from the portal library.</p>
+            <p>Tick the library courses this portal may use. Search, pick a whole door, or take every library course.</p>
           </div>
         </header>
         <div className="body">
-          {courses.length ? (
-            <div className="checks studio-courses" data-testid="studio-course-list">
-              {courses.map((course) => (
-                <label className="check" key={course.id} data-testid="studio-course">
-                  <input
-                    type="checkbox"
-                    name="course"
-                    value={course.id}
-                    checked={picked.includes(course.id)}
-                    onChange={() => toggleCourse(course.id)}
-                  />
-                  {course.title}
-                </label>
-              ))}
-            </div>
-          ) : (
-            <p className="hint">The library is empty just now. You can still open the portal and add courses later.</p>
-          )}
+          <LibraryCoursePicker courses={courses} selected={selectedCourses} testId="studio-course-list" />
         </div>
       </section>
 

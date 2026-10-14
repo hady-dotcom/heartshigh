@@ -23,7 +23,7 @@ const MASTER: Record<string, Lead> = {
     href: '/master/learners',
   },
   library: {
-    line: 'Shared courses any portal can link. Learners see a course only after their portal links it.',
+    line: 'Shared courses any portal can link. Learners see a course when a code or a portal opens it.',
     label: 'Add a course',
     href: '#new-library-course',
   },
@@ -36,11 +36,6 @@ const MASTER: Record<string, Lead> = {
     line: 'Live video for a portal. Learners in that portal see it while it is on.',
     label: 'Open a portal',
     href: '/master/create',
-  },
-  packs: {
-    line: 'The set of courses a join code opens. Learners see whatever their code includes.',
-    label: 'Make a pack',
-    href: '#new-pack',
   },
   plans: {
     line: 'How a course is spread across days. Learners see their plan on My week.',
@@ -217,7 +212,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
     path: '#write-a-note',
   },
   library: {
-    line: 'Courses from the shared library. Learners see one once a code includes it.',
+    line: 'Courses from the shared library. Learners see one once a code or this portal opens it.',
     label: 'Make your own course',
     path: 'content',
   },

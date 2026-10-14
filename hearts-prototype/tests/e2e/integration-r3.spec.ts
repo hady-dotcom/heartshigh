@@ -175,90 +175,20 @@ test('small fixes: favicon, Teach emails end in an ellipsis, and the install car
   await phone.close()
 })
 
-test('an opened pack spans the main area as at most about 20 door tiles, with no seats until a door opens, then one clean heading per Ghunya seat', async ({ page, playwright }) => {
-  const master = await playwright.request.newContext({ baseURL: E2E_BASE })
-  expect((await master.post('/api/users/login', { data: { email: 'master@hearts.test', password: 'hearts-master' } })).ok()).toBeTruthy()
-  const docs = async (path: string) => ((await (await master.get(path)).json()).docs || []) as Record<string, any>[]
-  const courses = await docs('/api/courses?where[origin][equals]=master&depth=0&limit=500')
-  const made = await master.post('/api/packs', { data: { title: 'HEARTS library: all talks', owner: 'master', summary: '', courses: courses.map((course) => course.id) } })
-  expect(made.ok()).toBeTruthy()
-  const packId = (await made.json()).doc.id
-
-  // The seed's cuts carry no seat, so give each cut one its clause really has.
-  const cuts = (await docs('/api/cuts?where[bestClause][exists]=true&depth=0&limit=2000')).filter((cut) => cut.bestClause)
-  const seatsByClause = new Map<number, Record<string, any>[]>()
-  for (const seat of await docs('/api/seats?depth=1&limit=500')) {
-    const clause = Number(seat.clause?.number || 0)
-    seatsByClause.set(clause, [...(seatsByClause.get(clause) || []), seat])
-  }
-  const changed: { id: number; seat: unknown }[] = []
-  for (const cut of cuts) {
-    const options = (seatsByClause.get(Number(cut.bestClause)) || []).filter((seat) => /^Vol\./.test(String(seat.text)))
-    if (!options.length) continue
-    changed.push({ id: cut.id, seat: cut.seat ?? null })
-    expect((await master.patch(`/api/cuts/${cut.id}`, { data: { seat: options[changed.length % options.length].id } })).ok()).toBeTruthy()
-  }
-  expect(changed.length).toBeGreaterThan(2)
-
-  try {
-    await page.setViewportSize({ width: 1440, height: 900 })
-    await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
-    await expect(page.getByTestId('admin-library')).toContainText('Courses from the main HEARTS library. Add a pack and it stays up to date.')
-    for (const title of ['Library packs', 'Library courses']) {
-      const header = page.locator('.panel > header').filter({ hasText: title })
-      expect(await header.evaluate((el) => getComputedStyle(el).backgroundColor), title).toBe('rgb(15, 59, 58)')
-    }
-
-    const pack = page.getByTestId('library-pack').filter({ hasText: 'HEARTS library: all talks' })
-    await pack.getByText('Show the courses').click()
-    await expect(page).toHaveURL(new RegExp(`pack=${packId}`))
-    const opened = page.getByTestId('pack-open')
-    await expect(opened).toBeVisible()
-    const main = await page.locator('[data-testid=admin-library] .panel').first().boundingBox()
-    const area = await opened.boundingBox()
-    expect(area!.width).toBeGreaterThan(main!.width - 2)
-    expect(area!.width).toBeGreaterThan(1000)
-
-    const tiles = opened.getByTestId('door-tile')
-    const count = await tiles.count()
-    expect(count).toBeGreaterThanOrEqual(20)
-    expect(count).toBeLessThanOrEqual(21)
-    const tops = await tiles.evaluateAll((all) => all.slice(0, 5).map((tile) => Math.round(tile.getBoundingClientRect().top)))
-    expect(new Set(tops.slice(0, 4)).size, 'four tiles across').toBe(1)
-    expect(tops[4]).toBeGreaterThan(tops[0])
-    for (const text of await tiles.allInnerTexts()) expect(text).toMatch(/^(Door \d+ · |Not on a door yet)/)
-    const empty = opened.locator('[data-testid=door-tile][data-empty=yes]')
-    expect(await empty.count()).toBeGreaterThan(0)
-    await expect(empty.first()).toContainText('Nothing here yet')
-    await expect(empty.first()).toBeDisabled()
-    await expect(opened.getByTestId('seat-label')).toHaveCount(0)
-    await expect(opened.getByTestId('seat-group')).toHaveCount(0)
-    await expect(opened.getByTestId('door-open')).toHaveCount(0)
-
-    const full = opened.locator('[data-testid=door-tile][data-empty=no]')
-    let seated = false
-    for (let index = 0; index < (await full.count()) && !seated; index += 1) {
-      await full.nth(index).click()
-      await expect(opened.getByTestId('door-open')).toHaveCount(1)
-      seated = (await opened.getByTestId('seat-label').filter({ hasText: /^Seats? / }).count()) > 0
-    }
-    expect(seated, 'some door has a Ghunya seat').toBe(true)
-    const labels = await opened.locator('[data-testid=seat-label]').filter({ hasText: /^Seats? / }).all()
-    const texts: string[] = []
-    for (const label of labels) {
-      const text = (await label.innerText()).trim()
-      texts.push(text)
-      expect(text).toMatch(/^Seats? [\d, and]+ · Volume [1-5](, Chapter \d+)?$/)
-      expect(await label.getAttribute('title')).toMatch(/^Vol\./)
-    }
-    expect(new Set(texts).size, 'one heading per seat').toBe(texts.length)
-    const seat = opened.getByTestId('seat-group').first()
-    await seat.locator('summary').click()
-    await expect(seat.getByTestId('pack-course').first()).toBeVisible()
-    await expect(opened.getByTestId('door-open').getByTestId('door-tile')).toHaveCount(0)
-  } finally {
-    for (const row of changed) await master.patch(`/api/cuts/${row.id}`, { data: { seat: row.seat } })
-    await master.delete(`/api/packs/${packId}`)
-    await master.dispose()
-  }
+test('the library names who can open each course, in words a learner can read', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 })
+  await signIn(page, 'elm-admin@hearts.test', 'portal-admin', `${PORTAL}/admin/library`)
+  await expect(page.getByTestId('admin-library')).toContainText('Each course says which codes and portals can open it.')
+  await expect(page.getByTestId('library-pack')).toHaveCount(0)
+  const header = page.locator('.panel > header').filter({ hasText: 'Library courses' })
+  expect(await header.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe('rgb(15, 59, 58)')
+  const line = page.getByTestId('opened-by').first()
+  await expect(line).toBeVisible()
+  await expect(line).toContainText(/can open|No code or portal opens this yet/)
+  const readable = await line.evaluate((el) => {
+    const style = getComputedStyle(el)
+    return { size: Number.parseFloat(style.fontSize), color: style.color }
+  })
+  expect(readable.size).toBeGreaterThanOrEqual(16)
+  expect(readable.color).not.toBe('rgb(138, 134, 152)')
 })

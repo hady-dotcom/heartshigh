@@ -1,11 +1,12 @@
 import type { Payload } from 'payload'
 import { offerJoinedNotice, offerOnCodeNotice } from '@/lib/course-offer'
 import { idOf } from '@/lib/ids'
+import { coursesOpenedByCode, type PackCourses } from '@/lib/code-courses'
 import { adoptedCourseIds } from './context'
+import { giveCourseToCodeHolders, openedCourseIdsForCode } from './code-courses'
 import { ensurePackAdopted } from './pack-adopt'
-import { giveCourseToPackHolders } from './publish-holders'
 
-type CodeRow = { id: number; code?: string; label?: string; role?: string; packs?: unknown[] }
+type CodeRow = { id: number; code?: string; label?: string; role?: string; packs?: unknown[]; courses?: unknown[] }
 type PackRow = { id: number; title?: string; owner?: string; portal?: unknown; courses?: unknown[] }
 
 export type CodeChoice = {
@@ -35,19 +36,19 @@ export async function learnerCodeChoices(payload: Payload, portalId: number, cou
   const packs = packIds.length
     ? ((await payload.find({ collection: 'packs', overrideAccess: true, depth: 0, limit: packIds.length, where: { id: { in: packIds } } })).docs as unknown as PackRow[])
     : []
-  const packOf = new Map(packs.map((pack) => [pack.id, pack]))
-  return codes.flatMap((code) => {
-    const pack = packOf.get(idsOf(code.packs)[0] || 0)
-    if (!pack) return []
+  const packList: PackCourses[] = packs.map((pack) => ({ id: pack.id, title: String(pack.title || ''), courses: idsOf(pack.courses) }))
+  return codes.map((code) => {
+    const pack = packs.find((row) => row.id === idsOf(code.packs)[0])
     const label = String(code.label || '').trim() || String(code.code || `Code ${code.id}`)
-    return [{
+    const opened = coursesOpenedByCode({ courses: idsOf(code.courses), packs: idsOf(code.packs) }, packList)
+    return {
       id: code.id,
       label,
-      packId: pack.id,
-      packTitle: String(pack.title || 'Course set'),
-      packOwner: String(pack.owner || ''),
-      hasCourse: idsOf(pack.courses).includes(courseId),
-    }]
+      packId: pack?.id || 0,
+      packTitle: String(pack?.title || ''),
+      packOwner: String(pack?.owner || ''),
+      hasCourse: opened.includes(courseId),
+    }
   })
 }
 
@@ -70,33 +71,26 @@ export async function addCourseToCode(payload: Payload, input: { portalId: numbe
   if (!code || idOf(code.portal) !== input.portalId || code.role !== 'learner') return { error: 'Choose a learner code from this portal.' }
   const packId = idsOf(code.packs)[0]
   const pack = packId ? await payload.findByID({ collection: 'packs', id: packId, overrideAccess: true, depth: 0 }).catch(() => null) as PackRow | null : null
-  if (!pack) return { error: 'That code has no course set yet. Make one on Access, then add the course.' }
   const title = String(course.title || 'This course')
   const codeLabel = String(code.label || '').trim() || String(code.code || 'that code')
-  let copied = false
-  const existing = idsOf(pack.courses)
-  if (pack.owner === 'portal') {
-    if (idOf(pack.portal) !== input.portalId) return { error: 'That course set belongs to another portal.' }
+  const opened = await openedCourseIdsForCode(payload, code)
+  if (!opened.includes(input.courseId)) {
+    await payload.update({
+      collection: 'access-codes',
+      id: code.id,
+      overrideAccess: true,
+      data: { courses: [...opened, input.courseId] },
+    })
+  }
+  if (pack?.owner === 'portal' && idOf(pack.portal) === input.portalId) {
+    const existing = idsOf(pack.courses)
     if (!existing.includes(input.courseId)) {
       await payload.update({ collection: 'packs', id: pack.id, overrideAccess: true, data: { courses: [...existing, input.courseId] } })
     }
-  } else {
-    const created = await payload.create({
-      collection: 'packs',
-      overrideAccess: true,
-      data: {
-        title: `${String(pack.title || 'Courses')} with ${title}`.slice(0, 120),
-        owner: 'portal',
-        portal: input.portalId,
-        courses: [...new Set([...existing, input.courseId])],
-      },
-    })
-    await payload.update({ collection: 'access-codes', id: code.id, overrideAccess: true, data: { packs: [created.id] } })
-    await ensurePackAdopted(payload, input.portalId, created.id)
-    copied = true
+    await ensurePackAdopted(payload, input.portalId, pack.id)
   }
-  const given = input.giveJoined ? await giveCourseToPackHolders(payload, [input.courseId]) : { updated: 0, live: 0 }
-  return { notice: offerOnCodeNotice({ course: title, code: codeLabel, copied, given: given.updated, live: given.live }) }
+  const given = input.giveJoined ? await giveCourseToCodeHolders(payload, code.id, [input.courseId]) : { updated: 0, live: 0 }
+  return { notice: offerOnCodeNotice({ course: title, code: codeLabel, copied: false, given: given.updated, live: given.live }) }
 }
 
 /** Gives the course to learners who have already joined, without changing any code. */

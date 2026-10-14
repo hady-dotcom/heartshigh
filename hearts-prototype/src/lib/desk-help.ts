@@ -28,9 +28,9 @@ export const PAGE: Record<string, string> = {
   create:
     'The sheet creator searches for talks on a topic and builds a draft workbook. Nothing goes live until you apply the preview on the sheet page. A portal draft stays in this portal. The shared library is unchanged.',
   library:
-    'The library is the shared catalogue. Link a course into this portal so learners can open it. Changes the master desk makes show up here straight away.',
+    'The library is the shared catalogue. Each course shows which codes and portals can open it. Link a course into this portal so learners can open it. Changes the master desk makes show up here straight away.',
   access:
-    'An access code says who someone is, and which courses they see. Send the link, a copy or the QR code, so nobody has to type the letters. Learner and parent codes need a teacher code, so someone can see their progress.',
+    'An access code says who someone is, and which library courses they can open. Tick the courses, or pick a whole door when the courses are tagged. Send the link, a copy or the QR code, so nobody has to type the letters. Learner and parent codes need a teacher code, so someone can see their progress.',
   opening:
     'These are the questions a newcomer sees before the clips. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal. They can be for any kind of work, not only HEARTS.',
   circle:
@@ -135,7 +135,7 @@ export const TOOL: Record<string, string> = {
   embed:
     'Paste this where you would like a button that opens the portal. The colour is the one you set above. It is an ordinary link, not a live frame of the app.',
   localCourse:
-    'A subject made here belongs to this portal. Add a first topic and film if you have them. You can add more in the editor. A course pack is optional.',
+    'A subject made here belongs to this portal. Add a first topic and film if you have them. You can add more in the editor. Learners open it once it is on a code, or once you give it to them.',
   contentSearch:
     'Search looks at subject titles. Mine is what you made here, and Library is what you linked. The list is grouped by the twenty doors of Hadith Jibril, then by Ghunya seat.',
   ingest:
@@ -209,7 +209,7 @@ export const TOOL: Record<string, string> = {
   portalDetails:
     'The name is what people see. The short address becomes /p/that-word. Kind is only a label for you. The welcome line greets whoever arrives.',
   portalCourses:
-    'These are library courses this portal can link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied, and the original stays as the master desk set it.',
+    'These are library courses this portal can use. Tick them, pick a whole door when courses are tagged, or choose all library courses. You can change the list later. Nothing is copied, and the original stays as the master desk set it.',
   portalFeatures:
     'Standard is the usual set: the parts that stay on, plus circle answers, Compass and feedback. Everything switches the extra parts on as well. You can still switch a middle part off, or pick extras one by one. Saving takes effect at once.',
   safeguarding:
@@ -267,7 +267,6 @@ export const TEST_IDS: Record<string, string> = {
   'master-bring-in': 'bringIn',
   'admin-bring-in': 'bringIn',
   'master-course': 'course',
-  'master-packs': 'packs',
   'master-questions': 'questions',
   'master-review': 'review',
   'master-tiers': 'tiers',

@@ -569,7 +569,11 @@ export const Resources: CollectionConfig = {
 export const Packs: CollectionConfig = {
   slug: 'packs',
   labels: { singular: 'Course pack', plural: 'Course packs' },
-  admin: { useAsTitle: 'title' },
+  admin: {
+    useAsTitle: 'title',
+    hidden: true,
+    description: 'Hidden. The desk picks courses on each code. This list stays so older codes can still be read.',
+  },
   access: masterOnly,
   fields: [
     { name: 'title', type: 'text', required: true },
@@ -998,6 +1002,13 @@ export const AccessCodes: CollectionConfig = {
       ],
     },
     { name: 'packs', type: 'relationship', relationTo: 'packs', hasMany: true },
+    {
+      name: 'courses',
+      type: 'relationship',
+      relationTo: 'courses',
+      hasMany: true,
+      admin: { description: 'The courses this code opens. Copied from its packs so an existing join code keeps opening the same courses.' },
+    },
     { name: 'requiredCourses', type: 'relationship', relationTo: 'courses', hasMany: true },
     { name: 'linkedTeacherCode', type: 'relationship', relationTo: 'access-codes' },
     { name: 'parentMentorCode', type: 'relationship', relationTo: 'access-codes' },

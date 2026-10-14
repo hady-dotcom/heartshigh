@@ -356,6 +356,11 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk .link-to-send { width: auto; max-width: none; }
 }
 @media (max-width: 899px) {
+  .desk.desk-phone .form .cols { grid-template-columns: minmax(0, 1fr); }
+  .desk.desk-phone .library-picker,
+  .desk.desk-phone .form input,
+  .desk.desk-phone .form select,
+  .desk.desk-phone .form textarea { max-width: 100%; min-width: 0; }
   .desk.desk-phone .main { padding: 16px 12px; min-width: 0; }
   .desk.desk-phone .desk-split { grid-template-columns: 1fr; }
   .desk.desk-phone .panel { overflow-x: auto; max-width: 100%; }
@@ -886,4 +891,24 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
   .desk.desk-phone table.phone-stack tr { padding: 8px 0 14px; border-bottom: 1px solid var(--line); }
   .desk.desk-phone table.phone-stack td { border-bottom: 0; padding: 6px 0; }
   .desk.desk-phone .give-course, .desk.desk-phone .actions { max-width: 100%; }
+}
+.library-picker {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px 14px;
+  margin: 0;
+  min-width: 0;
+}
+.library-picker legend { font-weight: 700; padding: 0 6px; color: var(--ink); }
+.quick-picks { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0; }
+.check-list { display: grid; gap: 8px; max-height: 320px; overflow: auto; padding-right: 4px; }
+.library-picker .check { align-items: flex-start; }
+.opened-by {
+  display: block;
+  margin-top: 4px;
+  max-width: 42rem;
+  font-size: 16px;
+  line-height: 1.45;
+  font-weight: 550;
+  color: var(--ink);
 }

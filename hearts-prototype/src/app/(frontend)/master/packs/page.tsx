@@ -1,8 +1,6 @@
-import { requireMaster } from '@/server/context'
-import { MasterPacks } from '@/screens/desk/master'
+import { redirect } from 'next/navigation'
 
-export default async function Packs({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
-  const query = await searchParams
-  const { payload, user } = await requireMaster()
-  return MasterPacks({ payload, user, query })
+/** Course packs are no longer a desk page. Old links land on the library. */
+export default function Packs() {
+  redirect('/master/library')
 }

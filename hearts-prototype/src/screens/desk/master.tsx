@@ -5,8 +5,8 @@ import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
 import { Hidden } from '@/components/app/shell'
-import { HelpTip } from '@/components/desk/help'
-import { TOOL } from '@/lib/desk-help'
+import { LibraryCoursePicker } from '@/components/desk/library-picker'
+import { loadLibraryPicker, openedByLines } from '@/server/code-courses'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { parseOption } from '@/lib/placing'
@@ -42,11 +42,11 @@ export function MasterFrame({ ctx, active, title, intro, children, testId, showO
 
 export async function MasterPortals(ctx: MasterCtx) {
   const { payload } = ctx
-  const [portals, packs, codes, people] = await Promise.all([
+  const [portals, codes, people, library] = await Promise.all([
     rows(payload, 'portals', undefined, { sort: 'name' }),
-    rows(payload, 'packs', undefined, { sort: 'title' }),
     rows(payload, 'access-codes', undefined, { sort: 'code', limit: 1000 }),
     rows(payload, 'users', undefined, { limit: 2000 }),
+    loadLibraryPicker(payload),
   ])
   const inPortal = (person: Record<string, unknown>, id: number) => ((person.tenants as { tenant?: unknown }[]) || []).some((row) => ref(row.tenant) === id)
   const binned = await openBinRecordIds(payload, 'portal')
@@ -109,7 +109,7 @@ export async function MasterPortals(ctx: MasterCtx) {
           </table>
         </div>
       </section>
-      <div className="grid three" style={{ alignItems: 'start' }}>
+      <div className="grid two" style={{ alignItems: 'start' }}>
         <section className="panel">
           <header><div><h2>Open a portal</h2><p><Link href="/master/create" data-testid="open-portal-studio">Choose courses and features</Link> when you want to pick which parts this place has.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
@@ -138,21 +138,10 @@ export async function MasterPortals(ctx: MasterCtx) {
                 {codes.filter((code) => code.role === 'teacher').map((code) => <option key={code.id} value={code.id}>{str(code.code)}</option>)}
               </select>
             </label>
-            <label className="stack">Course pack
-              <select data-testid="code-pack" name="pack">{packs.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}{pack.owner === 'master' ? ' (library)' : ''}</option>)}</select>
-            </label>
+            <LibraryCoursePicker courses={library} testId="master-code-courses" />
             <CodeLimits />
             <div className="actions"><button className="btn ink" data-testid="create-code" type="submit">Make code</button></div>
             <p className="hint">Join links look like /join?code=THE-CODE</p>
-          </form>
-        </section>
-        <section className="panel">
-          <header><div><h2>Course pack for a portal</h2></div></header>
-          <form className="body form" action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'create-pack', next: '/master' }} />
-            <label className="stack">Portal<select name="portalSlug" data-testid="pack-portal">{portals.map((portal) => <option key={portal.id} value={str(portal.slug)}>{showPortalName(portal.name)}</option>)}</select></label>
-            <label className="stack">Pack name<input type="text" data-testid="portal-pack-title" name="title" placeholder="Harbour sittings" required /></label>
-            <div className="actions"><button className="btn ghost" type="submit" data-testid="portal-pack-save">Save pack</button></div>
           </form>
         </section>
       </div>
@@ -171,14 +160,14 @@ function libraryHref(page: number, showShort: boolean) {
 export async function MasterLibrary(ctx: MasterCtx) {
   const { payload } = ctx
   const showingShort = ctx.query.show === 'too-short'
-  const [totals, listed, packs, shortTalks] = await Promise.all([
+  const [totals, listed, openers, shortTalks] = await Promise.all([
     libraryTotals(payload),
     libraryPage(payload, ctx.query.page),
-    rows(payload, 'packs', { owner: { equals: 'master' } }, { sort: 'title' }),
+    openedByLines(payload),
     listShortTalks(payload),
   ])
   return (
-    <MasterFrame ctx={ctx} active="library" title="Library" intro="The shared courses every portal can link. Portals see changes made here straight away." testId="master-library">
+    <MasterFrame ctx={ctx} active="library" title="Library" intro="The shared courses every portal can link. Each course says which codes and portals can open it." testId="master-library">
       <TooShortFilter base="/master/library" count={shortTalks.length} active={showingShort} />
       {showingShort ? <TooShortTable talks={shortTalks} next="/master/library?show=too-short" /> : null}
       <p className="library-totals" data-testid="library-totals" data-courses={totals.courses} data-films={totals.films} data-playable={totals.playable} data-clips={totals.clips}>{librarySummary(totals)}</p>
@@ -206,6 +195,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
                       <span data-testid="course-films">{counted(stat.films, 'film', 'films')}</span>
                       <span data-testid="course-approved">{counted(stat.approved, 'approved clip', 'approved clips')}</span>
                     </p>
+                    <span className="opened-by" data-testid="opened-by">{openers.get(course.id) || 'No code or portal opens this yet.'}</span>
                     <Link href={`/master/library/${course.id}`}>Edit</Link>
                     <DeletePick formId="bulk-course" id={course.id} label={str(course.title)} />
                     <DeleteInline kind="course" id={course.id} next="/master/library" testId={`delete-course-${course.id}`} />
@@ -223,9 +213,6 @@ export async function MasterLibrary(ctx: MasterCtx) {
             <label className="stack">Title<input type="text" data-testid="master-course-title" name="title" required /></label>
             <label className="stack">Speaker<input type="text" name="speaker" /></label>
             <label className="stack">Summary<textarea name="summary" /></label>
-            <label className="stack">Add to a library pack
-              <select name="pack"><option value="">Not yet</option>{packs.map((pack) => <option key={pack.id} value={pack.id}>{str(pack.title)}</option>)}</select>
-            </label>
             <div className="actions"><button className="btn ink" type="submit">Add to the library</button></div>
           </form>
         </section>
@@ -241,70 +228,6 @@ export async function MasterCourse(ctx: MasterCtx, courseId: number) {
   return (
     <MasterFrame ctx={ctx} active="library" title={str(course.title)} intro={<Link href="/master/library">‹ Library</Link>} testId="master-course" showOnPhone>
       {body}
-    </MasterFrame>
-  )
-}
-
-export async function MasterPacks(ctx: MasterCtx) {
-  const { payload } = ctx
-  const [packs, courses, portals] = await Promise.all([rows(payload, 'packs', undefined, { sort: 'title' }), rows(payload, 'courses', undefined, { sort: 'title' }), rows(payload, 'portals')])
-  const library = courses.filter((course) => course.origin === 'master')
-  return (
-    <MasterFrame ctx={ctx} active="packs" title="Course packs" intro="A pack is the set of courses an access code opens. Library packs can be linked by any portal; portal packs belong to one portal." testId="master-packs">
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
-        <section className="panel">
-          <DeleteMany kind="pack" next="/master/packs" formId="bulk-pack" />
-          <div className="table-wrap">
-            <table className="data">
-              <thead><tr><th>Pack</th><th>Belongs to</th><th>Courses</th></tr></thead>
-              <tbody>
-                {packs.map((pack) => {
-                  const inside = ((pack.courses as unknown[]) || []).map((item) => ref(item))
-                  const portal = portals.find((row) => row.id === ref(pack.portal))
-                  return (
-                    <tr key={pack.id} data-testid="pack-row">
-                      <td><b>{str(pack.title)}</b></td>
-                      <td>{pack.owner === 'master' ? <span className="badge gold">Library</span> : <span className="badge grey">{showPortalName(portal?.name)}</span>}</td>
-                      <td>
-                        {pack.owner === 'master' ? (
-                          <form action="/api/hearts" method="post" style={{ display: 'grid', gap: 8 }}>
-                            <Hidden fields={{ action: 'pack-courses', pack: pack.id, next: '/master/packs' }} />
-                            <div className="checks">{library.map((course) => <label className="check" key={course.id}><input type="checkbox" name="course" value={course.id} defaultChecked={inside.includes(course.id)} /> {str(course.title)}</label>)}</div>
-                            <label className="check">
-                              <input type="checkbox" name="giveHolders" value="yes" data-testid="pack-give-holders" /> Also give newly ticked courses to learners who already hold this pack
-                              <HelpTip topic="pack-give">{TOOL.packGiveHolders}</HelpTip>
-                            </label>
-                            <div><button className="btn ghost small" type="submit" data-testid="pack-save">Save courses</button></div>
-                          </form>
-                        ) : (() => {
-                          const named = courses.filter((course) => inside.includes(course.id))
-                          return named.length ? (
-                            <details data-testid="pack-courses">
-                              <summary>{named.length} course{named.length === 1 ? '' : 's'}</summary>
-                              <ul>{named.map((course) => <li key={course.id}>{str(course.title)}</li>)}</ul>
-                            </details>
-                          ) : <span className="hint">Empty</span>
-                        }                        )()}
-                        <DeletePick formId="bulk-pack" id={pack.id} label={str(pack.title)} />
-                        <DeleteInline kind="pack" id={pack.id} next="/master/packs" testId={`delete-pack-${pack.id}`} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-        <section className="panel" id="new-pack">
-          <header><div><h2>New library pack</h2></div></header>
-          <form className="body form" action="/api/hearts" method="post">
-            <Hidden fields={{ action: 'create-pack', owner: 'master', next: '/master/packs' }} />
-            <label className="stack">Pack name<input type="text" data-testid="master-pack-title" name="title" required /></label>
-            <label className="stack">Summary<textarea name="summary" /></label>
-            <div className="actions"><button className="btn ink" type="submit">Save pack</button></div>
-          </form>
-        </section>
-      </div>
     </MasterFrame>
   )
 }

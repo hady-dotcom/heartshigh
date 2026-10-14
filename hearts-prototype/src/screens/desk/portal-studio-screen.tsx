@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { adoptedCourseIds } from '@/server/context'
 import { aiAccountLine } from '@/lib/ai-honesty'
+import { loadLibraryPicker } from '@/server/code-courses'
 import { defaultFeatures, featuresOf, type FeatureSource } from '@/lib/features'
 import { publicAi } from '@/lib/portal-ai'
 import { portalDisplayName } from '@/lib/portal-name'
@@ -9,13 +10,8 @@ import { rows, str } from '../common'
 import type { MasterCtx } from './master'
 import { MasterFrame } from './master'
 
-async function libraryCourses(payload: MasterCtx['payload']) {
-  const courses = await rows(payload, 'courses', { and: [{ origin: { equals: 'master' } }, { importable: { not_equals: false } }] }, { sort: 'title', limit: 500 })
-  return courses.map((course) => ({ id: course.id, title: str(course.title) }))
-}
-
 export async function PortalCreateScreen(ctx: MasterCtx) {
-  const courses = await libraryCourses(ctx.payload)
+  const courses = await loadLibraryPicker(ctx.payload)
   return (
     <MasterFrame ctx={ctx} active="portals" title="Open a portal" intro="Choose the name, the courses, and which parts this place will have." testId="portal-create">
       <PortalStudio mode="create" action="create-portal" next="/master" courses={courses} features={defaultFeatures()} />
@@ -26,7 +22,7 @@ export async function PortalCreateScreen(ctx: MasterCtx) {
 export async function PortalEditScreen(ctx: MasterCtx, slug: string) {
   const portal = (await rows(ctx.payload, 'portals', { slug: { equals: slug } }, { limit: 1 }))[0]
   if (!portal) notFound()
-  const [courses, selected] = await Promise.all([libraryCourses(ctx.payload), adoptedCourseIds(ctx.payload, portal.id)])
+  const [courses, selected] = await Promise.all([loadLibraryPicker(ctx.payload), adoptedCourseIds(ctx.payload, portal.id)])
   const aiConnected = publicAi(portal.aiConnection).connected
   return (
     <MasterFrame

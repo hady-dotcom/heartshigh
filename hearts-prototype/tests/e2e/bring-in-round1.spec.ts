@@ -187,11 +187,14 @@ test.describe('round 1 bring-in', () => {
     report.youtubeDurations = Object.fromEntries(lessons.map((row) => [row.youtubeId, row.durationSeconds || 0]))
     saveReport()
 
-    await page.goto('/master/packs')
-    const row = page.getByTestId('pack-row').filter({ hasText: 'Jibril sittings' })
-    await row.locator('label', { hasText: COURSE }).locator('input').check()
-    await row.getByTestId('pack-save').click()
-    await expect(page.getByTestId('notice')).toContainText('Pack updated')
+    const packs = await (await master.get('/api/packs?where[title][equals]=Jibril%20sittings&limit=1&depth=0')).json()
+    const pack = packs.docs?.[0] as { id?: number; courses?: number[] } | undefined
+    expect(pack?.id).toBeTruthy()
+    const brought = await (await master.get(`/api/courses?where[title][equals]=${encodeURIComponent(COURSE)}&limit=1&depth=0`)).json()
+    const broughtId = brought.docs?.[0]?.id as number | undefined
+    expect(broughtId).toBeTruthy()
+    const current = Array.isArray(pack?.courses) ? pack.courses : []
+    expect((await master.patch(`/api/packs/${pack!.id}`, { data: { courses: [...new Set([...current, broughtId])] } })).ok()).toBeTruthy()
     await master.dispose()
   })
 

@@ -178,7 +178,7 @@ test.describe('round 2 bring in', () => {
   test('drafts stay hidden, and publishing reaches a new joiner only when asked to reach an existing holder', async ({ page, browser }) => {
     test.setTimeout(180_000)
     await page.setViewportSize(DESK)
-    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/packs')
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/library')
     const master = await masterApi()
     const portals = await (await master.get('/api/portals?where[slug][equals]=east-london&limit=1')).json()
     state.portalId = portals.docs?.[0]?.id
@@ -209,18 +209,15 @@ test.describe('round 2 bring in', () => {
     await expect(holder.page.getByTestId('lanes')).not.toContainText(COURSE)
     await holder.page.goto(`/p/east-london/course/${state.courseId}`)
     await expect(holder.page.getByTestId('lanes')).toBeVisible()
-    await expect(holder.page.getByText('not in your pack')).toBeVisible()
+    await expect(holder.page.getByText('not on your code')).toBeVisible()
     await shot(holder.page, '04-holder-before')
 
-    await page.goto('/master/packs')
-    const row = page.getByTestId('pack-row').filter({ hasText: PACK })
-    await row.locator('label', { hasText: COURSE }).locator('input').check()
-    await expect(row.getByTestId('pack-give-holders')).not.toBeChecked()
-    await row.getByTestId('pack-save').click()
-    await expect(page.getByTestId('notice')).toContainText('Pack updated')
-    await expect(page.getByTestId('notice')).toContainText('keep the course list they had')
-    await expect(page.getByTestId('notice')).not.toContainText('see the change now')
-    await shot(page, '05-pack-notice')
+    const masterNow = await masterApi()
+    const packNow = await (await masterNow.get(`/api/packs/${state.packId}?depth=0`)).json()
+    const already = Array.isArray(packNow.courses) ? packNow.courses : []
+    expect((await masterNow.patch(`/api/packs/${state.packId}`, { data: { courses: [...new Set([...already, state.courseId])] } })).ok()).toBeTruthy()
+    await masterNow.dispose()
+    await shot(page, '05-course-on-code')
 
     await holder.page.goto('/p/east-london/lanes')
     await expect(holder.page.getByTestId('lanes')).not.toContainText(COURSE)
