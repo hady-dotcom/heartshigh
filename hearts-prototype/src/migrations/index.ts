@@ -29,13 +29,13 @@ import * as migration_20261011_120000_bring_in_round2 from './20261011_120000_br
 import * as migration_20261013_190000_teach_seen from './20261013_190000_teach_seen';
 import * as migration_20261014_120000_portal_ai_forks from './20261014_120000_portal_ai_forks';
 import * as migration_20261014_150000_short_talks from './20261014_150000_short_talks';
-import * as migration_20261014_180000_code_courses from './20261014_180000_code_courses';
 import * as migration_20261014_210000_experiment_duration from './20261014_210000_experiment_duration';
 import * as migration_20261014_220000_transcript_edits from './20261014_220000_transcript_edits';
 import * as migration_20261014_231000_learner_desk from './20261014_231000_learner_desk';
 import * as migration_20261014_233000_reply_done from './20261014_233000_reply_done';
 import * as migration_20261014_235000_see_how_clips from './20261014_235000_see_how_clips';
 import * as migration_20261015_120000_desk_bin from './20261015_120000_desk_bin';
+import * as migration_20261015_130000_code_courses from './20261015_130000_code_courses';
 
 export const migrations = [
   {
@@ -194,11 +194,6 @@ export const migrations = [
     name: '20261014_150000_short_talks',
   },
   {
-    up: migration_20261014_180000_code_courses.up,
-    down: migration_20261014_180000_code_courses.down,
-    name: '20261014_180000_code_courses',
-  },
-  {
     up: migration_20261014_210000_experiment_duration.up,
     down: migration_20261014_210000_experiment_duration.down,
     name: '20261014_210000_experiment_duration',
@@ -227,5 +222,10 @@ export const migrations = [
     up: migration_20261015_120000_desk_bin.up,
     down: migration_20261015_120000_desk_bin.down,
     name: '20261015_120000_desk_bin',
+  },
+  {
+    up: migration_20261015_130000_code_courses.up,
+    down: migration_20261015_130000_code_courses.down,
+    name: '20261015_130000_code_courses',
   },
 ];

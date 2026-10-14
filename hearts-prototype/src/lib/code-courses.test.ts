@@ -107,7 +107,7 @@ test('the library line names the codes and portals that open a course', () => {
 })
 
 test('the migration copies course links and does not rewrite a join code', () => {
-  const source = readFileSync(new URL('../migrations/20261014_180000_code_courses.ts', import.meta.url), 'utf8')
+  const source = readFileSync(new URL('../migrations/20261015_130000_code_courses.ts', import.meta.url), 'utf8')
   assert.match(source, /COPY_PACK_COURSES_SQL/)
   assert.match(COPY_PACK_COURSES_SQL, /INSERT INTO "access_codes_rels"/)
   assert.match(COPY_PACK_COURSES_SQL, /'courses'/)
