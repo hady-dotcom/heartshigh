@@ -7,6 +7,7 @@ import type { SessionUser } from '@/server/context'
 import { CodeStatus } from '@/components/desk/codes'
 import { ref, rows, shortDate, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 export { MasterLearners, MasterPlans } from './learner-desk'
 
@@ -29,6 +30,7 @@ export async function MasterCodes(ctx: MasterCtx) {
   return (
     <Frame ctx={ctx} active="codes" title="Codes" intro="Join codes for every portal. Send the link rather than the code, so nobody has to type it. Demo codes change when the demo is reset." testId="master-codes-page" showOnPhone>
       <section className="panel">
+        <DeleteMany kind="code" next="/master/codes" formId="bulk-code" />
         <div className="table-wrap">
           <table className="data master-codes-table" data-testid="master-codes">
             <thead><tr><th>Portal</th><th>Code</th><th>Label</th><th>For</th><th>Works</th><th>Link to send</th></tr></thead>
@@ -51,6 +53,8 @@ export async function MasterCodes(ctx: MasterCtx) {
                         <div className="qr-small"><Qr value={share} testId="code-qr" /></div>
                       </div>
                       {slug ? <Link className="btn ghost small" href={`/p/${slug}/admin/access`} data-testid="change-pack">Change pack</Link> : null}
+                      <DeletePick formId="bulk-code" id={code.id} label={str(code.code)} />
+                      <DeleteInline kind="code" id={code.id} next="/master/codes" testId={`delete-code-${code.id}`} />
                     </td>
                   </tr>
                 )
@@ -73,15 +77,16 @@ export async function MasterNights(ctx: MasterCtx) {
   return (
     <Frame ctx={ctx} active="nights" title="Live in person" intro="Nights and gatherings across the portals." testId="master-nights" primary={slug ? { label: 'Plan a night', href: `/p/${slug}/admin/nights` } : undefined}>
       <section className="panel">
+        <DeleteMany kind="night" next="/master/nights" formId="bulk-night" />
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Night</th><th>When</th><th>Place</th></tr></thead>
             <tbody>
               {events.map((event) => (
-                <tr key={event.id}>
-                  <td>{str(event.title)}</td>
+                <tr key={event.id} data-testid="master-night-row">
+                  <td>{str(event.title)} <DeletePick formId="bulk-night" id={event.id} label={str(event.title)} /></td>
                   <td>{shortDate(str(event.startsAt))}</td>
-                  <td>{str(event.place)}</td>
+                  <td>{str(event.place)} <DeleteInline kind="night" id={event.id} next="/master/nights" testId={`delete-night-${event.id}`} /></td>
                 </tr>
               ))}
               {!events.length ? <tr><td colSpan={3}><ExampleInUse desk title="Circle after Isha" action={{ href: '/master/live', label: 'See Live recordings' }}><p>East London · the hall · Thursday</p></ExampleInUse></td></tr> : null}

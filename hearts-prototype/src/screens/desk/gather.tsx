@@ -10,6 +10,7 @@ import { type Ctx, rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
 import { PAGE } from '@/lib/desk-help'
 import { AdminFrame } from './overview'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 const AUDIENCES = [
   ['all', 'Everyone'],
@@ -53,6 +54,8 @@ export async function GatherDeskScreen(ctx: Ctx) {
                   <Hidden fields={{ action: 'status', status: 'published', id: card.id, portal: portal.slug, next: here }} />
                   <button className="btn small" type="submit" data-testid="approve-gather">Open it</button>
                 </form>
+                <DeletePick formId="bulk-gathering" id={card.id} label={card.title} />
+                <DeleteInline kind="gathering" id={card.id} next={here} portalSlug={portal.slug} testId={`delete-gathering-${card.id}`} />
               </div>
             ))}
           </div>
@@ -60,6 +63,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
       ) : null}
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.4fr) minmax(300px, 0.8fr)', alignItems: 'start' }}>
         <div>
+          <DeleteMany kind="gathering" next={here} portalSlug={portal.slug} formId="bulk-gathering" />
           {(['upcoming', 'past'] as const).map((bucket) => (
             <section key={bucket} style={{ marginBottom: 18 }} data-testid={`desk-${bucket}`}>
               <h2 className="gather-desk-heading">{bucket === 'upcoming' ? 'Upcoming' : 'Past'}</h2>
@@ -81,6 +85,8 @@ export async function GatherDeskScreen(ctx: Ctx) {
                           {' · '}
                           <a href={sharePack(origin, card).url}>Public page</a>
                         </div>
+                        <DeletePick formId="bulk-gathering" id={card.id} label={card.title} />
+                        <DeleteInline kind="gathering" id={card.id} next={here} portalSlug={portal.slug} testId={`delete-gathering-${card.id}`} />
                       </article>
                     ))}
                   </div>

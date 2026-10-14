@@ -13,6 +13,7 @@ import type { SessionUser } from '@/server/context'
 import { partTitle } from '@/lib/talk-title'
 import { rows, str } from '../common'
 import { DeskFrame, masterNav } from './shell'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 type MasterCtx = { payload: Payload; user: SessionUser; query: Record<string, string | undefined> }
 
@@ -201,6 +202,7 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
       <section className="panel" style={{ marginTop: 18 }} data-testid="tier-popups">
         <header className="light"><h2>Pop-ups in the main ({points.length})</h2><span className="hint">Drafts are never shown to learners</span></header>
         {late.length ? <ul className="hint tier-warn" data-testid="popup-late">{late.map((problem) => <li key={problem}>{problem}</li>)}</ul> : null}
+        <DeleteMany kind="point" next={next} formId="bulk-popup" />
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Time and question</th><th>Status</th><th /></tr></thead>
@@ -226,6 +228,8 @@ export async function MasterTier(ctx: MasterCtx, tierId: number) {
                         <Hidden fields={{ action: 'popup-publish', lesson: lesson.id, point: point.id, status: draft ? 'published' : 'draft', next }} />
                         <button className={`btn small ${draft ? 'teal' : 'ghost'}`} type="submit" data-testid="popup-publish">{draft ? 'Publish' : 'Back to draft'}</button>
                       </form>
+                      <DeletePick formId="bulk-popup" id={point.id} label={str(point.prompt)} />
+                      <DeleteInline kind="point" id={point.id} next={next} testId={`delete-popup-${point.id}`} />
                     </td>
                   </tr>
                 )

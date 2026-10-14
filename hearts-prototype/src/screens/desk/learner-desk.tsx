@@ -289,7 +289,7 @@ function AccountActions({
       </form>
       <form className="danger-zone" action="/api/hearts" method="post" data-testid="delete-account">
         <b>Delete the account</b>
-        <p>Type {learner.name} to confirm. This deletes their {JOURNAL_LABEL.one.toLowerCase()}, study plans and answers. Charts keep the numbers, but not their name.</p>
+        <p>Type {learner.name} to confirm. This deletes their {JOURNAL_LABEL.one.toLowerCase()}, study plans and answers. Charts keep the numbers, but not their name. This can't be undone.</p>
         <Hidden fields={{ action: 'learner-delete', learner: learner.id, next }} />
         <label className="stack">Their name<input name="confirm" data-testid="delete-name" required autoComplete="off" /></label>
         <button className="btn danger" type="submit" data-testid="delete-learner">Delete the account</button>
@@ -420,6 +420,7 @@ export async function MasterPlans(ctx: MasterCtx) {
       <section className="panel">
         <header className="light"><h2>Plans ({plans.length})</h2></header>
         <div className="body">
+          <p data-testid="plan-delete-copy">Delete these study plans? The talks stay in the library. This can't be undone.</p>
           <BulkBar id="plan-bulk" action="plan-bulk-delete" next={here} pick="plan" confirmHint="Type delete" buttons={[{ label: 'Delete plans', testId: 'plan-bulk-delete', danger: true }]} />
         </div>
         <PlanTable plans={plans} portals={portals} people={people} hrefFor={(id) => `/master/plans/${id}`} pickable emptyHref={here} />
@@ -432,6 +433,7 @@ export function PortalPlanTable({ ctx, plans, people }: { ctx: Ctx; plans: { id:
   const here = `${ctx.base}/admin/plans`
   return (
     <>
+      <p data-testid="plan-delete-copy">Delete these study plans? The talks stay in the library. This can't be undone.</p>
       <BulkBar id="plan-bulk" action="plan-bulk-delete" next={here} pick="plan" confirmHint="Type delete" buttons={[{ label: 'Delete plans', testId: 'plan-bulk-delete', danger: true }]} />
       <PlanTable
         plans={plans.map((plan) => ({ ...plan, portal: plan.portal || ctx.portal.id }))}
@@ -494,7 +496,8 @@ async function PlanDetailBody({ payload, user, planId, next }: { payload: Payloa
       </section>
       <form className="danger-zone" action="/api/hearts" method="post">
         <Hidden fields={{ action: 'plan-delete', plan: plan.id, next: next.replace(/\/\d+$/, '') }} />
-        <p>Delete this study plan. The talks stay in the library.</p>
+        <p data-testid="plan-delete-copy">Delete this study plan? The talks stay in the library. This can't be undone.</p>
+        <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="plan-delete-sure" /> Yes, delete it</label>
         <button className="btn danger" type="submit" data-testid="plan-delete">Delete plan</button>
       </form>
     </div>
@@ -529,11 +532,13 @@ function DiaryTable({
   portals,
   hrefFor,
   emptyHref,
+  bulkNext,
 }: {
   entries: { id: number; user?: unknown; portal?: unknown; createdAt?: unknown; consent?: boolean | null; body?: unknown; answer?: unknown; teacherReply?: unknown; repliedAt?: unknown; doneAt?: unknown }[]
   portals: { id: number; name?: unknown; organisationName?: unknown }[]
   hrefFor: (id: number) => string
   emptyHref: string
+  bulkNext?: string
 }) {
   const rows = entries.map((entry) => {
     const answer = entry.answer && typeof entry.answer === 'object' ? (entry.answer as { keepPrivate?: boolean }) : null
@@ -552,6 +557,7 @@ function DiaryTable({
   return (
     <JournalList
       rows={rows}
+      bulkNext={bulkNext}
       empty={(
         <ExampleInUse desk title="A line after Fajr" action={{ href: emptyHref, label: 'Open learners' }}>
           <p>Maryam · East London Mosque · Shared</p>
@@ -567,7 +573,7 @@ export async function MasterDiaries(ctx: MasterCtx) {
     <Frame ctx={ctx} active="diaries" title={JOURNAL_LABEL.many} intro={`${JOURNAL_LABEL.one} entries across the portals. Open one to read it when the learner shared it, or to delete it.`} testId="master-diaries" primary={{ label: 'Open learners', href: '/master/learners' }}>
       <section className="panel" id="diary-list">
         <header className="light"><h2>Entries ({entries.length})</h2></header>
-        <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `/master/diaries/${id}`} emptyHref="/master/learners" />
+        <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `/master/diaries/${id}`} emptyHref="/master/learners" bulkNext="/master/diaries" />
       </section>
     </Frame>
   )
@@ -579,7 +585,7 @@ export async function PortalDiaries(ctx: Ctx) {
     <AdminFrame ctx={ctx} active="diaries" title={JOURNAL_LABEL.many} intro={`${JOURNAL_LABEL.one} entries in this portal. Open one to read it when the learner shared it, or to delete it.`} testId="portal-diaries" primary={{ label: 'Open learners', href: `${ctx.base}/admin/teach` }}>
       <section className="panel" id="diary-list">
         <header className="light"><h2>Entries ({entries.length})</h2></header>
-        <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `${ctx.base}/admin/diaries/${id}`} emptyHref={`${ctx.base}/admin/teach`} />
+        <DiaryTable entries={entries} portals={portals} hrefFor={(id) => `${ctx.base}/admin/diaries/${id}`} emptyHref={`${ctx.base}/admin/teach`} bulkNext={ctx.user.role === 'teacher' ? undefined : `${ctx.base}/admin/diaries`} />
       </section>
     </AdminFrame>
   )
@@ -620,7 +626,8 @@ async function DiaryDetailBody({ payload, user, entryId, back }: { payload: Payl
       {canDelete ? (
         <form className="danger-zone" action="/api/hearts" method="post">
           <Hidden fields={{ action: 'diary-delete', entry: entry.id, next: back }} />
-          <p>Delete this {JOURNAL_LABEL.one.toLowerCase()} entry. This cannot be undone.</p>
+          <p data-testid="diary-delete-copy">Delete this {JOURNAL_LABEL.one.toLowerCase()} entry? People will no longer see it. This can't be undone.</p>
+          <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="diary-delete-sure" /> Yes, delete it</label>
           <button className="btn danger" type="submit" data-testid="diary-delete">Delete this entry</button>
         </form>
       ) : <p className="hint">You can look. A portal admin can delete it.</p>}

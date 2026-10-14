@@ -8,7 +8,7 @@ import { HelpTip } from '@/components/desk/help'
 import { SideNav } from '@/components/desk/side-nav'
 import { pageHelp } from '@/lib/desk-help'
 import { deskAppHref } from '@/lib/landing'
-import { BellIcon, BeakerIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
+import { BellIcon, BeakerIcon, BinIcon, BookIcon, CalendarIcon, ChartIcon, ClapperIcon, CogIcon, CompassIcon, FilmIcon, FlagIcon, FrameIcon, GlobeIcon, HeartIcon, HomeIcon, KeyIcon, LibraryIcon, MicIcon, MoonIcon, NetworkIcon, PathIcon, PeopleIcon, QuestionIcon, ScaleIcon, SheetIcon, SparkIcon } from '@/components/icons'
 import type { SessionUser } from '@/server/context'
 import { deskLead, type DeskPrimary } from '@/lib/desk-lead'
 import { JOURNAL_LABEL } from '@/lib/journal-copy'
@@ -48,6 +48,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
         { key: 'feedback', label: 'Feedback', href: `${base}/admin/feedback`, icon: <QuestionIcon /> },
         { key: 'safety', label: 'Care and safety', href: `${base}/admin/safety`, icon: <HeartIcon /> },
         { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
+        { key: 'bin', label: 'Bin', href: `${base}/admin/bin`, icon: <BinIcon /> },
       ]),
     },
     {
@@ -96,6 +97,7 @@ export function masterNav(): NavGroup[] {
         { key: 'codes', label: 'Codes', href: '/master/codes', icon: <KeyIcon /> },
         { key: 'safety', label: 'Care and safety', href: '/master/safety', icon: <HeartIcon /> },
         { key: 'announcements', label: 'Announcements', href: '/master/announcements', icon: <BellIcon /> },
+        { key: 'bin', label: 'Bin', href: '/master/bin', icon: <BinIcon /> },
       ],
     },
     {

@@ -2,6 +2,7 @@ import { Hidden } from '@/components/app/shell'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
 import { ExampleInUse } from '@/components/app/care'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { REPORT_LABEL, announceAudienceLabel, plainAlertSource, plainReportStatus, plainTarget } from '@/lib/safety'
 import { safeguardingLead } from '@/lib/portal-contacts'
 import { canSeeAlertContent } from '@/lib/safety'
@@ -193,7 +194,7 @@ export async function PortalAnnounceScreen(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="announcements" title="Announcements" intro="A short note for everyone, for teachers, or for one code. It appears on Home until they dismiss it." testId="admin-announcements">
       <AnnounceForm portal={ctx.portal.id} here={here} codes={codes.docs as { id: number; label?: string; code?: string }[]} />
-      <AnnounceList rows={list.docs as { id: number; body?: string; audience?: string; createdAt?: string }[]} />
+      <AnnounceList rows={list.docs as { id: number; body?: string; audience?: string; createdAt?: string; portal?: unknown }[]} next={here} portalSlug={ctx.portal.slug} />
     </AdminFrame>
   )
 }
@@ -204,7 +205,7 @@ export async function MasterAnnounceScreen({ payload, user, query }: { payload: 
   return (
     <DeskFrame payload={payload} user={user} title="Announcements" intro="A short note to a portal. Learners see it on Home." active="announcements" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-announcements">
       <AnnounceForm portal={Number(portals.docs[0]?.id || 0)} here="/master/announcements" portals={portals.docs as { id: number; name?: string }[]} codes={[]} />
-      <AnnounceList rows={list.docs as { id: number; body?: string; audience?: string; createdAt?: string }[]} />
+      <AnnounceList rows={list.docs as { id: number; body?: string; audience?: string; createdAt?: string }[]} next="/master/announcements" />
     </DeskFrame>
   )
 }
@@ -248,15 +249,18 @@ function AnnounceForm({ portal, here, codes, portals }: { portal: number; here: 
   )
 }
 
-function AnnounceList({ rows }: { rows: { id: number; body?: string; audience?: string; createdAt?: string }[] }) {
+function AnnounceList({ rows, next, portalSlug }: { rows: { id: number; body?: string; audience?: string; createdAt?: string }[]; next: string; portalSlug?: string }) {
   return (
     <section className="panel" data-testid="announce-list">
       <header className="light"><h2>Sent and waiting</h2></header>
+      <DeleteMany kind="announcement" next={next} portalSlug={portalSlug} formId="bulk-announcement" />
       <div className="body">
         {rows.map((row) => (
           <article key={row.id} className="lib-card" data-testid="announce-row">
             <p>{row.body}</p>
             <p className="hint">{announceAudienceLabel(String(row.audience || 'everyone'))} · {shortDate(row.createdAt)}</p>
+            <DeletePick formId="bulk-announcement" id={row.id} label={String(row.body || 'announcement').slice(0, 80)} />
+            <DeleteInline kind="announcement" id={row.id} next={next} portalSlug={portalSlug} testId={`delete-announcement-${row.id}`} />
           </article>
         ))}
         {!rows.length ? (

@@ -2,6 +2,7 @@
 
 import { useId, useMemo, useRef, useState, type ReactNode } from 'react'
 import { ClickRow } from '@/components/desk/row-link'
+import { JOURNAL_LABEL } from '@/lib/journal-copy'
 import { journalUnanswered, journalUnansweredLabel, journalWhen, sortJournalEntries, type JournalOrder } from '@/lib/journal-list'
 
 export type JournalListRow = {
@@ -19,10 +20,13 @@ export function JournalList({
   rows,
   mode = 'table',
   empty,
+  bulkNext,
 }: {
   rows: JournalListRow[]
   mode?: 'table' | 'lines'
   empty?: ReactNode
+  /** When set, each row has a tick and one Delete covers the ticked ones. */
+  bulkNext?: string
 }) {
   const [order, setOrder] = useState<JournalOrder>('newest')
   const top = useRef<HTMLDivElement>(null)
@@ -30,6 +34,7 @@ export function JournalList({
   const mark = useId()
   const sorted = useMemo(() => sortJournalEntries(rows, order), [rows, order])
   const waiting = journalUnansweredLabel(journalUnanswered(sorted))
+  const picking = mode === 'table' && Boolean(bulkNext)
 
   function jump(where: 'top' | 'bottom') {
     const node = where === 'top' ? top.current : bottom.current
@@ -45,6 +50,15 @@ export function JournalList({
         <button type="button" className="btn ghost small" data-testid="journal-jump-bottom" onClick={() => jump('bottom')}>Jump to bottom</button>
         {waiting ? <p className="journal-waiting" data-testid="journal-unanswered">{waiting}</p> : null}
       </div>
+      {picking ? (
+        <form id="diary-bulk" className="bulk-bar" action="/api/hearts" method="post" data-testid="diary-bulk">
+          <input type="hidden" name="action" value="diary-bulk-delete" />
+          <input type="hidden" name="next" value={bulkNext || ''} />
+          <p data-testid="diary-bulk-copy">Delete these {JOURNAL_LABEL.one.toLowerCase()} entries? People will no longer see them. This can't be undone.</p>
+          <label className="check"><input type="checkbox" name="sure" value="yes" required data-testid="diary-bulk-sure" /> Yes, delete the ticked ones</label>
+          <button className="btn danger small" type="submit" data-testid="diary-bulk-go">Delete selected</button>
+        </form>
+      ) : null}
       <div ref={top} id={`${mark}-top`} data-testid="journal-list-top" />
       {mode === 'lines' ? (
         <div className="demo-list">
@@ -59,12 +73,17 @@ export function JournalList({
       ) : (
         <div className="table-wrap">
           <table className="data people-table">
-            <thead><tr><th>Learner</th><th>Portal</th><th>When</th><th>Words</th></tr></thead>
+            <thead><tr>{picking ? <th /> : null}<th>Learner</th><th>Portal</th><th>When</th><th>Words</th></tr></thead>
             <tbody>
               {sorted.map((row) => {
                 const href = row.href || '#'
                 return (
                   <ClickRow key={row.id} href={href} testId="diary-row">
+                    {picking ? (
+                      <td data-label="Select">
+                        <input form="diary-bulk" type="checkbox" name="id" value={row.id} data-testid="delete-pick" aria-label={`Select ${row.name || `${JOURNAL_LABEL.one.toLowerCase()} entry`}`} />
+                      </td>
+                    ) : null}
                     <td data-label="Learner"><a href={href} data-testid="diary-open"><b>{row.name || 'A learner'}</b></a></td>
                     <td data-label="Portal" data-testid="diary-portal">{row.portal || '—'}</td>
                     <td data-label="When" data-testid="journal-when">{journalWhen(row.at)}</td>
@@ -74,7 +93,7 @@ export function JournalList({
               })}
               {!sorted.length ? (
                 <tr>
-                  <td colSpan={4}>{empty}</td>
+                  <td colSpan={picking ? 5 : 4}>{empty}</td>
                 </tr>
               ) : null}
             </tbody>

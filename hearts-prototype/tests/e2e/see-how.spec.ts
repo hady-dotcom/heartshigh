@@ -106,6 +106,7 @@ test('master desk can replace a See how clip, and Live recordings and Framing in
   await shot(page, 'see-how-replaced-laptop')
   await player.getByTestId('see-how-close').click()
 
+  await replaced.getByTestId('see-how-sure').check()
   await replaced.getByTestId('see-how-reset').click()
   await expect(page.getByText('Back to the recorded one.')).toBeVisible()
   const recorded = page.locator('[data-testid=see-how-row][data-page=home]')

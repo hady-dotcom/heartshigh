@@ -36,6 +36,7 @@ export async function hijriOffsetOf(payload: Payload) {
 export async function loadSeasons(payload: Payload): Promise<AdminSeason[]> {
   const found = await payload.find({ collection: col('calendar-seasons'), overrideAccess: true, depth: 0, limit: 40, sort: '-start' })
   return found.docs.map((row) => ({
+    id: Number(row.id),
     key: String((row as { key?: string }).key || ''),
     name: String((row as { name?: string }).name || ''),
     theme: (row as { theme?: string }).theme || '',

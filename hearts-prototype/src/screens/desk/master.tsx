@@ -20,6 +20,9 @@ import { listShortTalks } from '@/server/short-talks'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
 import { TooShortFilter, TooShortTable } from './short-talks'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { courseRemovedFromDesk } from '@/lib/desk-delete'
+import { openBinRecordIds } from '@/server/desk-delete'
 
 export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string; show?: string } }
 
@@ -46,6 +49,8 @@ export async function MasterPortals(ctx: MasterCtx) {
     rows(payload, 'users', undefined, { limit: 2000 }),
   ])
   const inPortal = (person: Record<string, unknown>, id: number) => ((person.tenants as { tenant?: unknown }[]) || []).some((row) => ref(row.tenant) === id)
+  const binned = await openBinRecordIds(payload, 'portal')
+  const openPortals = portals.filter((portal) => !binned.has(portal.id))
   return (
     <MasterFrame ctx={ctx} active="portals" title="Portals" intro="Each mosque or community has its own portal, with its own admin, codes and people. You open portals here; each portal admin runs their own." testId="master">
       <p className="hint" style={{ marginTop: 0 }}><Link href="/demo-stage" data-testid="open-demo-stage">Open the demo stage</Link> — four people on one page. A course, a note, a question, and a reply move between them. Nothing is saved.</p>
@@ -54,7 +59,7 @@ export async function MasterPortals(ctx: MasterCtx) {
           <table className="data">
             <thead><tr><th>Portal</th><th>Address</th><th>Kind</th><th>Status</th><th className="num">People</th><th className="num">Codes</th><th /></tr></thead>
             <tbody>
-              {portals.map((portal) => (
+              {openPortals.map((portal) => (
                 <tr key={portal.id} data-testid="portal-card">
                   <td><b>{portalDisplayName(portal)}</b></td>
                   <td style={{ fontFamily: 'ui-monospace, monospace' }}>/p/{str(portal.slug)}</td>
@@ -76,6 +81,7 @@ export async function MasterPortals(ctx: MasterCtx) {
                         {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
                         <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
                       </form>
+                      <DeleteInline kind="portal" id={portal.id} next="/master" testId={`delete-portal-${portal.id}`} title={portalDisplayName(portal)} label="Delete portal" />
                     </details>
                   </td>
                 </tr>
@@ -179,7 +185,8 @@ export async function MasterLibrary(ctx: MasterCtx) {
       <div className="library-layout">
         <section className="panel">
           <div className="library-list" data-testid="library-list">
-            {listed.courses.map((course) => {
+            <DeleteMany kind="course" next="/master/library" formId="bulk-course" />
+            {listed.courses.filter((course) => !courseRemovedFromDesk(course as { hidden?: boolean | null; hiddenNote?: unknown })).map((course) => {
               const stat = listed.stats.get(course.id) || { films: 0, approved: 0, youtubeId: null }
               const thumb = youtubeThumb(stat.youtubeId)
               const watch = youtubeWatch(stat.youtubeId)
@@ -200,6 +207,8 @@ export async function MasterLibrary(ctx: MasterCtx) {
                       <span data-testid="course-approved">{counted(stat.approved, 'approved clip', 'approved clips')}</span>
                     </p>
                     <Link href={`/master/library/${course.id}`}>Edit</Link>
+                    <DeletePick formId="bulk-course" id={course.id} label={str(course.title)} />
+                    <DeleteInline kind="course" id={course.id} next="/master/library" testId={`delete-course-${course.id}`} />
                   </div>
                 </article>
               )
@@ -244,6 +253,7 @@ export async function MasterPacks(ctx: MasterCtx) {
     <MasterFrame ctx={ctx} active="packs" title="Course packs" intro="A pack is the set of courses an access code opens. Library packs can be linked by any portal; portal packs belong to one portal." testId="master-packs">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
+          <DeleteMany kind="pack" next="/master/packs" formId="bulk-pack" />
           <div className="table-wrap">
             <table className="data">
               <thead><tr><th>Pack</th><th>Belongs to</th><th>Courses</th></tr></thead>
@@ -274,7 +284,9 @@ export async function MasterPacks(ctx: MasterCtx) {
                               <ul>{named.map((course) => <li key={course.id}>{str(course.title)}</li>)}</ul>
                             </details>
                           ) : <span className="hint">Empty</span>
-                        })()}
+                        }                        )()}
+                        <DeletePick formId="bulk-pack" id={pack.id} label={str(pack.title)} />
+                        <DeleteInline kind="pack" id={pack.id} next="/master/packs" testId={`delete-pack-${pack.id}`} />
                       </td>
                     </tr>
                   )
@@ -311,6 +323,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
     <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a door of Hadith Jibril; the door with most answers chooses the first course." testId="master-questions">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
+          <DeleteMany kind="placing" next="/master/questions" formId="bulk-placing" />
           <div className="table-wrap">
             <table className="data">
               <thead><tr><th className="num">Order</th><th>Question</th><th>Answers and the door each points to</th><th>Shown in</th></tr></thead>
@@ -320,7 +333,11 @@ export async function MasterQuestions(ctx: MasterCtx) {
                     <td className="num">{str(question.order)}</td>
                     <td><b>{str(question.prompt)}</b>{question.why ? <div className="hint">{str(question.why)}</div> : null}</td>
                     <td>{(Array.isArray(question.options) ? question.options : []).map((option, index) => { const parsed = parseOption(option); return <div key={index} className="hint"><b style={{ color: 'var(--ink)' }}>{parsed.label}</b>: {fragment(parsed.clause)}</div> })}</td>
-                    <td>{question.portal ? str(portals.find((row) => row.id === ref(question.portal))?.name) : 'Every portal'}</td>
+                    <td>
+                      {question.portal ? str(portals.find((row) => row.id === ref(question.portal))?.name) : 'Every portal'}
+                      <DeletePick formId="bulk-placing" id={question.id} label={str(question.prompt)} />
+                      <DeleteInline kind="placing" id={question.id} next="/master/questions" testId={`delete-placing-${question.id}`} />
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -254,8 +254,9 @@ export async function handleCircle(action: string, form: FormData, payload: Payl
     if ('error' in found) return back(next, found.error)
     const { answer } = found
     if (action === 'circle-delete') {
+      if (text(form, 'sure') !== 'yes') return back(next, 'Tick Yes, delete it. Nothing was deleted.')
       await payload.delete({ collection: 'circle-answers' as never, id: answer.id, overrideAccess: true })
-      return back(next, undefined, 'Circle answer deleted.')
+      return back(next, undefined, 'Circle answer deleted. This can\'t be undone.')
     }
     if (action === 'circle-toggle') {
       const enabled = text(form, 'enabled') === 'on'

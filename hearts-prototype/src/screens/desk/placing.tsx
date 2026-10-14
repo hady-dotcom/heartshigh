@@ -6,6 +6,7 @@ import { showPortalName } from '@/lib/portal-name'
 import { loadDoors } from '@/server/doors'
 import { type Ctx, ref, rows, str } from '../common'
 import { AdminFrame } from './overview'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 export async function PortalQuestionsScreen(ctx: Ctx) {
   const { payload, portal, base } = ctx
@@ -33,6 +34,7 @@ export async function PortalQuestionsScreen(ctx: Ctx) {
     >
       <section className="panel" style={{ marginBottom: 18 }} data-testid="placing-default-bank">
         <header className="light"><h2>Default bank</h2><span className="hint">Shown in every portal</span></header>
+        <DeleteMany kind="placing" next={here} portalSlug={portal.slug} formId="bulk-placing" />
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th className="num">Order</th><th>Question</th><th>Answers</th><th>Whose</th></tr></thead>
@@ -47,7 +49,15 @@ export async function PortalQuestionsScreen(ctx: Ctx) {
                       const parsed = parseOption(option)
                       return <div key={index} className="hint"><b style={{ color: 'var(--ink)' }}>{parsed.label}</b>: {fragment(parsed.clause)}</div>
                     })}</td>
-                    <td>{own ? showPortalName(portal.name) : 'Every portal'}</td>
+                    <td>
+                      {own ? showPortalName(portal.name) : 'Every portal'}
+                      {own ? (
+                        <>
+                          <DeletePick formId="bulk-placing" id={question.id} label={str(question.prompt)} />
+                          <DeleteInline kind="placing" id={question.id} next={here} portalSlug={portal.slug} testId={`delete-placing-${question.id}`} />
+                        </>
+                      ) : null}
+                    </td>
                   </tr>
                 )
               })}

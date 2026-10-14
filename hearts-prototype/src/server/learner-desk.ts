@@ -482,7 +482,36 @@ export async function deleteDiary(payload: Payload, actor: DeskActor, entryId: n
     portal,
     detail: { entryId: entry.id, learnerId: idOf(entry.user) },
   })
-  return { notice: `The ${JOURNAL_LABEL.one.toLowerCase()} entry is deleted.` }
+  const word = JOURNAL_LABEL.one.toLowerCase()
+  return { notice: `The ${word} entry is deleted. This can't be undone.` }
+}
+
+export async function bulkDeleteDiaries(payload: Payload, actor: DeskActor, entryIds: number[], sure: boolean): Promise<Result> {
+  if (!sure) return { error: 'Tick Yes, delete it. Nothing was deleted.' }
+  if (!entryIds.length) return { error: 'Tick at least one.' }
+  if (entryIds.length > 25) return { error: 'Tick up to 25 at a time.' }
+  const scope = actorScope(actor)
+  const entries: Doc[] = []
+  for (const id of entryIds) {
+    const entry = id
+      ? ((await payload.findByID({ collection: 'workbook-entries', id, overrideAccess: true, depth: 0 }).catch(() => null)) as Doc | null)
+      : null
+    if (!entry) return { error: `One of those ${JOURNAL_LABEL.one.toLowerCase()} entries could not be found. Nothing was deleted.` }
+    const reason = diaryDeleteRefusal(scope, idOf(entry.portal))
+    if (reason) return { error: `${reason} Nothing was deleted.` }
+    entries.push(entry)
+  }
+  for (const entry of entries) {
+    await payload.delete({ collection: 'workbook-entries', id: entry.id, overrideAccess: true })
+    await note(payload, 'diary.delete', actor, {
+      target: idOf(entry.user) || undefined,
+      portal: idOf(entry.portal),
+      detail: { entryId: entry.id, learnerId: idOf(entry.user), bulk: true },
+    })
+  }
+  const count = entries.length
+  const word = JOURNAL_LABEL.one.toLowerCase()
+  return { notice: `${count} ${count === 1 ? `${word} entry is` : `${word} entries are`} deleted. This can't be undone.` }
 }
 
 export function diaryWords(entry: { consent?: boolean | null; body?: unknown }, answer?: { keepPrivate?: boolean | null } | null) {
@@ -520,8 +549,15 @@ export async function dispatchLearnerDesk(payload: Payload, actor: DeskActor, fo
   if (action === 'learner-delete') return deleteLearnerAccount(payload, actor, Number(text(form, 'learner')), text(form, 'confirm'))
   if (action === 'learner-bulk') return bulkLearnerAction(payload, actor, ids(form, 'learner'), text(form, 'op'), text(form, 'confirm'))
   if (action === 'plan-edit') return editPlan(payload, actor, form)
-  if (action === 'plan-delete') return deletePlan(payload, actor, Number(text(form, 'plan')))
+  if (action === 'plan-delete') {
+    if (text(form, 'sure') !== 'yes') return { error: 'Tick Yes, delete it. Nothing was deleted.' }
+    return deletePlan(payload, actor, Number(text(form, 'plan')))
+  }
   if (action === 'plan-bulk-delete') return bulkDeletePlans(payload, actor, ids(form, 'plan'), text(form, 'confirm'))
-  if (action === 'diary-delete') return deleteDiary(payload, actor, Number(text(form, 'entry')))
+  if (action === 'diary-delete') {
+    if (text(form, 'sure') !== 'yes') return { error: 'Tick Yes, delete it. Nothing was deleted.' }
+    return deleteDiary(payload, actor, Number(text(form, 'entry')))
+  }
+  if (action === 'diary-bulk-delete') return bulkDeleteDiaries(payload, actor, ids(form, 'id'), text(form, 'sure') === 'yes')
   return { error: 'That action is not known.' }
 }

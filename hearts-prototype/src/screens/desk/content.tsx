@@ -36,6 +36,8 @@ import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { CodeRoleFields } from '@/components/desk/code-role'
 import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { courseRemovedFromDesk } from '@/lib/desk-delete'
 
 export function guardAdmin(ctx: Ctx) {
   if (ctx.user.role === 'teacher') redirect(`${ctx.base}/admin?error=${encodeURIComponent('That page is for the portal admin. Ask them if you need something changed.')}`)
@@ -44,9 +46,10 @@ export function guardAdmin(ctx: Ctx) {
 export async function ContentScreen(ctx: Ctx) {
   guardAdmin(ctx)
   const { payload, portal, base, query } = ctx
-  const local = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title' })
+  const gone = (course: unknown) => courseRemovedFromDesk(course as { hidden?: boolean | null; hiddenNote?: unknown })
+  const local = (await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title' })).filter((course) => !gone(course))
   const adoptedIds = await adoptedCourseIds(payload, portal.id)
-  const linked = adoptedIds.length ? await rows(payload, 'courses', { id: { in: adoptedIds } }, { sort: 'title' }) : []
+  const linked = (adoptedIds.length ? await rows(payload, 'courses', { id: { in: adoptedIds } }, { sort: 'title' }) : []).filter((course) => !gone(course))
   const all = [...local, ...linked]
   const ids = all.map((course) => course.id)
   const [units, lessons, packs] = await Promise.all([
@@ -96,7 +99,15 @@ export async function ContentScreen(ctx: Ctx) {
         <td className="num">{own.length}</td>
         <td className="num">{points.filter((point) => ownIds.has(ref(point.lesson) || 0)).length}</td>
         <td className="num">{cuts.filter((cut) => ownIds.has(ref(cut.lesson) || 0) && cut.status === 'approved').length}</td>
-        <td><Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{isLocal ? 'Edit' : 'View'}</Link></td>
+        <td>
+          <Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{isLocal ? 'Edit' : 'View'}</Link>
+          {isLocal ? (
+            <>
+              <DeletePick formId="bulk-course" id={course.id} label={str(course.title)} />
+              <DeleteInline kind="course" id={course.id} next={here} portalSlug={portal.slug} testId={`delete-course-${course.id}`} />
+            </>
+          ) : null}
+        </td>
       </tr>
     )
   }
@@ -112,6 +123,7 @@ export async function ContentScreen(ctx: Ctx) {
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
           <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{TOOL.contentSearch}</HelpTip></h2><Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link></header>
+          <DeleteMany kind="course" next={here} portalSlug={portal.slug} formId="bulk-course" />
           <form className="content-tools" action={here} method="get" data-testid="content-filter">
             <label className="stack">Search<input className="field" name="q" defaultValue={query.q || ''} placeholder="Subject or speaker" /></label>
             <label className="stack">Show
@@ -270,6 +282,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
       {filmPage.total ? (
         <section className="panel film-grid" data-testid="film-grid">
           <header><div><h2>Films</h2><p data-testid="film-total">{counted(filmPage.total, 'film', 'films')}</p></div></header>
+          {!locked ? <DeleteMany kind="lesson" next={editorHref} portalSlug={portal?.slug} formId="bulk-lesson" /> : null}
           <div className="film-cards">
             {filmPage.lessons.map((row) => {
               const thumb = youtubeThumb(row.youtubeId)
@@ -284,6 +297,12 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   ) : null}
                   <Link href={editorLink(editorHref, { part: row.id, films: filmPage.page })}>{partTitle(row, courseTitle)}</Link>
                   {row.durationSeconds ? <small>{clock(Number(row.durationSeconds))}</small> : null}
+                  {!locked ? (
+                    <>
+                      <DeletePick formId="bulk-lesson" id={row.id} label={partTitle(row, courseTitle)} />
+                      <DeleteInline kind="lesson" id={row.id} next={here} portalSlug={portal?.slug} testId={`delete-lesson-${row.id}`} />
+                    </>
+                  ) : null}
                 </article>
               )
             })}
@@ -326,6 +345,9 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                 <label className="check"><input type="checkbox" name="importable" defaultChecked={Boolean(course.importable)} /> Other portals may add this course</label>
                 <div className="actions"><button className="btn ghost small" type="submit">Save</button></div>
               </form>
+              <div className="body">
+                <DeleteInline kind="course" id={courseId} next={editorHref.replace(/\/\d+$/, '')} portalSlug={portal?.slug} testId="delete-course" />
+              </div>
             </section>
           ) : null}
         </div>
@@ -429,6 +451,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
           {lesson ? (
             <section className="panel" data-testid="cuts-panel">
               <header className="light"><h2>Cuts for review ({cuts.length})</h2><span className="hint">{cuts.filter((cut) => cut.status === 'approved').length} approved</span></header>
+              {!locked ? <DeleteMany kind="clip" next={here} portalSlug={portal?.slug} formId="bulk-clip" /> : null}
               <div className="body">
                 {cuts.length ? cuts.map((cut) => {
                   const clause = Number(cut.bestClause || 0)
@@ -477,6 +500,12 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                           </div>
                         </form>
                       ) : <div className="hint" data-testid="cut-door-readonly">{door ? <b>{doorLabel(door)}</b> : ''}</div>}
+                      {!locked ? (
+                        <>
+                          <DeletePick formId="bulk-clip" id={cut.id} label={str(cut.hook) || 'clip'} />
+                          <DeleteInline kind="clip" id={cut.id} next={here} portalSlug={portal?.slug} testId={`delete-clip-${cut.id}`} />
+                        </>
+                      ) : null}
                     </article>
                   )
                 }) : <ExampleInUse desk title="A clip from the talk" action={{ href: '#transcript', label: 'Add the words' }}><p>0:12 to 0:28 · the line you want people to hear first.</p><p className="hint">Add the timed words, then pull the clips.</p></ExampleInUse>}
@@ -487,6 +516,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
           {lesson && ladder.length ? (
             <section className="panel" data-testid="ladder-panel">
               <header className="light"><h2>Short clips for the feed ({ladder.length})</h2><span className="hint">Short opening clips of 15 to 20 seconds, each inside its longer extended clip</span></header>
+              {!locked ? <DeleteMany kind="ladder" next={here} portalSlug={portal?.slug} formId="bulk-ladder" /> : null}
               <div className="table-wrap">
                 <table className="data">
                   <thead><tr><th>Kind</th><th>Time</th><th>Caption</th><th>Status</th>{!locked ? <th /> : null}</tr></thead>
@@ -504,6 +534,8 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                               <button className="btn teal small" name="status" value="approved" type="submit">Approve</button>
                               <button className="btn ghost small" name="status" value="rejected" type="submit">Set aside</button>
                             </form>
+                            <DeletePick formId="bulk-ladder" id={item.id} label={str(item.quote) || 'draft clip'} />
+                            <DeleteInline kind="ladder" id={item.id} next={here} portalSlug={portal?.slug} testId={`delete-ladder-${item.id}`} />
                           </td>
                         ) : null}
                       </tr>
@@ -521,6 +553,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                 <div className="point-line" aria-hidden>
                   {visiblePoints.map((point) => <span key={point.id} className={point.timing === 'future' ? 'future' : ''} style={{ left: `${Math.min(98, Math.max(2, (Number(point.second) / length) * 100))}%` }} title={str(point.prompt)} />)}
                 </div>
+                {!locked ? <DeleteMany kind="point" next={here} portalSlug={portal?.slug} formId="bulk-point" /> : null}
                 <div className="table-wrap" style={{ marginBottom: 18 }}>
                   <table className="data">
                     <thead><tr><th>At</th><th>Kind</th><th>Question</th><th>Opens</th><th>Who sees it</th></tr></thead>
@@ -533,7 +566,15 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                             <td>{({ reflection: 'Reflection', question: 'Question', multiple_choice: 'Multiple choice', task: 'Task' } as Record<string, string>)[str(point.kind)] || 'Reflection'}</td>
                             <td>{str(point.prompt)}</td>
                             <td>{point.timing === 'future' ? `${str(point.delayAmount)} ${str(point.delayUnit)}${Number(point.delayAmount) === 1 ? '' : 's'} after ${contingent ? `answering "${str(contingent.prompt).slice(0, 40)}"` : 'first watching'}` : 'Straight away'}</td>
-                            <td>{point.audience === 'self' ? 'Only its author' : point.audience === 'selected' ? 'Chosen learners' : 'Everyone on this film'}</td>
+                            <td>
+                              {point.audience === 'self' ? 'Only its author' : point.audience === 'selected' ? 'Chosen learners' : 'Everyone on this film'}
+                              {!locked ? (
+                                <>
+                                  <DeletePick formId="bulk-point" id={point.id} label={str(point.prompt)} />
+                                  <DeleteInline kind="point" id={point.id} next={here} portalSlug={portal?.slug} testId={`delete-point-${point.id}`} />
+                                </>
+                              ) : null}
+                            </td>
                           </tr>
                         )
                       })}
@@ -685,10 +726,11 @@ export async function LibraryScreen(ctx: Ctx) {
           <div className="body"><PackContents key={openPack.id} groups={subsetGroups(grouped, packIds(openPack))} doors={doors} /></div>
         </section>
       ) : null}
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(380px, 1fr)', alignItems: 'start' }}>
+      <div className="grid two" style={{ alignItems: 'start' }}>
         <div style={{ display: 'grid', gap: 18 }}>
           <section className="panel">
             <header><h2>Library courses</h2></header>
+            <DeleteMany kind="adoption" next={here} portalSlug={portal.slug} formId="bulk-adoption" />
             <div className="table-wrap">
               <table className="data">
                 <thead><tr><th>Course</th><th>Speaker</th><th>Added</th><th /></tr></thead>
@@ -702,16 +744,17 @@ export async function LibraryScreen(ctx: Ctx) {
                           <b>{str(course.title)}</b>
                           {course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}
                           {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
+                          {direct ? (
+                            <>
+                              <DeletePick formId="bulk-adoption" id={direct.id} label={str(course.title)} />
+                              <DeleteInline kind="adoption" id={direct.id} next={here} portalSlug={portal.slug} testId="remove-link" label="Remove from this portal" />
+                            </>
+                          ) : null}
                         </td>
                         <td>{str(course.speaker)}</td>
                         <td>{direct ? <span className="badge teal">In this portal</span> : viaPack ? <span className="badge purple">Comes with a pack</span> : <span className="badge grey">Not added yet</span>}</td>
-                        <td style={{ whiteSpace: 'nowrap' }}>
-                          {direct ? (
-                            <form action="/api/hearts" method="post">
-                              <Hidden fields={{ action: 'remove-adoption', adoption: direct.id, portalSlug: portal.slug, next: here }} />
-                              <button className="btn danger small" data-testid="remove-link" type="submit">Remove from this portal</button>
-                            </form>
-                          ) : !viaPack && course.importable !== false ? (
+                        <td>
+                          {!direct && !viaPack && course.importable !== false ? (
                             <form action="/api/hearts" method="post">
                               <Hidden fields={{ action: 'adopt', kind: 'course', course: course.id, portalSlug: portal.slug, next: here }} />
                               <button className="btn small" data-testid="adopt-course" type="submit">Add this course (stays in sync)</button>
@@ -805,6 +848,7 @@ export async function AccessScreen(ctx: Ctx) {
         </div>
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
+        <DeleteMany kind="code" next={here} portalSlug={portal.slug} formId="bulk-code" />
         <div className="table-wrap">
           <table className="data">
             <thead><tr><th>Code</th><th>For</th><th>Courses</th><th>Teacher code</th><th className="num">Joined</th><th>Works</th><th>Link to send</th><th>QR</th><th>Change</th></tr></thead>
@@ -840,6 +884,8 @@ export async function AccessScreen(ctx: Ctx) {
                           <button className="btn ink small" type="submit">Update code</button>
                         </form>
                       </details>
+                      <DeletePick formId="bulk-code" id={code.id} label={str(code.code)} />
+                      <DeleteInline kind="code" id={code.id} next={here} portalSlug={portal.slug} testId={`delete-code-${code.id}`} />
                     </td>
                   </tr>
                 )
@@ -908,6 +954,14 @@ export async function AccessScreen(ctx: Ctx) {
               <label className="stack">Name<input type="text" data-testid="portal-pack-title" name="title" required /></label>
               <div className="actions"><button className="btn ghost" data-testid="portal-pack-submit" type="submit">Save this set</button></div>
             </form>
+            <DeleteMany kind="pack" next={here} portalSlug={portal.slug} formId="bulk-pack" />
+            {usable.filter((pack) => pack.owner !== 'master' && ref(pack.portal) === portal.id).map((pack) => (
+              <div key={pack.id} data-testid="portal-pack-row" style={{ padding: '0 16px 12px' }}>
+                <b>{str(pack.title)}</b>
+                <DeletePick formId="bulk-pack" id={pack.id} label={str(pack.title)} />
+                <DeleteInline kind="pack" id={pack.id} next={here} portalSlug={portal.slug} testId={`delete-pack-${pack.id}`} />
+              </div>
+            ))}
           </section>
         </details>
       </div>

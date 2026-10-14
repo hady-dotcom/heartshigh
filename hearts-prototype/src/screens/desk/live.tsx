@@ -8,6 +8,7 @@ import { loadDoors } from '@/server/doors'
 import { listQuestions, listSessions, muxStatus } from '@/server/live'
 import { type Ctx, rows, str } from '../common'
 import { AdminFrame } from './overview'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { DeskFrame, masterNav } from './shell'
 import type { SessionUser } from '@/server/context'
 import type { Payload } from 'payload'
@@ -52,6 +53,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
                   <Hidden fields={{ action: 'end', id: live.id, portal: portal.slug, next: here }} />
                   <button className="btn" type="submit" data-testid="desk-end-live" data-write>End recording</button>
                 </form>
+                <DeleteInline kind="live" id={live.id} next={here} portalSlug={portal.slug} testId={`delete-live-${live.id}`} />
               </div>
             </section>
           ) : null}
@@ -92,6 +94,7 @@ export async function LiveDeskScreen(ctx: Ctx) {
               ) : !live ? <p className="hint">Start a recording and the questions will land here.</p> : null}
             </div>
           </section>
+          <DeleteMany kind="live" next={here} portalSlug={portal.slug} formId="bulk-live" />
           {scheduled.length ? (
             <section className="panel" data-testid="desk-live-upcoming" style={{ marginBottom: 18 }}>
               <header><h2>Coming up</h2></header>
@@ -104,6 +107,8 @@ export async function LiveDeskScreen(ctx: Ctx) {
                       <Hidden fields={{ action: 'start', id: card.id, portal: portal.slug, next: here }} />
                       <button className="btn small" type="submit" data-testid="desk-start-scheduled" data-write>Start recording</button>
                     </form>
+                    <DeletePick formId="bulk-live" id={card.id} label={card.title} />
+                    <DeleteInline kind="live" id={card.id} next={here} portalSlug={portal.slug} testId={`delete-live-${card.id}`} />
                   </article>
                 ))}
               </div>
@@ -120,6 +125,8 @@ export async function LiveDeskScreen(ctx: Ctx) {
                     {card.replayLessonId ? <Link href={`${base}/admin/content`}>Open Content</Link> : null}
                     {' · '}
                     <a href={`/api/live?export=1&portal=${portal.slug}&id=${card.id}`}>Export questions</a>
+                    <DeletePick formId="bulk-live" id={card.id} label={card.title} />
+                    <DeleteInline kind="live" id={card.id} next={here} portalSlug={portal.slug} testId={`delete-live-${card.id}`} />
                   </article>
                 ))}
               </div>
@@ -174,6 +181,7 @@ export async function MasterLiveScreen({ payload, user, query }: { payload: Payl
     <DeskFrame payload={payload} user={user} title="Live recordings" intro="Every portal’s live sessions. Open a portal desk to start or end one." active="live" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="master-live" primary={first ? { label: 'Open a live desk', href: `/p/${str(first.slug)}/admin/live` } : undefined}>
       <section className="panel">
         <header><h2>All portals</h2></header>
+        <DeleteMany kind="live" next="/master/live" formId="bulk-live" />
         <div className="body">
           {sessions.map((row) => {
             const portal = portals.find((item) => item.id === Number(row.portal))
@@ -182,6 +190,8 @@ export async function MasterLiveScreen({ payload, user, query }: { payload: Payl
                 <b>{str(row.title)}</b>
                 <p className="hint">{str(portal?.name) || 'Portal'} · {str(row.status) === 'live' ? 'Live now' : str(row.status) === 'ended' ? 'Ended' : 'Coming up'} · {str(row.hostName)}</p>
                 {portal ? <Link href={`/p/${str(portal.slug)}/admin/live`}>Open the desk</Link> : null}
+                <DeletePick formId="bulk-live" id={row.id} label={str(row.title)} />
+                <DeleteInline kind="live" id={row.id} next="/master/live" portalSlug={str(portal?.slug) || undefined} testId={`delete-live-${row.id}`} />
               </article>
             )
           })}

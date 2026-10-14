@@ -18,6 +18,7 @@ export const HomeIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M3 
 export const BookIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z" /><path d="M4 21V5" /></svg>)
 export const LibraryIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M4 4h4v16H4zM10 4h4v16h-4z" /><path d="M16 5l4 1-3 14-4-1z" /></svg>)
 export const KeyIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="8" cy="15" r="4" /><path d="M11 12l9-9M17 6l3 3" /></svg>)
+export const BinIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M4 7h16" /><path d="M9 7V5h6v2" /><path d="M7 7l1 13h8l1-13" /></svg>)
 export const PeopleIcon = ({ size = 18 }: P) => (<svg {...base(size)}><circle cx="9" cy="8" r="3.5" /><path d="M2.5 20a6.5 6.5 0 0 1 13 0" /><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14a6 6 0 0 1 3.5 6" /></svg>)
 export const CalendarIcon = ({ size = 18 }: P) => (<svg {...base(size)}><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M16 3v4M8 3v4M3 10h18" /></svg>)
 export const MoonIcon = ({ size = 18 }: P) => (<svg {...base(size)}><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z" /></svg>)

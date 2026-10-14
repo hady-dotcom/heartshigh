@@ -13,6 +13,7 @@ import type { Ctx } from '../common'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './desk-extra.module.css'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
 type Query = Record<string, string | undefined>
 
@@ -184,8 +185,17 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
             </form>
             {seasons.length ? (
               <div className="body">
+                <DeleteMany kind="season" next={base} formId="bulk-season" />
                 {seasons.map((season) => (
-                  <p key={season.key} className={styles.quiet}>{season.name} · {ukDate(season.start)} to {ukDate(season.end)}</p>
+                  <div key={season.key} data-testid="season-row">
+                    <p className={styles.quiet}>{season.name} · {ukDate(season.start)} to {ukDate(season.end)}</p>
+                    {season.id ? (
+                      <>
+                        <DeletePick formId="bulk-season" id={season.id} label={season.name} />
+                        <DeleteInline kind="season" id={season.id} next={base} testId={`delete-season-${season.id}`} />
+                      </>
+                    ) : null}
+                  </div>
                 ))}
               </div>
             ) : null}
@@ -221,6 +231,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                 <button className="btn ghost" type="submit" data-testid="copy-suggest">Suggest a Friday line</button>
               </form>
             ) : null}
+            {masterUser ? <DeleteMany kind="calendar-line" next={base} formId="bulk-copy" /> : null}
             <table className={styles.table} data-testid="copy-table">
               <thead><tr><th>Where it shows</th><th>When</th><th>Line</th><th>Approved</th>{masterUser ? <th /> : null}</tr></thead>
               <tbody>
@@ -236,6 +247,8 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                           <Hidden fields={{ action: row.approved ? 'hold' : 'approve', id: String(row.id), next: base }} />
                           <button className="btn ghost small" type="submit">{row.approved ? 'Hold back' : 'Approve'}</button>
                         </form>
+                        <DeletePick formId="bulk-copy" id={row.id} label={row.label} />
+                        <DeleteInline kind="calendar-line" id={row.id} next={base} testId={`delete-copy-${row.id}`} />
                       </td>
                     ) : null}
                   </tr>
