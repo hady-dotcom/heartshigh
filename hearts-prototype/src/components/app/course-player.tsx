@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
-import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
+import { comingAnswerLabel, comingQuestionLabel, questionDotLocked, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
 import { SpokenWords } from '@/components/app/spoken-words'
 import { learnerFramingMode } from '@/lib/framing/learner'
@@ -816,7 +816,7 @@ export function CoursePlayer({
           {views.map((point) => {
             const place = places.get(point.id)
             const reached = questionMomentReached({ second: point.second, time, answered: point.answered })
-            const locked = !point.answered && point.state !== 'open'
+            const locked = questionDotLocked({ answered: point.answered, state: point.state, reached })
             return (
             <button
               key={point.id}

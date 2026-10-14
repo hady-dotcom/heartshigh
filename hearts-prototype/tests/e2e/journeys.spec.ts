@@ -304,7 +304,7 @@ test.describe.serial('HEARTS journeys', () => {
     shared.lessonId = (await page.locator('form.watched-form input[name=lesson]').getAttribute('value')) || undefined
     const tooSoon = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '1', next: `/p/${slug}/course/${shared.courseId}` })
     expect(tooSoon).toContain('error=')
-    const done = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '8', ended: 'yes', next: `/p/${slug}/course/${shared.courseId}` })
+    const done = await post(page, { action: 'complete', lesson: shared.lessonId!, seconds: '480', ended: 'yes', next: `/p/${slug}/course/${shared.courseId}` })
     expect(done).toContain('notice=')
   })
 
