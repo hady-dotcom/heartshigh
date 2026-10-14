@@ -14,10 +14,10 @@ async function signIn(page: import('@playwright/test').Page) {
   await expect(page.getByTestId('bring-in')).toBeVisible()
 }
 
-test('a blank new course takes the playlist title and the channel, and the examples stay pale grey', async ({ page }) => {
+test('a blank new course takes the playlist title and the channel, and the examples stay faint', async ({ page }) => {
   await signIn(page)
   const placeholder = await page.getByTestId('bring-in-urls').evaluate((el) => getComputedStyle(el, '::placeholder').color)
-  expect(placeholder).toBe('rgb(183, 192, 190)')
+  expect(placeholder).toBe('rgb(168, 152, 120)')
   await page.getByTestId('bring-in-urls').fill(PLAYLIST)
   await page.getByTestId('bring-in-course').selectOption('new')
   await page.getByTestId('bring-in-lookup').click()
