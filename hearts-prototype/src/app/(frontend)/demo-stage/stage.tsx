@@ -294,8 +294,8 @@ function Stage() {
     <div className={`demo-stage layout-${layout}${stepsOpen && introduced ? ' steps-open' : ''}`} data-testid="demo-stage">
       <header className="demo-bar">
         <div className="demo-title">
-          <p className="demo-kicker">HEARTS · sample only</p>
-          <h1>Demo stage</h1>
+          <p className="demo-kicker">Hady Core · sample only</p>
+          <h1 data-testid="demo-header-title">Hady Core Demo stage</h1>
         </div>
         <div className="demo-presets" role="group" aria-label="Layout">
           <button type="button" className={layout === 'row' ? 'on' : ''} data-testid="demo-layout-row" onClick={() => { setResized(false); setLayout('row') }}>4 across</button>

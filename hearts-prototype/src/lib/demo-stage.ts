@@ -10,7 +10,7 @@
 export const DEMO_CHANNEL = 'hearts-demo-stage'
 
 /** Words on the door. Practice data only, so this page does not ask for a login. */
-export const DEMO_ENTRY_TITLE = 'HEARTS Demo stage: a live four-screen walk-through (master, portal admin, teacher, learner). Practice data only; nothing you do here changes real portals.'
+export const DEMO_ENTRY_TITLE = 'Hady Core Demo stage: a live four-screen walk-through (master, portal admin, teacher, learner). Practice data only; nothing you do here changes real portals.'
 export const DEMO_ENTRY_START = 'Start the Demo stage'
 export const CAST_FLOW = ['master', 'portal', 'teacher', 'learner'] as const
 export type CastStep = (typeof CAST_FLOW)[number]

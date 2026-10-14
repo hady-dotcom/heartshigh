@@ -5,7 +5,7 @@ import './demo-stage.css'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: 'HEARTS Demo stage',
+  title: 'Hady Core Demo stage',
   description: 'A live four-screen walk-through. Practice data only.',
 }
 

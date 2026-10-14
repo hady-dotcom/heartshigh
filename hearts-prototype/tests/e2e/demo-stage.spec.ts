@@ -221,7 +221,8 @@ test('a signed-out person gets the demo door, not the app login', async ({ page 
   await expect(page).toHaveURL(/\/demo-stage$/)
   await expect(page.getByTestId('login-email')).toHaveCount(0)
   await expect(page.locator('.garden-door')).toHaveCount(0)
-  await expect(page.getByTestId('demo-entry-title')).toHaveText('HEARTS Demo stage: a live four-screen walk-through (master, portal admin, teacher, learner). Practice data only; nothing you do here changes real portals.')
+  await expect(page.getByTestId('demo-entry')).not.toContainText('HEARTS')
+  await expect(page.getByTestId('demo-entry-title')).toHaveText('Hady Core Demo stage: a live four-screen walk-through (master, portal admin, teacher, learner). Practice data only; nothing you do here changes real portals.')
   await expect(page.getByTestId('demo-start')).toHaveText('Start the Demo stage')
   const colours = {
     master: 'rgb(37, 33, 74)',
@@ -237,4 +238,6 @@ test('a signed-out person gets the demo door, not the app login', async ({ page 
   await page.getByTestId('demo-start').click()
   await expect(page.getByTestId('demo-cast')).toBeVisible()
   await expect(page.getByTestId('demo-entry')).toHaveCount(0)
+  await expect(page.getByTestId('demo-header-title')).toHaveText('Hady Core Demo stage')
+  await expect(page.locator('.demo-title .demo-kicker')).toHaveText('Hady Core · sample only')
 })

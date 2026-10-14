@@ -211,7 +211,8 @@ const TEACHER_NAV = ['overview', 'teach', 'diaries', 'feedback', 'compass', 'pla
 
 describe('the demo door', () => {
   it('says this is practice data and does not ask for a login', () => {
-    assert.equal(DEMO_ENTRY_TITLE.includes('HEARTS Demo stage'), true)
+    assert.equal(DEMO_ENTRY_TITLE.includes('Hady Core Demo stage'), true)
+    assert.equal(DEMO_ENTRY_TITLE.includes('HEARTS'), false)
     assert.equal(DEMO_ENTRY_TITLE.includes('master, portal admin, teacher, learner'), true)
     assert.equal(DEMO_ENTRY_TITLE.includes('Practice data only'), true)
     assert.equal(DEMO_ENTRY_TITLE.includes('nothing you do here changes real portals'), true)

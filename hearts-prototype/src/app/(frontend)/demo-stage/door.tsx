@@ -16,7 +16,7 @@ export function DemoDoor() {
   if (open) return <DemoStage />
   return (
     <main className="demo-door" data-testid="demo-entry">
-      <p className="demo-door-kicker">HEARTS · practice only</p>
+      <p className="demo-door-kicker">Hady Core · practice only</p>
       <ul className="demo-door-dots" aria-label="The four people">
         {DOTS.map((dot) => (
           <li key={dot.key}>
