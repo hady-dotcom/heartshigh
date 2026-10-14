@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { DatabaseSync } from 'node:sqlite'
 import test from 'node:test'
+import { COPY_PACK_COURSES_SQL } from './code-courses-sql'
 import {
   LIVE_JOIN_CODES,
   coursesAfterPackCopy,
@@ -11,16 +13,18 @@ import {
   type PackCourses,
 } from './code-courses'
 
+const liveCourses = Array.from({ length: 75 }, (_, index) => index + 1)
+
 const packs: PackCourses[] = [
   { id: 1, title: 'Jibril sittings', courses: [10, 11, 12] },
   { id: 2, title: 'Starter map', courses: [20, 21] },
-  { id: 3, title: 'One Names class', courses: [11] },
+  { id: 3, title: 'Live library', courses: liveCourses },
 ]
 
 const live = [
-  { code: 'HEARTSDE-7RV9-GFGV', courses: [] as number[], packs: [1] },
-  { code: 'HEARTSDE-9QFE-VNEV', courses: [] as number[], packs: [1, 2] },
-  { code: 'HEARTSDE-DTRC-99ND', courses: [] as number[], packs: [2] },
+  { code: 'HEARTSDE-7RV9-GFGV', courses: [] as number[], packs: [3] },
+  { code: 'HEARTSDE-9QFE-VNEV', courses: [] as number[], packs: [3] },
+  { code: 'HEARTSDE-DTRC-99ND', courses: [] as number[], packs: [3] },
 ]
 
 test('copying pack courses onto a code does not change what that code opens', () => {
@@ -34,34 +38,40 @@ test('copying pack courses onto a code does not change what that code opens', ()
   }
 })
 
-test('the live join codes keep their letters, and the old packs stay on the codes that use them', () => {
+test('the live join codes keep their letters, and every code opens pack 3 courses 1 to 75', () => {
   assert.deepEqual(LIVE_JOIN_CODES, ['HEARTSDE-7RV9-GFGV', 'HEARTSDE-9QFE-VNEV', 'HEARTSDE-DTRC-99ND'])
   const copied = live.map((code) => coursesAfterPackCopy(code, packs))
   assert.deepEqual(
     copied.map((code) => code.code),
     [...LIVE_JOIN_CODES],
   )
-  const teacher = copied[0]
-  const learner = copied[1]
-  const admin = copied[2]
-  assert.deepEqual(teacher.courses, [10, 11, 12])
-  assert.deepEqual(learner.courses, [10, 11, 12, 20, 21])
-  assert.deepEqual(admin.courses, [20, 21])
-  for (const code of [teacher, learner]) {
-    for (const courseId of packs[0].courses) assert.ok(code.courses.includes(courseId), `${code.code} keeps Jibril sittings`)
-  }
-  for (const code of [learner, admin]) {
-    for (const courseId of packs[1].courses) assert.ok(code.courses.includes(courseId), `${code.code} keeps Starter map`)
-  }
-  assert.ok(!teacher.courses.includes(20))
-  assert.ok(!admin.courses.includes(10))
+  for (const code of copied) assert.deepEqual(code.courses, liveCourses, code.code)
+})
+
+test('a teacher code that is already two courses short is filled up to the whole pack', () => {
+  const teacher = { code: 'HEARTSDE-7RV9-GFGV', courses: liveCourses.slice(0, 73), packs: [3] }
+  const copied = coursesAfterPackCopy(teacher, packs)
+  assert.equal(copied.code, teacher.code)
+  assert.deepEqual(copied.courses, liveCourses)
+})
+
+test('Jibril sittings and Starter map stay on the codes that use them', () => {
+  const named = [
+    { code: 'HEARTSDE-7RV9-GFGV', courses: [] as number[], packs: [1] },
+    { code: 'HEARTSDE-9QFE-VNEV', courses: [] as number[], packs: [1, 2] },
+    { code: 'HEARTSDE-DTRC-99ND', courses: [] as number[], packs: [2] },
+  ]
+  const copied = named.map((code) => coursesAfterPackCopy(code, packs))
+  assert.deepEqual(copied[0].courses, [10, 11, 12])
+  assert.deepEqual(copied[1].courses, [10, 11, 12, 20, 21])
+  assert.deepEqual(copied[2].courses, [20, 21])
 })
 
 test('a code that already names a course keeps it, and a repeated pack course is stored once', () => {
-  const code = { code: 'HEARTSDE-9QFE-VNEV', courses: [11, 30], packs: [1, 3] }
+  const code = { code: 'HEARTSDE-9QFE-VNEV', courses: [11, 30], packs: [1, 2] }
   const copied = coursesAfterPackCopy(code, packs)
   assert.equal(copied.code, 'HEARTSDE-9QFE-VNEV')
-  assert.deepEqual(copied.courses, [10, 11, 12, 30])
+  assert.deepEqual(copied.courses, [10, 11, 12, 20, 21, 30])
 })
 
 test('a whole door is offered only when a course is tagged with it', () => {
@@ -98,9 +108,61 @@ test('the library line names the codes and portals that open a course', () => {
 
 test('the migration copies course links and does not rewrite a join code', () => {
   const source = readFileSync(new URL('../migrations/20261014_180000_code_courses.ts', import.meta.url), 'utf8')
-  assert.match(source, /INSERT INTO "access_codes_rels"/)
-  assert.match(source, /'courses'/)
+  assert.match(source, /COPY_PACK_COURSES_SQL/)
+  assert.match(COPY_PACK_COURSES_SQL, /INSERT INTO "access_codes_rels"/)
+  assert.match(COPY_PACK_COURSES_SQL, /'courses'/)
   assert.doesNotMatch(source, /SET\s+"code"/i)
-  assert.doesNotMatch(source, /UPDATE\s+"access_codes"/i)
-  assert.doesNotMatch(source, /HEARTSDE-/)
+  assert.doesNotMatch(COPY_PACK_COURSES_SQL, /UPDATE\s+"access_codes"/i)
+  assert.doesNotMatch(source + COPY_PACK_COURSES_SQL, /HEARTSDE-/)
+})
+
+test('the copy gives admin, learner and teacher exactly courses 1 to 75 from pack 3', () => {
+  const db = new DatabaseSync(':memory:')
+  db.exec(`
+    CREATE TABLE access_codes (id INTEGER PRIMARY KEY, code TEXT, label TEXT);
+    CREATE TABLE access_codes_rels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      "order" INTEGER,
+      parent_id INTEGER NOT NULL,
+      path TEXT NOT NULL,
+      packs_id INTEGER,
+      courses_id INTEGER
+    );
+    CREATE TABLE packs_rels (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      "order" INTEGER,
+      parent_id INTEGER NOT NULL,
+      path TEXT NOT NULL,
+      courses_id INTEGER
+    );
+  `)
+  for (let courseId = 1; courseId <= 75; courseId += 1) {
+    db.prepare('INSERT INTO packs_rels ("order", parent_id, path, courses_id) VALUES (?, 3, ?, ?)').run(courseId, 'courses', courseId)
+  }
+  const codes = [
+    { id: 1, code: 'HEARTSDE-DTRC-99ND', label: 'admin' },
+    { id: 2, code: 'HEARTSDE-9QFE-VNEV', label: 'learner' },
+    { id: 3, code: 'HEARTSDE-7RV9-GFGV', label: 'teacher' },
+  ]
+  for (const code of codes) {
+    db.prepare('INSERT INTO access_codes (id, code, label) VALUES (?, ?, ?)').run(code.id, code.code, code.label)
+    db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, packs_id) VALUES (1, ?, ?, 3)').run(code.id, 'packs')
+  }
+  // The teacher already has 73 of the 75, plus two required courses that share the course column.
+  for (let courseId = 1; courseId <= 73; courseId += 1) {
+    db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, courses_id) VALUES (?, 3, ?, ?)').run(courseId, 'courses', courseId)
+  }
+  db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, courses_id) VALUES (74, 3, ?, 1)').run('requiredCourses')
+  db.prepare('INSERT INTO access_codes_rels ("order", parent_id, path, courses_id) VALUES (75, 3, ?, 2)').run('requiredCourses')
+
+  db.exec(COPY_PACK_COURSES_SQL)
+  db.exec(COPY_PACK_COURSES_SQL)
+
+  for (const code of codes) {
+    const stored = (db.prepare(`SELECT courses_id FROM access_codes_rels WHERE parent_id = ? AND path = 'courses' ORDER BY courses_id`).all(code.id) as { courses_id: number }[]).map((row) => row.courses_id)
+    assert.deepEqual(stored, liveCourses, code.label)
+    const letters = db.prepare('SELECT code FROM access_codes WHERE id = ?').get(code.id) as { code: string }
+    assert.equal(letters.code, code.code)
+  }
+  db.close()
 })

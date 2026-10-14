@@ -1,7 +1,8 @@
+import { sql } from 'drizzle-orm'
 import type { Payload } from 'payload'
+import { COPY_PACK_COURSES_SQL } from '@/lib/code-courses-sql'
 import { capitalAfterColon, doorByNumber, doorCode, parseDoor, type Door } from '@/lib/doors'
 import {
-  coursesAfterPackCopy,
   coursesOpenedByCode,
   indexOpeners,
   openedByLine,
@@ -70,34 +71,30 @@ export async function openedCourseIdsForCode(payload: Payload, code: { courses?:
   return coursesOpenedByCode({ courses: ids(code.courses), packs: packIds }, packRows(packs))
 }
 
+type CopyDb = {
+  name?: string
+  client?: { execute: (statement: string) => Promise<{ rowsAffected?: number }> }
+  drizzle?: { execute?: (query: unknown) => Promise<{ rowCount?: number | null }> }
+}
+
 /**
  * Store each pack's courses on the codes that use that pack.
+ * Writes the link rows directly. A short read of a relationship list cannot drop courses,
+ * and courses already on the code are never removed.
  * Does not change the code string, and does not remove the pack link.
  * Safe to run more than once.
  */
 export async function copyPackCoursesOntoCodes(payload: Payload) {
-  const [codes, packs] = await Promise.all([
-    listDocs(payload, 'access-codes'),
-    listDocs(payload, 'packs'),
-  ])
-  const packList = packRows(packs)
-  let updated = 0
-  for (const code of codes) {
-    const current = [...ids(code.courses)].sort((a, b) => a - b)
-    const next = coursesAfterPackCopy(
-      { code: String(code.code || ''), courses: current, packs: ids(code.packs) },
-      packList,
-    )
-    if (next.courses.length === current.length && next.courses.every((id, index) => id === current[index])) continue
-    await payload.update({
-      collection: 'access-codes',
-      id: code.id,
-      overrideAccess: true,
-      data: { courses: next.courses },
-    })
-    updated += 1
-  }
-  return { updated, codes: codes.length }
+  const db = payload.db as unknown as CopyDb
+  const query = sql.raw(COPY_PACK_COURSES_SQL)
+  const result = db.name === 'postgres'
+    ? await db.drizzle?.execute?.(query)
+    : await db.client?.execute(COPY_PACK_COURSES_SQL)
+  if (!result) throw new Error('The database could not copy pack courses onto access codes.')
+  const counted = result as { rowsAffected?: number; rowCount?: number | null }
+  const updated = Number(counted.rowsAffected ?? counted.rowCount ?? 0)
+  const codes = await payload.count({ collection: 'access-codes', overrideAccess: true })
+  return { updated, codes: codes.totalDocs }
 }
 
 function doorTag(number: number, doors: Door[]) {
