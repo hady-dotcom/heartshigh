@@ -14,14 +14,14 @@ async function signIn(page: import('@playwright/test').Page) {
   await expect(page.getByTestId('bring-in')).toBeVisible()
 }
 
-test('a blank new course takes the playlist title and the channel, and the examples stay pale grey', async ({ page }) => {
+test('a blank new course takes the playlist title and the channel, and the example stays readable', async ({ page }) => {
   await signIn(page)
   const placeholder = await page.getByTestId('bring-in-urls').evaluate((el) => {
     const style = getComputedStyle(el, '::placeholder')
     return { color: style.color, opacity: style.opacity }
   })
-  expect(placeholder.color === 'rgb(183, 192, 190)' || placeholder.color === 'rgba(183, 192, 190, 0.45)').toBeTruthy()
-  expect(Number(placeholder.opacity)).toBeCloseTo(0.45, 1)
+  expect(placeholder.color === 'rgb(168, 152, 120)' || placeholder.color === 'rgba(168, 152, 120, 1)').toBeTruthy()
+  expect(Number(placeholder.opacity)).toBeCloseTo(1, 1)
   await expect(page.getByTestId('bring-in-urls')).toHaveAttribute('placeholder', /^e\.g\./)
   await page.getByTestId('bring-in-urls').fill(PLAYLIST)
   await page.getByTestId('bring-in-more').locator('summary').click()

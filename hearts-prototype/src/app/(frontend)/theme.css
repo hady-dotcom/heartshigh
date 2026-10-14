@@ -287,8 +287,8 @@ html[data-theme] textarea::placeholder {
   opacity: 1;
 }
 html[data-theme] .desk textarea.paste-example::placeholder {
-  color: #b7c0be;
-  opacity: .45;
+  color: #a89878;
+  opacity: 1;
 }
 html[data-theme] .field:focus,
 html[data-theme] .desk input:focus,
