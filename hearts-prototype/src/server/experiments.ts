@@ -19,6 +19,7 @@ import {
 } from '@/lib/experiment-slots'
 import type { VariantView } from '@/lib/experiment-slots'
 import { clipStepUpLabel, talkStepUpLabel } from '@/lib/feed-copy'
+import { DEFAULT_EXPERIMENT_DAYS, experimentEndsAt, presetExperimentKey, presetOf } from '@/lib/experiment-presets'
 import { now } from '@/lib/clock'
 import { contextAt, resolveContextLabel } from '@/server/calendar'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
@@ -60,6 +61,7 @@ export type ExperimentDoc = {
   approvedBy?: unknown
   startedAt?: string | null
   finishedAt?: string | null
+  durationDays?: number | null
   createdAt?: string
   updatedAt?: string
 }
@@ -119,6 +121,7 @@ function asDoc(row: Record<string, unknown>): ExperimentDoc {
     approvedBy: row.approvedBy,
     startedAt: row.startedAt ? String(row.startedAt) : null,
     finishedAt: row.finishedAt ? String(row.finishedAt) : null,
+    durationDays: Number(row.durationDays) > 0 ? Number(row.durationDays) : DEFAULT_EXPERIMENT_DAYS,
     createdAt: row.createdAt ? String(row.createdAt) : undefined,
     updatedAt: row.updatedAt ? String(row.updatedAt) : undefined,
   }
@@ -298,6 +301,7 @@ export async function createExperiment(payload: Payload, actor: Actor, input: {
   primaryMetric: string
   secondaryMetrics?: string[]
   variants: ExperimentVariant[]
+  durationDays?: number
 }): Promise<ExperimentDoc> {
   assertEdit(actor)
   const slot = slotOf(input.slot)
@@ -323,6 +327,7 @@ export async function createExperiment(payload: Payload, actor: Actor, input: {
       variants: input.variants,
       defaultVariant: input.variants[0]?.key,
       createdBy: actor.id,
+      durationDays: input.durationDays && input.durationDays > 0 ? input.durationDays : DEFAULT_EXPERIMENT_DAYS,
     } as never,
   })
   const doc = asDoc(created as never)
@@ -358,6 +363,123 @@ export async function createLabelExperiment(payload: Payload, actor: Actor, inpu
       { key: 'b', label: 'Seasonal', payload: { label }, weight: 1, approved: false, source: 'staff' },
     ],
   })
+}
+
+/** Pick a preset, split traffic automatically, and start it for the default length. */
+export async function createFromPreset(payload: Payload, actor: Actor, presetKey: string, portalId?: number | null) {
+  const preset = presetOf(presetKey)
+  if (!preset) throw new Error('Pick one of the tests on the list.')
+  const running = await payload.find({
+    collection: col('experiments'),
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ slot: { equals: preset.slot } }, { status: { equals: 'running' } }] },
+  })
+  if (running.docs[0]) {
+    const existing = asDoc(running.docs[0] as never)
+    const error = new Error('Another test is already running on this. Open it to pause or stop it.') as Error & { experimentId?: number }
+    error.experimentId = existing.id
+    throw error
+  }
+  const created = await createExperiment(payload, actor, {
+    key: presetExperimentKey(preset.key),
+    name: preset.name,
+    description: preset.description,
+    slot: preset.slot,
+    portalId,
+    allocation: 'auto',
+    primaryMetric: preset.primaryMetric,
+    durationDays: DEFAULT_EXPERIMENT_DAYS,
+    variants: preset.variants.map((row) => ({
+      key: row.key,
+      label: row.label,
+      payload: row.payload,
+      weight: 1,
+      approved: true,
+      source: 'staff' as const,
+    })),
+  })
+  return startExperiment(payload, actor, created.id)
+}
+
+export type ExperimentBrief = {
+  tested: string
+  portalName: string
+  learnerLine: string
+  startedLabel: string
+  starterName: string
+  sampleSize: number
+  durationDays: number
+  endsLabel: string
+  appliedCopy: string
+}
+
+function personLabel(row: { name?: string | null; email?: string | null } | null | undefined) {
+  const name = String(row?.name || '').trim()
+  if (name) return name
+  return ''
+}
+
+function londonDate(value: string | null | undefined) {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' })
+}
+
+export async function experimentBrief(payload: Payload, actor: Actor, experiment: ExperimentDoc): Promise<ExperimentBrief> {
+  assertView(actor)
+  const portalFilter = actor.role === 'master' ? null : portalIdOf(actor)
+  const where: Where = portalFilter
+    ? { and: [{ experiment: { equals: experiment.id } }, { portal: { equals: portalFilter } }] }
+    : { experiment: { equals: experiment.id } }
+  const [assignments, sample] = await Promise.all([
+    payload.find({ collection: col('experiment-assignments'), overrideAccess: true, depth: 0, limit: 40, where }),
+    payload.count({ collection: col('experiment-assignments'), overrideAccess: true, where }),
+  ])
+  const learnerIds = [...new Set(assignments.docs.map((row) => idOf((row as { learner?: unknown }).learner)).filter((id): id is number => Boolean(id)))]
+  const people = learnerIds.length
+    ? await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: learnerIds.length, where: { id: { in: learnerIds } } })
+    : { docs: [] as { id: number; name?: string | null }[] }
+  const names = people.docs.map((person) => personLabel(person as { name?: string | null })).filter(Boolean)
+  const shown = names.slice(0, 6)
+  const extra = names.length - shown.length
+  const portalIds = [...new Set([
+    idOf(experiment.portal),
+    ...assignments.docs.map((row) => idOf((row as { portal?: unknown }).portal)),
+  ].filter((id): id is number => Boolean(id)))]
+  const portals = portalIds.length
+    ? await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: portalIds.length, where: { id: { in: portalIds } } })
+    : { docs: [] as { id: number; name?: string | null }[] }
+  const portalNames = portals.docs.map((portal) => String((portal as { name?: string }).name || '').trim()).filter(Boolean)
+  const scoped = idOf(experiment.portal)
+  const portalName = scoped ? portalNames[0] || 'One portal' : portalNames.length ? `Every portal · seen in ${portalNames.join(', ')}` : 'Every portal'
+  const learnerLine = shown.length
+    ? `${shown.join(', ')}${extra > 0 ? ` and ${extra} more` : ''}`
+    : sample.totalDocs
+      ? `${sample.totalDocs} ${sample.totalDocs === 1 ? 'person has' : 'people have'} been shown a version. Names stay off this line until a signed-in learner is assigned.`
+      : 'No one has been shown a version yet.'
+  const audits = await experimentAudit(payload, experiment.key, actor.role === 'master' ? null : portalIdOf(actor))
+  const starts = audits.filter((row) => row.event === 'experiment.start')
+  const starterId = idOf(starts[starts.length - 1]?.actor) || (experiment.status !== 'draft' ? idOf(experiment.createdBy) : null)
+  const starter = starterId
+    ? await payload.findByID({ collection: 'users', id: starterId, depth: 0, overrideAccess: true }).catch(() => null)
+    : null
+  const days = experiment.durationDays || DEFAULT_EXPERIMENT_DAYS
+  const ends = experimentEndsAt(experiment.startedAt, days)
+  const winner = experiment.variants.find((row) => row.key === (experiment.winnerKey || experiment.defaultVariant))
+  return {
+    tested: experiment.description || slotOf(experiment.slot)?.description || experiment.name,
+    portalName,
+    learnerLine,
+    startedLabel: experiment.startedAt ? londonDate(experiment.startedAt) : 'Not started',
+    starterName: experiment.status === 'draft' && !starts.length ? 'Not started yet' : personLabel(starter as { name?: string | null } | null) || 'Not recorded',
+    sampleSize: sample.totalDocs,
+    durationDays: days,
+    endsLabel: ends ? londonDate(ends) : `Runs for ${days} days after you start it`,
+    appliedCopy: experiment.promoted ? variantCopy(winner?.payload, winner?.label || '') : '',
+  }
 }
 
 export async function updateExperiment(payload: Payload, actor: Actor, id: number, input: Partial<{
@@ -978,7 +1100,7 @@ export async function experimentAudit(payload: Payload, experimentKey: string, p
       ],
     },
   })
-  return (found.docs as { id: number; event?: string; actorRole?: string; at?: string; detail?: { key?: string; name?: string; variantKey?: string } }[])
+  return (found.docs as { id: number; event?: string; actor?: unknown; actorRole?: string; at?: string; detail?: { key?: string; name?: string; variantKey?: string } }[])
     .filter((row) => {
       const key = row.detail && typeof row.detail === 'object' ? row.detail.key : undefined
       return !experimentKey || key === experimentKey

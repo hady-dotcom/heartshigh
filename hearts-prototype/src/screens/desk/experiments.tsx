@@ -5,6 +5,7 @@ import { Hidden } from '@/components/app/shell'
 import { ExperimentForm } from '@/components/desk/experiment-form'
 import { ExperimentHelp } from '@/components/desk/help'
 import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
+import { DEFAULT_EXPERIMENT_DAYS, EXPERIMENT_PRESETS } from '@/lib/experiment-presets'
 import {
   EXPERIMENT_RULE,
   EXPERIMENT_SLOTS,
@@ -19,6 +20,7 @@ import {
   canViewExperiments,
   ensureStarterExperiments,
   experimentAudit,
+  experimentBrief,
   experimentsKilled,
   listExperiments,
   loadExperiment,
@@ -48,6 +50,13 @@ const STATUS_BADGE: Record<string, [string, string]> = {
 
 function pct(value: number) {
   return `${Math.round(value * 100)}%`
+}
+
+function confidenceLine(verdict: { text: string; chance: number; claimed: boolean; ready: boolean }) {
+  if (/too soon/i.test(verdict.text)) return 'Confidence: too soon to say.'
+  const chance = pct(verdict.chance)
+  if (verdict.claimed) return `Confidence: high. About ${chance} that this version is better.`
+  return `Confidence: about ${chance} that the version ahead is better. Not enough to be sure.`
 }
 
 function atIso(value: unknown) {
@@ -82,7 +91,7 @@ async function Frame({
   if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={withHelp}>{children}</AdminFrame>
   const desk = master!
   return (
-    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={withHelp}>
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={withHelp} showOnPhone>
       {children}
     </DeskFrame>
   )
@@ -102,7 +111,8 @@ export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null;
   }
   await ensureStarterExperiments(payload, user)
   const [head, rest] = path
-  if (head === 'new') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
+  if (head === 'new' && queryText(query, 'advanced') === '1') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
+  if (head === 'new') return <StartPage ctx={ctx || null} master={master || null} base={base} portalId={queryText(query, 'portal')} />
   if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
   if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={queryText(query, 'suggest') === '1'} error={queryText(query, 'error')} />
   return <ListPage ctx={ctx || null} master={master || null} base={base} />
@@ -142,7 +152,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
       title="Experiments"
       intro="Test small words, buttons and layouts as learners use the app, and let the winners take over."
       testId="experiments-desk"
-      tools={masterUser ? <Link className="btn" href={`${base}/new`} data-testid="experiment-new">New experiment</Link> : null}
+      tools={masterUser ? <Link className="btn" href={`${base}/new`} data-testid="experiment-new">Start a new experiment</Link> : null}
     >
       <div className={styles.page}>
         <Rule />
@@ -234,6 +244,7 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
   const audits = await experimentAudit(payload, experiment.key, user.role === 'master' ? null : undefined)
   const portals = masterUser ? await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 }) : []
   const slot = EXPERIMENT_SLOTS.find((row) => row.key === experiment.slot)
+  const brief = await experimentBrief(payload, user, experiment)
   const testNote = variants.some((row) => row.exposures > 0) && (await payload.find({
     collection: 'experiment-events' as never,
     overrideAccess: true,
@@ -265,9 +276,47 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
           <div className={styles.tile}><b data-testid="stat-assignments">{totals.assignments}</b><span>Kept on one version</span></div>
           <div className={styles.tile}><b>{variants.length}</b><span>Versions</span></div>
         </section>
+        <section className={styles.facts} data-testid="experiment-facts">
+          <article className={styles.fact}>
+            <b>What is being tested</b>
+            <p data-testid="experiment-tested">{brief.tested}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Versions</b>
+            <ul className={styles.arms} data-testid="experiment-arms">
+              {variants.map((row) => <li key={row.key}><span>{row.letter}</span> {variantCopy(row.payload, row.label)}</li>)}
+            </ul>
+          </article>
+          <article className={styles.fact}>
+            <b>Portal</b>
+            <p data-testid="experiment-portal">{brief.portalName}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Learners</b>
+            <p data-testid="experiment-learners">{brief.learnerLine}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Started</b>
+            <p data-testid="experiment-started">{brief.startedLabel}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Who started it</b>
+            <p data-testid="experiment-starter">{brief.starterName}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Sample size</b>
+            <p data-testid="experiment-sample">{brief.sampleSize} {brief.sampleSize === 1 ? 'person' : 'people'}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Length</b>
+            <p data-testid="experiment-duration">{brief.durationDays} days{experiment.startedAt ? ` · until ${brief.endsLabel}` : ` · ${brief.endsLabel}`}</p>
+          </article>
+        </section>
         <section className={styles.verdict} data-testid="experiment-verdict">
           <b>Plain reading</b>
           <p>{verdict.text}</p>
+          <p data-testid="experiment-confidence">{confidenceLine(verdict)}</p>
+          {brief.appliedCopy ? <p data-testid="experiment-applied">In use: learners see “{brief.appliedCopy}”.</p> : null}
         </section>
         {masterUser ? (
           <div className="actions" style={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
@@ -278,11 +327,11 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
               <form action="/api/experiments" method="post"><Hidden fields={{ action: 'pause', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-pause">Pause</button></form>
             ) : null}
             {experiment.status === 'running' || experiment.status === 'paused' ? (
-              <form action="/api/experiments" method="post"><Hidden fields={{ action: 'finish', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-finish">Finish</button></form>
+              <form action="/api/experiments" method="post"><Hidden fields={{ action: 'finish', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-stop">Stop</button></form>
             ) : null}
             <form action="/api/experiments" method="post">
               <Hidden fields={{ action: 'promote', id: String(experiment.id), variant: verdict.leaderKey || experiment.winnerKey || '', next: `${base}/${experiment.id}` }} />
-              <button className="btn teal" type="submit" data-testid="experiment-promote" disabled={!verdict.leaderKey}>Make the winner the default</button>
+              <button className="btn teal" type="submit" data-testid="experiment-use-winner" disabled={!verdict.leaderKey}>Use the winner</button>
             </form>
             <Link className="btn ghost" href={`${base}/${experiment.id}/edit`}>Edit</Link>
             <a className="btn ghost" href={`/api/experiments?action=export&id=${experiment.id}`} data-testid="experiment-csv">CSV</a>
@@ -382,6 +431,39 @@ async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx 
         </section>
         {masterUser && portals.length ? <p className={styles.quiet}>Scope: {idOfPortal(experiment) ? portals.find((row) => row.id === idOfPortal(experiment)) ? str((portals.find((row) => row.id === idOfPortal(experiment)) as { name?: string }).name) : 'One portal' : 'Every portal'}.</p> : null}
       </div>
+    </Frame>
+  )
+}
+
+async function StartPage({ ctx, master, base, portalId }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; portalId: string }) {
+  const user = ctx?.user || master!.user
+  if (!canEditExperiments(user)) {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master can start an experiment.</p></Frame>
+  }
+  return (
+    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Pick what to try. The split and the length are already chosen." testId="experiment-start-page">
+      <form className={`panel ${styles.start}`} action="/api/experiments" method="post" data-testid="experiment-start-form">
+        <header><h2>What do you want to test?</h2></header>
+        <div className="body">
+          <Hidden fields={{ action: 'preset', next: `${base}/new`, portal: portalId || '' }} />
+          <div className={styles.presets}>
+            {EXPERIMENT_PRESETS.map((preset, index) => (
+              <label key={preset.key} className={styles.preset} data-testid="experiment-preset" data-preset={preset.key}>
+                <input type="radio" name="preset" value={preset.key} defaultChecked={index === 0} required />
+                <span>
+                  <b>{preset.name}</b>
+                  <span className={styles.quiet}>{preset.description}</span>
+                </span>
+              </label>
+            ))}
+          </div>
+          <p className={styles.quiet} data-testid="experiment-defaults">The split is automatic, half and half until one version is clearly ahead. It runs for {DEFAULT_EXPERIMENT_DAYS} days. Learners are not told.</p>
+          <div className="actions" style={{ justifyContent: 'flex-start' }}>
+            <button className="btn" type="submit" data-testid="experiment-start-save">Start this test</button>
+            <Link className="btn ghost" href={base}>Cancel</Link>
+          </div>
+        </div>
+      </form>
     </Frame>
   )
 }

@@ -320,9 +320,9 @@ export function experimentAuditLine(
     case 'experiment.pause':
       return 'Test held back'
     case 'experiment.finish':
-      return 'Test finished'
+      return 'Test stopped'
     case 'experiment.promote':
-      return 'Made the winner the default'
+      return 'Used the winner'
     case 'experiment.create':
       return 'Draft created'
     case 'experiment.update':

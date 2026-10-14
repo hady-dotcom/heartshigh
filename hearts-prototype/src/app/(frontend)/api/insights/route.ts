@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server'
 import { portalIdOf } from '@/lib/ids'
 import { clientIp, trustedProxyHops } from '@/lib/rate-limit'
 import { getSession } from '@/server/context'
-import { canViewInsights, fillInsightDemo, ingestEvents } from '@/server/insights'
+import { canViewInsights, fillInsightDemo, ingestEvents, messageTeacherFromInsight, planFromInsight } from '@/server/insights'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,6 +48,16 @@ export async function POST(req: Request) {
     const form = await req.formData()
     const action = String(form.get('action') || '')
     const next = String(form.get('next') || '/master/insights')
+    if (action === 'make-plan') {
+      if (!user || !canViewInsights(user)) return wantsJson ? NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 }) : redirectTo(req, next, 'Sign in on the desk first.')
+      const made = await planFromInsight(payload, user, Number(form.get('portal')) || null)
+      return wantsJson ? NextResponse.json({ ok: true, ...made }) : redirectTo(req, next, undefined, `Study plan “${made.name}” is ready for ${made.learnerName}.`)
+    }
+    if (action === 'message-teacher') {
+      if (!user || !canViewInsights(user)) return wantsJson ? NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 }) : redirectTo(req, next, 'Sign in on the desk first.')
+      const sent = await messageTeacherFromInsight(payload, user, Number(form.get('portal')) || null)
+      return wantsJson ? NextResponse.json({ ok: true, ...sent }) : redirectTo(req, next, undefined, `Sent to ${sent.names}.`)
+    }
     if (action === 'test-data') {
       if (!user || !canViewInsights(user)) return wantsJson ? NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 }) : redirectTo(req, next, 'Sign in on the desk first.')
       const n = await fillInsightDemo(payload, user)

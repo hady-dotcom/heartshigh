@@ -9,6 +9,7 @@ import {
   canEditExperiments,
   canViewExperiments,
   createExperiment,
+  createFromPreset,
   createLabelExperiment,
   csvFor,
   experimentsKilled,
@@ -161,6 +162,22 @@ export async function POST(req: Request) {
       const dest = `/master/experiments/${created.id}`
       return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'Draft saved. Approve the versions, then start it.')
     }
+    if (action === 'preset') {
+      if (!canEditExperiments(user)) return fail('Only the master can start an experiment.', 403)
+      const stem = (next.replace(/\/new\/?$/, '') || '/master/experiments').split('?')[0]
+      try {
+        const created = await createFromPreset(payload, user, text(form, 'preset'), Number(text(form, 'portal')) || null)
+        const dest = `${stem}/${created.id}`
+        return wantsJson ? NextResponse.json({ ok: true, id: created.id, key: created.key }) : redirectTo(req, dest, undefined, 'The test is running. Learners are not told. The split is automatic and it runs for 14 days.')
+      } catch (error) {
+        const existing = (error as { experimentId?: number }).experimentId
+        if (existing) {
+          const message = error instanceof Error ? error.message : 'Another test is already running.'
+          return wantsJson ? NextResponse.json({ ok: true, id: existing, notice: message }) : redirectTo(req, `${stem}/${existing}`, undefined, message)
+        }
+        throw error
+      }
+    }
     if (action === 'create') {
       if (!canEditExperiments(user)) return fail('Only the master can create an experiment.', 403)
       const slot = text(form, 'slotOverride').trim() || text(form, 'slot')
@@ -205,7 +222,7 @@ export async function POST(req: Request) {
     }
     if (action === 'promote') {
       await promoteWinner(payload, user, Number(text(form, 'id')), text(form, 'variant') || undefined)
-      return ok('That version is now the default for this slot.')
+      return ok('The winning version is now what learners see.')
     }
     if (action === 'approve-variant' || action === 'reject-variant') {
       await setVariantApproval(payload, user, Number(text(form, 'id')), text(form, 'variant'), action === 'approve-variant')

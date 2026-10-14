@@ -2366,6 +2366,7 @@ export interface Experiment {
   approvedBy?: (number | null) | User;
   startedAt?: string | null;
   finishedAt?: string | null;
+  durationDays?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -4631,6 +4632,7 @@ export interface ExperimentsSelect<T extends boolean = true> {
   approvedBy?: T;
   startedAt?: T;
   finishedAt?: T;
+  durationDays?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -103,6 +103,15 @@
   color: var(--ink);
 }
 .card h3 { margin: 0; font-size: 18px; font-family: var(--serif, Georgia, serif); color: var(--ink, #1a1408); }
+.card p { margin: 0; color: var(--ink-2, #2a241c); font-size: 15px; line-height: 1.45; }
+.more { color: var(--on-light-heading, #102e2c); font-weight: 750; font-size: 15px; }
+.filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
+.filters label { display: grid; gap: 4px; font-size: 15px; font-weight: 700; color: var(--desk-ink, #f6eedc); }
+.trend { display: flex; gap: 10px; align-items: flex-end; overflow-x: auto; padding-bottom: 4px; }
+.trendCol { display: grid; justify-items: center; gap: 4px; min-width: 52px; color: var(--desk-ink, #f6eedc); font-size: 13px; }
+.trendBar { display: block; width: 22px; border-radius: 8px 8px 2px 2px; background: var(--desk-gold, #d4a84b); }
+.driverList { margin: 0; padding-left: 18px; display: grid; gap: 8px; }
+.driverList b { color: var(--desk-ink, #f6eedc); }
 .table { width: 100%; border-collapse: collapse; font-size: 14px; }
 .table th, .table td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line, #d7c7a3); vertical-align: top; }
 .tabs { display: flex; gap: 8px; flex-wrap: wrap; }

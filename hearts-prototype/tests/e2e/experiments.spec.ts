@@ -82,7 +82,7 @@ test.describe('Experiments', () => {
     expect(maryam && hamza, 'seeded learners').toBeTruthy()
     const split = keyThatSplits(maryam!.id, hamza!.id)
 
-    await desk.getByTestId('experiment-new').click()
+    await desk.goto('/master/experiments/new?advanced=1')
     await expect(desk.getByTestId('experiment-form')).toBeVisible()
     const keyBox = await desk.getByTestId('experiment-key').boundingBox()
     const nameBox = await desk.getByTestId('experiment-name').boundingBox()
@@ -161,7 +161,7 @@ test.describe('Experiments', () => {
 
   test('a slot that targets talk content is refused', async ({ page }) => {
     await page.setViewportSize(DESK)
-    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/experiments/new')
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/experiments/new?advanced=1')
     await expect(page.getByTestId('experiment-form')).toBeVisible()
     await page.getByTestId('experiment-key').fill('talk-words-blocked')
     await page.getByTestId('experiment-name').fill('Rewrite the talk')
@@ -178,7 +178,7 @@ test.describe('Experiments', () => {
 
   test('the kill switch writes a kill line on a running test', async ({ page }) => {
     await page.setViewportSize(DESK)
-    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/experiments/new')
+    await signIn(page, 'master@hearts.test', 'hearts-master', '/master/experiments/new?advanced=1')
     const key = `kill-log-${Date.now().toString(36)}`
     await page.getByTestId('experiment-key').fill(key)
     await page.getByTestId('experiment-name').fill('Kill history check')

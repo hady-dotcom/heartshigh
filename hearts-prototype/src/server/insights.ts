@@ -3,7 +3,9 @@ import { now } from '@/lib/clock'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { FUNNEL_STEPS, funnelMaths, retentionFromBuckets, type FunnelResult } from '@/lib/insight-funnel'
 import { heatmapGrid, type HeatCell } from '@/lib/insight-taps'
-import { allowInsightIngest, angrySpotWords, DEFAULT_SAMPLE_RATE, insightEventRow, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, sampleSession, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
+import { allowInsightIngest, angrySpotWords, DEFAULT_SAMPLE_RATE, insightEventRow, isAnswerScreen, isInsightKind, isPrivateLane, normaliseRoute, replayLines, routeWords, sampleSession, sessionReplayScore, shouldKeep } from '@/lib/insight-events'
+import { buildInsightStories, type InsightDriver, type InsightPoint, type InsightStory } from '@/lib/insight-stories'
+import { flattenSlots, planAcrossDays, studyDates } from '@/lib/schedule'
 
 export { insightEventRow } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -202,6 +204,7 @@ type EventRow = {
   step?: string | null
   interactive?: boolean | null
   at?: string
+  portal?: unknown
   props?: { returnBucket?: string } | null
 }
 
@@ -221,6 +224,103 @@ async function loadEvents(payload: Payload, actor: InsightActor, extra?: Where, 
   return found.docs as unknown as EventRow[]
 }
 
+function insightRange(query: { portal?: string; from?: string; to?: string }): Where | undefined {
+  const parts: Where[] = []
+  const portal = Number(query.portal)
+  if (portal > 0) parts.push({ portal: { equals: portal } })
+  if (query.from && /^\d{4}-\d{2}-\d{2}$/.test(query.from)) parts.push({ at: { greater_than_equal: `${query.from}T00:00:00.000Z` } })
+  if (query.to && /^\d{4}-\d{2}-\d{2}$/.test(query.to)) {
+    const end = new Date(`${query.to}T00:00:00.000Z`)
+    end.setUTCDate(end.getUTCDate() + 1)
+    parts.push({ at: { less_than: end.toISOString() } })
+  }
+  if (!parts.length) return undefined
+  return parts.length === 1 ? parts[0] : { and: parts }
+}
+
+function toPoints(events: EventRow[]): InsightPoint[] {
+  return events.map((row) => ({
+    kind: String(row.kind || ''),
+    route: String(row.route || '/'),
+    at: row.at,
+    sessionId: row.sessionId,
+    step: row.step || undefined,
+    clipId: row.clipId || undefined,
+    watchPct: row.watchPct ?? undefined,
+    depth: row.depth ?? undefined,
+    portalId: idOf(row.portal),
+    returnBucket: row.props?.returnBucket,
+  }))
+}
+
+export type StoryDriver = { kind: string; label: string; n: number }
+
+export type PresentedStory = InsightStory & {
+  driverLines: StoryDriver[]
+  talkHref: string
+  talkTitle: string
+  planPortalId: number | null
+  planPortalSlug: string
+}
+
+async function presentStories(payload: Payload, stories: InsightStory[], actor: InsightActor, portalQuery?: string): Promise<PresentedStory[]> {
+  const drivers = stories.flatMap((story) => story.drivers)
+  const portalIds = [...new Set(drivers.filter((row) => row.kind === 'portal').map((row) => Number(row.id)).filter((id) => id > 0))]
+  const courseIds = [...new Set(drivers.filter((row) => row.kind === 'course').map((row) => Number(row.id)).filter((id) => id > 0))]
+  const talkIds = [...new Set(drivers.filter((row) => row.kind === 'talk').map((row) => row.id))]
+  const numericTalks = talkIds.map((id) => Number(id)).filter((id) => id > 0)
+  const [portals, courses, lessons, fallbackLessons, chosenPortal] = await Promise.all([
+    portalIds.length ? payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: portalIds.length, where: { id: { in: portalIds } } }) : Promise.resolve({ docs: [] as { id: number; name?: string }[] }),
+    courseIds.length ? payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: courseIds.length, where: { id: { in: courseIds } } }) : Promise.resolve({ docs: [] as { id: number; title?: string }[] }),
+    numericTalks.length ? payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: numericTalks.length, where: { id: { in: numericTalks } } }) : Promise.resolve({ docs: [] as { id: number; title?: string; course?: unknown }[] }),
+    payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 12, sort: 'order' }),
+    resolvePlanPortal(payload, actor, portalQuery),
+  ])
+  const portalName = new Map(portals.docs.map((row) => [String(row.id), String((row as { name?: string }).name || 'A portal')]))
+  const courseName = new Map(courses.docs.map((row) => [String(row.id), String((row as { title?: string }).title || 'A course')]))
+  const lessonName = new Map(lessons.docs.map((row) => [String(row.id), String((row as { title?: string }).title || 'A talk')]))
+  const lessonCourse = new Map(lessons.docs.map((row) => [String(row.id), idOf((row as { course?: unknown }).course)]))
+  const fallback = (fallbackLessons.docs as { id: number; title?: string; course?: unknown; publishState?: string }[]).find((row) => row.publishState !== 'draft') || fallbackLessons.docs[0] as { id: number; title?: string; course?: unknown } | undefined
+  const labelOf = (driver: InsightDriver) => {
+    if (driver.kind === 'portal') return portalName.get(driver.id) || 'A portal'
+    if (driver.kind === 'course') return courseName.get(driver.id) || 'A course'
+    if (driver.kind === 'talk') return lessonName.get(driver.id) || 'A short clip'
+    return routeWords(driver.id)
+  }
+  return stories.map((story) => {
+    const matched = story.drivers.find((row) => row.kind === 'talk' && lessonCourse.get(row.id))
+    const courseId = matched ? lessonCourse.get(matched.id) : idOf(fallback?.course)
+    const lessonId = matched ? Number(matched.id) : fallback?.id
+    const talkHref = courseId && lessonId ? `/master/library/${courseId}?part=${lessonId}` : '/master/library'
+    const talkTitle = matched ? lessonName.get(matched.id) || 'A talk' : String(fallback?.title || 'A talk')
+    return {
+      ...story,
+      driverLines: story.drivers.slice(0, 8).map((row) => ({ kind: row.kind, label: labelOf(row), n: row.n })),
+      talkHref,
+      talkTitle,
+      planPortalId: chosenPortal?.id || null,
+      planPortalSlug: chosenPortal?.slug || '',
+    }
+  })
+}
+
+async function resolvePlanPortal(payload: Payload, actor: InsightActor, portalQuery?: string) {
+  const asked = Number(portalQuery)
+  let id = asked > 0 ? asked : actor.role === 'master' ? null : portalIdOf(actor)
+  if (!id) {
+    const elm = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 1, where: { slug: { equals: 'east-london' } } })
+    id = elm.docs[0]?.id || null
+  }
+  if (!id) {
+    const any = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 1, sort: 'name' })
+    id = any.docs[0]?.id || null
+  }
+  if (!id) return null
+  const doc = await payload.findByID({ collection: 'portals', id, depth: 0, overrideAccess: true }).catch(() => null) as { id: number; slug?: string; name?: string } | null
+  if (!doc) return null
+  return { id: doc.id, slug: String(doc.slug || ''), name: String(doc.name || 'This portal') }
+}
+
 export type InsightsDesk = {
   routes: { route: string; taps: number; angry: number; sessions: number }[]
   heatmap: { route: string; cells: HeatCell[]; max: number; taps: number }
@@ -232,11 +332,12 @@ export type InsightsDesk = {
   replay: { sessionId: string; events: { kind: string; route: string; x?: number; y?: number; at?: string; watchPct?: number; depth?: number; line: string }[] } | null
   sampleRate: number
   testData: boolean
+  stories: PresentedStory[]
 }
 
-export async function insightsDesk(payload: Payload, actor: InsightActor, query: { route?: string; session?: string } = {}): Promise<InsightsDesk> {
+export async function insightsDesk(payload: Payload, actor: InsightActor, query: { route?: string; session?: string; portal?: string; from?: string; to?: string } = {}): Promise<InsightsDesk> {
   assertView(actor)
-  const events = await loadEvents(payload, actor)
+  const events = await loadEvents(payload, actor, insightRange(query))
   const byRoute = new Map<string, { taps: number; angry: number; sessions: Set<string> }>()
   for (const row of events) {
     const route = row.route || '/'
@@ -330,6 +431,7 @@ export async function insightsDesk(payload: Payload, actor: InsightActor, query:
     sampleRate: await sampleRateOf(payload),
     scroll: [...scrollByRoute.entries()].map(([route, max]) => ({ route, max })).sort((a, b) => b.max - a.max),
     testData: events.some((row) => String(row.subject || '').startsWith('test-data:')),
+    stories: await presentStories(payload, buildInsightStories(toPoints(events)), actor, query.portal),
   }
 }
 
@@ -438,6 +540,127 @@ export async function fillInsightDemo(payload: Payload, actor: InsightActor) {
   for (let i = 0; i < jobs.length; i += 25) await Promise.all(jobs.slice(i, i + 25))
   await audit(payload, 'insights.test_data', { actor: actor.id, actorRole: actor.role, detail: { rows: n } })
   return n
+}
+
+const PLAN_NAME = 'From Insights'
+
+export async function planFromInsight(payload: Payload, actor: InsightActor, portalId?: number | null) {
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') throw new Error('A study plan from Insights is for the master desk or a portal admin.')
+  const portal = await resolvePlanPortal(payload, actor, portalId ? String(portalId) : '')
+  if (!portal) throw new Error('There is no portal to plan for.')
+  const lessons = await payload.find({
+    collection: 'lessons',
+    overrideAccess: true,
+    depth: 0,
+    limit: 40,
+    sort: 'order',
+  })
+  const first = (lessons.docs as { id: number; title?: string; course?: unknown; publishState?: string }[]).find((row) => idOf(row.course) && row.publishState !== 'draft')
+    || (lessons.docs as { id: number; title?: string; course?: unknown }[])[0]
+  const courseId = idOf(first?.course)
+  if (!courseId) throw new Error('There is no talk to spread across a plan yet.')
+  const courseLessons = (lessons.docs as { id: number; title?: string; course?: unknown }[]).filter((row) => idOf(row.course) === courseId).slice(0, 12)
+  const learner = await payload.find({
+    collection: 'users',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    sort: 'name',
+    where: { and: [{ role: { equals: 'learner' } }, { 'tenants.tenant': { equals: portal.id } }] },
+  })
+  const learnerId = learner.docs[0]?.id
+  if (!learnerId) throw new Error('This portal has no learner to plan for yet.')
+  const start = now().toISOString().slice(0, 10)
+  const end = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
+  const dates = studyDates(start, end, [2, 4])
+  const planned = planAcrossDays(courseLessons.map((row) => ({
+    id: row.id,
+    title: String(row.title || 'Sitting'),
+    courseId,
+  })), dates)
+  const slots = flattenSlots(planned.slots)
+  const data = {
+    name: PLAN_NAME,
+    owner: actor.id,
+    learners: [learnerId],
+    targetType: 'course',
+    course: courseId,
+    startDate: start,
+    endDate: end,
+    weekdays: [2, 4],
+    slots,
+    minutesPerDay: 20,
+    portal: portal.id,
+  }
+  const existing = await payload.find({
+    collection: 'schedules',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ portal: { equals: portal.id } }, { name: { equals: PLAN_NAME } }] },
+  })
+  if (existing.docs[0]) await payload.update({ collection: 'schedules', id: existing.docs[0].id, overrideAccess: true, data: data as never })
+  else await payload.create({ collection: 'schedules', overrideAccess: true, data: data as never })
+  const learnerName = String((learner.docs[0] as { name?: string }).name || 'the learner')
+  const noteKey = `insight-plan-${portal.id}-${learnerId}`
+  const prior = await payload.find({ collection: 'notifications', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: learnerId } }, { key: { equals: noteKey } }] } })
+  const note = {
+    user: learnerId,
+    portal: portal.id,
+    title: 'A study plan was made for you',
+    body: `${PLAN_NAME}. It is on My week.`,
+    href: `/p/${portal.slug}/week`,
+    key: noteKey,
+    read: false,
+  }
+  if (prior.docs[0]) await payload.update({ collection: 'notifications', id: prior.docs[0].id, overrideAccess: true, data: note })
+  else await payload.create({ collection: 'notifications', overrideAccess: true, data: note })
+  await audit(payload, 'insights.plan', { actor: actor.id, actorRole: actor.role, portal: portal.id, detail: { courseId, learnerId, slots: slots.length } })
+  return { name: PLAN_NAME, learnerName, portalName: portal.name }
+}
+
+export async function messageTeacherFromInsight(payload: Payload, actor: InsightActor, portalId?: number | null) {
+  if (!canViewInsights(actor)) throw new Error('Insights are for the master desk and portal admins.')
+  const portal = await resolvePlanPortal(payload, actor, portalId ? String(portalId) : '')
+  if (!portal) throw new Error('There is no portal to message.')
+  const teachers = await payload.find({
+    collection: 'users',
+    overrideAccess: true,
+    depth: 0,
+    limit: 10,
+    where: { and: [{ role: { equals: 'teacher' } }, { 'tenants.tenant': { equals: portal.id } }] },
+  })
+  let people = teachers.docs as { id: number; name?: string | null }[]
+  if (!people.length) {
+    const admins = await payload.find({
+      collection: 'users',
+      overrideAccess: true,
+      depth: 0,
+      limit: 5,
+      where: { and: [{ role: { equals: 'portal-admin' } }, { 'tenants.tenant': { equals: portal.id } }] },
+    })
+    people = admins.docs as { id: number; name?: string | null }[]
+  }
+  if (!people.length) throw new Error('This portal has no teacher to message.')
+  const names: string[] = []
+  for (const person of people) {
+    const key = `insight-teacher-${portal.id}-${person.id}`
+    const data = {
+      user: person.id,
+      portal: portal.id,
+      title: 'A note from Insights',
+      body: 'People are tapping the same spot and not moving on. Have a look when you can.',
+      href: `/p/${portal.slug}/admin/teach`,
+      key,
+      read: false,
+    }
+    const existing = await payload.find({ collection: 'notifications', overrideAccess: true, depth: 0, limit: 1, where: { and: [{ user: { equals: person.id } }, { key: { equals: key } }] } })
+    if (existing.docs[0]) await payload.update({ collection: 'notifications', id: existing.docs[0].id, overrideAccess: true, data })
+    else await payload.create({ collection: 'notifications', overrideAccess: true, data })
+    if (person.name) names.push(person.name)
+  }
+  await audit(payload, 'insights.message_teacher', { actor: actor.id, actorRole: actor.role, portal: portal.id, detail: { teachers: people.length } })
+  return { names: names.join(', ') || 'the teacher', portalName: portal.name }
 }
 
 export function experimentHint(route: string, reason: string) {

@@ -83,6 +83,7 @@ export const Experiments: CollectionConfig = {
     { name: 'approvedBy', type: 'relationship', relationTo: 'users' },
     { name: 'startedAt', type: 'date' },
     { name: 'finishedAt', type: 'date' },
+    { name: 'durationDays', type: 'number', defaultValue: 14, min: 1, max: 90 },
   ],
 }
 
