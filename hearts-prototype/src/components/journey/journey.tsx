@@ -35,6 +35,7 @@ import { KeepPlaceSheet, type SheetReason } from './sheet'
 import { track } from '@/lib/experiment-track'
 import { useVariant, type VariantMap } from '@/lib/use-variant'
 import { SpokenWords } from '../app/spoken-words'
+import { learnerFramingMode } from '@/lib/framing/learner'
 import { sentencesFromCaptions } from '@/lib/framing/words'
 
 type Phase = 'opener' | 'scene' | 'help' | 'handoff' | 'feed'
@@ -2580,7 +2581,7 @@ export function Journey(props: JourneyProps) {
   ) : null
 
   return (
-    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
+    <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={learnerFramingMode(item?.framingTrack, spokenAt)} data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
@@ -2599,7 +2600,7 @@ export function Journey(props: JourneyProps) {
       ) : null}
 
       <div ref={clipRef} className="j-clip" data-screen={phase === 'feed' || phase === 'handoff' ? 'clip' : undefined}>
-        <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing="F" style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
+        <div ref={slotRef} className="j-slot" data-testid="player-slot" data-framing={learnerFramingMode(item?.framingTrack, spokenAt)} style={{ visibility: phase === 'feed' || phase === 'handoff' ? 'visible' : 'hidden' }}>
           {[0, 1].map((at) => {
             const row = hosts.current[at as 0 | 1]
             const filmOn = hostShouldShow(at === visibleHost, revealed, Boolean(slide || scenic || !currentSpec || clipEnded))

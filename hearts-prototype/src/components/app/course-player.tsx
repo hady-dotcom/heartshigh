@@ -7,6 +7,7 @@ import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popu
 import { comingAnswerLabel, comingQuestionLabel, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
 import { SpokenWords } from '@/components/app/spoken-words'
+import { learnerFramingMode } from '@/lib/framing/learner'
 import type { FramingSentence } from '@/lib/framing/types'
 import { placeDots } from '@/lib/timeline-dots'
 import { courseCatcherTap, coursePlayVisible } from '@/lib/course-controls'
@@ -703,7 +704,7 @@ export function CoursePlayer({
     return () => window.clearInterval(timer)
   }, [ended, startAt, youtubeId])
   return (
-    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing="F" data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+    <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing={learnerFramingMode()} data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
           {playerReadout({ state: liveState, time, currentTime: liveTime, cover: showCover })}
