@@ -234,8 +234,9 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('go-feed').click()
     await expect(page.getByTestId('journey')).toHaveAttribute('data-cuts', new RegExp(`(^| )${shared.cutId}( |$)`))
     await page.goto(`/p/${slug}/lanes`)
-    await expect(page.getByTestId('visible-courses')).toContainText('1 course open to you')
+    await expect(page.getByTestId('visible-courses')).toContainText('1 course in your library')
     await expect(page.getByTestId('path-course')).toHaveCount(1)
+    await expect(page.getByTestId('path-course')).toHaveAttribute('data-open', 'yes')
     await expect(page.getByText('How to Live Like the Prophet')).toHaveCount(0)
 
     await join(page, seedCode('elm-learner'), 'Placed by Prophet', `p1-${suffix}@hearts.test`, 'placing-one')
