@@ -1,6 +1,7 @@
 // Seed data for the opening ("Shine and dust"): Leon's ten scales, the Jibril lanes, and the scenes.
 // Copy comes from ux-first-run.md and the build spec (sections 2.1, 2.7, 2.8). Plain module, no path aliases,
 // so the seed, the server, the browser and the tests can all import it.
+import { doorByNumber } from './doors'
 import type { LaneDef, ScaleDef, ScaleKey, SceneDef } from './heart'
 import { hasMarkup, killHits } from './text-safety'
 
@@ -24,19 +25,25 @@ export const SCALES: (ScaleDef & {
   { key: 'discipline', leonName: 'Discipline / Self-Control', room: 'lights', polishLabel: 'Small steady habits', firstOpenRead: true, anchors: {} },
 ]
 
-const c = (pairs: [number, number][]) => pairs.map(([clause, rank]) => ({ clause, rank }))
+/** A lane is ranked by door. The stored clause rows are every clause that door covers, at that door's rank. */
+const byDoor = (pairs: [number, number][], excludeDoors: number[] = []) => {
+  const doors = pairs.map(([door, rank]) => ({ door, rank }))
+  const clauses = doors.flatMap((row) => (doorByNumber(row.door)?.clauses || []).map((clause) => ({ clause, rank: row.rank })))
+  const excludeClauses = [...new Set(excludeDoors.flatMap((door) => doorByNumber(door)?.clauses || []))]
+  return { doors, excludeDoors, clauses, excludeClauses }
+}
 
 export const LANES: (LaneDef & { seriesNote: string })[] = [
-  { key: 'trust', title: 'Trust', scale: 'worry', fit: 'natural', order: 1, clauses: c([[27, 1], [22, 2], [15, 3]]), excludeClauses: [26, 31, 32, 33, 34, 35], optInOnly: false, seriesNote: "Vol 5 tawakkul 114–125; Vol 2 Bismillah 47–104; The Names; DUA: The Answered Prayer. Do not route on Vol 4 'fear prayer' (239–301)." },
-  { key: 'company', title: 'Good company', scale: 'belonging', fit: 'natural', order: 2, clauses: c([[2, 1], [4, 2], [8, 2], [37, 3], [9, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 1 sitting 53–111; Vol 5 fellowship 43–86; Vol 5 murid/shaykh 22–42; In Good Company; Manners of the Salaf' },
-  { key: 'lightness', title: 'Lightness and giving', scale: 'greed', fit: 'natural', order: 3, clauses: c([[16, 1], [35, 2], [27, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 1 Zakat 17–20; Vol 5 rich and poor 43–86; Vol 5 tawakkul 114–125' },
-  { key: 'quiet', title: 'Quiet heart', scale: 'ego', fit: 'natural', order: 4, clauses: c([[31, 1], [33, 2], [39, 2], [35, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 3 ikhlas/riya 326–350; Vol 5 tawadu (no pages); Kingdom of the Heart; Purification of the Heart' },
-  { key: 'talking', title: 'Talking to Allah', scale: 'faith', fit: 'natural', order: 5, clauses: c([[22, 1], [21, 2], [30, 2], [29, 3], [31, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 2 Bismillah 47–104; Vol 2 tawba 105–208; Vol 1 Ch 4 171–; Faithful; The Names; Dhikr & Fikr' },
-  { key: 'habits', title: 'Small steady habits', scale: 'discipline', fit: 'natural', order: 6, clauses: c([[15, 1], [17, 1], [1, 2], [10, 2], [36, 3]]), excludeClauses: [], optInOnly: false, seriesNote: "Vol 4 five prayers 110–238; Vol 4 year-fast 5–109; Vol 1 fasting 21–23; Vol 5 'easy first' 22–42; Ramadan Muslims; The Blessing of Time" },
-  { key: 'patience', title: 'Patience', scale: 'anger', fit: 'workable', order: 7, clauses: c([[20, 1], [17, 1], [37, 2], [6, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 1 fasting incl. the tongue 21–23; Vol 1 hisba patience (no pages); Vol 5 sabr 140–144; Vol 5 husn al-khuluq 126–131; Our Character' },
-  { key: 'gifts', title: 'Noticing gifts', scale: 'gratitude', fit: 'workable', order: 8, clauses: c([[27, 1], [1, 2], [16, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 5 tawakkul 114–125 (contentment); Vol 3 days of the week 351–360; shelf Vol 5 §17 shukr, rida (no pages); The Blessing of Time' },
-  { key: 'mercy', title: 'Mercy', scale: 'compassion', fit: 'workable', order: 9, clauses: c([[6, 1], [4, 2], [8, 2], [16, 3], [10, 3]]), excludeClauses: [], optInOnly: false, seriesNote: 'Vol 5 husn al-khuluq 126–131; Vol 5 strangers 43–86; Vol 1 zakat beneficiaries 17–20; Our Character' },
-  { key: 'guarding-gaze', title: 'Guarding the gaze', scale: 'desire', fit: 'weak', order: 10, clauses: c([[31, 1], [29, 2], [17, 2]]), excludeClauses: [], optInOnly: true, seriesNote: 'Vol 3 ikhlas 326–350; Vol 2 tawba 105–208; Vol 1 fasting 21–23. Opt-in only. Unit 34 (marriage seat) is not a back door.' },
+  { key: 'trust', title: 'Trust', scale: 'worry', fit: 'natural', order: 1, ...byDoor([[15, 1], [10, 2], [5, 3]], [14, 16, 17, 18]), optInOnly: false, seriesNote: "Vol 5 tawakkul 114–125; Vol 2 Bismillah 47–104; The Names; DUA: The Answered Prayer. Do not route on Vol 4 'fear prayer' (239–301)." },
+  { key: 'company', title: 'Good company', scale: 'belonging', fit: 'natural', order: 2, ...byDoor([[2, 1], [19, 3]]), optInOnly: false, seriesNote: 'Vol 1 sitting 53–111; Vol 5 fellowship 43–86; Vol 5 murid/shaykh 22–42; In Good Company; Manners of the Salaf' },
+  { key: 'lightness', title: 'Lightness and giving', scale: 'greed', fit: 'natural', order: 3, ...byDoor([[6, 1], [18, 2], [15, 3]]), optInOnly: false, seriesNote: 'Vol 1 Zakat 17–20; Vol 5 rich and poor 43–86; Vol 5 tawakkul 114–125' },
+  { key: 'quiet', title: 'Quiet heart', scale: 'ego', fit: 'natural', order: 4, ...byDoor([[16, 1], [17, 2], [19, 2], [18, 3]]), optInOnly: false, seriesNote: 'Vol 3 ikhlas/riya 326–350; Vol 5 tawadu (no pages); Kingdom of the Heart; Purification of the Heart' },
+  { key: 'talking', title: 'Talking to Allah', scale: 'faith', fit: 'natural', order: 5, ...byDoor([[10, 1], [9, 2], [16, 2]]), optInOnly: false, seriesNote: 'Vol 2 Bismillah 47–104; Vol 2 tawba 105–208; Vol 1 Ch 4 171–; Faithful; The Names; Dhikr & Fikr' },
+  { key: 'habits', title: 'Small steady habits', scale: 'discipline', fit: 'natural', order: 6, ...byDoor([[5, 1], [7, 1], [1, 2], [2, 2], [19, 3]]), optInOnly: false, seriesNote: "Vol 4 five prayers 110–238; Vol 4 year-fast 5–109; Vol 1 fasting 21–23; Vol 5 'easy first' 22–42; Ramadan Muslims; The Blessing of Time" },
+  { key: 'patience', title: 'Patience', scale: 'anger', fit: 'workable', order: 7, ...byDoor([[3, 1], [7, 1], [19, 2], [2, 3]]), optInOnly: false, seriesNote: 'Vol 1 fasting incl. the tongue 21–23; Vol 1 hisba patience (no pages); Vol 5 sabr 140–144; Vol 5 husn al-khuluq 126–131; Our Character' },
+  { key: 'gifts', title: 'Noticing gifts', scale: 'gratitude', fit: 'workable', order: 8, ...byDoor([[15, 1], [1, 2], [6, 3]]), optInOnly: false, seriesNote: 'Vol 5 tawakkul 114–125 (contentment); Vol 3 days of the week 351–360; shelf Vol 5 §17 shukr, rida (no pages); The Blessing of Time' },
+  { key: 'mercy', title: 'Mercy', scale: 'compassion', fit: 'workable', order: 9, ...byDoor([[2, 1], [6, 3]]), optInOnly: false, seriesNote: 'Vol 5 husn al-khuluq 126–131; Vol 5 strangers 43–86; Vol 1 zakat beneficiaries 17–20; Our Character' },
+  { key: 'guarding-gaze', title: 'Guarding the gaze', scale: 'desire', fit: 'weak', order: 10, ...byDoor([[16, 1], [7, 2]]), optInOnly: true, seriesNote: 'Vol 3 ikhlas 326–350; Vol 2 tawba 105–208; Vol 1 fasting 21–23. Opt-in only. Unit 34 (marriage seat) is not a back door.' },
 ]
 
 /** Clean lane blurbs for the Lanes screen. Never a raw transcript line. */

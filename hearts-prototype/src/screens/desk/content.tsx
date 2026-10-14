@@ -1,7 +1,7 @@
 import { Fragment } from 'react'
 import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
-import { doorCode, doorLabel, doorOfClause } from '@/lib/doors'
+import { doorLabel, doorOfClause } from '@/lib/doors'
 import { countLine, describeGroups, subsetGroups } from '@/lib/curriculum-groups'
 import { withEveryDoor } from '@/lib/every-door'
 import { groupThese, listDocs } from '@/server/curriculum'
@@ -440,7 +440,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         <p className="land"><b>Land</b>{str(cut.land)}</p>
                         <div className="meta">
                           {cut.theme ? <>Theme: {str(cut.theme)}. </> : null}
-                          {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong> <span className="hint" data-testid="cut-door-clause">(clause {clause}{cut.clauseFragment ? `: ${str(cut.clauseFragment)}` : ''})</span>. </> : null}
+                          {door ? <>Door <strong data-testid="cut-door" style={{ color: 'var(--ink)' }}>{doorLabel(door)}</strong>{cut.clauseFragment || clauseDoc ? <span className="hint" data-testid="cut-door-clause"> {str(cut.clauseFragment) || str(clauseDoc?.fragment)}</span> : <span className="hint" data-testid="cut-door-clause" />}. </> : null}
                           {cut.whyHang ? <>{str(cut.whyHang)} </> : null}
                           Quote check: {str(cut.quoteConfidence, 'not checked')}. {cut.engine === 'llm' ? 'Drafted with this portal’s AI account.' : 'Drafted from the transcript.'}
                         </div>
@@ -448,14 +448,14 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                       {!locked ? (
                         <form action="/api/hearts" method="post">
                           <Hidden fields={{ action: 'cut-status', cut: cut.id, confirm: 'yes', next: here }} />
-                          <label className="stack" style={{ fontSize: 12.5 }}>Door, then clause
+                          <label className="stack" style={{ fontSize: 12.5 }}>Which door
                             <select name="clause" defaultValue={clause || ''} data-testid="cut-clause">
                               <option value="">No door</option>
                               {doors.map((row) => (
                                 <optgroup key={row.number} label={doorLabel(row)}>
                                   {row.clauses.map((number) => {
                                     const doc = clauses.find((item) => Number(item.number) === number)
-                                    return <option key={number} value={number}>{doorCode(row.number)} · clause {number}{doc ? `: ${str(doc.fragment)}` : ''}</option>
+                                    return <option key={number} value={number}>{doc ? str(doc.fragment) : row.title}</option>
                                   })}
                                 </optgroup>
                               ))}
@@ -472,7 +472,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                             <button className="btn ghost small" name="status" value="rejected" data-testid="reject-cut" type="submit">Set aside</button>
                           </div>
                         </form>
-                      ) : <div className="hint" data-testid="cut-door-readonly">{door ? <><b>{doorLabel(door)}</b><br />clause {clause}</> : ''}</div>}
+                      ) : <div className="hint" data-testid="cut-door-readonly">{door ? <b>{doorLabel(door)}</b> : ''}</div>}
                     </article>
                   )
                 }) : <ExampleInUse desk title="A clip from the talk" action={{ href: '#transcript', label: 'Add the words' }}><p>0:12 to 0:28 · the line you want people to hear first.</p><p className="hint">Add the timed words, then pull the clips.</p></ExampleInUse>}

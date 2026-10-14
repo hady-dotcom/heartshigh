@@ -185,7 +185,7 @@ export function Simulator({ scenes, scales, feelings, edits, route, cutTitles }:
             <ol className="body" style={{ margin: 0, paddingLeft: 36 }} data-testid="sim-feed">
               {result.feed.items.map((item, index) => (
                 <li key={`${item.cutId}-${index}`} data-testid="sim-feed-item" data-lane={item.laneKey || ''}>
-                  <b>{cutTitles[item.cutId] || `Clip ${item.cutId}`}</b> <span className="hint">{laneTitle(item.laneKey)}{item.door ? ` · ${doorCode(item.door)}` : ''}{item.clause ? ` (clause ${item.clause})` : ''}</span>
+                  <b>{cutTitles[item.cutId] || `Clip ${item.cutId}`}</b> <span className="hint">{laneTitle(item.laneKey)}{item.door ? ` · Door ${item.door} (${doorCode(item.door)})` : ''}</span>
                 </li>
               ))}
             </ol>

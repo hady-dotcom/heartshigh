@@ -167,7 +167,7 @@ const STEP_LINES: Record<string, string> = {
   'appetiser-cut': 'Cuts a first sitting into a hook, a turn and a land.',
   'popup-drafter': 'Writes the questions that pause the full talk.',
   'tidy-caption-line': 'Adds capitals and stops so captions are easy to read.',
-  'jibril-seat': 'Says which Hadith Jibril teaching this talk is about.',
+  'jibril-seat': 'Says which door of Hadith Jibril this talk is about.',
   'quran-harvest': 'Finds every Qur’an quote and keeps the exact words.',
   'hadith-extraction': 'Finds the hadith the speaker quotes, in their words.',
   'reflection-prompts': 'Writes open questions with no right answer.',
@@ -210,9 +210,9 @@ const STEP_DOES: Record<string, string[]> = {
     'With no AI account, the same tidy-up runs here and nothing is sent out.',
   ],
   'jibril-seat': [
-    'Says which of the 41 Hadith Jibril teachings this talk is about.',
+    'Says which of the 20 doors of Hadith Jibril this talk is about.',
     'Matches the teaching, not a word that happens to show up.',
-    'Adds a Ghunya seat only when that teaching already prints one.',
+    'Adds a Ghunya seat only when that door already prints one.',
     'It does not change what learners play on its own.',
   ],
   'quran-harvest': [
@@ -623,12 +623,12 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
   {
     slug: 'jibril-seat',
     name: 'Jibril and Ghunya tagger',
-    description: 'Says which of the 41 Hadith Jibril teachings this talk is about, and which Ghunya seat that teaching already prints. It matches the teaching, not a shared word. It never invents a page. The note stays on this talk for the reviewer, and it does not by itself change what learners play.',
+    description: 'Says which door of Hadith Jibril this talk is about, and which Ghunya seat that door already prints. It matches the teaching, not a shared word. It never invents a page. The note stays on this talk for the reviewer, and it does not by itself change what learners play.',
     placeholders: [
       { token: 'HOOK', meaning: 'The opening line of the first sitting.', required: true },
       { token: 'TURN', meaning: 'The line where the first sitting shifts.', required: true },
       { token: 'LAND', meaning: 'The last line of the first sitting.', required: true },
-      { token: 'CLAUSE_CARDS', meaning: 'The 41 teachings, each with its line and the seats already printed.', required: true },
+      { token: 'CLAUSE_CARDS', meaning: 'The twenty doors, each with its line and the seats already printed.', required: true },
       { token: 'TRANSCRIPT', meaning: 'The words of the talk.', required: true },
     ],
     provider: 'anthropic',
@@ -639,7 +639,7 @@ role is hors, hook, turn, land or quote. raw is the line exactly as given. text 
     inPipeline: true,
     fillsTier: null,
     fillsPoints: null,
-    fills: 'A note on this talk: which teaching, how strong the match is, a one-line reason, and a seat only when the card already prints one.',
+    fills: 'A note on this talk: which door, how strong the match is, a one-line reason, and a seat only when that door already prints one.',
     outputSchema: obj(
       {
         clause: intOrNull,

@@ -20,7 +20,8 @@ export async function PortalQuestionsScreen(ctx: Ctx) {
   const fragment = (n: number | null) => {
     const door = doorOfClause(n, doors)
     if (!n || !door) return 'No door'
-    return <>{doorLabel(door)} <span className="hint">(clause {n}. {str(clauses.find((row) => Number(row.number) === n)?.fragment)})</span></>
+    const words = str(clauses.find((row) => Number(row.number) === n)?.fragment)
+    return <>{doorLabel(door)}{words ? <span className="hint"> {words}</span> : null}</>
   }
   return (
     <AdminFrame

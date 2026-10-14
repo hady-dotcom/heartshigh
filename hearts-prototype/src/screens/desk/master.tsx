@@ -300,7 +300,8 @@ export async function MasterQuestions(ctx: MasterCtx) {
   const fragment = (n: number | null) => {
     const door = doorOfClause(n, doors)
     if (!n || !door) return 'No door'
-    return <><span data-testid="placing-door">{doorLabel(door)}</span> <span style={{ opacity: 0.75 }}>(clause {n}. {str(clauses.find((row) => Number(row.number) === n)?.fragment)})</span></>
+    const words = str(clauses.find((row) => Number(row.number) === n)?.fragment)
+    return <><span data-testid="placing-door">{doorLabel(door)}</span>{words ? <span style={{ opacity: 0.75 }}> {words}</span> : null}</>
   }
   return (
     <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a door of Hadith Jibril; the door with most answers chooses the first course." testId="master-questions">
@@ -323,7 +324,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
           </div>
         </section>
         <section className="panel" id="new-question">
-          <header><div><h2>New question</h2><p>Put the door after a bar, for example: With prayer | W5. A clause number still works: With prayer | 15</p></div></header>
+          <header><div><h2>New question</h2><p>Put the door after a bar, for example: With prayer | W5. A plain number finds the door too: With prayer | 5.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing-question', next: '/master/questions' }} />
             <label className="stack">Question<textarea data-testid="placing-prompt" name="prompt" required /></label>

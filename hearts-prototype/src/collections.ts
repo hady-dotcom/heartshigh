@@ -298,14 +298,14 @@ export const Clauses: CollectionConfig = {
 
 export const Doors: CollectionConfig = {
   slug: 'doors',
-  admin: { useAsTitle: 'title', defaultColumns: ['number', 'section', 'title', 'clauses'], description: 'The 20 working doors learners see. Each absorbs one or more of the 41 clauses; a talk’s door comes from its clause.' },
+  admin: { useAsTitle: 'title', defaultColumns: ['number', 'section', 'title', 'clauses'], description: 'The 20 doors learners see, from the hadith of Jibril. A talk sits in one door.' },
   access: masterOnly,
   hooks: { beforeChange: [plainFields('title')] },
   fields: [
     { name: 'number', type: 'number', required: true, unique: true, min: 1, max: 20 },
     { name: 'section', type: 'select', required: true, options: DOOR_SECTIONS.map((value) => ({ label: value, value })) },
     { name: 'title', type: 'text', required: true },
-    { name: 'clauses', type: 'json', required: true, admin: { description: 'The clause numbers this door absorbs, for example [13, 19, 20].' } },
+    { name: 'clauses', type: 'json', required: true, admin: { description: 'The pieces of the hadith this door covers, for example [13, 19, 20].' } },
   ],
 }
 
@@ -1084,7 +1084,7 @@ export const HarvestEntries: CollectionConfig = {
     { name: 'grading', type: 'text', admin: { description: 'Only as given by the hadith source. Never filled in by hand.' } },
     { name: 'seenAt', type: 'date', admin: { description: 'When the learner first opened Harvest with this item in it. Empty means new.' } },
     { name: 'speaker', type: 'text' },
-    { name: 'door', type: 'number', min: 1, max: 20, admin: { description: 'The Hadith Jibril working door (1 to 20) of the talk, worked out from its clause.' } },
+    { name: 'door', type: 'number', min: 1, max: 20, admin: { description: 'The door of Hadith Jibril this talk sits in, from 1 to 20.' } },
     {
       name: 'surface',
       type: 'select',

@@ -1474,7 +1474,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (clauseNumber) {
       const found = await payload.find({ collection: 'clauses', overrideAccess: true, limit: 1, where: { number: { equals: clauseNumber } } })
       clauseDocId = found.docs[0]?.id as number | undefined
-      if (!clauseDocId) return redirectTo(req, text(form, 'next') || '/', 'Choose a clause between 1 and 41.')
+      if (!clauseDocId) return redirectTo(req, text(form, 'next') || '/', 'Choose a line that sits on one of the 20 doors.')
     }
     if (seatId) {
       const seat = await findDoc(payload, 'seats', seatId)

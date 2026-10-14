@@ -1,6 +1,9 @@
 // A lane's own clips, for the Lanes screen and for /feed?lane=<key>. Plain module: the server and the device share it.
 import type { CutInfo, LaneDef } from './heart'
+import { laneDoors } from './heart'
 import type { FeedItem } from '../server/learner'
+import { areaOfDoor } from './garden-areas'
+import { capitalAfterColon, doorByNumber } from './doors'
 import { playingSpeaker } from './playing-speaker'
 
 const ROLE_ORDER = { first: 0, next: 1, mains: 2 } as const
@@ -67,11 +70,31 @@ export function laneCardSpeaker(clips: { speaker?: string | null }[]) {
   return names.length === 1 ? names[0] : ''
 }
 
+/** The tree of the lane's first door, and the door names in rank order. */
+export function laneGardenCopy(lane: Pick<LaneDef, 'doors' | 'clauses'>) {
+  const ranked = laneDoors(lane as LaneDef)
+  const tree = ranked.length ? areaOfDoor(ranked[0].door)?.title || '' : ''
+  const doorNames = ranked.map((row) => {
+    const door = doorByNumber(row.door)
+    return door ? capitalAfterColon(door.title) : `Door ${row.door}`
+  })
+  return { tree, doorNames }
+}
+
 /** Every lane that has at least one clip, in the lanes' own order, with its clips. Opt-in lanes stay out. */
 export function lanesWithClips(route: { lanes: LaneDef[]; cuts: CutInfo[] }, clips: Record<string, FeedItem>, titles: Record<string, string>) {
   return route.lanes
     .filter((lane) => !lane.optInOnly)
-    .map((lane) => ({ key: lane.key, title: titles[lane.key] || lane.title, clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title) }))
+    .map((lane) => {
+      const grown = laneGardenCopy(lane)
+      return {
+        key: lane.key,
+        title: titles[lane.key] || lane.title,
+        clips: playableLaneClips(clips, route.cuts, lane.key, titles[lane.key] || lane.title),
+        tree: grown.tree,
+        doorNames: grown.doorNames,
+      }
+    })
     .filter((lane) => lane.clips.length > 0)
 }
 

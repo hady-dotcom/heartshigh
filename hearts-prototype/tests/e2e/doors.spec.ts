@@ -148,7 +148,7 @@ test('the feed walks the spine door by door and the lanes push talks by door', a
   await learner.dispose()
 })
 
-test('the desk shows the door first and keeps the clause beside it', async ({ page }) => {
+test('the desk shows the door, and does not call it a clause', async ({ page }) => {
   const placed = (await json(await master.get('/api/cuts?where[bestClause][exists]=true&where[status][equals]=approved&limit=50&depth=1'))).docs as { id: number; bestClause: number; lesson: { id: number; course: number | { id: number } } }[]
   const cut = placed.find((row) => row.lesson && typeof row.lesson === 'object')!
   expect(cut, 'a seeded approved cut placed on a clause').toBeTruthy()
@@ -158,7 +158,7 @@ test('the desk shows the door first and keeps the clause beside it', async ({ pa
   await signIn(page, 'master@hearts.test', 'hearts-master', `/master/library/${courseId}?part=${cut.lesson.id}`)
   const row = page.locator(`[data-testid=cut-draft][data-cut="${cut.id}"]`)
   await expect(row.getByTestId('cut-door')).toHaveText(`W${door.number} · ${door.title}`)
-  await expect(row.getByTestId('cut-door-clause')).toContainText(`clause ${cut.bestClause}`)
+  await expect(row.getByTestId('cut-door-clause')).not.toContainText(/\bclause\b/i)
   await expect(row.getByTestId('cut-clause')).toHaveValue(String(cut.bestClause))
   await expect(row.getByTestId('cut-clause').locator('optgroup')).toHaveCount(20)
   await expect(row.getByTestId('cut-clause').locator(`optgroup[label="W${door.number} · ${door.title}"] option[value="${cut.bestClause}"]`)).toHaveCount(1)
