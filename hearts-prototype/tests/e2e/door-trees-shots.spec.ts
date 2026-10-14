@@ -37,6 +37,10 @@ test('garden plaques and lane doors at phone and wide size', async ({ page }) =>
     const notes = page.getByTestId('plaque-note')
     await expect(notes).toHaveCount(5)
     await expect(notes).toHaveText(NOTES)
+    const branches = page.getByTestId('garden-branch')
+    await expect(branches).toHaveCount(9)
+    await expect(page.locator('[data-testid=garden-branch][data-lane=trust]')).toHaveAttribute('href', '/p/east-london/lanes/trust')
+    await expect(page.locator('[data-testid=garden-branch][data-lane=patience]')).toHaveAttribute('href', '/p/east-london/lanes/patience')
     const scene = page.getByTestId('garden-scene')
     const sceneBox = await scene.boundingBox()
     expect(sceneBox).toBeTruthy()
@@ -47,6 +51,15 @@ test('garden plaques and lane doors at phone and wide size', async ({ page }) =>
       expect(box!.x + box!.width).toBeLessThanOrEqual(sceneBox!.x + sceneBox!.width + 2)
     }
     await page.screenshot({ path: `${SHOTS}/garden-${size.name}.png`, caret: 'initial' })
+    if (size.name === '390x844') {
+      await page.locator('[data-area=islam] [data-testid=tree-plaque]').click()
+      await expect(page.getByTestId('tree-sheet')).toBeVisible()
+      await expect(page.getByTestId('tree-doors')).toContainText('Door 3')
+      await expect(page.getByRole('link', { name: 'Start this lane' }).first()).toHaveAttribute('href', /\/lanes\/(lightness|habits|patience)$/)
+      await page.screenshot({ path: `${SHOTS}/garden-islam-branches-390x844.png`, caret: 'initial' })
+      await page.getByRole('button', { name: 'Back to the garden' }).click()
+      await expect(page.getByTestId('tree-sheet')).toHaveCount(0)
+    }
 
     await page.goto('/p/east-london/lanes')
     await expect(page.getByTestId('lanes')).toBeVisible()

@@ -72,7 +72,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use the Garden',
     body: [
       'The garden is a quiet picture of time you have given.',
-      'Five trees grow here: Islam, Iman, Ihsan, the Hour and the Sitting. A tree grows when you finish a talk on its doors and answer a question there.',
+      'Five trees grow here: Islam, Iman, Ihsan, the Hour and the Sitting. Each lane is a branch on its tree. Tap a branch to open that lane, or the name on the pot to see the lanes and doors. A tree grows when you finish a talk on its doors and answer a question there.',
       'Finished counts a talk once you watch it to the end or tap I have watched this part. Short clips do not count. Your path is this course only.',
     ],
   },

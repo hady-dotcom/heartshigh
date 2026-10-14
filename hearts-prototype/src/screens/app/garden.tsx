@@ -23,6 +23,7 @@ import { capitalAfterColon, doorByNumber, doorCode, doorFromPath, doorNumberOfCl
 import { areaGrowth, type AreaView } from '@/lib/garden-areas'
 import type { GardenTheme } from '@/lib/garden-art'
 import { GardenScene } from '@/components/app/garden-scene'
+import { gardenBranches } from '@/lib/garden-branches'
 import { answerCounts } from '@/lib/nesting'
 import { taskWantsCompany } from '@/lib/gather'
 import { featureOn } from '@/lib/features'
@@ -268,12 +269,12 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
 
 export async function GardenScreen({ payload, user, portal, base, query }: Ctx) {
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const [areas, path] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g)])
+  const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g), gardenBranches(base)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
   return (
     <AppFrame testId="garden">
       <div className="app-scroll garden-home">
-        <GardenScene areas={areas} theme={query.theme === 'dawn' || query.theme === 'evening' ? (query.theme satisfies GardenTheme) : undefined} />
+        <GardenScene areas={areas} branches={branches} theme={query.theme === 'dawn' || query.theme === 'evening' ? (query.theme satisfies GardenTheme) : undefined} />
         <div className="garden-rest">
         <Flash error={query.error} notice={query.notice} />
         <section className="garden-rings card" data-testid="garden-rings">

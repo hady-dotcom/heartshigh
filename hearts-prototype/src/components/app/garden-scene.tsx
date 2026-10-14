@@ -2,7 +2,9 @@
 
 import Link from 'next/link'
 import { useEffect, useState } from 'react'
-import { readStoredGarden, type AreaFruit, type AreaView } from '@/lib/garden-areas'
+import { ExampleInUse } from '@/components/app/care'
+import { readStoredGarden, GARDEN_AREAS, type AreaFruit, type AreaView, type GardenAreaId } from '@/lib/garden-areas'
+import { doorNamesForArea, type GardenBranch } from '@/lib/garden-branches'
 import { CANOPY_SPLIT, TREE_FRAME, TREE_PADS, medallionSpots, sceneBackground, treeDepth, treeSources, trunkPivot, type GardenTheme } from '@/lib/garden-art'
 
 const MEDALLION_CAP = 6
@@ -34,7 +36,7 @@ function hanging(area: AreaView): AreaFruit[] {
   return [...glow, ...area.pending.slice(0, room)]
 }
 
-function Tree({ area }: { area: AreaView }) {
+function Tree({ area, branches, onPlaque }: { area: AreaView; branches: GardenBranch[]; onPlaque: (id: GardenAreaId) => void }) {
   const pad = TREE_PADS[area.art]
   const art = treeSources(area.art, area.stage)
   const marks = hanging(area)
@@ -64,11 +66,40 @@ function Tree({ area }: { area: AreaView }) {
     >
       <div className="tree-planter">
         <img src={art.planter} alt="" />
-        <Link className="plaque-name" href={area.workbookHref} style={{ ['--plaque-chars' as string]: String(area.plaque.length) }} aria-label={`${area.title}. ${area.note}`}>{area.plaque}</Link>
+        <button
+          type="button"
+          className="plaque-name"
+          data-testid="tree-plaque"
+          style={{ ['--plaque-chars' as string]: String(area.plaque.length) }}
+          aria-label={`${area.title}. ${area.note}. Lanes and doors`}
+          onClick={() => onPlaque(area.id)}
+        >{area.plaque}</button>
         <p className="plaque-note" data-testid="plaque-note">{area.note}</p>
       </div>
       <div className={`tree-canopy${art.split ? ' sway' : ''}`}>
         {art.canopy ? <img src={art.canopy} alt="" /> : null}
+        {branches.length ? (
+          <svg className="tree-branches" viewBox="0 0 100 100" aria-hidden="true">
+            {branches.map((branch) => (
+              <g key={branch.id}>
+                <path d={branch.d} className="branch-wood" />
+                <path d={branch.d} className="branch-leaf" pathLength={1} strokeDasharray={1} strokeDashoffset={1 - branch.fill} />
+              </g>
+            ))}
+          </svg>
+        ) : null}
+        {branches.map((branch) => (
+          <Link
+            key={branch.id}
+            className="branch-bud"
+            href={branch.href}
+            data-testid="garden-branch"
+            data-lane={branch.id}
+            data-fill={branch.fill}
+            style={{ left: `${branch.tipX}%`, top: `${branch.tipY}%` }}
+            aria-label={`${branch.title}. ${branch.done} of ${branch.total} done`}
+          >{branch.label}</Link>
+        ))}
         {marks.length ? (
           <ul className="garden-fruits">
             {marks.map((mark, index) => (
@@ -110,8 +141,43 @@ function useAppTheme(pinned?: GardenTheme): GardenTheme {
   return theme
 }
 
-export function GardenScene({ areas, theme: pinned }: { areas: AreaView[]; theme?: GardenTheme }) {
+function TreeSheet({ areaId, branches, onClose }: { areaId: GardenAreaId; branches: GardenBranch[]; onClose: () => void }) {
+  const area = GARDEN_AREAS.find((row) => row.id === areaId)
+  if (!area) return null
+  const doors = doorNamesForArea(areaId)
+  const own = branches.filter((branch) => branch.areaId === areaId)
+  return (
+    <div className="tree-sheet" data-testid="tree-sheet" role="dialog" aria-label={area.title}>
+      <button type="button" className="tree-sheet-close" onClick={onClose}>Back to the garden</button>
+      <p className="eyebrow">{area.plaque}</p>
+      <h2>{area.title}</h2>
+      <p className="tree-sheet-note">{area.note}</p>
+      <p className="eyebrow">Doors</p>
+      <ul className="tree-doors" data-testid="tree-doors">
+        {doors.map((door) => <li key={door.number}>Door {door.number} · {door.title}</li>)}
+      </ul>
+      {own.length ? <p className="eyebrow">Branches</p> : null}
+      {own.map((branch) => (
+        <section key={branch.id} className="tree-lane" data-testid="tree-lane" data-lane={branch.id}>
+          <h3>{branch.title}</h3>
+          <p className="tree-lane-count" data-testid="tree-lane-count">{branch.done} of {branch.total} done{branch.minutes ? ` · ${branch.minutes} min` : ''}</p>
+          <div className="bar" aria-hidden="true"><i style={{ width: `${Math.round(branch.fill * 100)}%` }} /></div>
+          {branch.done <= 0 ? (
+            <ExampleInUse testId="lane-branch-example" title={branch.title} action={{ href: branch.href, label: 'Start this lane' }}>
+              <p>{branch.example}</p>
+            </ExampleInUse>
+          ) : (
+            <Link className="pill gold" href={branch.href}>Open this lane</Link>
+          )}
+        </section>
+      ))}
+    </div>
+  )
+}
+
+export function GardenScene({ areas, branches = [], theme: pinned }: { areas: AreaView[]; branches?: GardenBranch[]; theme?: GardenTheme }) {
   const theme = useAppTheme(pinned)
+  const [open, setOpen] = useState<GardenAreaId | null>(null)
   useEffect(() => {
     try {
       const raw = localStorage.getItem(AREAS_KEY)
@@ -139,8 +205,9 @@ export function GardenScene({ areas, theme: pinned }: { areas: AreaView[]; theme
       </header>
       <img className="garden-prop lantern" src="/garden/props/lantern.webp" alt="" />
       <div className="garden-trees">
-        {areas.map((area) => <Tree key={area.id} area={area} />)}
+        {areas.map((area) => <Tree key={area.id} area={area} branches={branches.filter((branch) => branch.areaId === area.id)} onPlaque={setOpen} />)}
       </div>
+      {open ? <TreeSheet areaId={open} branches={branches} onClose={() => setOpen(null)} /> : null}
     </section>
   )
 }
