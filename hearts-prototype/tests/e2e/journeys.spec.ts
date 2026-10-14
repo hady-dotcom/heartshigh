@@ -478,7 +478,8 @@ test.describe.serial('HEARTS journeys', () => {
       await page.waitForFunction(() => !document.querySelector('.j-clip')?.getAnimations().length)
       const box = (await page.getByTestId('gesture-layer').boundingBox())!
       const cx = box.x + box.width / 2
-      const cy = box.y + box.height / 2
+      // The open More board docks over the lower half. A swipe has to start on the film.
+      const cy = box.y + box.height / 3
       await page.mouse.move(cx, cy)
       await page.mouse.down()
       await page.mouse.move(cx + dx, cy + dy, { steps: 8 })
