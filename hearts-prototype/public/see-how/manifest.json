@@ -1828,6 +1828,63 @@
       ],
       "overrideVideo": "",
       "seconds": 4.8
+    },
+    "lane": {
+      "title": "One lane",
+      "video": "/see-how/lane.webm",
+      "poster": "/see-how/lane.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.3,
+          "text": "These talks belong together, in the order to watch them."
+        },
+        {
+          "start": 2.3,
+          "end": 5.7,
+          "text": "Continue plays the next one you have not watched."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.7
+    },
+    "transcripts": {
+      "title": "Transcripts",
+      "video": "/see-how/transcripts.webm",
+      "poster": "/see-how/transcripts.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3.3,
+          "text": "Every talk is listed with the speaker, the length and a picture."
+        },
+        {
+          "start": 3.3,
+          "end": 6.8,
+          "text": "Open a talk to fix a line."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.8
+    },
+    "transcript-editor": {
+      "title": "One transcript",
+      "video": "/see-how/transcript-editor.webm",
+      "poster": "/see-how/transcript-editor.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.7,
+          "text": "Fix a line, replace a word, or save. Learners hear these lines on the clips."
+        },
+        {
+          "start": 2.7,
+          "end": 5.5,
+          "text": "Find a word in this talk."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 5.5
     }
   },
   "keys": {
@@ -2029,7 +2086,11 @@
     "live-home": "live-home",
     "feature-announcements": "portal-edit",
     "feature-calendar": "portal-edit",
-    "feature-ai": "portal-edit"
+    "feature-ai": "portal-edit",
+    "lane": "lane",
+    "transcripts": "transcripts",
+    "transcript-editor": "transcript-editor",
+    "transcript-editor-page": "transcript-editor"
   },
   "skipped": {
     "default": "Fallback sentences for a screen with no page of its own. There is no task to film.",

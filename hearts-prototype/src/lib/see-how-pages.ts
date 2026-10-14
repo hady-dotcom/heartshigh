@@ -27,6 +27,8 @@ export type SeeHowDiscover =
   | 'ai-step'
   | 'tier'
   | 'framing'
+  | 'lane'
+  | 'transcript'
 
 export type SeeHowPageSpec = {
   id: string
@@ -266,6 +268,20 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     steps: [
       hold('Each lane is one theme. Walk one subject at a time.'),
       click('Tap a lane to watch its clips.', '[data-testid=lane-card]'),
+    ],
+  }),
+  clip({
+    id: 'lane',
+    title: 'One lane',
+    keys: ['lane'],
+    path: '/p/east-london/lanes/trust',
+    role: 'learner',
+    viewport: phone,
+    ready: '[data-testid=lane]',
+    discover: 'lane',
+    steps: [
+      hold('These talks belong together, in the order to watch them.'),
+      click('Continue plays the next one you have not watched.', '[data-testid=start-lane], [data-testid=lane-continue]', true),
     ],
   }),
   clip({
@@ -941,6 +957,33 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     viewport: desk,
     ready: '[data-testid=transcript-files]',
     steps: [hold('Upload the timed transcript a sheet points at. Each file gets a number you can paste back into the sheet. You do not need the raw data console.')],
+  }),
+  clip({
+    id: 'transcripts',
+    title: 'Transcripts',
+    keys: ['transcripts'],
+    path: '/master/transcripts',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=transcripts]',
+    steps: [
+      hold('Every talk is listed with the speaker, the length and a picture.'),
+      click('Open a talk to fix a line.', 'a.tx-row', true),
+    ],
+  }),
+  clip({
+    id: 'transcript-editor',
+    title: 'One transcript',
+    keys: ['transcript-editor-page'],
+    path: '/master/transcripts/1',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=transcript-editor]',
+    discover: 'transcript',
+    steps: [
+      hold('Fix a line, replace a word, or save. Learners hear these lines on the clips.'),
+      fill('Find a word in this talk.', '[data-testid=transcript-find]', 'and', true),
+    ],
   }),
   clip({
     id: 'portal-circle',

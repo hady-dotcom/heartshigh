@@ -285,6 +285,8 @@ export const TEST_IDS: Record<string, string> = {
   'master-safety': 'safety',
   'admin-announcements': 'announcements',
   'master-announcements': 'announcements',
+  transcripts: 'transcripts',
+  'transcript-editor-page': 'transcripts',
 }
 
 /** Page copy for a desk frame, from the nav key or the screen test id. */
