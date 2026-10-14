@@ -23,7 +23,7 @@ const MASTER: Record<string, Lead> = {
     href: '/master/learners',
   },
   library: {
-    line: 'Shared courses any portal can link. Learners see a course when a code or a portal opens it.',
+    line: 'Shared courses any portal can link. Each course says which codes and portals can open it. Learners see a course when a code or a portal opens it.',
     label: 'Add a course',
     href: '#new-library-course',
   },
@@ -212,7 +212,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
     path: '#write-a-note',
   },
   library: {
-    line: 'Courses from the shared library. Learners see one once a code or this portal opens it.',
+    line: 'Courses from the shared library. Each course says which codes and portals can open it. Learners see one once a code or this portal opens it.',
     label: 'Make your own course',
     path: 'content',
   },

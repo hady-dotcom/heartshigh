@@ -400,9 +400,10 @@ test.describe('round 3 screens', () => {
     await page.getByTestId('join-submit').click()
     await page.waitForURL(/\/admin/)
     await page.goto(`/p/${slug}/admin/library`)
-    const offered = page.getByTestId('split-course')
+    const offered = page.getByTestId('library-course')
     expect(await offered.count()).toBeGreaterThan(0)
-    await expect(offered.filter({ hasText: 'from the library' }).first()).toContainText('from the library')
+    await expect(offered.first().getByTestId('opened-by')).toBeVisible()
+    await expect(page.getByTestId('admin-library')).toContainText('Each course says which codes and portals can open it.')
   })
 
   test('Bug 23: Home Continue rows put the title and the speaker line on separate lines', async ({ page }) => {

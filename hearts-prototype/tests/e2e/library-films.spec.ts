@@ -55,7 +55,10 @@ async function openCourse(page: Page, name: string) {
     }
     const next = page.getByTestId('page-next')
     if (!(await next.count())) break
+    const status = page.getByTestId('page-status')
+    const before = (await status.innerText()).trim()
     await next.click()
+    await expect(status).not.toHaveText(before)
   }
   throw new Error(`No library course matching ${name}`)
 }
