@@ -347,22 +347,6 @@ export interface Portal {
     | boolean
     | null;
   /**
-   * The Demo stage portal only. Its accounts are excluded from metrics, insights and swarm counts.
-   */
-  isDemo?: boolean | null;
-  /**
-   * Demo stage activity ticker. Only the sandbox portal writes this.
-   */
-  demoActivity?:
-    | {
-        [k: string]: unknown;
-      }
-    | unknown[]
-    | string
-    | number
-    | boolean
-    | null;
-  /**
    * This portal’s own AI account: an OpenAI-compatible address and an encrypted key. Empty means the desk uses the built-in path. The master desk never reads it to place a call.
    */
   aiConnection?:
@@ -3365,8 +3349,6 @@ export interface PortalsSelect<T extends boolean = true> {
   teacherLabel?: T;
   wizardDone?: T;
   features?: T;
-  isDemo?: T;
-  demoActivity?: T;
   aiConnection?: T;
   updatedAt?: T;
   createdAt?: T;

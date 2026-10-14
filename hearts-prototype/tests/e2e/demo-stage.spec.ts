@@ -13,35 +13,37 @@ async function signIn(page: Page, email: string, password: string, next: string)
 
 test.describe.configure({ timeout: 180_000 })
 
-test('demo stage on a wide screen and a laptop', async ({ page }) => {
+test('demo stage on a wide screen and a 1920 screen', async ({ page }) => {
   mkdirSync(dir, { recursive: true })
   await page.setViewportSize({ width: 2560, height: 1080 })
   await signIn(page, 'master@hearts.test', 'hearts-master', '/demo-stage')
-  await expect(page.getByTestId('demo-stage')).toBeVisible({ timeout: 90_000 })
+  await expect(page.getByTestId('demo-stage')).toBeVisible()
   for (const slot of ['master', 'portal', 'teacher', 'learner']) {
     await expect(page.getByTestId(`demo-panel-${slot}`)).toBeVisible()
-    await expect(page.getByTestId(`demo-frame-${slot}`)).toBeVisible()
   }
   await expect(page.getByText("Used as if you're the Master")).toBeVisible()
   await expect(page.getByText("Used as if you're the Portal admin (HEARTS Demo)")).toBeVisible()
   await expect(page.getByText("Used as if you're a Teacher")).toBeVisible()
   await expect(page.getByText("Used as if you're a Learner")).toBeVisible()
+  await expect(page.getByTestId('demo-steps')).toBeVisible()
+  await expect(page.getByTestId('demo-learner-empty')).toBeVisible()
   const phone = page.getByTestId('demo-phone')
   const box = await phone.boundingBox()
   expect(box?.width || 0).toBeGreaterThan(360)
   expect(box?.width || 0).toBeLessThan(460)
-  const learner = page.getByTestId('demo-frame-learner')
-  await expect(learner).toHaveAttribute('src', /\/demo-stage\/as\/learner\//)
-  await page.getByTestId('demo-layout-row').click()
-  await page.waitForTimeout(400)
+
+  await page.getByTestId('demo-scenario-publish').click()
+  await expect(page.getByTestId('demo-step-say')).toContainText('Publish')
+  await page.locator('[data-demo="publish"]').click()
+  await expect(page.getByTestId('demo-learner-course')).toHaveText('A quiet hour')
+  await expect(page.getByTestId('demo-ticker')).toContainText('Course published: A quiet hour')
+  await expect(page.getByTestId('demo-stat-published')).toHaveText('1')
   await page.screenshot({ path: `${dir}/demo-stage-2560x1080.png`, caret: 'initial' })
 
-  await page.setViewportSize({ width: 1280, height: 800 })
-  await page.getByTestId('demo-layout-grid').click()
-  if (await page.getByTestId('demo-steps').count()) await page.getByTestId('demo-steps-toggle').click()
-  await expect(page.getByTestId('demo-steps')).toHaveCount(0)
-  await page.waitForTimeout(400)
-  await page.screenshot({ path: `${dir}/demo-stage-1280x800.png`, caret: 'initial' })
+  await page.setViewportSize({ width: 1920, height: 1080 })
+  await page.getByTestId('demo-layout-row').click()
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: `${dir}/demo-stage-1920x1080.png`, caret: 'initial' })
 })
 
 test('a learner cannot open the demo stage', async ({ page }) => {

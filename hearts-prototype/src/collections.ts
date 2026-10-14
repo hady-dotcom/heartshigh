@@ -123,18 +123,6 @@ export const Portals: CollectionConfig = {
       },
     },
     {
-      name: 'isDemo',
-      type: 'checkbox',
-      defaultValue: false,
-      label: 'Demo stage sandbox',
-      admin: { description: 'The Demo stage portal only. Its accounts are excluded from metrics, insights and swarm counts.' },
-    },
-    {
-      name: 'demoActivity',
-      type: 'json',
-      admin: { description: 'Demo stage activity ticker. Only the sandbox portal writes this.' },
-    },
-    {
       name: 'aiConnection',
       type: 'json',
       // The local API with overrideAccess still reads this for the desk. REST and GraphQL never return the key.

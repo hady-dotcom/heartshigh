@@ -23,7 +23,6 @@
   color: #f6f0e4;
   flex: none;
 }
-
 .demo-title { min-width: 9rem; }
 .demo-kicker {
   margin: 0;
@@ -39,7 +38,6 @@
   font-weight: 600;
   line-height: 1;
 }
-
 .demo-presets, .demo-actions { display: flex; gap: 8px; align-items: center; }
 .demo-presets { flex: 1; }
 .demo-bar button, .demo-steps button {
@@ -55,15 +53,8 @@
 .demo-bar button.on, .demo-bar button:hover { background: #f6f0e4; color: #17151f; }
 .demo-bar button.danger { border-color: #e7a3ad; color: #ffd5db; }
 .demo-bar button.danger:hover { background: #d94f68; color: white; border-color: #d94f68; }
-.demo-actions form { margin: 0; }
 
-.demo-body {
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  position: relative;
-}
-
+.demo-body { flex: 1; min-height: 0; display: flex; }
 .demo-board {
   flex: 1;
   min-width: 0;
@@ -73,22 +64,11 @@
   padding: 10px;
   box-sizing: border-box;
 }
-
-.layout-grid .demo-board {
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr 1fr;
-}
-
+.layout-grid .demo-board { grid-template-rows: 1fr 1fr; }
 .layout-phone .demo-board {
   background: linear-gradient(90deg, transparent calc(100% - 446px), rgba(23, 21, 31, 0.06) calc(100% - 446px));
 }
-
-.demo-cell {
-  min-width: 0;
-  min-height: 0;
-  display: flex;
-  position: relative;
-}
+.demo-cell { min-width: 0; min-height: 0; display: flex; position: relative; }
 
 .demo-panel {
   --tint: #25214a;
@@ -101,50 +81,39 @@
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
-  border: 1px solid rgba(31, 29, 54, 0.06);
 }
-
-.demo-panel.is-glow {
-  animation: demo-glow 1.6s ease;
-  box-shadow: 0 0 0 3px var(--tint), 0 12px 32px rgba(31, 29, 54, 0.16);
-}
-
+.demo-panel[data-slot='master'] { --tint: #25214a; }
+.demo-panel[data-slot='portal'] { --tint: #1f8a78; }
+.demo-panel[data-slot='teacher'] { --tint: #c48f2c; }
+.demo-panel[data-slot='learner'] { --tint: #7a4fa8; }
+.demo-panel.is-glow { animation: demo-glow 1.6s ease; }
 @keyframes demo-glow {
   0% { box-shadow: 0 0 0 0 var(--tint); }
   30% { box-shadow: 0 0 0 4px var(--tint), 0 0 24px var(--tint); }
-  100% { box-shadow: 0 0 0 3px var(--tint), 0 12px 32px rgba(31, 29, 54, 0.16); }
+  100% { box-shadow: 0 0 0 3px var(--tint); }
 }
-
 .demo-strip {
   background: var(--tint);
   color: #f6f0e4;
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.01em;
   padding: 8px 12px;
   flex: none;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
-
-.demo-panel[data-testid='demo-panel-teacher'] .demo-strip { color: #2a2414; }
-
+.demo-panel[data-slot='teacher'] .demo-strip { color: #2a2414; }
 .demo-view {
   flex: 1;
   min-height: 0;
+  overflow: auto;
+  background: #0e2a2b;
+}
+.demo-panel.is-phone .demo-view {
   background: #ece7dc;
   display: flex;
-  align-items: stretch;
   justify-content: center;
-}
-
-.demo-frame {
-  border: 0;
-  width: 100%;
-  height: 100%;
-  background: white;
-  display: block;
 }
 
 .demo-phone {
@@ -152,12 +121,9 @@
   max-width: 100%;
   height: 100%;
   display: flex;
-  align-items: stretch;
-  justify-content: center;
   padding: 8px 0;
   box-sizing: border-box;
 }
-
 .demo-bezel {
   width: 390px;
   max-width: 100%;
@@ -167,9 +133,9 @@
   padding: 12px 8px 10px;
   box-sizing: border-box;
   position: relative;
-  box-shadow: inset 0 0 0 2px #2a2836, 0 16px 30px rgba(17, 16, 24, 0.28);
+  box-shadow: inset 0 0 0 2px #2a2836;
+  overflow: hidden;
 }
-
 .demo-notch {
   position: absolute;
   top: 8px;
@@ -179,12 +145,25 @@
   transform: translateX(-50%);
   background: #111018;
   border-radius: 0 0 10px 10px;
-  z-index: 2;
+  z-index: 5;
 }
-
-.demo-phone .demo-frame {
-  border-radius: 18px;
+.demo-phone .demo-app.app {
+  min-height: 0;
   height: 100%;
+  width: 100%;
+  margin: 0;
+  border-radius: 18px;
+  overflow: hidden;
+}
+.demo-phone .app-scroll { flex: 1; min-height: 0; overflow: auto; padding-bottom: 78px; }
+.demo-phone .tabbar {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 10px;
+  transform: none;
+  width: auto;
+  border-radius: 0 0 18px 18px;
 }
 
 .demo-resize {
@@ -194,14 +173,100 @@
   bottom: 8px;
   width: 12px;
   border: 0;
-  border-radius: 999px;
   padding: 0;
   background: transparent;
   cursor: col-resize;
   z-index: 3;
 }
-.demo-resize:hover, .demo-resize:focus-visible {
-  background: rgba(31, 138, 120, 0.35);
+.demo-resize:hover, .demo-resize:focus-visible { background: rgba(31, 138, 120, 0.35); }
+
+.demo-desk.desk {
+  min-height: 0;
+  height: 100%;
+  grid-template-columns: 118px minmax(0, 1fr);
+  font-size: 13px;
+}
+.demo-desk .side {
+  position: relative;
+  top: auto;
+  height: auto;
+  min-height: 100%;
+  padding: 10px 8px;
+}
+.demo-desk .side-brand { padding: 2px 6px 10px; }
+.demo-desk .side-brand b { font-size: 13px; }
+.demo-desk .main { padding: 10px 12px 24px; }
+.demo-desk .side button.nav {
+  display: flex;
+  width: 100%;
+  text-align: left;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 0;
+  background: transparent;
+  color: #f7eedb;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+}
+.demo-desk .side button.nav.on, .demo-desk .side button.nav:hover { background: var(--gold); color: var(--gold-ink); }
+.demo-desk .stats-strip { grid-template-columns: 1fr 1fr; gap: 8px; }
+.demo-desk .stat-chip { padding: 8px 10px; gap: 8px; }
+.demo-desk .stat-chip b { font-size: 18px; }
+.demo-desk .panel > header { padding: 10px 12px; }
+.demo-desk .panel .body { padding: 12px; }
+
+.demo-list { display: grid; gap: 8px; }
+.demo-list p { margin: 0; }
+.demo-stack { display: grid; gap: 10px; }
+.demo-stack p { margin: 0; }
+.demo-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.demo-counts span { background: var(--field, #102e2c); border-radius: 10px; padding: 8px 10px; }
+.demo-thumb, .demo-poster { margin: 0; border-radius: 12px; overflow: hidden; background: #102e2c; }
+.demo-thumb img, .demo-poster, .demo-course img { width: 100%; height: 92px; object-fit: cover; display: block; }
+.demo-thumb figcaption { padding: 6px 8px; font-weight: 700; }
+.demo-timeline { height: 8px; border-radius: 99px; background: rgba(246, 238, 220, 0.2); overflow: hidden; }
+.demo-timeline i { display: block; height: 100%; background: var(--gold, #d4a84b); }
+.demo-prompt { font-weight: 650; }
+.demo-queue { display: grid; gap: 8px; padding-top: 4px; }
+.demo-course {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 10px;
+  align-items: center;
+  text-align: left;
+  border: 0;
+  border-radius: 16px;
+  padding: 0;
+  background: #fff;
+  color: inherit;
+  overflow: hidden;
+  cursor: pointer;
+}
+.demo-course span { display: grid; gap: 2px; padding-right: 8px; }
+.demo-course small { color: #5c5848; }
+.demo-live {
+  margin: 0;
+  background: #1f8a78;
+  color: #f6f0e4;
+  border-radius: 12px;
+  padding: 8px 10px;
+  font-weight: 700;
+}
+.demo-app .card .eyebrow { margin: 0 0 6px; }
+
+.demo-next {
+  outline: 3px solid #d4a84b;
+  outline-offset: 2px;
+  animation: demo-pulse 1.1s ease infinite;
+  position: relative;
+  z-index: 4;
+}
+@keyframes demo-pulse {
+  0%, 100% { outline-color: #d4a84b; }
+  50% { outline-color: #fff4cc; }
 }
 
 .demo-steps {
@@ -228,10 +293,11 @@
   background: #1f4d3a;
   color: #f6f0e4;
   border-color: #1f4d3a;
+  text-align: left;
 }
-.demo-steps button:disabled { opacity: 0.6; cursor: wait; }
+.demo-steps button.on { background: #d4a84b; color: #1a1408; border-color: #d4a84b; }
 .demo-steps li span { font-size: 12.5px; color: #48455e; line-height: 1.4; }
-.demo-note { color: #8f2f2a; }
+.demo-say { background: #f6f0e4; border-radius: 10px; padding: 8px 10px; }
 
 .demo-ticker {
   height: var(--demo-ticker);
@@ -260,17 +326,6 @@
   overflow: hidden;
   white-space: nowrap;
 }
-.demo-ticker li { color: #f6f0e4; }
-.demo-ticker li:first-child { color: #fff; font-weight: 600; }
-
-.demo-boot {
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  background: #17151f;
-  color: #f6f0e4;
-  font-family: Inter, system-ui, sans-serif;
-}
 
 @media (max-width: 1500px) {
   .demo-steps {
@@ -281,4 +336,5 @@
     z-index: 4;
     margin: 0;
   }
+  .demo-body { position: relative; }
 }

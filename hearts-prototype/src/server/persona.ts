@@ -1,6 +1,5 @@
 // Loads the master persona lens. Counts only: no person id leaves this function.
 import type { Payload } from 'payload'
-import { isDemoStageEmail } from '@/lib/demo-stage'
 import { bandFromRow, tallyPersonas, type PersonaBand, type Reading } from '@/lib/persona'
 import { SCALE_KEYS, type ScaleKey } from '@/lib/heart'
 
@@ -22,7 +21,7 @@ export async function loadPersonaLens(payload: Payload) {
     payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 2000, pagination: false, where: { trendsOptIn: { equals: true } } }),
   ])
   const bands = (bandDocs.docs as unknown as Parameters<typeof bandFromRow>[0][]).map((row) => bandFromRow(row))
-  const ids = opted.docs.filter((user) => !isDemoStageEmail((user as { email?: string }).email)).map((user) => user.id)
+  const ids = opted.docs.map((user) => user.id)
   const states = ids.length
     ? await payload.find({ collection: 'heart-states', overrideAccess: true, depth: 0, limit: 2000, pagination: false, where: { user: { in: ids } } })
     : { docs: [] as { state?: unknown }[] }

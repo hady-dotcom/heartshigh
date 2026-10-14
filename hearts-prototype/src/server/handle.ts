@@ -18,8 +18,6 @@ import { partTitle } from '@/lib/talk-title'
 import { planKeepPath, planNotify, planToast } from '@/lib/week'
 import { clockEnabled, setTestNow } from '@/lib/clock'
 import { authCookie } from '@/lib/cookies'
-import { isDemoStageEmail, sessionCookieName, tickerForAction } from '@/lib/demo-stage'
-import { appendDemoActivity, refuseDemoWrite } from './demo-activity'
 import { logError } from '@/lib/log'
 import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
@@ -151,8 +149,7 @@ async function loginResponse(req: Request, email: string, password: string, next
     const result = await payload.login({ collection: 'users', data: { email, password } })
     if (!result.token || !result.user) return redirectTo(req, '/login', 'That email or password did not match.')
     const response = redirectTo(req, await landingPath(payload, result.user as SessionUser, next))
-    const cookieName = sessionCookieName(req.headers.get('x-demo-slot'), payload.config.cookiePrefix)
-    response.headers.append('Set-Cookie', authCookie(cookieName, result.token, 7200))
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, result.token, 7200))
     return response
   } catch {
     return redirectTo(req, '/login', 'That email or password did not match.')
@@ -511,18 +508,6 @@ export async function handlePost(req: Request) {
   }
   try {
     const response = await handleForm(req, form, session)
-    if (session.user && isDemoStageEmail(session.user.email) && response.status < 400) {
-      const location = response.headers.get('location') || ''
-      if (!location.includes('error=')) {
-        const line = tickerForAction(action, session.user.role, {
-          body: text(form, 'body'),
-          title: text(form, 'title'),
-          visibility: text(form, 'visibility'),
-          reply: text(form, 'reply'),
-        })
-        if (line) await appendDemoActivity(payload, line).catch(() => undefined)
-      }
-    }
     if (viewAs && !['logout', 'login', 'clock'].includes(action) && response.status < 400) {
       const location = response.headers.get('location') || ''
       if (!location.includes('error=')) {
@@ -580,8 +565,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const next = text(form, 'next')
     const dest = next === '/login' ? '/login' : '/'
     const response = redirectTo(req, dest)
-    const cookieName = sessionCookieName(req.headers.get('x-demo-slot'), payload.config.cookiePrefix)
-    response.headers.append('Set-Cookie', authCookie(cookieName, '', 0))
+    response.headers.append('Set-Cookie', authCookie(`${payload.config.cookiePrefix}-token`, '', 0))
     return response
   }
 
@@ -667,11 +651,6 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   }
 
   if (!user) return redirectTo(req, '/login', 'Please sign in first.')
-
-  if (isDemoStageEmail(user.email)) {
-    const refused = await refuseDemoWrite(payload, user, action, form)
-    if (refused) return redirectTo(req, text(form, 'next') || '/', refused)
-  }
 
   const safety = await handleSafetyAction(action, form, payload, user, req, (path, error, notice) => redirectTo(req, path, error, notice))
   if (safety) return safety

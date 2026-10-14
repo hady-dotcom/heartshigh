@@ -9,8 +9,6 @@ import { flattenSlots, planAcrossDays, studyDates } from '@/lib/schedule'
 
 export { insightEventRow } from '@/lib/insight-events'
 import { idOf, portalIdOf } from '@/lib/ids'
-import { shouldStoreInsight } from '@/lib/demo-stage'
-import { portalIsDemo } from './demo-activity'
 import { audit } from './viewas'
 import type { SessionUser } from './context'
 
@@ -62,8 +60,6 @@ export async function ingestEvents(
     events: IncomingEvent[]
   },
 ) {
-  if (!shouldStoreInsight({ email: input.user?.email, portalIsDemo: false })) return { stored: 0, limited: false }
-  if (input.portalId && (await portalIsDemo(payload, input.portalId))) return { stored: 0, limited: false }
   const optedIn = Boolean(input.user && 'trendsOptIn' in input.user && input.user.trendsOptIn)
   const rate = await sampleRateOf(payload)
   if (!allowInsightIngest({ deviceId: input.deviceId, clientIp: input.clientIp, userAgent: input.userAgent }, 40, 10_000)) return { stored: 0, limited: true }

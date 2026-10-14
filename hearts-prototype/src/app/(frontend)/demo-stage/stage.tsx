@@ -1,100 +1,80 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState } from 'react'
+import type { PointerEvent as ReactPointerEvent } from 'react'
 import {
-  DEMO_BEATS,
-  DEMO_POLL_MS,
-  demoFrameName,
-  demoFramePath,
-  foldActivity,
-  type DemoBeatId,
-  type DemoEvent,
-  type DemoSlot,
+  DEMO_SCENARIOS,
+  isViewCommand,
+  runDemoCommand,
+  scenarioById,
+  seedDemo,
+  stageFor,
+  type DemoPanel,
 } from '@/lib/demo-stage'
-import { resetDemo, runBeat } from './actions'
+import { Board } from './panels'
+import { DemoProvider, useDemo, type DemoViews } from './store'
 
-const PANELS: { slot: DemoSlot; label: string; tint: string; path: string; phone?: boolean }[] = [
-  { slot: 'master', label: "Used as if you're the Master", tint: '#25214a', path: '/master/portals/demo-stage' },
-  { slot: 'portal', label: "Used as if you're the Portal admin (HEARTS Demo)", tint: '#1f8a78', path: '/p/demo-stage/admin' },
-  { slot: 'teacher', label: "Used as if you're a Teacher", tint: '#c48f2c', path: '/p/demo-stage/admin/teach' },
-  { slot: 'learner', label: "Used as if you're a Learner", tint: '#7a4fa8', path: '/p/demo-stage', phone: true },
+const PANELS: { slot: DemoPanel; label: string; phone?: boolean }[] = [
+  { slot: 'master', label: "Used as if you're the Master" },
+  { slot: 'portal', label: "Used as if you're the Portal admin (HEARTS Demo)" },
+  { slot: 'teacher', label: "Used as if you're a Teacher" },
+  { slot: 'learner', label: "Used as if you're a Learner", phone: true },
 ]
+
+const START: DemoViews = { master: 'portals', portal: 'overview', teacher: 'queue', learner: 'home' }
+
+const DESTINATION: Record<string, Partial<DemoViews>> = {
+  'show-library': { master: 'library' },
+  'show-imported': { portal: 'imported' },
+  'open-content': { portal: 'content' },
+  'add-video': { portal: 'content' },
+  'open-question': { portal: 'question' },
+  'pause-moment': { portal: 'question' },
+  'save-question': { portal: 'question' },
+  'save-later': { portal: 'question' },
+  publish: { portal: 'content', learner: 'home' },
+  'open-home': { learner: 'home' },
+  'open-course': { learner: 'course' },
+  'open-player': { learner: 'player' },
+  'send-answer': { learner: 'player' },
+  'open-queue': { teacher: 'queue' },
+  'send-reply': { teacher: 'queue' },
+  'open-workbook': { learner: 'workbook' },
+  'open-announce': { portal: 'announce' },
+  'post-announce': { portal: 'announce', learner: 'home' },
+  'open-features': { portal: 'features' },
+  'toggle-live': { portal: 'features', learner: 'home' },
+  'toggle-workbook': { portal: 'features' },
+}
 
 type Layout = 'row' | 'grid' | 'phone'
 
-function Frame({ slot, label, path }: { slot: DemoSlot; label: string; path: string }) {
+export function DemoStage() {
   return (
-    <iframe
-      className="demo-frame"
-      name={demoFrameName(slot)}
-      title={label}
-      src={demoFramePath(slot, path)}
-      data-testid={`demo-frame-${slot}`}
-      data-slot={slot}
-    />
+    <DemoProvider>
+      <Stage />
+    </DemoProvider>
   )
 }
 
-export function DemoStage() {
+function Stage() {
+  const { state, glow, replace, setViews, resetViews } = useDemo()
   const [layout, setLayout] = useState<Layout>('row')
   const [flex, setFlex] = useState([1, 1, 1])
   const [gridSplit, setGridSplit] = useState(1)
   const [stepsOpen, setStepsOpen] = useState(true)
-  const [busy, setBusy] = useState<string>('')
-  const [note, setNote] = useState('')
-  const [ticker, setTicker] = useState<string[]>([])
-  const [glow, setGlow] = useState<DemoSlot[]>([])
-  const boardRef = useRef<HTMLDivElement>(null)
-  const cursor = useRef(0)
-  const primed = useRef(false)
+  const [scenarioId, setScenarioId] = useState('')
+  const [index, setIndex] = useState(0)
+  const scenario = scenarioById(scenarioId)
+  const step = scenario && index < scenario.steps.length ? scenario.steps[index] : null
+  const columns = layout === 'grid' ? `${gridSplit}fr 1fr` : `${flex[0]}fr ${flex[1]}fr ${flex[2]}fr 430px`
 
-  useEffect(() => {
-    let stop = false
-    async function poll() {
-      try {
-        const response = await fetch(`/api/demo-stage/activity?since=${cursor.current}`, { cache: 'no-store' })
-        if (!response.ok) return
-        const data = (await response.json()) as { events?: DemoEvent[]; cursor?: number }
-        const events = data.events || []
-        if (!primed.current) {
-          primed.current = true
-          cursor.current = data.cursor || 0
-          return
-        }
-        if (!events.length) return
-        cursor.current = data.cursor || cursor.current
-        const folded = foldActivity(events)
-        setTicker((prev) => [...events.map((event) => event.text).reverse(), ...prev].slice(0, 12))
-        setGlow(folded.glow)
-        window.setTimeout(() => setGlow([]), 1800)
-        for (const slot of folded.refresh) {
-          const frame = document.querySelector<HTMLIFrameElement>(`iframe[data-slot="${slot}"]`)
-          try {
-            frame?.contentWindow?.location.reload()
-          } catch {
-            if (frame) frame.src = frame.src
-          }
-        }
-      } catch {
-        // The next poll tries again.
-      }
-    }
-    void poll()
-    const timer = window.setInterval(() => {
-      if (!stop) void poll()
-    }, DEMO_POLL_MS)
-    return () => {
-      stop = true
-      window.clearInterval(timer)
-    }
-  }, [])
-
-  function drag(index: number, event: React.PointerEvent) {
+  function drag(at: number, event: ReactPointerEvent) {
     event.preventDefault()
     const startX = event.clientX
     const start = flex.slice()
     const startSplit = gridSplit
-    const width = boardRef.current?.getBoundingClientRect().width || 1
+    const width = (event.currentTarget.parentElement?.parentElement as HTMLElement | null)?.getBoundingClientRect().width || 1
     function move(ev: PointerEvent) {
       const delta = (ev.clientX - startX) / width
       if (layout === 'grid') {
@@ -103,8 +83,8 @@ export function DemoStage() {
       }
       const next = start.slice()
       const scaled = delta * (start[0] + start[1] + start[2])
-      next[index] = Math.max(0.45, start[index] + scaled)
-      if (index + 1 < next.length) next[index + 1] = Math.max(0.45, start[index + 1] - scaled)
+      next[at] = Math.max(0.45, start[at] + scaled)
+      if (at + 1 < next.length) next[at + 1] = Math.max(0.45, start[at + 1] - scaled)
       setFlex(next)
     }
     function up() {
@@ -115,26 +95,43 @@ export function DemoStage() {
     window.addEventListener('pointerup', up)
   }
 
-  async function beat(id: DemoBeatId) {
-    setBusy(id)
-    setNote('')
-    try {
-      const result = await runBeat(id)
-      if (!result.ok) setNote(result.error)
-    } catch (err) {
-      setNote(err instanceof Error ? err.message : 'That step did not run.')
-    } finally {
-      setBusy('')
-    }
+  function start(id: string) {
+    const chosen = scenarioById(id)
+    if (!chosen) return
+    replace(stageFor(id))
+    setScenarioId(id)
+    setIndex(0)
+    const first = chosen.steps[0]
+    setViews({ ...START, [first.panel]: first.view })
   }
 
-  const columns = layout === 'grid' ? `${gridSplit}fr 1fr` : `${flex[0]}fr ${flex[1]}fr ${flex[2]}fr 430px`
+  function press(id: string) {
+    const next = runDemoCommand(state, id)
+    const changed = next !== state
+    if (changed) replace(next, next.ticker[0]?.slot)
+    const jump = DESTINATION[id]
+    const following = scenario && step?.target === id && (changed || isViewCommand(id)) ? scenario.steps[index + 1] : undefined
+    const advanced = Boolean(scenario && step?.target === id && (changed || isViewCommand(id)))
+    setViews((current) => {
+      const withDest = jump ? { ...current, ...jump } : current
+      if (!following) return withDest
+      return { ...withDest, [following.panel]: following.view }
+    })
+    if (advanced) setIndex(index + 1)
+  }
+
+  function reset() {
+    replace(seedDemo())
+    resetViews()
+    setScenarioId('')
+    setIndex(0)
+  }
 
   return (
     <div className={`demo-stage layout-${layout}${stepsOpen ? ' steps-open' : ''}`} data-testid="demo-stage">
       <header className="demo-bar">
         <div className="demo-title">
-          <p className="demo-kicker">HEARTS · sandbox</p>
+          <p className="demo-kicker">HEARTS · sample only</p>
           <h1>Demo stage</h1>
         </div>
         <div className="demo-presets" role="group" aria-label="Layout">
@@ -143,29 +140,21 @@ export function DemoStage() {
           <button type="button" className={layout === 'phone' ? 'on' : ''} data-testid="demo-layout-phone" onClick={() => setLayout('phone')}>3 + phone</button>
         </div>
         <div className="demo-actions">
-          <button type="button" data-testid="demo-steps-toggle" onClick={() => setStepsOpen((open) => !open)}>{stepsOpen ? 'Hide steps' : 'Guided steps'}</button>
-          <form action={resetDemo}>
-            <button type="submit" className="danger" data-testid="demo-reset">Reset demo</button>
-          </form>
+          <button type="button" data-testid="demo-steps-toggle" onClick={() => setStepsOpen((open) => !open)}>{stepsOpen ? 'Hide steps' : 'Demo steps'}</button>
+          <button type="button" className="danger" data-testid="demo-reset" onClick={reset}>Reset demo</button>
         </div>
       </header>
-
       <div className="demo-body">
-        <div
-          className="demo-board"
-          ref={boardRef}
-          data-testid="demo-board"
-          style={columns ? { gridTemplateColumns: columns } : undefined}
-        >
-          {PANELS.map((panel, index) => (
-            <div className="demo-cell" key={panel.slot} data-slot={panel.slot}>
-              {index > 0 && (layout !== 'grid' || index === 1) ? (
-                <button type="button" className="demo-resize" aria-label={`Resize ${panel.label}`} onPointerDown={(event) => drag(index - 1, event)} />
+        <div className="demo-board" data-testid="demo-board" style={{ gridTemplateColumns: columns }}>
+          {PANELS.map((panel, at) => (
+            <div className="demo-cell" key={panel.slot}>
+              {at > 0 && (layout !== 'grid' || at === 1) ? (
+                <button type="button" className="demo-resize" aria-label={`Resize ${panel.label}`} onPointerDown={(event) => drag(at - 1, event)} />
               ) : null}
               <section
                 className={`demo-panel${glow.includes(panel.slot) ? ' is-glow' : ''}${panel.phone ? ' is-phone' : ''}`}
                 data-testid={`demo-panel-${panel.slot}`}
-                style={{ ['--tint' as string]: panel.tint }}
+                data-slot={panel.slot}
               >
                 <header className="demo-strip">{panel.label}</header>
                 <div className="demo-view">
@@ -173,49 +162,44 @@ export function DemoStage() {
                     <div className="demo-phone" data-testid="demo-phone">
                       <div className="demo-bezel">
                         <div className="demo-notch" />
-                        <Frame slot={panel.slot} label={panel.label} path={panel.path} />
+                        <Board only="learner" hot={step?.target || ''} press={press} />
                       </div>
                     </div>
                   ) : (
-                    <Frame slot={panel.slot} label={panel.label} path={panel.path} />
+                    <Board only={panel.slot} hot={step?.target || ''} press={press} />
                   )}
                 </div>
               </section>
             </div>
           ))}
         </div>
-
         {stepsOpen ? (
           <aside className="demo-steps" data-testid="demo-steps">
-            <h2>Guided steps</h2>
-            <p>Each step changes only the HEARTS Demo sandbox. The other desks refresh on their own.</p>
+            <h2>Demo steps</h2>
+            <p>Pick a beat from the school demos. The next button lights up. Nothing is saved.</p>
             <ol>
-              {DEMO_BEATS.map((step) => (
-                <li key={step.id}>
-                  <button type="button" data-testid={`demo-beat-${step.id}`} disabled={Boolean(busy)} onClick={() => beat(step.id)}>
-                    {busy === step.id ? 'Running…' : step.title}
+              {DEMO_SCENARIOS.map((item) => (
+                <li key={item.id}>
+                  <button type="button" data-testid={`demo-scenario-${item.id}`} className={scenarioId === item.id ? 'on' : ''} onClick={() => start(item.id)}>
+                    {item.title}
                   </button>
-                  <span>{step.detail}</span>
+                  <span>{item.blurb}</span>
                 </li>
               ))}
             </ol>
-            {note ? <p className="demo-note" data-testid="demo-beat-error">{note}</p> : null}
+            {step ? <p className="demo-say" data-testid="demo-step-say">{step.say}</p> : scenario ? <p className="demo-say">That beat is done. Pick another, or press Reset demo.</p> : null}
           </aside>
         ) : null}
       </div>
-
       <footer className="demo-ticker" data-testid="demo-ticker">
         <span>Activity</span>
-        {ticker.length ? (
+        {state.ticker.length ? (
           <ul>
-            {ticker.map((line, index) => (
-              <li key={`${line}-${index}`}>{line}</li>
-            ))}
+            {state.ticker.map((row) => <li key={row.id}>{row.text}</li>)}
           </ul>
-        ) : (
-          <p>Waiting for a change in one of the desks.</p>
-        )}
+        ) : <p>Waiting for a change in the sample.</p>}
       </footer>
     </div>
   )
 }
+
