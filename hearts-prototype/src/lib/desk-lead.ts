@@ -101,9 +101,9 @@ const MASTER: Record<string, Lead> = {
     href: '/master/sheet/create',
   },
   transcripts: {
-    line: 'Timed transcript files the sheet points at. Learners never see this page.',
-    label: 'Store a file',
-    href: '#transcript-file',
+    line: 'The words of each talk. Learners hear these lines on the clips.',
+    label: 'Find a talk',
+    href: '#transcript-list',
   },
   simulator: {
     line: 'Answer the opening the way a new person would. Nothing on this page is saved.',

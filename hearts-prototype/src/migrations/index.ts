@@ -30,6 +30,7 @@ import * as migration_20261013_190000_teach_seen from './20261013_190000_teach_s
 import * as migration_20261014_120000_portal_ai_forks from './20261014_120000_portal_ai_forks';
 import * as migration_20261014_150000_short_talks from './20261014_150000_short_talks';
 import * as migration_20261014_210000_experiment_duration from './20261014_210000_experiment_duration';
+import * as migration_20261014_220000_transcript_edits from './20261014_220000_transcript_edits';
 
 export const migrations = [
   {
@@ -191,5 +192,10 @@ export const migrations = [
     up: migration_20261014_210000_experiment_duration.up,
     down: migration_20261014_210000_experiment_duration.down,
     name: '20261014_210000_experiment_duration',
+  },
+  {
+    up: migration_20261014_220000_transcript_edits.up,
+    down: migration_20261014_220000_transcript_edits.down,
+    name: '20261014_220000_transcript_edits',
   },
 ];

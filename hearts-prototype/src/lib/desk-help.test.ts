@@ -42,6 +42,7 @@ const PAGES = [
   'portalEdit',
   'safety',
   'announcements',
+  'transcripts',
 
 ]
 

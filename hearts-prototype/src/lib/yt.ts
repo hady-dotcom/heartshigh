@@ -19,10 +19,11 @@ export function learnerEmbedSrc(videoId: string, extra: Record<string, string | 
     enablejsapi: extra.enablejsapi ?? 1,
   }
   for (const [key, value] of Object.entries({ ...defaults, ...extra })) {
-    if (value === undefined || value === '') continue
+    if (key === 'skipOrigin' || value === undefined || value === '') continue
     params.set(key, String(value))
   }
-  if (typeof window !== 'undefined') {
+  // skipOrigin keeps the address identical on the server and in the browser, so a desk preview can hydrate.
+  if (typeof window !== 'undefined' && extra.skipOrigin !== 1) {
     if (!params.has('origin')) params.set('origin', window.location.origin)
     if (!params.has('widget_referrer')) params.set('widget_referrer', window.location.origin)
   }

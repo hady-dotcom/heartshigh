@@ -330,9 +330,11 @@ test.describe('round 1 bring-in', () => {
     await page.goto('/master/transcripts')
     const sample = path.join(ARTIFACTS, 'desk-transcript.txt')
     writeFileSync(sample, '[0:00:00] A line from the talk.\n[0:00:04] The next line.\n')
+    await page.getByTestId('transcript-talk').selectOption({ label: 'How we sit' })
     await page.getByTestId('sheet-transcript-file').setInputFiles(sample)
     await page.getByTestId('sheet-transcript-upload').click()
-    await expect(page.getByTestId('notice')).toContainText(/media/i)
+    await expect(page.getByTestId('notice')).toContainText(/How we sit/)
+    await expect(page.getByTestId('notice')).not.toContainText(/media \d/i)
     await shot(page, '11c-transcript-desk')
 
     await page.goto('/master/ai')

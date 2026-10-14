@@ -25,6 +25,7 @@ import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { isUnavailableFilm } from '@/lib/bring-in-plan'
 import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
+import { runTranscriptAction } from './transcript-desk'
 import { packSaveNotice } from '@/lib/publish-state'
 import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
 import { giveCourseToPackHolders } from './publish-holders'
@@ -1298,25 +1299,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, next, undefined, attached.notice)
   }
 
-  if (action === 'upload-transcript-file') {
-    if (user.role !== 'master') return redirectTo(req, '/', 'Only the master desk stores transcript files for the sheet.')
-    const file = form.get('file')
-    const next = text(form, 'next') || '/master/transcripts'
-    if (!(file instanceof File) || file.size === 0) return redirectTo(req, next, 'Choose a .vtt, .srt or .txt transcript.')
-    const name = file.name.toLowerCase()
-    if (!name.endsWith('.vtt') && !name.endsWith('.srt') && !name.endsWith('.txt') && !name.endsWith('.md')) {
-      return redirectTo(req, next, 'Use a .vtt, .srt or .txt file.')
-    }
-    if (file.size > 5 * 1024 * 1024) return redirectTo(req, next, 'A transcript should be under 5 MB.')
-    const body = await file.text()
-    if (!body.trim()) return redirectTo(req, next, 'That file was empty.')
-    const media = await payload.create({
-      collection: 'media',
-      overrideAccess: true,
-      data: { alt: file.name.slice(0, 120), purpose: 'portal-asset' } as never,
-      file: { data: Buffer.from(body), mimetype: 'text/plain', name: file.name.replace(/[^\w.\-]+/g, '-').slice(0, 80), size: Buffer.byteLength(body) },
-    })
-    return redirectTo(req, next, undefined, `Saved “${file.name}” as media ${media.id}. Put that number in the sheet’s transcript file column.`)
+  if (action === 'upload-transcript-file' || action === 'fetch-talk-captions' || action === 'save-transcript' || action === 'undo-transcript' || action === 'redo-transcript') {
+    if (!user || user.role !== 'master') return redirectTo(req, '/', 'Only the master desk edits transcripts.')
+    const result = await runTranscriptAction(payload, action, form)
+    const next = result.next || text(form, 'next') || '/master/transcripts'
+    if (result.error) return redirectTo(req, next, result.error)
+    return redirectTo(req, next, undefined, result.notice)
   }
 
   if (action === 'attach-transcript') {

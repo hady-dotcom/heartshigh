@@ -703,6 +703,18 @@ export interface Lesson {
   transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
   transcriptNote?: string | null;
   /**
+   * Earlier copies of this transcript, so a save on the Transcripts desk can be undone.
+   */
+  transcriptEdits?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Draft talks are hidden from learners. Existing rows stay published.
    */
   publishState?: ('draft' | 'published') | null;
@@ -3577,6 +3589,7 @@ export interface LessonsSelect<T extends boolean = true> {
   transcript?: T;
   transcriptSource?: T;
   transcriptNote?: T;
+  transcriptEdits?: T;
   publishState?: T;
   jibrilSection?: T;
   ghunyaHeading?: T;

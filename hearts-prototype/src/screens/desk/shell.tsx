@@ -126,7 +126,7 @@ export function masterNav(): NavGroup[] {
         { key: 'ai', label: 'AI steps', href: '/master/ai', icon: <CogIcon /> },
         { key: 'framing', label: 'Framing director', href: '/master/framing', icon: <FrameIcon /> },
         { key: 'sheet', label: 'Master sheet', href: '/master/sheet', icon: <SheetIcon /> },
-        { key: 'transcripts', label: 'Transcript files', href: '/master/transcripts', icon: <SheetIcon /> },
+        { key: 'transcripts', label: 'Transcripts', href: '/master/transcripts', icon: <SheetIcon /> },
         { key: 'create', label: 'Sheet creator', href: '/master/sheet/create', icon: <BookIcon /> },
       ],
     },
