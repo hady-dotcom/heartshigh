@@ -121,6 +121,10 @@ export function castReady(cast: DemoCast, step: CastStep) {
   return Boolean(cast.learner.trim())
 }
 
+export function castFilled(cast: DemoCast) {
+  return CAST_FLOW.every((step) => castReady(cast, step))
+}
+
 export function tidyCast(cast: DemoCast): DemoCast {
   const base = defaultCast()
   return {

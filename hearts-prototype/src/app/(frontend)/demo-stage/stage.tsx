@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import {
   DEMO_SCENARIOS,
@@ -12,6 +12,7 @@ import {
   seedDemo,
   stageFor,
   tidyCast,
+  type DemoCast,
   type DemoPanel,
 } from '@/lib/demo-stage'
 import { CastScreen } from './cast'
@@ -53,6 +54,91 @@ const DESTINATION: Record<string, Partial<DemoViews>> = {
 
 type Layout = 'row' | 'grid' | 'phone'
 
+function HeaderName({ value, testId, onSave }: { value: string; testId: string; onSave: (next: string) => void }) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState(value)
+  const cancel = useRef(false)
+  const openedAt = useRef(0)
+  if (!editing) {
+    return (
+      <button type="button" className="demo-name" data-testid={testId} title="Click to type a new name" onClick={() => { openedAt.current = Date.now(); setDraft(value); setEditing(true) }}>
+        {value}
+      </button>
+    )
+  }
+  return (
+    <input
+      className="demo-name-input"
+      data-testid={`${testId}-input`}
+      value={draft}
+      autoFocus
+      aria-label="Name"
+      style={{ width: `${Math.max(draft.length, value.length, 2) + 1}ch` }}
+      onFocus={(event) => event.currentTarget.select()}
+      onChange={(event) => setDraft(event.target.value)}
+      onBlur={(event) => {
+        if (Date.now() - openedAt.current < 400) {
+          event.currentTarget.focus()
+          return
+        }
+        if (cancel.current) {
+          cancel.current = false
+          return
+        }
+        const next = draft.trim()
+        if (next && next !== value) onSave(next)
+        setEditing(false)
+      }}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') {
+          openedAt.current = 0
+          event.currentTarget.blur()
+        }
+        if (event.key === 'Escape') {
+          cancel.current = true
+          openedAt.current = 0
+          setEditing(false)
+        }
+      }}
+    />
+  )
+}
+
+function Strip({ cast, slot, setCast }: { cast: DemoCast; slot: DemoPanel; setCast: (next: DemoCast) => void }) {
+  if (slot === 'master') {
+    return (
+      <header className="demo-strip">
+        <HeaderName value={cast.master} testId="demo-name-master" onSave={(master) => setCast({ ...cast, master })} />
+        <span>, running the whole system</span>
+      </header>
+    )
+  }
+  if (slot === 'portal') {
+    return (
+      <header className="demo-strip">
+        <HeaderName value={cast.portalAdmin} testId="demo-name-admin" onSave={(portalAdmin) => setCast({ ...cast, portalAdmin })} />
+        <span>, looking after </span>
+        <HeaderName value={cast.portalName} testId="demo-name-portal" onSave={(portalName) => setCast({ ...cast, portalName })} />
+      </header>
+    )
+  }
+  if (slot === 'teacher') {
+    return (
+      <header className="demo-strip">
+        <HeaderName value={cast.teacher} testId="demo-name-teacher" onSave={(teacher) => setCast({ ...cast, teacher })} />
+        <span>, guiding the learners</span>
+      </header>
+    )
+  }
+  return (
+    <header className="demo-strip">
+      <HeaderName value={cast.learner} testId="demo-name-learner" onSave={(learner) => setCast({ ...cast, learner })} />
+      <span>, a learner at </span>
+      <HeaderName value={cast.portalName} testId="demo-name-place" onSave={(portalName) => setCast({ ...cast, portalName })} />
+    </header>
+  )
+}
+
 export function DemoStage() {
   return (
     <DemoProvider>
@@ -63,8 +149,15 @@ export function DemoStage() {
 
 function Stage() {
   const { state, cast, setCast, glow, replace, setViews, resetViews } = useDemo()
-  const [casting, setCasting] = useState(true)
+  const [castOpen, setCastOpen] = useState(true)
+  const [introduced, setIntroduced] = useState(false)
   const [reveal, setReveal] = useState(false)
+  const [focusOn, setFocusOn] = useState(true)
+  useEffect(() => {
+    if (!reveal) return
+    const timer = window.setTimeout(() => setReveal(false), 1100)
+    return () => window.clearTimeout(timer)
+  }, [reveal])
   const [layout, setLayout] = useState<Layout>('row')
   const [flex, setFlex] = useState([1, 1, 1])
   const [gridSplit, setGridSplit] = useState(1)
@@ -133,16 +226,19 @@ function Stage() {
     setIndex(0)
   }
 
-  if (casting) {
-    return (
-      <div className="demo-stage" data-testid="demo-stage">
-        <CastScreen initial={cast} onShow={(next) => { setCast(tidyCast(next)); setCasting(false); setReveal(true) }} />
-      </div>
-    )
+  function showCast(next: DemoCast) {
+    setCast(tidyCast(next))
+    setCastOpen(false)
+    if (!introduced) {
+      setIntroduced(true)
+      setReveal(true)
+    }
   }
 
+  const focus = focusOn && step ? step.panel : null
+
   return (
-    <div className={`demo-stage layout-${layout}${stepsOpen ? ' steps-open' : ''}`} data-testid="demo-stage">
+    <div className={`demo-stage layout-${layout}${stepsOpen && introduced ? ' steps-open' : ''}`} data-testid="demo-stage">
       <header className="demo-bar">
         <div className="demo-title">
           <p className="demo-kicker">HEARTS · sample only</p>
@@ -154,15 +250,17 @@ function Stage() {
           <button type="button" className={layout === 'phone' ? 'on' : ''} data-testid="demo-layout-phone" onClick={() => setLayout('phone')}>3 + phone</button>
         </div>
         <div className="demo-actions">
-          <button type="button" data-testid="demo-edit-cast" onClick={() => { setReveal(false); setCasting(true) }}>Edit cast</button>
+          <button type="button" data-testid="demo-edit-cast" onClick={() => setCastOpen(true)}>Edit cast</button>
+          <button type="button" className={focusOn ? 'on' : ''} aria-pressed={focusOn} data-testid="demo-focus" onClick={() => setFocusOn((on) => !on)}>{focusOn ? 'Focus on' : 'Focus off'}</button>
           <button type="button" data-testid="demo-steps-toggle" onClick={() => setStepsOpen((open) => !open)}>{stepsOpen ? 'Hide steps' : 'Demo steps'}</button>
           <button type="button" className="danger" data-testid="demo-reset" onClick={reset}>Reset demo</button>
         </div>
       </header>
+      {introduced ? <>
       <div className="demo-body">
-        <div className={`demo-board${reveal ? ' is-reveal' : ''}`} data-testid="demo-board" style={{ gridTemplateColumns: columns }}>
+        <div className={`demo-board${reveal ? ' is-reveal' : ''}${focus ? ' is-focusing' : ''}`} data-testid="demo-board" data-focus={focus || 'off'} style={{ gridTemplateColumns: columns }}>
           {PANELS.map((panel, at) => (
-            <div className="demo-cell" key={panel.slot}>
+            <div className={`demo-cell${focus && focus !== panel.slot ? ' is-dim' : ''}${focus === panel.slot ? ' is-live' : ''}`} key={panel.slot}>
               {at > 0 && (layout !== 'grid' || at === 1) ? (
                 <button type="button" className="demo-resize" aria-label={`Resize ${castHeader(cast, panel.slot)}`} onPointerDown={(event) => drag(at - 1, event)} />
               ) : null}
@@ -171,7 +269,7 @@ function Stage() {
                 data-testid={`demo-panel-${panel.slot}`}
                 data-slot={panel.slot}
               >
-                <header className="demo-strip">{castHeader(cast, panel.slot)}</header>
+                <Strip cast={cast} slot={panel.slot} setCast={setCast} />
                 <div className="demo-view">
                   {panel.phone ? (
                     <div className="demo-phone" data-testid="demo-phone">
@@ -214,6 +312,15 @@ function Stage() {
           </ul>
         ) : <p>Waiting for a change in the sample.</p>}
       </footer>
+      </> : null}
+      {castOpen ? (
+        <CastScreen
+          initial={cast}
+          editing={introduced}
+          onShow={showCast}
+          onCancel={introduced ? () => setCastOpen(false) : undefined}
+        />
+      ) : null}
     </div>
   )
 }

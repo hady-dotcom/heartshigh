@@ -13,6 +13,7 @@ import {
   DEMO_THUMB,
   DEMO_VIDEO,
   CAST_FLOW,
+  castFilled,
   castHeader,
   castPrompt,
   castReady,
@@ -136,6 +137,8 @@ describe('cast your demo', () => {
     assert.equal(welcomeLine({ ...cast, kind: 'school' }), 'Hello Abdallah')
     assert.equal(welcomeLine({ ...cast, kind: 'company' }), 'Hello Abdallah')
     assert.equal(castReady({ ...cast, learner: '   ' }, 'learner'), false)
+    assert.equal(castFilled(cast), true)
+    assert.equal(castFilled({ ...cast, portalName: ' ' }), false)
     const made = rollCast(cast, 'learner', 0)
     assert.equal(made.learner, 'Yusuf')
     assert.equal(made.teacher, cast.teacher)
