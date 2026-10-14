@@ -225,7 +225,10 @@ test.describe('round 4 screens', () => {
       const card = cards.nth(i)
       const lane = (await card.getAttribute('data-lane'))!
       const first = (await card.getAttribute('data-first-cut'))!
-      expect(await card.getAttribute('href')).toContain(`feed?lane=${lane}`)
+      expect(await card.getByTestId('lane-open').getAttribute('href')).toContain(`/lanes/${lane}`)
+      await page.goto(`/p/${PORTAL}/lanes/${lane}`)
+      await expect(page.getByTestId('lane')).toBeVisible()
+      await expect(page.getByTestId('lane-item').first()).toHaveAttribute('data-cut', first)
       await page.goto(`/p/${PORTAL}/feed?lane=${lane}`)
       const journey = page.getByTestId('journey')
       await expect(journey).toHaveAttribute('data-phase', 'feed', { timeout: 20_000 })

@@ -21,6 +21,7 @@ import { unreadCount } from '../common'
 import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
 import { featureOn, featuresOf } from '@/lib/features'
+import { feedBackHref } from '@/lib/lane-progress'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -89,6 +90,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
             mains={mains}
             unread={unread}
             lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
+            backHref={feedBackHref(base, { from: query.from, lane: query.lane })}
             clip={Number(query.clip) || null}
             play={query.play === 'appetiser' ? 'appetiser' : null}
             afterPlacing={query.after === 'placing'}

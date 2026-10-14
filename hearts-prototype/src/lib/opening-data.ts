@@ -33,6 +33,10 @@ const byDoor = (pairs: [number, number][], excludeDoors: number[] = []) => {
   return { doors, excludeDoors, clauses, excludeClauses }
 }
 
+/**
+ * Learner lane ids. `/lanes/[id]` and Garden branches use `key`.
+ * How far a learner is along one lane: `getLaneProgress(laneId)` (re-exported below from `./lane-progress`).
+ */
 export const LANES: (LaneDef & { seriesNote: string })[] = [
   { key: 'trust', title: 'Trust', scale: 'worry', fit: 'natural', order: 1, ...byDoor([[15, 1], [10, 2], [5, 3]], [14, 16, 17, 18]), optInOnly: false, seriesNote: "Vol 5 tawakkul 114–125; Vol 2 Bismillah 47–104; The Names; DUA: The Answered Prayer. Do not route on Vol 4 'fear prayer' (239–301)." },
   { key: 'company', title: 'Good company', scale: 'belonging', fit: 'natural', order: 2, ...byDoor([[2, 1], [19, 3]]), optInOnly: false, seriesNote: 'Vol 1 sitting 53–111; Vol 5 fellowship 43–86; Vol 5 murid/shaykh 22–42; In Good Company; Manners of the Salaf' },
@@ -223,3 +227,6 @@ export function authorTextProblems(fields: [label: string, text: string | null |
 export function markupProblems(fields: [label: string, text: string | null | undefined][]) {
   return fields.filter(([, value]) => hasMarkup(value || '')).map(([label]) => `${label} is plain text: no HTML, script or code.`)
 }
+
+export { feedBackHref, getLaneProgress, isLaneId, lanePagePath, lanePlayPath, LANE_PROGRESS_EXAMPLE } from './lane-progress'
+export type { LaneProgress, LaneProgressClip, LaneWatch } from './lane-progress'

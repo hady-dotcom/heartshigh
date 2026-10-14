@@ -65,7 +65,7 @@ function slots(count: number, art: GardenArtId) {
   })
 }
 
-function readProgress(value: LaneProgress | { done?: number; total?: number; minutes?: number; minutesWatched?: number }): LaneProgress {
+function readProgress(value: { done?: number; total?: number; minutes?: number; minutesWatched?: number }) {
   const minutesWatched = 'minutesWatched' in value ? value.minutesWatched : undefined
   return {
     done: Number(value.done) || 0,

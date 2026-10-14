@@ -16,8 +16,11 @@ import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
+import { LaneProgressSlot } from '@/components/app/lane-progress'
 import { laneCardSpeaker, lanesWithClips } from '@/lib/lanes'
+import { getLaneProgress, lanePagePath, lanePlayPath } from '@/lib/lane-progress'
 import { LANE_BLURBS } from '@/lib/opening-data'
+import { watchFor } from './lane'
 import { plural } from '@/lib/schedule'
 import { continueOrder, dateKeyInZone, tonightLabel, tonightSlot } from '@/lib/study-plan'
 import { now as clockNow } from '@/lib/clock'
@@ -193,7 +196,13 @@ function snippet(text: string, max: number) {
 }
 
 export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
-  const [{ opening }, courses, unread] = await Promise.all([learnerClips(payload, portal, user), courseCards(payload, user), unreadCount(payload, user)])
+  const [{ opening }, courses, unread, completions, sessions] = await Promise.all([
+    learnerClips(payload, portal, user),
+    courseCards(payload, user),
+    unreadCount(payload, user),
+    rows(payload, 'completions', { user: { equals: user.id } }, { limit: 200 }),
+    rows(payload, 'watch-sessions', { user: { equals: user.id } }, { limit: 400 }),
+  ])
   const lanes = lanesWithClips(opening.route, opening.clips, opening.laneTitles)
   const today = dayNumber(user)
   return (
@@ -212,25 +221,36 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           const first = lane.clips[0]
           const count = lane.clips.length
           const poster = shownPoster(first?.poster) || shownPoster(first?.portrait)
+          const progress = getLaneProgress(lane.key, lane.clips.map((clip) => ({
+            cutId: clip.cutId,
+            lessonId: clip.lessonId,
+            start: Number(clip.hors?.start || 0),
+            end: Number(clip.hors?.end || 0),
+            durationSeconds: Number(clip.talkSeconds || clip.durationSeconds || 0),
+          })), watchFor(completions, sessions, lane.clips))
+          const who = laneCardSpeaker(lane.clips)
+          const startHref = progress.playCutId ? lanePlayPath(base, lane.key, progress.playCutId) : ''
           return (
-            <Link
+            <article
               key={lane.key}
               className="lane-card"
-              href={`${base}/feed?lane=${lane.key}`}
               data-testid="lane-card"
               data-lane={lane.key}
               data-first-cut={first?.cutId}
               style={poster ? { backgroundImage: `url(${poster})` } : undefined}
             >
               <div>
-                <small>Lane</small>
-                <h3>{learnerWords(lane.title)}</h3>
-                {lane.tree ? <p className="lane-grows" data-testid="lane-grows">Grows your {lane.tree} tree</p> : null}
-                {lane.doorNames.length ? <p className="lane-doors" data-testid="lane-doors">{lane.doorNames.join(' · ')}</p> : null}
-                <p>{LANE_BLURBS[lane.key] || snippet(first?.hookTidy || first?.hook || first?.scenic?.hook || first?.land || first?.lessonTitle || first?.courseTitle || '', 64)}</p>
-                <p>{(() => { const who = laneCardSpeaker(lane.clips); return `${who}${who ? ' · ' : ''}${count} ${count === 1 ? 'clip' : 'clips'}` })()}</p>
+                <Link className="lane-card-open" href={lanePagePath(base, lane.key)} data-testid="lane-open">
+                  <small>Lane</small>
+                  <h3>{learnerWords(lane.title)}</h3>
+                  {lane.tree ? <p className="lane-grows" data-testid="lane-grows">Grows your {lane.tree} tree</p> : null}
+                  {lane.doorNames.length ? <p className="lane-doors" data-testid="lane-doors">{lane.doorNames.join(' · ')}</p> : null}
+                  <p>{LANE_BLURBS[lane.key] || snippet(first?.hookTidy || first?.hook || first?.scenic?.hook || first?.land || first?.lessonTitle || first?.courseTitle || '', 64)}</p>
+                  <p>{`${who}${who ? ' · ' : ''}${count} ${count === 1 ? 'clip' : 'clips'}`}</p>
+                </Link>
+                <LaneProgressSlot progress={progress} startHref={progress.started ? undefined : startHref || undefined} />
               </div>
-            </Link>
+            </article>
           )
         })}
         {!lanes.length ? <p className="card" data-testid="lanes-empty"><span>No clips have been approved yet. The courses below are ready to watch.</span></p> : null}

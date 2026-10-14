@@ -63,9 +63,17 @@ const PAGES: Record<string, HelpCopy> = {
   lanes: {
     title: 'How to use Lanes',
     body: [
-      'Each lane is a friendly way in, like Trust or Patience, and it says which tree it grows and which doors it walks.',
-      'Tap a lane to watch its clips.',
+      'Each lane is one theme, like Trust or Patience, and it says which tree it grows and which doors it walks.',
+      'Tap a lane to see its talks in order, then Continue plays the next one you have not watched, and Back returns you to that lane.',
       'Courses already in those clips are open now, and the others open one a day.',
+    ],
+  },
+  lane: {
+    title: 'How to use this lane',
+    body: [
+      'These talks belong together, in the order to watch them.',
+      'Continue plays the next one you have not watched. Back on the film returns you here.',
+      'The bar shows how many you have finished, and how many minutes you have watched.',
     ],
   },
   garden: {

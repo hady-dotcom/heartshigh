@@ -1,4 +1,4 @@
-// A lane's own clips, for the Lanes screen and for /feed?lane=<key>. Plain module: the server and the device share it.
+// A lane's own clips, for the Lanes screen, the lane page, and /feed?lane=<key>. Plain module: the server and the device share it.
 import type { CutInfo, LaneDef } from './heart'
 import { laneDoors } from './heart'
 import type { FeedItem } from '../server/learner'
@@ -110,3 +110,5 @@ export function laneEndHref(input: { base: string; signedIn: boolean; current?: 
   if (!next || next === input.current) return `${input.base}/feed`
   return `${input.base}/feed?lane=${encodeURIComponent(next)}`
 }
+
+export { feedBackHref, getLaneProgress, isLaneId, lanePagePath, lanePlayPath } from './lane-progress'

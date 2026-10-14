@@ -60,6 +60,8 @@ export type JourneyProps = {
   unread: number
   /** /feed?lane=<key>: that lane's clips first. */
   lane?: string | null
+  /** When a lane page opened this clip, Back returns there instead of Home. */
+  backHref?: string | null
   /** /feed?clip=<cut id>&play=appetiser: open on that clip, optionally straight into its appetiser. */
   clip?: number | null
   play?: 'appetiser' | null
@@ -2437,9 +2439,9 @@ export function Journey(props: JourneyProps) {
         <div className="clip-row">
           <div className="clip-row-top">
             {mode === 'appetiser' ? (
-              <button type="button" className="chip white" onClick={() => { window.location.assign(`${base}/feed`) }} data-testid="appetiser-back">‹ Back</button>
+              <button type="button" className="chip white" data-back={props.backHref || `${base}/feed`} onClick={() => { window.location.assign(props.backHref || `${base}/feed`) }} data-testid="appetiser-back">‹ Back</button>
             ) : (
-              <button type="button" className="chip white" onClick={() => { window.location.assign(base) }} data-testid="feed-back">‹ Back</button>
+              <button type="button" className="chip white" data-back={props.backHref || base} onClick={() => { window.location.assign(props.backHref || base) }} data-testid="feed-back">‹ Back</button>
             )}
           </div>
         </div>

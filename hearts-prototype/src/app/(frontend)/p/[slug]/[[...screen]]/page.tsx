@@ -14,6 +14,7 @@ import { rows, type Ctx, type Query } from '@/screens/common'
 import { LearnerPathScreen, RecalibrateScreen } from '@/screens/app/compass'
 import { GatherDetailScreen, GatherDoorScreen, GatherListScreen, GatherProposeScreen, GatherReflectScreen } from '@/screens/app/gather'
 import { HomeScreen, LanesScreen } from '@/screens/app/home'
+import { LaneScreen } from '@/screens/app/lane'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook } from '@/screens/app/garden'
 import { GardenHarvest } from '@/screens/app/harvest'
@@ -206,6 +207,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case undefined:
       return HomeScreen(ctx)
     case 'lanes':
+      if (a) return LaneScreen(ctx, a)
       return LanesScreen(ctx)
     case 'live': {
       const closed = gated(ctx, 'live')
