@@ -264,7 +264,7 @@ async function hrefOf(page: Page, selector: string) {
   const loc = page.locator(selector).first()
   await loc.waitFor({ state: 'attached', timeout: 8000 }).catch(() => {})
   if (!(await loc.count().catch(() => 0))) return null
-  const href = await loc.getAttribute('href')
+  const href = (await loc.getAttribute('href')) || (await loc.getAttribute('data-href'))
   return href || null
 }
 
@@ -323,6 +323,18 @@ async function discoverPath(browser: Browser, spec: SeeHowPageSpec, storage?: st
     if (kind === 'transcript') {
       await page.goto('/master/transcripts')
       return await hrefOf(page, '[data-testid=transcript-row] a')
+    }
+    if (kind === 'diary') {
+      await page.goto('/master/diaries')
+      return await hrefOf(page, '[data-testid=diary-open]')
+    }
+    if (kind === 'plan') {
+      await page.goto('/master/plans')
+      return await hrefOf(page, '[data-testid=schedule-plan] a, [data-testid=schedule-plan]')
+    }
+    if (kind === 'portal-learner') {
+      await page.goto('/p/east-london/admin/teach')
+      return await hrefOf(page, '[data-testid=learner-open]')
     }
     return spec.path
   } catch (error) {

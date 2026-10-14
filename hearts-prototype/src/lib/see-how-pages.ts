@@ -29,6 +29,9 @@ export type SeeHowDiscover =
   | 'framing'
   | 'lane'
   | 'transcript'
+  | 'diary'
+  | 'plan'
+  | 'portal-learner'
 
 export type SeeHowPageSpec = {
   id: string
@@ -662,6 +665,17 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     ],
   }),
   clip({
+    id: 'portal-learner',
+    title: 'One learner',
+    keys: ['portal-learner'],
+    path: '/p/east-london/admin/teach/1',
+    role: 'portal',
+    viewport: desk,
+    ready: '[data-testid=portal-learner]',
+    discover: 'portal-learner',
+    steps: [hold('Their portal, when they joined, when they were last seen, and what to do next.')],
+  }),
+  clip({
     id: 'feedback-desk',
     title: 'Feedback',
     keys: ['feedback-desk', 'feedback-denied', 'export', 'filters', 'anonymise', 'ai-summary', 'weak-questions'],
@@ -1213,6 +1227,43 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
     viewport: desk,
     ready: '[data-testid=master-plans]',
     steps: [hold('Plans learners and teachers have shared out across the days. It is a guide. People can still watch at their own pace.')],
+  }),
+  clip({
+    id: 'master-plan',
+    title: 'One study plan',
+    keys: ['master-plan', 'portal-plan'],
+    path: '/master/plans/1',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=master-plan]',
+    discover: 'plan',
+    soft: true,
+    steps: [hold('Change the name and the days, or delete the plan. The talks stay in the library.')],
+  }),
+  clip({
+    id: 'master-diaries',
+    title: 'Diaries',
+    keys: ['master-diaries', 'portal-diaries'],
+    path: '/master/diaries',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=master-diaries]',
+    steps: [
+      hold('Each row is a workbook entry. You see who wrote it, which portal, and when.'),
+      click('Open one to read it when the learner shared it.', '[data-testid=diary-open]', true),
+    ],
+  }),
+  clip({
+    id: 'master-diary',
+    title: 'One diary entry',
+    keys: ['master-diary', 'portal-diary'],
+    path: '/master/diaries/1',
+    role: 'master',
+    viewport: desk,
+    ready: '[data-testid=master-diary]',
+    discover: 'diary',
+    soft: true,
+    steps: [hold('The words show only when the learner shared them. You can still delete an entry.')],
   }),
   clip({
     id: 'master-nights',

@@ -1885,6 +1885,53 @@
       ],
       "overrideVideo": "",
       "seconds": 5.5
+    },
+    "portal-learner": {
+      "title": "One learner",
+      "video": "/see-how/portal-learner.webm",
+      "poster": "/see-how/portal-learner.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.2,
+          "text": "Their portal, when they joined, when they were last seen, and what to do next."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.2
+    },
+    "master-diaries": {
+      "title": "Diaries",
+      "video": "/see-how/master-diaries.webm",
+      "poster": "/see-how/master-diaries.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 3,
+          "text": "Each row is a workbook entry. You see who wrote it, which portal, and when."
+        },
+        {
+          "start": 3,
+          "end": 6.4,
+          "text": "Open one to read it when the learner shared it."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 6.4
+    },
+    "master-diary": {
+      "title": "One diary entry",
+      "video": "/see-how/master-diary.webm",
+      "poster": "/see-how/master-diary.jpg",
+      "captions": [
+        {
+          "start": 0,
+          "end": 2.6,
+          "text": "The words show only when the learner shared them. You can still delete an entry."
+        }
+      ],
+      "overrideVideo": "",
+      "seconds": 2.6
     }
   },
   "keys": {
@@ -2090,7 +2137,12 @@
     "lane": "lane",
     "transcripts": "transcripts",
     "transcript-editor": "transcript-editor",
-    "transcript-editor-page": "transcript-editor"
+    "transcript-editor-page": "transcript-editor",
+    "portal-learner": "portal-learner",
+    "master-diaries": "master-diaries",
+    "portal-diaries": "master-diaries",
+    "master-diary": "master-diary",
+    "portal-diary": "master-diary"
   },
   "skipped": {
     "default": "Fallback sentences for a screen with no page of its own. There is no task to film.",
@@ -2099,6 +2151,8 @@
     "mission-page": "The seeded demo has no A mission screen to open.",
     "mission-missing": "The seeded demo has no A mission screen to open.",
     "live-screen": "The seeded demo has no A live talk screen to open.",
-    "gather-door": "The seeded demo has no At the door screen to open."
+    "gather-door": "The seeded demo has no At the door screen to open.",
+    "master-plan": "The seeded demo has no One study plan screen to open.",
+    "portal-plan": "The seeded demo has no One study plan screen to open."
   }
 }
