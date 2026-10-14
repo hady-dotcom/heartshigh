@@ -1,7 +1,8 @@
 import { youtubeIdFromUrl } from './extractor'
 import type { FieldPlacement } from './bring-in-place'
+import { broughtInCourseName } from './human-date'
 import { MIN_TALK_SECONDS, tooShortMessage } from './talk-length'
-import { publishedClockSeconds, type YoutubeIngest, bringInNote, cleanedTimedTranscript, captionLang, isUnavailableFilm } from './youtube'
+import { CAPTION_QUEUE_DETAIL, bringInNote, captionLang, cleanedTimedTranscript, isUnavailableFilm, publishedClockSeconds, type YoutubeIngest } from './youtube'
 
 export { isUnavailableFilm, MIN_TALK_SECONDS as MIN_BRING_IN_SECONDS }
 
@@ -158,12 +159,15 @@ export function suggestedCourseName(input: {
   playlistTitle?: string | null
   loose: boolean
   videos: { title?: string | null; channel?: string | null }[]
+  when?: Date
 }) {
+  const when = input.when || new Date()
+  if (input.loose && input.videos.length === 1) return broughtInCourseName(when).slice(0, 180)
   const playlist = input.loose ? '' : cleanPlaylistTitle(input.playlistTitle)
   const firstTitle = input.videos.map((video) => usableFilmTitle(video.title)).find(Boolean) || ''
   const channel = input.videos.map((video) => String(video.channel || '').trim()).find(Boolean) || ''
   const chosen = input.loose ? firstTitle || channel : playlist || channel || firstTitle
-  return chosen.slice(0, 180)
+  return (chosen || broughtInCourseName(when)).slice(0, 180)
 }
 
 /** A typed speaker wins. Otherwise the channel name, so the box is not left blank. */
@@ -214,9 +218,9 @@ export function decideBringInWrite(result: YoutubeIngest, wantTranscript: boolea
   }
   if (filmOnly) {
     return {
-      note: bringInNote('processed', 'Film saved. The transcript box was clear, so captions were not fetched.', code),
-      source: 'none' as const,
-      bucket: 'saved' as const,
+      note: bringInNote('waiting', CAPTION_QUEUE_DETAIL, code),
+      source: 'pending' as const,
+      bucket: 'waiting' as const,
       transcript: undefined,
       raw: undefined,
     }

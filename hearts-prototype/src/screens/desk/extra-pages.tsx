@@ -27,7 +27,7 @@ export async function MasterCodes(ctx: MasterCtx) {
   ])
   const origin = (ctx.origin || '').replace(/\/$/, '')
   return (
-    <Frame ctx={ctx} active="codes" title="Codes" intro="Join codes for every portal. Send the link rather than the code, so nobody has to type it. Seeded codes change when the demo is reseeded." testId="master-codes-page" showOnPhone>
+    <Frame ctx={ctx} active="codes" title="Codes" intro="Join codes for every portal. Send the link rather than the code, so nobody has to type it. Demo codes change when the demo is reset." testId="master-codes-page" showOnPhone>
       <section className="panel">
         <div className="table-wrap">
           <table className="data master-codes-table" data-testid="master-codes">

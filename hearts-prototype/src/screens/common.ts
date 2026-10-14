@@ -49,6 +49,8 @@ export type Query = {
   q?: string
   /** Learner list: a portal id, or empty for every portal. */
   portal?: string
+  /** A code just made from a quick link, so the desk can show the address, WhatsApp and QR. */
+  fresh?: string
   /** `?debug=yt` — kept when moving between course links. */
   debug?: string
   /** Library list page. */

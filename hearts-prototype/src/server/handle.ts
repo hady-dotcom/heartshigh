@@ -23,11 +23,13 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
+import { deskScreenName, escapeHtml } from '@/lib/action-error'
+import { humanDayMonth } from '@/lib/human-date'
 import { isUnavailableFilm } from '@/lib/bring-in-plan'
-import { bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
+import { CAPTION_QUEUE_DETAIL, bringInFlash, bringInNote, bringInStatus, captionLang, cleanedTimedTranscript, fetchYoutubeMeta, ingestYoutubeUrl, isAwaitingTranscript, noteAfterTranscriptUpload, speakerForBringIn, splitBringInLines } from '@/lib/youtube'
 import { runTranscriptAction } from './transcript-desk'
 import { packSaveNotice } from '@/lib/publish-state'
-import { commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker } from './bring-in'
+import { bringInAndPublish, commitBringIn, createHelperToken, deleteChannelSpeaker, previewBringIn, publishTalks, revokeHelperToken, saveChannelSpeaker, settleAutoPublish } from './bring-in'
 import { giveCourseToPackHolders } from './publish-holders'
 import { addCourseToCode, giveCourseToJoinedLearners } from './course-offer'
 import { withWorkLock } from '@/lib/work-lock'
@@ -93,6 +95,36 @@ function redirectTo(req: Request, path: string, error?: string, notice?: string)
   if (error) url.searchParams.set('error', error)
   if (notice) url.searchParams.set('notice', notice)
   return NextResponse.redirect(url, 303)
+}
+
+function refererPath(req: Request) {
+  const referer = req.headers.get('referer') || ''
+  try {
+    const url = new URL(referer)
+    const path = `${url.pathname}${url.search}`
+    if (path.startsWith('/') && !path.startsWith('//')) return path
+  } catch {
+    // No usable referer.
+  }
+  return '/'
+}
+
+/** A generic failure keeps what was typed and offers one way back to the screen. */
+function actionProblemPage(message: string, next: string, form?: FormData) {
+  const safeNext = next.startsWith('/') && !next.startsWith('//') && !next.startsWith('/\\') ? next : '/'
+  const screen = deskScreenName(safeNext)
+  const fields: string[] = []
+  if (form) {
+    for (const [key, value] of form.entries()) {
+      if (typeof value !== 'string') continue
+      fields.push(`<input type="hidden" name="${escapeHtml(key)}" value="${escapeHtml(value)}" />`)
+    }
+  }
+  const retry = fields.length
+    ? `<form method="post" action="/api/hearts" data-testid="kept-form">${fields.join('')}<p><button type="submit">Try again with these details</button></p></form>`
+    : ''
+  const html = `<!doctype html><html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(message)}</title></head><body style="font-family:system-ui,sans-serif;max-width:36rem;margin:3rem auto;padding:0 1rem;line-height:1.5"><div role="alert" data-testid="error">${escapeHtml(message)}</div><p><a data-testid="error-back" href="${escapeHtml(safeNext)}">Go back to ${escapeHtml(screen)}</a></p>${retry}</body></html>`
+  return new NextResponse(html, { status: 400, headers: { 'content-type': 'text/html; charset=utf-8' } })
 }
 
 /** "2:05", "1:02:05" or "125" as whole seconds; null when it is not a time. */
@@ -498,7 +530,7 @@ export async function handlePost(req: Request) {
   try {
     form = await req.formData()
   } catch {
-    return redirectTo(req, '/', 'That form could not be read. Please try again.')
+    return actionProblemPage('That form could not be read. Please try again.', refererPath(req))
   }
   const action = text(form, 'action')
   const session = await getSession({ touch: action !== 'clock' })
@@ -527,7 +559,7 @@ export async function handlePost(req: Request) {
     return response
   } catch (error) {
     logError('action failed', error, { action: text(form, 'action') })
-    return redirectTo(req, text(form, 'next') || '/', 'Something went wrong with that. Nothing was saved. Please try again.')
+    return actionProblemPage('Something went wrong with that. Nothing was saved. Please try again.', text(form, 'next') || refererPath(req), form)
   }
 }
 
@@ -834,7 +866,73 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         disabled: false,
       },
     })
-    return redirectTo(req, text(form, 'next') || '/master', undefined, `Access code ${code} is ready.`)
+    const ready = `Access code ${code} is ready.`
+    const back = text(form, 'next') || '/master'
+    if (text(form, 'quick') === 'yes') {
+      const url = new URL(back, 'http://localhost')
+      url.searchParams.set('fresh', code)
+      return redirectTo(req, `${url.pathname}${url.search}`, undefined, ready)
+    }
+    return redirectTo(req, back, undefined, ready)
+  }
+
+  if (action === 'quick-join-link') {
+    if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot make an access code.')
+    const role = text(form, 'role')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (!['admin', 'teacher', 'learner'].includes(role)) return redirectTo(req, text(form, 'next') || '/', 'Choose a teacher, a learner or an admin.')
+    const packs = await payload.find({
+      collection: 'packs',
+      overrideAccess: true,
+      depth: 0,
+      limit: 80,
+      sort: 'title',
+      where: { or: [{ and: [{ owner: { equals: 'portal' } }, { portal: { equals: acting.portal.id } }] }, { owner: { equals: 'master' } }] },
+    })
+    const pack = packs.docs.find((row) => (row as { owner?: string }).owner === 'portal') || packs.docs[0]
+    if (!pack) return redirectTo(req, text(form, 'next') || '/', 'Make a course pack first, then the link can be made in one tap.')
+    if (!(await packUsable(payload, user, acting.portal.id, pack.id))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')
+    await ensurePackAdopted(payload, acting.portal.id, pack.id)
+    let teacherId = 0
+    if (role === 'learner') {
+      const teachers = await payload.find({
+        collection: 'access-codes',
+        overrideAccess: true,
+        depth: 0,
+        limit: 1,
+        where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+      })
+      const existing = teachers.docs[0] as { id: number } | undefined
+      if (existing) teacherId = existing.id
+      else {
+        const made = await payload.create({
+          collection: 'access-codes',
+          overrideAccess: true,
+          data: { code: randomCode(acting.portal.slug || ''), role: 'teacher', packs: [pack.id], portal: acting.portal.id, uses: 0, disabled: false, label: 'Teacher' },
+        })
+        teacherId = made.id
+      }
+    }
+    const made = randomCode(acting.portal.slug || '')
+    await payload.create({
+      collection: 'access-codes',
+      overrideAccess: true,
+      data: {
+        code: made,
+        role: role as 'learner',
+        packs: [pack.id],
+        portal: acting.portal.id,
+        linkedTeacherCode: teacherId || undefined,
+        label: role === 'admin' ? 'Admin' : role === 'teacher' ? 'Teacher' : 'Learner',
+        uses: 0,
+        disabled: false,
+      },
+    })
+    const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || ''
+    const proto = req.headers.get('x-forwarded-proto') || 'http'
+    const link = host ? `${proto}://${host}/join?code=${encodeURIComponent(made)}` : `/join?code=${made}`
+    return redirectTo(req, text(form, 'next') || '/', undefined, `New ${role} link: ${link}. Copy, WhatsApp and the QR are on the row below.`)
   }
 
   if (action === 'code-switch') {
@@ -915,8 +1013,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
   if (action === 'add-lesson') {
     if (user.role !== 'master' && user.role !== 'portal-admin') return redirectTo(req, '/', 'You cannot add a lesson.')
     const courseId = Number(text(form, 'course'))
-    const title = text(form, 'title')
-    if (!courseId || !title) return redirectTo(req, text(form, 'next') || '/', 'A lesson needs a name.')
+    const youtube = text(form, 'youtube')
+    let title = text(form, 'title')
+    let youtubeId = ''
+    let sourceTitle = ''
+    if (youtube) {
+      youtubeId = youtubeIdFromUrl(youtube) || ''
+      if (!youtubeId) return redirectTo(req, text(form, 'next') || '/', 'That does not look like a YouTube link. Paste a watch, share or youtu.be link, or type a title.')
+      if (!title) {
+        const meta = await fetchYoutubeMeta(youtubeId)
+        title = String(meta?.title || '').trim()
+        sourceTitle = title
+        if (!title) return redirectTo(req, text(form, 'next') || '/', 'YouTube did not give a title for that film. Type a title and try again.')
+      }
+    }
+    if (!courseId || !title) return redirectTo(req, text(form, 'next') || '/', 'Type a title, or paste a YouTube link and leave the title blank.')
     const courseDoc = await findDoc(payload, 'courses', courseId)
     const denied = editError(user, courseDoc)
     if (denied) return redirectTo(req, text(form, 'next') || '/', denied)
@@ -937,6 +1048,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         order: count.totalDocs + 1,
         speaker: (course as { speaker?: string }).speaker,
         transcriptSource: 'none',
+        ...(youtubeId ? { youtubeId, videoProvider: 'youtube' as const, sourceUrl: youtube.slice(0, 500), ...(sourceTitle ? { sourceTitle } : {}) } : {}),
       },
     })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Lesson added.')
@@ -1221,7 +1333,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             }
           }
         } else if (filmOnly) {
-          note = bringInNote('processed', 'Film saved. The transcript box was clear, so captions were not fetched.', lang)
+          source = 'pending'
+          note = bringInNote('waiting', CAPTION_QUEUE_DETAIL, lang)
         } else if (waitingForTranscript) {
           source = 'pending'
           note = bringInNote('waiting', result.error, lang)
@@ -1239,7 +1352,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
             ...(meta && !text(form, 'keepTitle') ? { title: meta.title } : {}),
             ...(speaker ? { speaker } : {}),
             ...(duration > 0 ? { durationSeconds: duration } : {}),
-            ...(transcript ? { transcript, transcriptSource: source } : waitingForTranscript || noCaptions ? { transcriptSource: 'pending' as const } : replaceFilm ? { transcript: '', transcriptSource: 'none' as const } : {}),
+            ...(transcript ? { transcript, transcriptSource: source } : filmOnly || waitingForTranscript || noCaptions ? { transcriptSource: 'pending' as const } : replaceFilm ? { transcript: '', transcriptSource: 'none' as const } : {}),
             transcriptNote: note,
             ...draftPatch,
           },
@@ -1247,10 +1360,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         if (unavailable) {
           failed++
           outcomes.push(result.ok ? 'This film is not available.' : result.error)
-        } else if (result.ok || filmOnly) saved++
-        else if (waitingForTranscript || noCaptions) {
+        } else if (result.ok) saved++
+        else if (filmOnly || waitingForTranscript || noCaptions) {
           waiting++
-          outcomes.push(result.error)
+          outcomes.push(filmOnly ? CAPTION_QUEUE_DETAIL : result.error)
         } else {
           failed++
           outcomes.push(result.error)
@@ -1263,12 +1376,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
   }
 
-  if (action === 'preview-bring-in' || action === 'commit-bring-in' || action === 'publish-talks' || action === 'save-channel-speaker' || action === 'delete-channel-speaker' || action === 'create-helper-token' || action === 'revoke-helper-token') {
+  if (action === 'preview-bring-in' || action === 'bring-in-ready' || action === 'commit-bring-in' || action === 'publish-talks' || action === 'save-channel-speaker' || action === 'delete-channel-speaker' || action === 'create-helper-token' || action === 'revoke-helper-token') {
     if (!user) return redirectTo(req, '/login', 'Please sign in first.')
     const next = text(form, 'next') || '/master/bring-in'
     const result = action === 'preview-bring-in'
       ? await previewBringIn(payload, user, form)
-      : action === 'commit-bring-in'
+      : action === 'bring-in-ready'
+        ? await bringInAndPublish(payload, user, form)
+        : action === 'commit-bring-in'
         ? await commitBringIn(payload, user, form)
         : action === 'publish-talks'
           ? await publishTalks(payload, user, form)
@@ -1312,13 +1427,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const transcript = await file.text()
     if (!transcript.trim()) return redirectTo(req, next, 'That file was empty.')
+    const previousNote = (owned.lesson as { transcriptNote?: string }).transcriptNote
     const uploadedLength = sourceTalkSeconds({
       durationSeconds: Number((owned.lesson as { durationSeconds?: number }).durationSeconds) || null,
       transcript,
     })
     const uploadedRefusal = refusalForTalk(uploadedLength)
     if (uploadedRefusal) return redirectTo(req, next, uploadedRefusal)
-    const attached = noteAfterTranscriptUpload((owned.lesson as { transcriptNote?: string }).transcriptNote, file.name, (owned.lesson as { publishState?: string | null }).publishState)
+    const attached = noteAfterTranscriptUpload(previousNote, file.name, (owned.lesson as { publishState?: string | null }).publishState)
     await payload.update({
       collection: 'lessons',
       id: Number(text(form, 'lesson')),
@@ -1329,7 +1445,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         transcriptNote: attached.transcriptNote,
       },
     })
-    return redirectTo(req, next, undefined, attached.notice)
+    const settled = await settleAutoPublish(payload, Number(text(form, 'lesson')), previousNote)
+    return redirectTo(req, next, undefined, settled.published ? 'Captions are in. Learners who already have this course can see this talk.' : attached.notice)
   }
 
   if (action === 'upload-transcript-file' || action === 'fetch-talk-captions' || action === 'save-transcript' || action === 'undo-transcript' || action === 'redo-transcript') {
@@ -1352,6 +1469,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!isAwaitingTranscript((lesson as { transcriptNote?: string }).transcriptNote) && text(form, 'force') !== 'yes') {
       return redirectTo(req, next, 'That talk is not waiting for a transcript.')
     }
+    const previousNote = (lesson as { transcriptNote?: string }).transcriptNote
     const file = form.get('file')
     const pasted = text(form, 'transcript')
     const raw = file instanceof File && file.size ? await file.text() : pasted
@@ -1373,10 +1491,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         transcriptNote: bringInNote('processed', 'A timed transcript was attached while this server was waiting.', captionLang(text(form, 'captionLang'))),
       },
     })
-    const draft = (lesson as { publishState?: string | null }).publishState === 'draft'
-    return redirectTo(req, next, undefined, draft
-      ? 'The timed transcript is attached. This talk is still a draft, so learners cannot see it until you publish it.'
-      : 'The timed transcript is attached. Learners who already have this course can see this talk.')
+    const settled = await settleAutoPublish(payload, lessonId, previousNote)
+    const draft = !settled.published && (lesson as { publishState?: string | null }).publishState === 'draft'
+    return redirectTo(req, next, undefined, settled.published
+      ? 'The timed transcript is attached. Learners who already have this course can see this talk.'
+      : draft
+        ? 'The timed transcript is attached. This talk is still a draft, so learners cannot see it until you publish it.'
+        : 'The timed transcript is attached. Learners who already have this course can see this talk.')
   }
 
   if (action === 'extract') {
@@ -1907,7 +2028,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
           user: learnerId,
           portal: portal || undefined,
           title: 'Email not sent',
-          body: 'Email is stubbed in this prototype. The reply is waiting in the bell.',
+          body: "Reply sent. They'll see it in their workbook.",
           href: text(form, 'href') || '/',
           channel: 'email-stub' as const,
         },
@@ -2153,13 +2274,17 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
-    if (!text(form, 'title')) return redirectTo(req, text(form, 'next') || '/', 'Give the night a name.')
     if (text(form, 'startsAt') && Number.isNaN(Date.parse(text(form, 'startsAt')))) return redirectTo(req, text(form, 'next') || '/', 'That date and time could not be read.')
+    const kind = text(form, 'kind') || 'Night'
+    const startsRaw = text(form, 'startsAt')
+    const dated = startsRaw.match(/^(\d{4})-(\d{2})-(\d{2})/)
+    const nightWhen = dated ? new Date(Date.UTC(Number(dated[1]), Number(dated[2]) - 1, Number(dated[3]))) : now()
+    const nightTitle = text(form, 'title') || `${kind} · ${humanDayMonth(nightWhen, true)}`
     await payload.create({
       collection: 'events',
       overrideAccess: true,
       data: {
-        title: text(form, 'title'),
+        title: nightTitle,
         place: text(form, 'place'),
         note: text(form, 'note'),
         startsAt: text(form, 'startsAt') ? new Date(text(form, 'startsAt')).toISOString() : undefined,
@@ -2168,7 +2293,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     })
     const alerted = await payload.find({ collection: 'users', overrideAccess: true, depth: 0, limit: 500, where: { and: [{ 'tenants.tenant': { equals: portal } }, { nightAlerts: { equals: true } }] } })
     for (const person of alerted.docs) {
-      await notify(payload, { user: person.id, portal, title: 'Live in person has a new evening', body: `${text(form, 'title')}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
+      await notify(payload, { user: person.id, portal, title: 'Live in person has a new evening', body: `${nightTitle}${text(form, 'place') ? ` at ${text(form, 'place')}` : ''}.`, href: `/p/${acting.portal.slug}/me/circle` })
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Live in person saved.')
   }
@@ -2208,6 +2333,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/master', acting.error)
     const closed = text(form, 'closed') !== 'no'
+    if (closed && text(form, 'confirm') !== 'yes') return redirectTo(req, text(form, 'next') || '/master', 'Tick the box to confirm before you deactivate a portal.')
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { closed } })
     return redirectTo(req, text(form, 'next') || '/master', undefined, closed ? 'Portal deactivated.' : 'Portal is active again.')
   }
@@ -2282,6 +2408,30 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       }
     }
     return redirectTo(req, text(form, 'next') || '/', undefined, apply === 'leave' ? 'Existing people were left as they are.' : 'Access updated. It is already in their account.')
+  }
+
+  if (action === 'grant-many') {
+    if (user.role === 'learner') return redirectTo(req, '/', 'Learners cannot grant courses.')
+    const next = text(form, 'next') || '/'
+    const learnerIds = [...new Set(form.getAll('learner').map((value) => Number(value)).filter((id) => id > 0))]
+    const courseIds = [...new Set(form.getAll('course').map((value) => Number(value)).filter((id) => id > 0))]
+    if (!learnerIds.length || !courseIds.length) return redirectTo(req, next, 'Choose a course and at least one learner.')
+    const visible = new Set(await visibleCourseIds(payload, user))
+    if (courseIds.some((id) => !visible.has(id))) return redirectTo(req, next, 'That course is not in your portal.')
+    let count = 0
+    for (const learnerId of learnerIds) {
+      const learner = await findDoc(payload, 'users', learnerId)
+      if (!learner || (user.role !== 'master' && portalIdOf(learner as SessionUser) !== portalIdOf(user))) continue
+      const existing = ((learner as { extraCourses?: unknown[] }).extraCourses || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+      await payload.update({
+        collection: 'users',
+        id: learnerId,
+        overrideAccess: true,
+        data: { extraCourses: [...new Set([...existing, ...courseIds])] },
+      })
+      count += 1
+    }
+    return redirectTo(req, next, undefined, `Given to ${count} learner${count === 1 ? '' : 's'}. They can see it on Lanes.`)
   }
 
   if (action === 'grant') {
@@ -2745,7 +2895,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return handleCircle(action, form, payload, user, (path, error, notice) => redirectTo(req, path, error, notice), session.actor?.role || user.role)
   }
 
-  return redirectTo(req, '/', 'That action is not known.')
+  return actionProblemPage('That action is not known.', text(form, 'next') || refererPath(req), form)
 }
 
 async function notifyTeachers(payload: Payload, learner: SessionUser, portal: number | null, title: string, body: string) {

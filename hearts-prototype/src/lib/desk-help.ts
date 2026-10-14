@@ -123,7 +123,7 @@ export const TOOL: Record<string, string> = {
   teacherCode:
     'A teacher code is the staff member who sees this learner’s progress. Learner and parent codes need one. Admin and teacher codes do not.',
   requiredCourses:
-    'These are courses everyone on the code is asked to finish. They sit beside the pack, not instead of it. Leave them unticked if the pack is enough.',
+    'Optional. Tick courses everyone with this code must finish.',
   timeZone:
     'The time zone is how dates and nights appear for this portal. Pick the city of the masjid. It does not change the clocks on people’s phones.',
   watchHistory:
@@ -145,7 +145,7 @@ export const TOOL: Record<string, string> = {
   bringInJibril:
     'W1 to W20 is the door of Hadith Jibril this talk sits in. Leave it blank if you are not placing it yet. You can set a different door on each row after the lookup.',
   bringInGhunya:
-    'A Ghunya heading is the seat line you want on this talk. It is optional and stays on the desk. Learners do not see a draft talk, heading or not.',
+    'Optional. A short name for the seat this talk belongs in. Leave it blank if you are not placing it.',
   bringInSkip:
     'Untick a row to leave that film out. Films under five minutes are refused. Private films, and films already in the library, start unticked.',
   bringInSpeaker:

@@ -99,9 +99,13 @@ the salah keeps a heart soft
 if (flag('--flat-playlist')) {
   const kind = isList(target)
   if (kind === 'playlist') {
-    for (const id of catalogue.playlist) {
+    const listId = new URL(target).searchParams.get('list') || ''
+    const named = catalogue.playlists?.[listId]
+    const ids = named?.ids || catalogue.playlist
+    const title = named?.title || catalogue.playlistTitle || ''
+    for (const id of ids) {
       const video = byId(id)
-      if (video) console.log(line(video, catalogue.playlistTitle || ''))
+      if (video) console.log(line(video, title))
     }
     process.exit(0)
   }

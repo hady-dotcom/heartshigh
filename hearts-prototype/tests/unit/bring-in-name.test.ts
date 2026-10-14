@@ -21,8 +21,12 @@ test('a blank new course takes the playlist title, and a loose link takes the fi
     'Goals for the month',
   )
   assert.equal(
-    suggestedCourseName({ playlistTitle: '', loose: true, videos: [{ title: 'Film B4KtRL_2aXY', channel: 'HEARTS channel' }] }),
-    'HEARTS channel',
+    suggestedCourseName({ playlistTitle: '', loose: true, videos: [{ title: 'Film B4KtRL_2aXY', channel: 'HEARTS channel' }], when: new Date('2026-10-13T12:00:00.000Z') }),
+    'Brought in 13 Oct 2026',
+  )
+  assert.equal(
+    suggestedCourseName({ playlistTitle: 'Round two sitting', loose: true, videos: [film], when: new Date('2026-09-30T00:00:00.000Z') }),
+    'Brought in 30 Sep 2026',
   )
   assert.equal(suggestedCourseSpeaker({ typed: '', videos: [film] }), 'HEARTS channel')
   assert.equal(suggestedCourseSpeaker({ typed: 'Alauddin Elbakri', videos: [film] }), 'Alauddin Elbakri')

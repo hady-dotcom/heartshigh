@@ -15,8 +15,8 @@ test('a teacher signing in at /login lands on Teach and can see it as a learner'
   await expect(page.getByTestId('admin-teach')).toBeVisible()
   const back = page.locator('.desk').getByTestId('see-as-learner')
   await expect(back).toBeVisible()
-  await expect(back).toHaveText('See it as a learner')
-  await expect(page.locator('.side-foot a.nav', { hasText: 'See it as a learner' })).toBeVisible()
+  await expect(back).toHaveText('See what a learner sees')
+  await expect(page.locator('.side-foot a.nav', { hasText: 'See what a learner sees' })).toBeVisible()
   await back.click()
   await expect(page.getByTestId('home')).toBeVisible()
   expect(new URL(page.url()).pathname).toBe('/p/east-london')
@@ -29,12 +29,14 @@ test('a teacher signing in at /login lands on Teach and can see it as a learner'
   expect(new URL(page.url()).pathname).toBe('/p/east-london/admin/teach')
 })
 
-test('on a phone the teacher desk says See it as a learner', async ({ page }) => {
+test('on a phone Teach is one column and says See what a learner sees', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await signInTeacher(page)
-  const back = page.getByTestId('desk-open-app')
+  await expect(page.getByTestId('desk-narrow')).toBeHidden()
+  await expect(page.getByTestId('admin-teach')).toBeVisible()
+  const back = page.locator('.desk').getByTestId('see-as-learner')
   await expect(back).toBeVisible()
-  await expect(back).toHaveText('See it as a learner')
+  await expect(back).toHaveText('See what a learner sees')
   await expect(back).toHaveAttribute('href', '/p/east-london')
   await back.click()
   await expect(page.getByTestId('home')).toBeVisible()
@@ -46,7 +48,8 @@ test('on a phone the teacher desk says See it as a learner', async ({ page }) =>
   expect(box!.x + box!.width).toBeLessThanOrEqual(390)
   await desk.click()
   await expect(page).toHaveURL(/\/p\/east-london\/admin\/teach/)
-  await expect(page.getByTestId('desk-open-app')).toBeVisible()
+  await expect(page.getByTestId('desk-narrow')).toBeHidden()
+  await expect(page.locator('.desk').getByTestId('see-as-learner')).toBeVisible()
 })
 
 test('joining with a teacher code opens Teach, not the learner feed', async ({ page }) => {
@@ -61,7 +64,7 @@ test('joining with a teacher code opens Teach, not the learner feed', async ({ p
   await page.waitForURL(/\/p\/east-london\/admin\/teach/, { timeout: 30_000 })
   await expect(page.getByTestId('admin-teach')).toBeVisible()
   expect(page.url()).not.toMatch(/\/feed/)
-  await expect(page.locator('.desk').getByTestId('see-as-learner')).toHaveText('See it as a learner')
+  await expect(page.locator('.desk').getByTestId('see-as-learner')).toHaveText('See what a learner sees')
 })
 
 test('a learner does not see Back to teacher desk', async ({ page }) => {

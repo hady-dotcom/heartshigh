@@ -4,6 +4,7 @@ import { parseWeekdays } from '@/lib/week'
 import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
 import { ViewAsButton } from '@/components/desk/view-as-button'
 import { GiveCourse } from '@/components/desk/give-course'
+import { groupThese } from '@/server/curriculum'
 import { HideTestFilter } from '@/components/desk/hide-test'
 import { HelpTip } from '@/components/desk/help'
 import { TOOL } from '@/lib/desk-help'
@@ -45,6 +46,17 @@ export async function TeachScreen(ctx: Ctx) {
     rows(payload, 'schedules', { portal: { equals: portal.id } }, { limit: 200 }),
   ])
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
+  const groupedCourses = courses.length ? await groupThese(payload, courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))) : []
+  const giveCourses: { id: number; title: string; door: string }[] = []
+  const placedCourse = new Set<number>()
+  for (const group of groupedCourses) {
+    const door = group.number == null ? 'Not placed yet' : group.heading
+    for (const course of group.courses) {
+      placedCourse.add(course.id)
+      giveCourses.push({ id: course.id, title: course.title, door })
+    }
+  }
+  for (const course of courses) if (!placedCourse.has(course.id)) giveCourses.push({ id: course.id, title: str(course.title), door: 'Not placed yet' })
   const shared = entries.filter((entry) => entry.consent)
   const kept = entries.length - shared.length
   const consented = new Set(shared.flatMap((entry) => {
@@ -91,11 +103,15 @@ export async function TeachScreen(ctx: Ctx) {
     return slots
   }
   return (
-    <AdminFrame ctx={ctx} active="teach" title="Learners" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach">
+    <AdminFrame ctx={ctx} active="teach" title="Learners" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach" showOnPhone>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="give-course-panel">
+        <header><div><h2>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></h2><p>Search by name or door, then tick everyone who should have it.</p></div></header>
+        <div className="body"><GiveCourse learners={learners.map((learner) => ({ id: learner.id, name: str(learner.name) || 'Learner' }))} courses={giveCourses} next={here} /></div>
+      </section>
       <section className="panel" id="learner-list" style={{ marginBottom: 18 }}>
         <header className="light">
           <h2 data-testid="learner-count">Learners ({learners.length})</h2>
-          <HideTestFilter action={here} hide={hideTest} />
+          {user.role === 'master' ? <HideTestFilter action={here} hide={hideTest} /> : null}
         </header>
         <div className="body">
           <LearnerFilters action={here} query={query} portals={[{ id: portal.id, name: portalDisplayName(portal) }]} locked />
@@ -125,7 +141,6 @@ export async function TeachScreen(ctx: Ctx) {
               <th className="num">Parts watched</th>
               <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
               <th className="num">Answers</th>
-              <th>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></th>
               <th />
             </tr></thead>
             <tbody>
@@ -296,7 +311,7 @@ export async function PlansScreen(ctx: Ctx) {
             <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} defaultChecked={weekdays.includes(index)} /> {label}</label>)}</div>
             <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>Days the plan should use <HelpTip topic="weekdays">{TOOL.weekdays}</HelpTip></p>
             <div className="hint">For</div>
-            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, hideTestFromQuery(ctx.query)).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" defaultChecked={keptLearners.has(learner.id)} /> {str(learner.name)}</label>)}</div>
+            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, ctx.user.role === 'master' ? hideTestFromQuery(ctx.query) : true).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" defaultChecked={keptLearners.has(learner.id)} /> {str(learner.name)}</label>)}</div>
             <div className="actions"><button className="btn ink" data-testid="schedule-submit" type="submit">Share out the parts</button></div>
           </form>
         </section>
@@ -381,7 +396,7 @@ export async function NightsScreen(ctx: Ctx) {
                   <Hidden fields={{ action: 'checkin', event: event.id, next: here }} />
                   <select name="learner" data-testid="checkin-learner" style={{ maxWidth: 260 }} required>
                     <option value="">Who has arrived?</option>
-                    {visiblePeople(people, hideTestFromQuery(ctx.query)).map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
+                    {visiblePeople(people, ctx.user.role === 'master' ? hideTestFromQuery(ctx.query) : true).map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
                   </select>
                   <label className="check"><input type="checkbox" name="override" data-testid="checkin-override" /> Let them in anyway</label>
                   <HelpTip topic="checkin">{TOOL.checkinOverride}</HelpTip>
@@ -397,7 +412,12 @@ export async function NightsScreen(ctx: Ctx) {
             <header><div><h2>Plan Live in person</h2><p>People with evening alerts on are told straight away</p></div></header>
             <form id="plan-a-night" className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'create-event', portalSlug: portal.slug, next: here }} />
-              <label className="stack">Name<input type="text" data-testid="event-title" name="title" required placeholder="Circle after Isha" /></label>
+              <label className="stack">Kind
+                <select name="kind" data-testid="event-kind" defaultValue="Night">
+                  <option>Night</option><option>Circle</option><option>Class</option><option>Gathering</option>
+                </select>
+              </label>
+              <label className="stack">Name<input type="text" data-testid="event-title" name="title" placeholder="Leave blank for Kind · date" /></label>
               <label className="stack">Date and time<input type="datetime-local" name="startsAt" data-testid="event-starts" /></label>
               <label className="stack">Place<input type="text" name="place" placeholder="The hall" /></label>
               <label className="stack">A note for people coming<textarea name="note" placeholder="A short, warm note" /></label>

@@ -105,7 +105,7 @@ export async function GatherDeskScreen(ctx: Ctx) {
           <header><h2>Plan a gathering</h2></header>
           <form id="plan-a-gathering" className="body form" action="/api/gather" method="post" data-testid="desk-gather-form">
             <Hidden fields={{ action: 'save', portal: portal.slug, next: here }} />
-            <label className="stack">Name<input type="text" name="title" required data-testid="desk-gather-title" placeholder="Circle after Maghrib" /></label>
+            <label className="stack">Name<input type="text" name="title" data-testid="desk-gather-title" placeholder="Circle evening" /></label>
             <label className="stack">Kind
               <select name="kind" defaultValue="circle">{GATHER_KINDS.map((kind) => <option key={kind} value={kind}>{KIND_LABEL[kind]}</option>)}</select>
             </label>

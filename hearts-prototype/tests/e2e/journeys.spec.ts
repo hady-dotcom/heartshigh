@@ -78,6 +78,24 @@ async function masterRequest() {
   return master
 }
 
+/** A portal opened from the short form starts without in-person nights. This journey needs them. */
+async function enableGather(portalSlug: string) {
+  const master = await masterRequest()
+  const body = new URLSearchParams()
+  body.set('action', 'portal-features')
+  body.set('portalSlug', portalSlug)
+  body.set('featuresForm', 'yes')
+  body.set('next', '/master')
+  for (const key of ['garden', 'workbook', 'planner', 'announcements', 'circle', 'compass', 'feedback', 'gather']) body.append('feature', key)
+  const response = await master.post('/api/hearts', {
+    headers: { 'content-type': 'application/x-www-form-urlencoded' },
+    data: body.toString(),
+    maxRedirects: 0,
+  })
+  expect(response.status()).toBe(303)
+  await master.dispose()
+}
+
 async function post(page: Page, form: Record<string, string>) {
   const response = await page.request.post('/api/hearts', { form, maxRedirects: 0 })
   expect(response.status()).toBe(303)
@@ -118,6 +136,7 @@ test.describe.serial('HEARTS journeys', () => {
     await page.getByTestId('create-portal-submit').click()
     await expect(page.getByTestId('notice')).toBeVisible()
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Active')
+    await enableGather(slug)
     await page.getByTestId('pack-portal').selectOption(slug)
     await page.getByTestId('portal-pack-title').fill('Harbour sittings')
     await page.getByTestId('portal-pack-save').click()
@@ -147,7 +166,7 @@ test.describe.serial('HEARTS journeys', () => {
 
     await page.getByTestId('nav-content').click()
     await page.getByTestId('local-course-title').fill('Night class')
-    await page.getByTestId('local-course-duration').fill('8')
+    await page.getByTestId('local-course-duration').fill('8:00')
     await page.getByTestId('local-course-pack').selectOption({ label: 'Harbour sittings' })
     await page.getByTestId('local-course-submit').click()
     await expect(page.getByTestId('notice')).toBeVisible()
@@ -429,7 +448,10 @@ test.describe.serial('HEARTS journeys', () => {
     await expect(page.getByTestId('error')).toContainText('master desk')
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
-    await page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` }).getByTestId('deactivate-portal').click()
+    const closing = page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })
+    await closing.getByTestId('danger-zone').locator('summary').click()
+    await closing.getByTestId('deactivate-confirm').check()
+    await closing.getByTestId('deactivate-portal').click()
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Deactivated')
     await page.setViewportSize(PHONE)
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}`)
@@ -437,7 +459,9 @@ test.describe.serial('HEARTS journeys', () => {
     expect(await post(page, { action: 'board', body: 'Still here?', next: `/p/${slug}` })).toContain('error=')
     await page.setViewportSize(DESK)
     await signIn(page, 'master@hearts.test', 'hearts-master', '/master')
-    await page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` }).getByTestId('deactivate-portal').click()
+    const opening = page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })
+    await opening.getByTestId('danger-zone').locator('summary').click()
+    await opening.getByTestId('deactivate-portal').click()
     await expect(page.getByTestId('portal-card').filter({ hasText: `/p/${slug}` })).toContainText('Active')
   })
 
