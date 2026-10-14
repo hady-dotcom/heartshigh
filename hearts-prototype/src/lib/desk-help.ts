@@ -203,7 +203,7 @@ export const TOOL: Record<string, string> = {
   portalCourses:
     'These are library courses this portal can link. Tick the ones they will use. You can add more later from the portal library. Nothing is copied, and the original stays as the master desk set it.',
   portalFeatures:
-    'Each switch is one part of HEARTS. Start small keeps videos, questions and the Garden. Add the community brings circle answers and the planner, and Everything turns every switch on. Saving takes effect at once.',
+    'Standard is the usual set: the parts that stay on, plus circle answers, Compass and feedback. Everything switches the extra parts on as well. You can still switch a middle part off, or pick extras one by one. Saving takes effect at once.',
   safeguarding:
     'This box is for the named person who will reach out. Other staff only see that a person is needed. The email says to look today and does not add extra personal detail.',
 }

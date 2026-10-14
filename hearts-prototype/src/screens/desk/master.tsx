@@ -98,7 +98,7 @@ export async function MasterPortals(ctx: MasterCtx) {
       </section>
       <div className="grid three" style={{ alignItems: 'start' }}>
         <section className="panel">
-          <header><div><h2>Open a portal</h2><p><Link href="/master/create" data-testid="open-portal-studio">Choose courses and features</Link> when you want to switch parts on in stages.</p></div></header>
+          <header><div><h2>Open a portal</h2><p><Link href="/master/create" data-testid="open-portal-studio">Choose courses and features</Link> when you want to pick which parts this place has.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-portal' }} />
             <label className="stack">Name<input type="text" data-testid="create-portal-name" name="name" placeholder="Harbour Mosque" required /></label>

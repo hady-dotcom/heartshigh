@@ -609,12 +609,15 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
 .feature-board { display: grid; gap: 22px; }
 .feature-depth h3 {
-  margin: 0 0 10px;
+  margin: 0 0 4px;
   font-family: var(--serif);
   font-size: 20px;
   font-weight: 650;
   color: var(--gold);
 }
+.feature-depth .depth-line { margin: 0 0 12px; }
+.feature-row.locked .feature-switch,
+.feature-row.locked .feature-switch input { cursor: default; }
 .feature-row {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -632,7 +635,13 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .feature-switch b { display: block; font-size: 16px; color: var(--ink); }
 .feature-switch small { display: block; margin-top: 4px; color: var(--muted); font-size: 15px; line-height: 1.45; }
 .studio-courses { display: grid; gap: 8px; }
-.studio-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.studio-actions { display: flex; flex-wrap: wrap; gap: 10px; justify-content: flex-end; }
+@media (max-width: 640px) {
+  .feature-row { padding: 12px; }
+  .feature-depth h3 { font-size: 18px; }
+  .studio-actions { justify-content: stretch; }
+  .studio-actions .btn { flex: 1 1 auto; }
+}
 .portal-studio [hidden] { display: none !important; }
 .saved-toast { margin: 0 0 12px; padding: 10px 14px; background: var(--card, #f7eedb); border: 1px solid var(--line, #d7c6a4); border-radius: 12px; font-size: 14px; }
 .saved-list { display: grid; gap: 8px; }

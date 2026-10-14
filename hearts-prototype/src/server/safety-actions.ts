@@ -5,6 +5,8 @@ import { announceProblems, canModerate, isAnnounceAudience, isReportReason, isTa
 import { portalIdOf } from '@/lib/ids'
 import { now } from '@/lib/clock'
 import { audit } from './viewas'
+import { featureOn } from '@/lib/features'
+import { loadPortalById } from './features'
 import { fileReport, samePortal, setHidden, SLOW_DOWN, REPORT_THANKS } from './safety'
 import type { SessionUser } from './context'
 
@@ -127,6 +129,8 @@ export async function handleSafety(
     if (!canModerate(user.role)) return back(next, 'That page is for the portal team.')
     const portal = Number(text(form, 'portal') || portalIdOf(user) || 0)
     if (!portal || !(await samePortal(user, portal))) return back(next, 'That is not in your portal.')
+    const host = await loadPortalById(payload, portal)
+    if (host && !featureOn(host, 'announcements')) return back(next, 'Announcements are not switched on for this portal.')
     const body = text(form, 'body')
     const problems = announceProblems(body)
     if (problems[0]) return back(next, problems[0])

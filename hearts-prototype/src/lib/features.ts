@@ -1,17 +1,22 @@
 /**
  * Per-portal feature switches — one registry, one gating helper.
  *
- * Missing or null `portal.features` means “use each feature’s default”.
- * Features that already exist on live default ON, so existing portals do not
- * change when this lands. Live, missions, insights and experiments shipped in
- * the first r5 merge and stay in this registry with their plug-in points.
+ * Beginner parts are always on and cannot be saved off. Intermediate parts
+ * start on and can be switched off one by one. In-depth parts start off and
+ * are chosen per portal.
+ *
+ * A portal with no saved map, or a map from before announcements / calendar /
+ * AI steps existed, keeps every part it already had (the old defaults, all on),
+ * plus the beginner parts forced on. A map that includes one of those new keys
+ * is a new save: missing keys use the new defaults.
  */
 
 export const FEATURE_KEYS = [
   'garden',
   'workbook',
-  'circle',
   'planner',
+  'announcements',
+  'circle',
   'compass',
   'feedback',
   'gather',
@@ -19,6 +24,8 @@ export const FEATURE_KEYS = [
   'missions',
   'insights',
   'experiments',
+  'calendar',
+  'ai',
 ] as const
 
 export type FeatureKey = (typeof FEATURE_KEYS)[number]
@@ -65,7 +72,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The Garden shows time someone has given: rings, this course, harvest and the doors of Hadith Jibril. Switch it off if this portal is only for films and questions. The bottom bar still looks complete without it.',
+    help: 'The Garden shows time someone has given: rings, this course, harvest and the doors of Hadith Jibril. Every portal includes it. Learners can see what they have watched, sown and harvested.',
     plugIn: [
       'Learner /p/:slug/garden and garden/* (except workbook, which is its own switch)',
       'Home grow banner, rings and “See what you have sown”',
@@ -82,13 +89,47 @@ export const FEATURES: readonly FeatureRecord[] = [
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The workbook keeps answers and reflections in one place. Teachers can still teach without it. They will not open a learner’s written work from the desk.',
+    help: 'The workbook keeps answers and reflections in one place. Every portal includes it, so a learner can reopen what they wrote. Teachers can open that written work from the desk.',
     plugIn: [
       'Learner /p/:slug/garden/workbook and the Me workbook link',
       'Garden rings Workbook tile',
       'GET /api/workbook and /api/workbook/:learnerId',
       'Teach desk workbook inbox and download',
     ],
+  },
+  {
+    key: 'planner',
+    name: 'Study plans',
+    what: 'A course spread across the days that suit them.',
+    defaultOn: true,
+    depth: 'beginner',
+    shipped: true,
+    dependsOn: [],
+    help: 'My week is the study plan. Pick a course, tick the days, and the talks are shared out evenly. It always sits on the learner bar, and Gather never takes its place. Every portal includes it.',
+    plugIn: [
+      'Learner /p/:slug/week, /me/plan and Home “Your plan” card',
+      'Course “Plan the rest of this course”',
+      'Desk /admin/plans and handle.ts action schedule',
+      'TabBar My week item via learnerBar()',
+    ],
+    deskNav: ['plans'],
+    bar: { key: 'week', label: 'My week', path: '/week', slot: 'middle' },
+  },
+  {
+    key: 'announcements',
+    name: 'Announcements',
+    what: 'A short note on Home that they can dismiss.',
+    defaultOn: true,
+    depth: 'beginner',
+    shipped: true,
+    dependsOn: [],
+    help: 'Announcements are short notes on Home, for everyone, for teachers, or for one code. A learner can dismiss a note once they have read it. Every portal includes this.',
+    plugIn: [
+      'Learner Home announcement cards (src/screens/app/home.tsx)',
+      'Desk /admin/announcements and /master/announcements',
+      'POST announce and announce-dismiss in safety-actions.ts',
+    ],
+    deskNav: ['announcements'],
   },
   {
     key: 'circle',
@@ -105,24 +146,6 @@ export const FEATURES: readonly FeatureRecord[] = [
       'handle.ts actions that start with circle-',
     ],
     deskNav: ['circle'],
-  },
-  {
-    key: 'planner',
-    name: 'Study planner and My week',
-    what: 'A gentle spread of one course across the days that suit them.',
-    defaultOn: true,
-    depth: 'intermediate',
-    shipped: true,
-    dependsOn: [],
-    help: 'My week is the study plan. Pick a course, tick the days, and the talks are shared out evenly. It always sits on the learner bar, and Gather never takes its place.',
-    plugIn: [
-      'Learner /p/:slug/week, /me/plan and Home “Your plan” card',
-      'Course “Plan the rest of this course”',
-      'Desk /admin/plans and handle.ts action schedule',
-      'TabBar My week item via learnerBar()',
-    ],
-    deskNav: ['plans'],
-    bar: { key: 'week', label: 'My week', path: '/week', slot: 'middle' },
   },
   {
     key: 'compass',
@@ -161,7 +184,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     key: 'gather',
     name: 'Gather',
     what: 'In-person nights and meetups, with check-in and tickets.',
-    defaultOn: true,
+    defaultOn: false,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
@@ -180,7 +203,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     key: 'live',
     name: 'Live recordings',
     what: 'Video sessions for this portal, with a Live now banner on Home.',
-    defaultOn: true,
+    defaultOn: false,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
@@ -197,7 +220,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     key: 'missions',
     name: 'Help shape HEARTS missions',
     what: 'A quiet way to say which missions HEARTS should take on next.',
-    defaultOn: true,
+    defaultOn: false,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
@@ -213,7 +236,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     key: 'insights',
     name: 'Insights',
     what: 'A calm picture of how the portal is being used, without names.',
-    defaultOn: true,
+    defaultOn: false,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
@@ -228,7 +251,7 @@ export const FEATURES: readonly FeatureRecord[] = [
     key: 'experiments',
     name: 'Experiments',
     what: 'Quiet wording tests. Learners are never told they are in one.',
-    defaultOn: true,
+    defaultOn: false,
     depth: 'in-depth',
     shipped: true,
     dependsOn: [],
@@ -240,33 +263,78 @@ export const FEATURES: readonly FeatureRecord[] = [
     ],
     deskNav: ['experiments'],
   },
+  {
+    key: 'calendar',
+    name: 'Event Calendar',
+    what: 'Special days, and the words that go with them.',
+    defaultOn: false,
+    depth: 'in-depth',
+    shipped: true,
+    dependsOn: [],
+    help: 'Event Calendar is for special days: Friday, Ramadan, the Eids and seasons you add. A suggested line never reaches a learner until you approve it. Switch it on when this portal wants its own calendar desk.',
+    plugIn: [
+      'Portal desk /admin/calendar',
+      'Master desk /master/calendar stays available to the master',
+      'GET/POST /api/calendar',
+    ],
+    deskNav: ['calendar'],
+  },
+  {
+    key: 'ai',
+    name: 'AI steps',
+    what: 'The steps this portal can run when it uses its own AI.',
+    defaultOn: false,
+    depth: 'in-depth',
+    shipped: true,
+    dependsOn: [],
+    help: 'AI steps are the instructions this portal can run when its own AI account is connected. The list lives on the desk, and learners do not see it. Switch it on when this portal should edit those steps.',
+    plugIn: [
+      'Portal desk /admin/ai',
+      'Master desk /master/ai stays available to the master',
+      'POST /api/ai-steps',
+    ],
+    deskNav: ['ai'],
+  },
 ] as const
 
 export const DEPTH_ORDER: FeatureDepth[] = ['beginner', 'intermediate', 'in-depth']
 
-export const DEPTH_LABEL: Record<FeatureDepth, string> = {
-  beginner: 'Beginner',
-  intermediate: 'Intermediate',
-  'in-depth': 'In-depth',
+/** Plain names for the three groups in the portal studio. */
+export const DEPTH_SECTION: Record<FeatureDepth, { title: string; line: string }> = {
+  beginner: {
+    title: 'Always included',
+    line: 'These stay on. You cannot switch them off.',
+  },
+  intermediate: {
+    title: 'On unless you switch it off',
+    line: 'These start on. Switch one off if you do not need it.',
+  },
+  'in-depth': {
+    title: 'Extras you choose',
+    line: 'These start off. Switch one on if you want it.',
+  },
 }
 
+export const DEPTH_LABEL: Record<FeatureDepth, string> = {
+  beginner: DEPTH_SECTION.beginner.title,
+  intermediate: DEPTH_SECTION.intermediate.title,
+  'in-depth': DEPTH_SECTION['in-depth'].title,
+}
+
+/** Keys added with this change. A saved map that contains one of them is a new save. */
+const NEW_FEATURE_KEYS = ['announcements', 'calendar', 'ai'] as const
+
 export const PRESETS = {
-  small: {
-    key: 'small' as const,
-    label: 'Start small',
-    hint: 'Videos, questions and the Garden.',
-    keys: ['garden', 'workbook'] as readonly FeatureKey[],
-  },
-  community: {
-    key: 'community' as const,
-    label: 'Add the community',
-    hint: 'Start small, plus circle answers and the planner.',
-    keys: ['garden', 'workbook', 'circle', 'planner'] as readonly FeatureKey[],
+  standard: {
+    key: 'standard' as const,
+    label: 'Standard',
+    hint: 'The usual set: the parts that stay on, plus the ones that start on.',
+    keys: ['garden', 'workbook', 'planner', 'announcements', 'circle', 'compass', 'feedback'] as readonly FeatureKey[],
   },
   everything: {
     key: 'everything' as const,
     label: 'Everything',
-    hint: 'Every switch on this list.',
+    hint: 'Every part on this list, switched on.',
     keys: FEATURE_KEYS,
   },
 } as const
@@ -284,6 +352,19 @@ export function featureByKey(key: string): FeatureRecord | undefined {
   return FEATURES.find((row) => row.key === key)
 }
 
+/** Beginner parts stay on. The studio cannot switch them off, and a save cannot either. */
+export function featureLocked(key: FeatureKey): boolean {
+  return featureByKey(key)?.depth === 'beginner'
+}
+
+export function lockBeginner(map: FeatureMap): FeatureMap {
+  const next = { ...map }
+  for (const feature of FEATURES) {
+    if (feature.depth === 'beginner') next[feature.key] = true
+  }
+  return next
+}
+
 export function isFeatureKey(value: unknown): value is FeatureKey {
   return typeof value === 'string' && (FEATURE_KEYS as readonly string[]).includes(value)
 }
@@ -294,18 +375,41 @@ export function defaultFeatures(): FeatureMap {
 
 export function presetFeatures(preset: PresetKey): FeatureMap {
   const chosen = new Set<FeatureKey>(PRESETS[preset].keys)
-  return Object.fromEntries(FEATURE_KEYS.map((key) => [key, chosen.has(key)])) as FeatureMap
+  return lockBeginner(Object.fromEntries(FEATURE_KEYS.map((key) => [key, chosen.has(key)])) as FeatureMap)
 }
 
-/** Read stored JSON (or null) into a full map, filling gaps from defaults. */
+/**
+ * A save from before this change, or an empty column.
+ * Missing keys stay on, because that is what the portal has today.
+ * Beginner parts are forced on even if an older save turned them off.
+ */
+export function isLegacyFeatureRecord(raw: unknown): boolean {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return true
+  const input = raw as Record<string, unknown>
+  return !NEW_FEATURE_KEYS.some((key) => key in input)
+}
+
+export function legacyPortalFeatures(raw?: unknown): FeatureMap {
+  const input = raw && typeof raw === 'object' && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {}
+  const map = Object.fromEntries(
+    FEATURE_KEYS.map((key) => [key, typeof input[key] === 'boolean' ? input[key] : true]),
+  ) as FeatureMap
+  return lockBeginner(map)
+}
+
+/**
+ * Read stored JSON into a full map.
+ * Empty or pre-change maps keep the parts a portal already has.
+ * A new save fills gaps from the current defaults, then forces beginner on.
+ */
 export function parseFeatures(raw: unknown): FeatureMap {
+  if (isLegacyFeatureRecord(raw)) return legacyPortalFeatures(raw)
   const base = defaultFeatures()
-  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return base
   const input = raw as Record<string, unknown>
   for (const key of FEATURE_KEYS) {
     if (typeof input[key] === 'boolean') base[key] = input[key]
   }
-  return base
+  return lockBeginner(base)
 }
 
 export type FeatureSource = { features?: unknown } | null | undefined
@@ -328,7 +432,7 @@ export function featureOn(portal: FeatureSource, key: FeatureKey): boolean {
 
 export function featuresFromForm(form: FormData, field = 'feature'): FeatureMap {
   const on = new Set(form.getAll(field).map(String).filter(isFeatureKey))
-  return Object.fromEntries(FEATURE_KEYS.map((key) => [key, on.has(key)])) as FeatureMap
+  return lockBeginner(Object.fromEntries(FEATURE_KEYS.map((key) => [key, on.has(key)])) as FeatureMap)
 }
 
 /**

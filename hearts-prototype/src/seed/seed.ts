@@ -21,6 +21,7 @@ import { clearDevPushMarker } from '../lib/prepare-db'
 import { FILMS } from './films'
 import { seedOpening, seedPeople, timingCheck } from './opening'
 import { seedSpeakers } from './speakers'
+import { legacyPortalFeatures } from '../lib/features'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -179,9 +180,11 @@ async function main() {
     })
   }
 
+  const keptFeatures = legacyPortalFeatures(null)
   const portals: { name: string; slug: string; kind: 'mosque'; welcome: string; organisationName: string; wizardDone: boolean; colour: string; [key: string]: unknown }[] = [
     {
       name: 'East London Mosque',
+      features: keptFeatures,
       slug: 'east-london',
       kind: 'mosque',
       welcome: 'Welcome to the East London circle. Short talks during the week, and a sitting together on Thursday nights.',
@@ -198,6 +201,7 @@ async function main() {
     {
       name: 'Leeds Chapter',
       slug: 'leeds',
+      features: keptFeatures,
       kind: 'mosque',
       welcome: 'Welcome to the Leeds circle. Watch at your own pace and join us when we meet.',
       organisationName: 'Leeds Chapter',
