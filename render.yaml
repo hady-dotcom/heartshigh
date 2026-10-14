@@ -1,0 +1,41 @@
+# Render alternative, read from the repository root.
+# Render has no object store of its own: set the S3_* variables to Cloudflare R2, Amazon S3, or another S3-compatible bucket.
+services:
+  - type: web
+    name: hearts
+    runtime: docker
+    dockerfilePath: ./hearts-prototype/Dockerfile
+    dockerContext: ./hearts-prototype
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: hearts-db
+          property: connectionString
+      - key: HEARTS_TRUSTED_PROXY_HOPS
+        value: "1"
+      - key: PAYLOAD_SECRET
+        generateValue: true
+      - key: SERVER_URL
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_ACCESS_KEY_ID
+        sync: false
+      - key: S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: S3_ENDPOINT
+        sync: false
+      - key: S3_REGION
+        sync: false
+      - key: BOOTSTRAP_ADMIN_EMAIL
+        sync: false
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        sync: false
+
+databases:
+  - name: hearts-db
+    plan: basic-256mb
+    postgresMajorVersion: "16"

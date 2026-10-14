@@ -1,0 +1,603 @@
+import Link from 'next/link'
+import { ExampleInUse } from '@/components/app/care'
+import type { Payload } from 'payload'
+import { Hidden } from '@/components/app/shell'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { ExperimentForm } from '@/components/desk/experiment-form'
+import { ExperimentPhones } from '@/components/desk/experiment-mock'
+import { ExperimentHelp } from '@/components/desk/help'
+import { LocalWhen, LocalZoneNote } from '@/components/desk/local-when'
+import { estimatePortalCalls } from '@/lib/portal-ai'
+import { portalIdOf } from '@/lib/ids'
+import { safetyLabel } from '@/lib/experiment-guard'
+import { mockFaces } from '@/lib/experiment-mock'
+import {
+  EXPERIMENT_RULE,
+  EXPERIMENT_SLOTS,
+  PRIMARY_METRICS,
+  experimentAuditLine,
+  metricLabel,
+  variantCopy,
+} from '@/lib/experiment-slots'
+import type { SessionUser } from '@/server/context'
+import { getSession } from '@/server/context'
+import { storedForPortal } from '@/server/portal-ai'
+import {
+  canEditExperiments,
+  canViewExperiments,
+  ensureStarterExperiments,
+  experimentAudit,
+  experimentBrief,
+  experimentsKilled,
+  listExperiments,
+  loadExperiment,
+  resultsFor,
+  type ExperimentDoc,
+  type ExperimentResults,
+} from '@/server/experiments'
+import { rows, str } from '../common'
+import type { Ctx } from '../common'
+import { AdminFrame } from './overview'
+import { DeskFrame, masterNav } from './shell'
+import styles from './experiments.module.css'
+
+type Query = Record<string, string | string[] | undefined>
+
+function queryText(query: Query, key: string) {
+  const value = query[key]
+  return typeof value === 'string' ? value : Array.isArray(value) ? value[0] || '' : ''
+}
+
+const STATUS_BADGE: Record<string, [string, string]> = {
+  draft: ['Draft', 'grey'],
+  running: ['Running', 'teal'],
+  paused: ['Paused', 'gold'],
+  finished: ['Finished', 'ink'],
+}
+
+function pct(value: number) {
+  return `${Math.round(value * 100)}%`
+}
+
+function confidenceLine(verdict: { text: string; chance: number; claimed: boolean; ready: boolean }) {
+  if (/too soon/i.test(verdict.text)) return 'Confidence: too soon to say.'
+  const chance = pct(verdict.chance)
+  if (verdict.claimed) return `Confidence: high. About ${chance} that this version is better.`
+  return `Confidence: about ${chance} that the version ahead is better. Not enough to be sure.`
+}
+
+function atIso(value: unknown) {
+  if (!value) return ''
+  const date = new Date(String(value))
+  return Number.isNaN(date.getTime()) ? '' : date.toISOString()
+}
+
+async function Frame({
+  ctx,
+  master,
+  title,
+  intro,
+  testId,
+  tools,
+  children,
+}: {
+  ctx: Ctx | null
+  master: { payload: Payload; user: SessionUser; query: Query } | null
+  title: string
+  intro: string
+  testId: string
+  tools?: React.ReactNode
+  children: React.ReactNode
+}) {
+  const withHelp = (
+    <>
+      <ExperimentHelp />
+      {tools}
+    </>
+  )
+  if (ctx) return <AdminFrame ctx={ctx} active="experiments" title={title} intro={intro} testId={testId} tools={withHelp}>{children}</AdminFrame>
+  const desk = master!
+  return (
+    <DeskFrame payload={desk.payload} user={desk.user} title={title} intro={intro} active="experiments" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={desk.query} testId={testId} tools={withHelp} showOnPhone>
+      {children}
+    </DeskFrame>
+  )
+}
+
+function queryOf(ctx: Ctx | null, master: { query: Query } | null) {
+  return (ctx?.query || master?.query || {}) as Query
+}
+
+export async function ExperimentPages({ ctx, master, path }: { ctx?: Ctx | null; master?: { payload: Payload; user: SessionUser; query: Query } | null; path: string[] }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  const query = queryOf(ctx || null, master || null)
+  const base = ctx ? `${ctx.base}/admin/experiments` : '/master/experiments'
+  if (!canViewExperiments(user)) {
+    return <Frame ctx={ctx || null} master={master || null} title="Experiments" intro="" testId="experiments-denied"><p>Experiments are for the master desk and portal admins.</p></Frame>
+  }
+  await ensureStarterExperiments(payload, user)
+  const [head, rest] = path
+  if (head === 'new' && queryText(query, 'advanced') === '1') return <EditPage ctx={ctx || null} master={master || null} base={base} fromInsight={query} />
+  if (head === 'new' && queryText(query, 'draft')) return <PreviewPage ctx={ctx || null} master={master || null} base={base} id={queryText(query, 'draft')} goal={queryText(query, 'goal')} />
+  if (head === 'new') return <StartPage ctx={ctx || null} master={master || null} base={base} goal={queryText(query, 'goal')} />
+  if (head && rest === 'edit') return <EditPage ctx={ctx || null} master={master || null} base={base} id={Number(head)} />
+  if (head) return <DetailPage ctx={ctx || null} master={master || null} base={base} id={head} suggest={queryText(query, 'suggest') === '1'} error={queryText(query, 'error')} />
+  return <ListPage ctx={ctx || null} master={master || null} base={base} />
+}
+
+function Rule() {
+  return (
+    <aside className={styles.rule} data-testid="experiment-rule">
+      <b>What may be tested</b>
+      <p className={styles.quiet} style={{ margin: 0 }}>{EXPERIMENT_RULE} Only slots on the registry can run. Learners are never told they are in a test, and nothing extra about them is stored.</p>
+    </aside>
+  )
+}
+
+async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  const items = await listExperiments(payload, user)
+  const killed = await experimentsKilled(payload)
+  const counts = {
+    running: items.filter((row) => row.status === 'running').length,
+    draft: items.filter((row) => row.status === 'draft').length,
+    paused: items.filter((row) => row.status === 'paused').length,
+    finished: items.filter((row) => row.status === 'finished').length,
+  }
+  const groups: { key: ExperimentDoc['status']; title: string }[] = [
+    { key: 'running', title: 'Running' },
+    { key: 'draft', title: 'Drafts' },
+    { key: 'paused', title: 'Paused' },
+    { key: 'finished', title: 'Finished' },
+  ]
+  const masterUser = user.role === 'master'
+  const canStart = user.role === 'master' || user.role === 'portal-admin'
+  return (
+    <Frame
+      ctx={ctx}
+      master={master}
+      title="Experiments"
+      intro="Test small words, buttons and layouts as learners use the app, and let the winners take over."
+      testId="experiments-desk"
+      tools={canStart ? <Link className="btn" href={`${base}/new`} data-testid="experiment-new">Start a new experiment</Link> : null}
+    >
+      <div className={styles.page}>
+        <Rule />
+        {killed ? <p className={styles.test} data-testid="experiments-killed">The kill switch is on. Running tests have been paused. Learners see the usual defaults.</p> : null}
+        <section className={styles.summary} data-testid="experiment-summary">
+          <div className={styles.tile}><b data-testid="count-running">{counts.running}</b><span>Running</span></div>
+          <div className={styles.tile}><b data-testid="count-draft">{counts.draft}</b><span>Drafts</span></div>
+          <div className={styles.tile}><b data-testid="count-paused">{counts.paused}</b><span>Paused</span></div>
+          <div className={styles.tile}><b data-testid="count-finished">{counts.finished}</b><span>Finished</span></div>
+        </section>
+        {masterUser ? (
+          <form className={styles.banner} action="/api/experiments" method="post" data-testid="kill-switch">
+            <Hidden fields={{ action: 'kill', value: killed ? 'off' : 'on', next: base }} />
+            <b>{killed ? 'Kill switch is on' : 'Kill switch'}</b>
+            <p className={styles.quiet}>Stops every running test at once and sends learners back to the defaults.</p>
+            <button className="btn ghost" type="submit">{killed ? 'Turn the kill switch off' : 'Turn the kill switch on'}</button>
+          </form>
+        ) : null}
+        {user.role === 'master' || ctx ? <DeleteMany kind="experiment" next={base} portalSlug={ctx?.portal.slug} formId="bulk-experiment" /> : null}
+        <div className={styles.groups} id="experiment-list">
+          {groups.map((group) => {
+            const rows = items.filter((item) => item.status === group.key)
+            if (!rows.length) return null
+            return (
+              <section key={group.key} data-testid={`experiment-group-${group.key}`}>
+                <h2 style={{ margin: '0 0 10px', fontSize: 18 }}>{group.title}</h2>
+                <div className={styles.cards}>
+                  {rows.map((item) => {
+                    const [label, tone] = STATUS_BADGE[item.status]
+                    const slot = EXPERIMENT_SLOTS.find((row) => row.key === item.slot)
+                    const portalOfItem = idOfPortal(item)
+                    const canDelete = user.role === 'master' || (ctx != null && portalOfItem === ctx.portal.id)
+                    return (
+                      <div key={item.id}>
+                      <Link className={styles.card} href={`${base}/${item.id}`} data-testid="experiment-card" data-key={item.key} data-status={item.status}>
+                        <div className={styles.meta}>
+                          <span className={`badge ${tone}`}>{label}</span>
+                          <span className="badge grey">{slot?.name || item.slot}</span>
+                          <span className="badge grey">{item.allocation === 'auto' ? 'Auto' : 'Fixed split'}</span>
+                        </div>
+                        <h3>{item.name}</h3>
+                        <ExperimentPhones slot={item.slot} versions={mockFaces(item.variants)} compact />
+                        <p>{item.description || `${item.variants.length} versions · ${metricLabel(item.primaryMetric)}`}</p>
+                        <p className={styles.quiet}>{item.variants.length} versions · {portalOfItem ? 'One portal' : 'Every portal'}</p>
+                      </Link>
+                      {canDelete ? (
+                        <>
+                          <DeletePick formId="bulk-experiment" id={item.id} label={item.name} />
+                          <DeleteInline kind="experiment" id={item.id} next={base} portalSlug={ctx?.portal.slug} testId={`delete-experiment-${item.id}`} />
+                        </>
+                      ) : null}
+                      </div>
+                    )
+                  })}
+                </div>
+              </section>
+            )
+          })}
+        </div>
+        <section className="panel">
+          <header><h2>Testable slots</h2></header>
+          <div className="body">
+            <div className={styles.slots} data-testid="slot-registry">
+              {EXPERIMENT_SLOTS.map((slot) => (
+                <div key={slot.key} className={styles.slot} data-testid="slot-row" data-slot={slot.key}>
+                  <b>{slot.name}</b>
+                  <span className={styles.quiet}>{slot.key} · {slot.kind === 'copy' ? 'Wording' : 'Layout'} · {slot.wired ? 'Live in the app' : 'Registered, not swapped yet'}</span>
+                  <p className={styles.quiet} style={{ margin: '6px 0 0' }}>{slot.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      </div>
+    </Frame>
+  )
+}
+
+function idOfPortal(item: ExperimentDoc) {
+  const value = item.portal
+  if (value && typeof value === 'object' && 'id' in value) return Number((value as { id: number }).id)
+  return typeof value === 'number' ? value : null
+}
+
+async function DetailPage({ ctx, master, base, id, suggest, error }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id: string; suggest: boolean; error?: string }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  let results: ExperimentResults
+  try {
+    const experimentId = Number(id)
+    if (!Number.isFinite(experimentId) || experimentId <= 0) {
+      return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
+    }
+    results = await resultsFor(payload, user, experimentId)
+  } catch (error) {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>{error instanceof Error ? error.message : 'That experiment was not found.'}</p></Frame>
+  }
+  const { experiment, variants, verdict, totals } = results
+  const [label, tone] = STATUS_BADGE[experiment.status]
+  const masterUser = canEditExperiments(user)
+  const audits = await experimentAudit(payload, experiment.key, user.role === 'master' ? null : undefined)
+  const portals = masterUser ? await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 }) : []
+  const slot = EXPERIMENT_SLOTS.find((row) => row.key === experiment.slot)
+  const brief = await experimentBrief(payload, user, experiment)
+  const testNote = variants.some((row) => row.exposures > 0) && (await payload.find({
+    collection: 'experiment-events' as never,
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ experiment: { equals: experiment.id } }, { subject: { like: 'test-data:' } }] },
+  })).docs.length
+  return (
+    <Frame
+      ctx={ctx}
+      master={master}
+      title={experiment.name}
+      intro={slot?.description || ''}
+      testId="experiment-detail"
+      tools={<Link className="btn ghost" href={base}>All experiments</Link>}
+    >
+      <div className={styles.page}>
+        <Rule />
+        <div className={styles.meta}>
+          <span className={`badge ${tone}`} data-testid="experiment-status">{label}</span>
+          <span className="badge grey" data-testid="experiment-slot">{slot?.name || experiment.slot}</span>
+          <span className="badge grey">{experiment.allocation === 'auto' ? 'Auto · tries the stronger version' : 'Fixed split'}</span>
+          <span className="badge grey">{metricLabel(experiment.primaryMetric)}</span>
+        </div>
+        {testNote ? <p className={styles.test} data-testid="fake-test-data">These counts include labelled test data for a local or development database. They are not live learners.</p> : null}
+        <section className={styles.summary}>
+          <div className={styles.tile}><b data-testid="stat-exposures">{totals.exposures}</b><span>Times shown</span></div>
+          <div className={styles.tile}><b data-testid="stat-conversions">{totals.conversions}</b><span>Times it worked</span></div>
+          <div className={styles.tile}><b data-testid="stat-assignments">{totals.assignments}</b><span>Kept on one version</span></div>
+          <div className={styles.tile}><b>{variants.length}</b><span>Versions</span></div>
+        </section>
+        <ExperimentPhones slot={experiment.slot} versions={mockFaces(experiment.variants)} />
+        <section className={styles.facts} data-testid="experiment-facts">
+          <article className={styles.fact}>
+            <b>What is being tested</b>
+            <p data-testid="experiment-tested">{brief.tested}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Versions</b>
+            <ul className={styles.arms} data-testid="experiment-arms">
+              {variants.map((row) => <li key={row.key}><span>{row.letter}</span> {variantCopy(row.payload, row.label)}</li>)}
+            </ul>
+          </article>
+          <article className={styles.fact}>
+            <b>Portal</b>
+            <p data-testid="experiment-portal">{brief.portalName}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Learners</b>
+            <p data-testid="experiment-learners">{brief.learnerLine}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Started</b>
+            <p data-testid="experiment-started">{brief.startedLabel}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Who started it</b>
+            <p data-testid="experiment-starter">{brief.starterName}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Sample size</b>
+            <p data-testid="experiment-sample">{brief.sampleSize} {brief.sampleSize === 1 ? 'person' : 'people'}</p>
+          </article>
+          <article className={styles.fact}>
+            <b>Length</b>
+            <p data-testid="experiment-duration">{brief.durationDays} days{experiment.startedAt ? ` · until ${brief.endsLabel}` : ` · ${brief.endsLabel}`}</p>
+          </article>
+        </section>
+        <section className={styles.verdict} data-testid="experiment-verdict">
+          <b>Plain reading</b>
+          <p>{verdict.text}</p>
+          <p data-testid="experiment-confidence">{confidenceLine(verdict)}</p>
+          {brief.appliedCopy ? <p data-testid="experiment-applied">In use: learners see “{brief.appliedCopy}”.</p> : null}
+        </section>
+        {masterUser ? (
+          <div className="actions" style={{ justifyContent: 'flex-start', flexWrap: 'wrap' }}>
+            {experiment.status === 'draft' || experiment.status === 'paused' ? (
+              <form action="/api/experiments" method="post"><Hidden fields={{ action: 'start', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn" type="submit" data-testid="experiment-start">Start</button></form>
+            ) : null}
+            {experiment.status === 'running' ? (
+              <form action="/api/experiments" method="post"><Hidden fields={{ action: 'pause', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-pause">Pause</button></form>
+            ) : null}
+            {experiment.status === 'running' || experiment.status === 'paused' ? (
+              <form action="/api/experiments" method="post"><Hidden fields={{ action: 'finish', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-stop">Stop</button></form>
+            ) : null}
+            <form action="/api/experiments" method="post">
+              <Hidden fields={{ action: 'promote', id: String(experiment.id), variant: verdict.leaderKey || experiment.winnerKey || '', next: `${base}/${experiment.id}` }} />
+              <button className="btn teal" type="submit" data-testid="experiment-use-winner" disabled={!verdict.leaderKey}>Use the winner</button>
+            </form>
+            <Link className="btn ghost" href={`${base}/${experiment.id}/edit`}>Edit</Link>
+            <DeleteInline kind="experiment" id={experiment.id} next={base} portalSlug={ctx?.portal.slug} testId="delete-experiment" />
+            <a className="btn ghost" href={`/api/experiments?action=export&id=${experiment.id}`} data-testid="experiment-csv">CSV</a>
+            <form action="/api/experiments" method="post"><Hidden fields={{ action: 'test-data', id: String(experiment.id), next: `${base}/${experiment.id}` }} /><button className="btn ghost" type="submit" data-testid="experiment-test-data">Fill with labelled test numbers</button></form>
+          </div>
+        ) : null}
+        <div className={styles.layout}>
+          <section className="panel">
+            <header><h2>Versions</h2></header>
+            <div className="body" style={{ overflowX: 'auto' }}>
+              <table className={styles.table} data-testid="variant-table">
+                <thead>
+                  <tr>
+                    <th>Version</th>
+                    <th>Copy</th>
+                    <th>Approved</th>
+                    <th>Times shown</th>
+                    <th>Times it worked</th>
+                    <th>Rate</th>
+                    <th>Chance of being best</th>
+                    {masterUser ? <th></th> : null}
+                  </tr>
+                </thead>
+                <tbody>
+                  {variants.map((row) => (
+                    <tr key={row.key} data-testid="variant-row" data-variant={row.key}>
+                      <td><b>{row.letter}</b><div className={styles.quiet}>{row.key}</div></td>
+                      <td data-testid="variant-copy">{variantCopy(row.payload, row.label)}</td>
+                      <td>{row.approved ? 'Yes' : 'Needs approval'}</td>
+                      <td data-testid="variant-exposures">{row.exposures}</td>
+                      <td data-testid="variant-conversions">{row.conversions}</td>
+                      <td>{pct(row.rate)}</td>
+                      <td data-testid="variant-chance">{pct(row.chance)}</td>
+                      {masterUser ? (
+                        <td>
+                          <form action="/api/experiments" method="post">
+                            <Hidden fields={{ action: row.approved ? 'reject-variant' : 'approve-variant', id: String(experiment.id), variant: row.key, next: `${base}/${experiment.id}` }} />
+                            <button className="btn ghost small" type="submit">{row.approved ? 'Hold back' : 'Approve'}</button>
+                          </form>
+                        </td>
+                      ) : null}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <div style={{ display: 'grid', gap: 18 }}>
+            {masterUser && slot?.kind === 'copy' ? (
+              <section className="panel" data-testid="ai-suggest-panel">
+                <header><h2>Suggest built-in lines</h2></header>
+                <div className="body">
+                  <p className={styles.quiet}>Drafts 3 to 5 wording alternatives from the built-in set. The master desk does not call a model. You can also type a line on the experiment form. Each one needs your approval before it can run.</p>
+                  <form action="/api/experiments" method="post">
+                    <Hidden fields={{ action: 'suggest', id: String(experiment.id), next: `${base}/${experiment.id}?suggest=1` }} />
+                    <label>Current line
+                      <input name="current" defaultValue={variantCopy(experiment.variants[0]?.payload, experiment.variants[0]?.label)} />
+                    </label>
+                    <button className="btn" type="submit" data-testid="experiment-suggest">Suggest built-in lines</button>
+                  </form>
+                  {suggest && !error ? <p className={styles.quiet} data-testid="ai-suggest-done">Drafts were added below. Approve the ones you want before you start.</p> : null}
+                </div>
+              </section>
+            ) : null}
+            <section className="panel">
+              <header><h2>Guardrail</h2></header>
+              <div className="body">
+                <p className={styles.quiet}>{experiment.guardrailNote || EXPERIMENT_RULE}</p>
+                <p className={styles.quiet}>Slot <code>{experiment.slot}</code>{slot?.wired ? '' : ' · registered only; the app still uses the default framing.'}</p>
+              </div>
+            </section>
+          </div>
+        </div>
+        <section className="panel">
+          <header>
+            <div>
+              <h2>Who changed what</h2>
+              <LocalZoneNote />
+            </div>
+          </header>
+          <div className="body">
+            {audits.length ? (
+              <table className={styles.table} data-testid="experiment-audit">
+                <thead><tr><th>When</th><th>What</th><th>Who</th></tr></thead>
+                <tbody>
+                  {audits.map((row) => (
+                    <tr key={row.id}>
+                      <td style={{ whiteSpace: 'nowrap' }}><LocalWhen at={atIso(row.at)} /></td>
+                      <td data-testid="audit-what">{experimentAuditLine(String(row.event || ''), (row.detail || {}) as Record<string, unknown>, experiment)}</td>
+                      <td>{row.actorRole || 'desk'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <ExampleInUse desk title="Started the test" action={{ href: base, label: 'All experiments' }}><p>A person on the desk turned it on. Learners are not told.</p></ExampleInUse>}
+          </div>
+        </section>
+        {masterUser && portals.length ? <p className={styles.quiet}>Scope: {idOfPortal(experiment) ? portals.find((row) => row.id === idOfPortal(experiment)) ? str((portals.find((row) => row.id === idOfPortal(experiment)) as { name?: string }).name) : 'One portal' : 'Every portal'}.</p> : null}
+      </div>
+    </Frame>
+  )
+}
+
+function splitWho(description: string) {
+  const marker = '\n\nWho: '
+  const at = description.lastIndexOf(marker)
+  if (at === -1) return { explanation: description, who: '' }
+  return { explanation: description.slice(0, at), who: description.slice(at + marker.length) }
+}
+
+async function StartPage({ ctx, master, base, goal }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; goal: string }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  const session = await getSession()
+  const actor = session.actor?.id ? session.actor : user
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master or a portal admin can start an experiment.</p></Frame>
+  }
+  const portalId = actor.role === 'portal-admin' ? portalIdOf(actor) : null
+  const connected = Boolean(portalId && await storedForPortal(payload, portalId))
+  const willCall = connected && actor.role === 'portal-admin'
+  return (
+    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Say what you are trying to solve. You will see a setup before anything starts." testId="experiment-start-page">
+      <form className={`panel ${styles.start}`} action="/api/experiments" method="post" data-testid="experiment-start-form">
+        <header><h2>What are you trying to solve?</h2></header>
+        <div className="body">
+          <Hidden fields={{ action: 'design', next: `${base}/new`, portal: portalId ? String(portalId) : '' }} />
+          <label className="stack" data-testid="experiment-goal-label">
+            What are you trying to solve?
+            <textarea name="goal" required minLength={3} maxLength={400} defaultValue={goal} data-testid="experiment-goal" />
+          </label>
+          {willCall ? (
+            <>
+              <p className={styles.quiet} data-testid="experiment-ai-note">{estimatePortalCalls(1).label}</p>
+              <label className="check"><input type="checkbox" name="confirmAi" value="yes" data-testid="experiment-ai-confirm" /> Use this portal’s AI account for one setup</label>
+            </>
+          ) : (
+            <p className={styles.quiet} data-testid="experiment-defaults">Your words pick a ready-made test. No model is called.</p>
+          )}
+          <div className="actions" style={{ justifyContent: 'flex-start' }}>
+            <button className="btn" type="submit" data-testid="experiment-show-setup">Show a setup</button>
+            <Link className="btn ghost" href={base}>Cancel</Link>
+          </div>
+        </div>
+      </form>
+    </Frame>
+  )
+}
+
+async function PreviewPage({ ctx, master, base, id, goal }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id: string; goal: string }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  const session = await getSession()
+  const actor = session.actor?.id ? session.actor : user
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master or a portal admin can start an experiment.</p></Frame>
+  }
+  const experiment = await loadExperiment(payload, Number(id))
+  if (!experiment) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That setup was not found.</p></Frame>
+  if (actor.role === 'portal-admin' && idOfPortal(experiment) !== portalIdOf(actor)) {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That setup is not for your portal.</p></Frame>
+  }
+  if (experiment.status !== 'draft') {
+    return <Frame ctx={ctx} master={master} title={experiment.name} intro="" testId="experiment-preview"><p>That setup has already started.</p><p><Link href={`${base}/${experiment.id}`}>Open it</Link></p></Frame>
+  }
+  const { explanation, who } = splitWho(experiment.description || '')
+  const safety = (experiment.secondaryMetrics || []).find((item) => item === 'care_alert' || item === 'drop_off')
+  const fromAi = experiment.variants.some((row) => row.source === 'ai')
+  return (
+    <Frame ctx={ctx} master={master} title="Start a new experiment" intro="Read the setup. Change the lines if you want, then start it." testId="experiment-start-page">
+      <form className={`panel ${styles.start}`} action="/api/experiments" method="post" data-testid="experiment-preview">
+        <header><h2>Check this, then start</h2></header>
+        <div className="body">
+          <Hidden fields={{ action: 'launch', id: String(experiment.id), next: `${base}/new?draft=${experiment.id}`, goal }} />
+          <ExperimentPhones slot={experiment.slot} versions={mockFaces(experiment.variants)} live />
+          <article className={styles.fact} data-testid="experiment-explanation">
+            <b>In plain words</b>
+            <p>{explanation}</p>
+          </article>
+          <p className={styles.quiet} data-testid="experiment-design-source">{fromAi ? 'This setup came from this portal’s own AI account.' : 'Matched from your words. No model was called.'}</p>
+          <label className="stack">Name
+            <input name="name" required minLength={3} maxLength={80} defaultValue={experiment.name} data-testid="experiment-preview-name" />
+          </label>
+          {experiment.variants.map((row, index) => (
+            <label className="stack" key={row.key}>Version {index + 1}
+              <input name={`label_${row.key}`} required maxLength={80} defaultValue={variantCopy(row.payload, row.label)} data-testid="experiment-preview-version" />
+            </label>
+          ))}
+          <label className="stack">Who is in it
+            <input name="who" required maxLength={160} defaultValue={who || 'Learners in this portal'} data-testid="experiment-preview-who" />
+          </label>
+          <p className={styles.quiet} data-testid="experiment-preview-metric">Deciding metric: {metricLabel(experiment.primaryMetric)}. At least 100 learners see each version before the split moves.</p>
+          <p className={styles.quiet} data-testid="experiment-preview-safety">Safety: {safetyLabel(safety || 'drop_off')} must not rise. If they do, the test pauses and the admin is told.</p>
+          <p className={styles.quiet} data-testid="experiment-defaults">Thompson-sampling bandit after a 50/50 warm-up of 100 learners per version. Stop at a 95% probability of best, or after 4 weeks.</p>
+          <div className="actions" style={{ justifyContent: 'flex-start' }}>
+            <button className="btn" type="submit" data-testid="experiment-start-save">Start</button>
+            <Link className="btn ghost" href={base}>Cancel</Link>
+          </div>
+        </div>
+      </form>
+    </Frame>
+  )
+}
+
+async function EditPage({ ctx, master, base, id, fromInsight }: { ctx: Ctx | null; master: { payload: Payload; user: SessionUser; query: Query } | null; base: string; id?: number; fromInsight?: Query }) {
+  const payload = ctx?.payload || master!.payload
+  const user = ctx?.user || master!.user
+  if (!canEditExperiments(user)) {
+    return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-edit-denied"><p>Only the master can create an experiment.</p></Frame>
+  }
+  const current = id ? await loadExperiment(payload, id) : null
+  if (id && !current) return <Frame ctx={ctx} master={master} title="Experiments" intro="" testId="experiment-missing"><p>That experiment was not found.</p></Frame>
+  const portals = await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
+  const query = queryOf(ctx, master)
+  const insightSlotRaw = queryText(fromInsight || {}, 'slot')
+  const insightSlot = insightSlotRaw && EXPERIMENT_SLOTS.some((slot) => slot.key === insightSlotRaw) ? insightSlotRaw : ''
+  const insightNote = fromInsight?.from === 'insight' ? `From Insights${fromInsight.route ? ` · ${fromInsight.route}` : ''}${fromInsight.reason ? ` · ${fromInsight.reason}` : ''}` : ''
+  const variantText = queryText(query, 'variants') || (current?.variants || []).map((row) => `${row.key} | ${row.label}`).join('\n')
+  return (
+    <Frame ctx={ctx} master={master} title={current ? `Edit ${current.name}` : 'New experiment'} intro="Stay on a listed slot. Versions are wording or framing only." testId="experiment-edit">
+      <ExperimentForm
+        draft={{
+          action: current ? 'update' : 'create',
+          id: current ? String(current.id) : '',
+          next: current ? `${base}/${current.id}` : `${base}/new`,
+          key: queryText(query, 'key') || current?.key || '',
+          name: queryText(query, 'name') || current?.name || (insightNote ? 'From Insights' : ''),
+          description: queryText(query, 'description') || current?.description || insightNote,
+          slot: queryText(query, 'slot') || current?.slot || insightSlot || 'feed-cta-label',
+          slotOverride: queryText(query, 'slotOverride') || '',
+          portal: queryText(query, 'portal') || (current ? String(idOfPortal(current) || '') : ''),
+          allocation: queryText(query, 'allocation') || current?.allocation || 'fixed',
+          primaryMetric: queryText(query, 'primaryMetric') || current?.primaryMetric || 'clip_cta_tap',
+          secondary: queryText(query, 'secondary') || (current?.secondaryMetrics || []).join(', '),
+          variants: variantText || 'ready | Ready for more?\nthree-min | Watch the 3-minute version',
+          existing: Boolean(current),
+          cancelHref: current ? `${base}/${current.id}` : base,
+          rule: EXPERIMENT_RULE,
+          slots: EXPERIMENT_SLOTS.map((slot) => ({ value: slot.key, label: `${slot.name} — ${slot.wired ? 'live' : 'registered only'}` })),
+          portals: portals.map((portal) => ({ value: String(portal.id), label: str(portal.name) })),
+          metrics: PRIMARY_METRICS.map((metric) => ({ value: metric.key, label: metric.label })),
+        }}
+      />
+    </Frame>
+  )
+}

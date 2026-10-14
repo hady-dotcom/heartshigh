@@ -1,0 +1,35 @@
+/* Motion tokens (spec 7A.2). Only transform and opacity are animated. */
+:root {
+  --ease-enter: cubic-bezier(0.05, 0.7, 0.1, 1);
+  --ease-exit: cubic-bezier(0.3, 0, 0.8, 0.15);
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-calm: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-tap: 120ms;
+  --t-fade: 150ms;
+  --t-exit: 250ms;
+  --t-snap: 280ms;
+  --t-sheet: 350ms;
+  --t-scene: 400ms;
+  --t-calm: 600ms;
+  --t-grow: 900ms;
+  --t-reduced: 200ms;
+  --dusk-0: #1d1838;
+  --dusk-1: #2c2350;
+  --dusk-2: #4a3566;
+  --dawn-1: #8a5a6e;
+  --dawn-2: #d39a6a;
+  --dawn-3: #f1c988;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-tap: var(--t-reduced);
+    --t-fade: var(--t-reduced);
+    --t-exit: var(--t-reduced);
+    --t-snap: 120ms;
+    --t-sheet: var(--t-reduced);
+    --t-scene: var(--t-reduced);
+    --t-calm: var(--t-reduced);
+    --t-grow: var(--t-reduced);
+  }
+}

@@ -1,0 +1,439 @@
+import { defaultPlanName } from '@/lib/schedule'
+import { now as clockNow } from '@/lib/clock'
+import { parseWeekdays } from '@/lib/week'
+import { dateKey, formatOnTime, onTimeProgress, ON_TIME_HINT, type PlanSlot } from '@/lib/on-time'
+import { ViewAsButton } from '@/components/desk/view-as-button'
+import { GiveCourse } from '@/components/desk/give-course'
+import { groupThese } from '@/server/curriculum'
+import { HideTestFilter } from '@/components/desk/hide-test'
+import { HelpTip } from '@/components/desk/help'
+import { TOOL } from '@/lib/desk-help'
+import { hideTestFromQuery, visiblePeople } from '@/lib/test-accounts'
+import { cleanTitle } from '@/lib/clean-title'
+import Link from 'next/link'
+import { Hidden } from '@/components/app/shell'
+import { EvidencePlayer } from '@/components/desk/tools'
+import { heartsFileUrl } from '@/lib/media-access'
+import { now } from '@/lib/clock'
+import { visibleCourseIds } from '@/server/context'
+import { dayNumber } from '@/server/learner'
+import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } from '../common'
+import { AdminFrame } from './overview'
+import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { featureOn } from '@/lib/features'
+import { ExampleInUse } from '@/components/app/care'
+import { AnswerFocus } from '@/components/desk/answer-focus'
+import { sharedAnswersNewestFirst } from '@/lib/shared-answers'
+import { ClickRow } from '@/components/desk/row-link'
+import { portalDisplayName } from '@/lib/portal-name'
+import { managesLearnerAccounts, matchesLearnerSearch } from '@/lib/learner-desk'
+import { BulkBar, LearnerFilters } from './learner-desk'
+import { ReplyQueueView } from '@/components/desk/reply-queue-view'
+import { buildQueueCards } from '@/lib/reply-queue'
+
+export async function TeachScreen(ctx: Ctx) {
+  const { payload, user, portal, base, query } = ctx
+  const people = await portalPeople(payload, portal.id)
+  const hideTest = hideTestFromQuery(query)
+  const learners = visiblePeople(people.filter((person) => person.role === 'learner'), hideTest).filter((learner) => matchesLearnerSearch(str(learner.name), str(learner.email), query.q || ''))
+  const manage = managesLearnerAccounts(user.role)
+  const [entries, answers, completions, notes, watches, courseIds, plans] = await Promise.all([
+    rows(payload, 'workbook-entries', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt' }),
+    rows(payload, 'answers', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 500 }),
+    rows(payload, 'completions', { portal: { equals: portal.id } }, { limit: 2000 }),
+    rows(payload, 'feedback-notes', { portal: { equals: portal.id } }, { depth: 1, sort: 'second' }),
+    rows(payload, 'watch-sessions', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 50 }),
+    visibleCourseIds(payload, user),
+    rows(payload, 'schedules', { portal: { equals: portal.id } }, { limit: 200 }),
+  ])
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
+  const groupedCourses = courses.length ? await groupThese(payload, courses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))) : []
+  const giveCourses: { id: number; title: string; door: string }[] = []
+  const placedCourse = new Set<number>()
+  for (const group of groupedCourses) {
+    const door = group.number == null ? 'Not placed yet' : group.heading
+    for (const course of group.courses) {
+      placedCourse.add(course.id)
+      giveCourses.push({ id: course.id, title: course.title, door })
+    }
+  }
+  for (const course of courses) if (!placedCourse.has(course.id)) giveCourses.push({ id: course.id, title: str(course.title), door: 'Not placed yet' })
+  const shared = entries.filter((entry) => entry.consent)
+  const kept = entries.length - shared.length
+  const consented = new Set(shared.flatMap((entry) => {
+    const id = ref(entry.answer)
+    return id == null ? [] : [id]
+  }))
+  const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
+  const portalDocs = user.role === 'master'
+    ? await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
+    : [portal]
+  let queueAnswers = answers
+  let queueEntries = entries
+  if (user.role === 'master') {
+    const extras = await Promise.all(portalDocs.filter((item) => item.id !== portal.id).map(async (item) => {
+      const [moreAnswers, moreEntries] = await Promise.all([
+        rows(payload, 'answers', { portal: { equals: item.id } }, { depth: 1, sort: '-createdAt', limit: 200 }),
+        rows(payload, 'workbook-entries', { portal: { equals: item.id } }, { depth: 0, sort: '-createdAt', limit: 200 }),
+      ])
+      return { moreAnswers, moreEntries }
+    }))
+    queueAnswers = [...answers, ...extras.flatMap((item) => item.moreAnswers)]
+    queueEntries = [...entries, ...extras.flatMap((item) => item.moreEntries)]
+  }
+  const queueCards = buildQueueCards(queueAnswers, queueEntries, portalDocs.map((item) => ({
+    id: item.id,
+    name: str(item.name),
+    slug: str(item.slug),
+    organisationName: str(item.organisationName),
+  })))
+  const evidence = sharedAnswers.filter((answer) => answer.video || answer.audio)
+  const focusId = Number(query.answer) || 0
+  const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
+  const here = `${base}/admin/teach`
+  const today = dateKey(now())
+  const slotsFor = (learnerId: number): PlanSlot[] => {
+    const slots: PlanSlot[] = []
+    for (const plan of plans) {
+      const members = ((plan.learners as unknown[]) || []).map((item) => ref(item))
+      if (!members.includes(learnerId)) continue
+      for (const slot of (plan.slots as { date?: string; lessonId?: number }[]) || []) {
+        if (slot.lessonId && slot.date) slots.push({ lessonId: Number(slot.lessonId), date: String(slot.date) })
+      }
+    }
+    return slots
+  }
+  return (
+    <AdminFrame ctx={ctx} active="teach" title="Learners" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach" showOnPhone>
+      <section className="panel" style={{ marginBottom: 18 }} data-testid="give-course-panel">
+        <header><div><h2>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></h2><p>Search by name or door, then tick everyone who should have it.</p></div></header>
+        <div className="body"><GiveCourse learners={learners.map((learner) => ({ id: learner.id, name: str(learner.name) || 'Learner' }))} courses={giveCourses} next={here} /></div>
+      </section>
+      <section className="panel" id="learner-list" style={{ marginBottom: 18 }}>
+        <header className="light">
+          <h2 data-testid="learner-count">Learners ({learners.length})</h2>
+          {user.role === 'master' ? <HideTestFilter action={here} hide={hideTest} /> : null}
+        </header>
+        <div className="body">
+          <LearnerFilters action={here} query={query} portals={[{ id: portal.id, name: portalDisplayName(portal) }]} locked />
+          {manage ? (
+            <BulkBar
+              id="learner-bulk"
+              action="learner-bulk"
+              next={here}
+              pick="learner"
+              confirmHint="Type delete or remove"
+              buttons={[
+                { op: 'reset', label: 'New passwords', testId: 'bulk-reset' },
+                { op: 'remove', label: 'Take out of portal', testId: 'bulk-remove' },
+                { op: 'delete', label: 'Delete accounts', testId: 'bulk-delete', danger: true },
+              ]}
+            />
+          ) : null}
+        </div>
+        <div className="table-wrap">
+          <table className="data people-table">
+            <thead><tr>
+              {manage ? <th>Pick</th> : null}
+              <th>Name</th>
+              <th>Email</th>
+              <th>Portal</th>
+              <th className="num">Day</th>
+              <th className="num">Parts watched</th>
+              <th className="num"><abbr className="tip" title={ON_TIME_HINT} data-testid="on-time-header">On time</abbr></th>
+              <th className="num">Answers</th>
+              <th />
+            </tr></thead>
+            <tbody>
+              {learners.map((learner) => {
+                const done = completions.filter((row) => ref(row.user) === learner.id)
+                const progress = onTimeProgress(slotsFor(learner.id), done.map((row) => ({ lessonId: ref(row.lesson) || 0, watchedOn: dateKey(row.watchedAt || row.createdAt) })), today)
+                const onTime = formatOnTime(progress)
+                const open = `${base}/admin/teach/${learner.id}`
+                return (
+                  <ClickRow key={learner.id} href={open} testId="learner-row">
+                    {manage ? <td data-label="Pick"><input form="learner-bulk" type="checkbox" name="learner" value={learner.id} data-testid="learner-pick" aria-label={`Select ${str(learner.name)}`} /></td> : null}
+                    <td data-label="Name"><a href={open} data-testid="learner-open"><b>{str(learner.name)}</b></a>{learner.audience && learner.audience !== 'learner' ? <div className="hint">{str(learner.audience)}</div> : null}{learner.paused ? <div className="badge rose" data-testid="learner-paused">Paused</div> : null}</td>
+                    <td data-label="Email" className="email-cell"><span title={str(learner.email)} data-testid="learner-email">{str(learner.email)}</span></td>
+                    <td data-label="Portal" data-testid="learner-portal">{portalDisplayName(portal)}</td>
+                    <td data-label="Day" className="num">{dayNumber(learner as never)}</td>
+                    <td data-label="Parts watched" className="num" data-testid="learner-progress">{done.length}</td>
+                    <td data-label="On time" className="num" data-testid="on-time" title={progress.planned ? ON_TIME_HINT : 'No study plan yet'}>{onTime}</td>
+                    <td data-label="Answers" className="num" data-testid="learner-answers">{answers.filter((row) => ref(row.user) === learner.id).length}</td>
+                    <td data-label="Give a course">
+                      <GiveCourse learnerId={learner.id} learnerName={str(learner.name) || 'this learner'} courses={courses.map((course) => ({ id: course.id, title: str(course.title) }))} next={here} />
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end', alignItems: 'start' }}>
+                        {featureOn(portal, 'workbook') ? (answers.filter((row) => ref(row.user) === learner.id).length ? (
+                          <a className="btn ghost small" href={`/api/workbook/${learner.id}?format=csv`} data-testid="workbook-csv">Workbook</a>
+                        ) : (
+                          <span className="btn ghost small" aria-disabled="true" data-testid="workbook-csv" title="Nothing to download yet">Workbook</span>
+                        )) : null}
+                        {user.role !== 'teacher' ? <ViewAsButton targetId={learner.id} name={str(learner.name) || 'this learner'} landing={`${base}`} /> : null}
+                      </div>
+                    </td>
+                  </ClickRow>
+                )
+              })}
+              {!learners.length ? <tr><td colSpan={manage ? 10 : 9}><ExampleInUse desk title="Maryam Begum" action={{ href: query.q ? here : `${base}/admin/access`, label: query.q ? 'Show everyone' : 'Share a join code' }}><p>East London · day 3 · one talk finished</p></ExampleInUse></td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      {focusId ? <AnswerFocus id="reply-focus" /> : null}
+      <section className="panel" data-testid="shared-answers" style={{ marginBottom: 18 }}>
+        <header><div><h2>Reply queue</h2><p>Newest first. Tap a card to reply. Anything a learner kept private stays in their workbook.</p></div></header>
+        <div className="body">
+          <ReplyQueueView
+            base={here}
+            cards={queueCards}
+            portals={portalDocs.map((item) => ({ id: item.id, slug: str(item.slug), label: portalDisplayName(item) }))}
+            query={query}
+            currentSlug={portal.slug}
+            canSeeAllPortals={user.role === 'master'}
+            canReply={featureOn(portal, 'feedback')}
+          />
+        </div>
+      </section>
+
+      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1.25fr)', alignItems: 'start' }}>
+        {featureOn(portal, 'workbook') ? (
+        <section className="panel" data-testid="workbook-inbox">
+          <header><div><h2>Workbook entries shared with you ({shared.length})</h2><p>{kept} kept private by their writers and not shown here</p></div></header>
+          <div className="body" style={{ display: 'grid', gap: 14 }}>
+            {shared.map((entry) => {
+              const answer = answers.find((row) => row.id === ref(entry.answer))
+              const prompt = (answer?.point as { prompt?: string } | undefined)?.prompt
+              return (
+                <article key={entry.id} className="lib-card" data-testid="workbook-review">
+                  <div style={{ display: 'flex', justifyContent: 'space-between' }}><b>{(entry.user as { name?: string } | null)?.name || 'A learner'}</b><span className="hint">{shortDate(entry.createdAt)}</span></div>
+                  {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
+                  {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
+                  <p style={{ fontSize: 15, color: 'var(--ink)' }}>{str(entry.body) || 'A photo or recording'}</p>
+                  {heartsFileUrl(answer?.image) ? <img data-testid="teach-answer-media" src={heartsFileUrl(answer?.image)!} alt="" style={{ maxWidth: '100%', borderRadius: 8 }} /> : null}
+                  {entry.teacherReply && featureOn(portal, 'feedback') ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
+                  {featureOn(portal, 'feedback') ? (
+                  <form className="form" action="/api/hearts" method="post">
+                    <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: here }} />
+                    <textarea data-testid="reply-text" name="reply" placeholder="Write a reply. They will see it in their workbook." required />
+                    <div className="actions"><button className="btn ink small" data-testid="reply-submit" type="submit">{entry.teacherReply ? 'Send another reply' : 'Send reply'}</button></div>
+                  </form>
+                  ) : null}
+                </article>
+              )
+            })}
+            {!shared.length ? <ExampleInUse desk title="A shared workbook note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Hamza · I sat with the Names class and wrote one line I want to keep.</p></ExampleInUse> : null}
+          </div>
+        </section>
+        ) : null}
+
+        {featureOn(portal, 'feedback') ? (
+        <section className="panel" data-testid="evidence">
+          <header><div><h2>Recordings to give feedback on ({evidence.length})</h2><p>Pause at a moment and add a note; the learner sees it on their timeline</p></div></header>
+          <div className="body">
+            {picked ? (
+              <div className="evidence">
+                <EvidencePlayer
+                  src={heartsFileUrl(picked.video || picked.audio)}
+                  kind={picked.video ? 'video' : 'audio'}
+                  answerId={picked.id}
+                  next={`${here}?answer=${picked.id}`}
+                  href={`${base}/course/${ref((picked.lesson as { course?: unknown } | null)?.course) || ''}?part=${ref(picked.lesson) || ''}`}
+                  marks={notes.filter((note) => ref(note.answer) === picked.id).map((note) => ({ id: note.id, second: Number(note.second || 0), body: str(note.body), author: (note.author as { name?: string } | null)?.name || 'Teacher' }))}
+                />
+                <div style={{ display: 'grid', gap: 8, alignContent: 'start' }}>
+                  <b>{(picked.user as { name?: string } | null)?.name}</b>
+                  <p className="hint" style={{ margin: 0 }}>{(picked.point as { prompt?: string } | null)?.prompt}</p>
+                  {picked.body ? <p style={{ margin: 0 }}>{str(picked.body)}</p> : null}
+                  <div className="hint" style={{ marginTop: 8 }}>Other recordings</div>
+                  {evidence.map((answer) => (
+                    <Link key={answer.id} className={`btn ${answer.id === picked.id ? 'ink' : 'ghost'} small`} href={`${here}?answer=${answer.id}`}>{(answer.user as { name?: string } | null)?.name || 'Learner'} · {shortDate(answer.createdAt)}</Link>
+                  ))}
+                </div>
+              </div>
+            ) : <ExampleInUse desk title="A voice note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Maryam · 0:42 · “This is what I tried this week.”</p><p className="hint">Pause it and leave a note. They see it on the timeline.</p></ExampleInUse>}
+          </div>
+        </section>
+        ) : null}
+      </div>
+
+      <section className="panel" style={{ marginTop: 18 }}>
+        <header className="light"><h2>Detailed watch history</h2><span className="hint">Only for learners who turned it on</span></header>
+        <div className="table-wrap">
+          <table className="data">
+            <thead><tr><th>Learner</th><th>Film</th><th className="num">Watched up to</th><th>When</th></tr></thead>
+            <tbody>
+              {watches.filter((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)).map((row) => (
+                <tr key={row.id} data-testid="watch-session"><td>{(row.user as { name?: string } | null)?.name}</td><td>{(row.lesson as { title?: string } | null)?.title}</td><td className="num">{clock(Number(row.seconds || 0))}</td><td>{shortDate(row.createdAt)}</td></tr>
+              ))}
+              {!watches.some((row) => Boolean((row.user as { shareWatch?: boolean } | null)?.shareWatch)) ? <tr><td colSpan={4}><ExampleInUse desk title="Maryam · The Names" action={{ href: base, label: 'Open the app' }}><p>Watched up to 12:04 · yesterday</p><p className="hint">Only if they turn detailed history on.</p></ExampleInUse></td></tr> : null}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </AdminFrame>
+  )
+}
+
+const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+export async function PlansScreen(ctx: Ctx) {
+  const { payload, user, portal, base, query } = ctx
+  const [people, plans, courseIds] = await Promise.all([
+    portalPeople(payload, portal.id),
+    rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 100 }),
+    visibleCourseIds(payload, user),
+  ])
+  const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
+  const learners = people.filter((person) => person.role === 'learner')
+  const today = now().toISOString().slice(0, 10)
+  const later = new Date(now().getTime() + 27 * 86_400_000).toISOString().slice(0, 10)
+  const start = String(query.start || today)
+  const end = String(query.end || later)
+  const weekdays = parseWeekdays(query.days)
+  const selected = Number(query.course) || courses[0]?.id || 0
+  const keptLearners = new Set(String(query.learner || '').split(',').map(Number).filter(Boolean))
+  const here = `${base}/admin/plans`
+  return (
+    <AdminFrame ctx={ctx} active="plans" title="Study plans" intro="Share a course out across chosen days for one learner or a whole group. The parts stay in order and are spread evenly, so no day is left empty at the end. Learners can still watch at their own pace." testId="admin-plans">
+      <div className="grid desk-split">
+        <section className="panel">
+          <header><div><h2>New plan</h2></div></header>
+          <form id="new-plan" className="body form" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'schedule', portalSlug: portal.slug, targetType: 'course', next: here }} />
+            <label className="stack">Name<input type="text" name="name" defaultValue={defaultPlanName(clockNow())} /></label>
+            <label className="stack">Course<select data-testid="schedule-course" name="course" defaultValue={selected || undefined}>{courses.map((course) => <option key={course.id} value={course.id}>{cleanTitle(str(course.title))}</option>)}</select></label>
+            <div className="cols">
+              <label className="stack">From<input data-testid="schedule-start" type="date" name="start" defaultValue={start} /></label>
+              <label className="stack">Until<input data-testid="schedule-end" type="date" name="end" defaultValue={end} /></label>
+            </div>
+            <div className="checks">{DAYS.map((label, index) => <label className="check" key={label}><input data-testid={`weekday-${index}`} type="checkbox" name="weekday" value={index} defaultChecked={weekdays.includes(index)} /> {label}</label>)}</div>
+            <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>Days the plan should use <HelpTip topic="weekdays">{TOOL.weekdays}</HelpTip></p>
+            <div className="hint">For</div>
+            <div className="checks" style={{ flexDirection: 'column' }}>{visiblePeople(learners, ctx.user.role === 'master' ? hideTestFromQuery(ctx.query) : true).map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} data-testid="plan-learner" defaultChecked={keptLearners.has(learner.id)} /> {str(learner.name)}</label>)}</div>
+            <div className="actions"><button className="btn ink" data-testid="schedule-submit" type="submit">Share out the parts</button></div>
+          </form>
+        </section>
+        <section className="panel">
+          <header className="light"><h2>Plans ({plans.length})</h2></header>
+          <div className="body">
+            <BulkBar id="plan-bulk" action="plan-bulk-delete" next={here} pick="plan" confirmHint="Type delete" buttons={[{ label: 'Delete plans', testId: 'plan-bulk-delete', danger: true }]} />
+          </div>
+          <div className="table-wrap">
+            <table className="data people-table">
+              <thead><tr><th>Pick</th><th>Plan</th><th>Portal</th><th>Learner</th><th>Dates</th><th className="num">Parts</th><th>Days</th></tr></thead>
+              <tbody>
+                {plans.map((plan) => {
+                  const slots = (plan.slots as { date?: string; title?: string }[]) || []
+                  const names = ((plan.learners as unknown[]) || []).map((item) => str(people.find((person) => person.id === ref(item))?.name)).filter(Boolean)
+                  const open = `${base}/admin/plans/${plan.id}`
+                  return (
+                    <tr key={plan.id} data-testid="schedule-plan">
+                      <td data-label="Pick"><input form="plan-bulk" type="checkbox" name="plan" value={plan.id} data-testid="plan-pick" aria-label={`Select ${str(plan.name)}`} /></td>
+                      <td data-label="Plan"><a href={open} data-testid="plan-open"><b>{str(plan.name)}</b></a><details><summary className="hint" style={{ cursor: 'pointer' }}>See the days</summary>{slots.map((slot, index) => <div key={index} className="hint" data-testid="schedule-slot">{slot.date}: {slot.title}</div>)}</details></td>
+                      <td data-label="Portal" data-testid="plan-portal">{portalDisplayName(portal)}</td>
+                      <td data-label="Learner" data-testid="plan-for">{names.join(', ') || 'Themselves'}</td>
+                      <td data-label="Dates" style={{ whiteSpace: 'nowrap' }}>{str(plan.startDate)} to {str(plan.endDate)}</td>
+                      <td data-label="Parts" className="num">{slots.length}</td>
+                      <td data-label="Days">{((plan.weekdays as number[]) || []).map((day) => DAYS[day]).join(', ')}</td>
+                    </tr>
+                  )
+                })}
+                {!plans.length ? <tr><td colSpan={7}><ExampleInUse desk title="Names class, four weeks" action={{ href: '#new-plan', label: 'Make a plan' }}><p>Maryam · East London Mosque · Tue and Thu · 8 parts</p></ExampleInUse></td></tr> : null}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </AdminFrame>
+  )
+}
+
+export async function NightsScreen(ctx: Ctx) {
+  const { payload, user, portal, base } = ctx
+  const [events, rsvps, checkins, people] = await Promise.all([
+    rows(payload, 'events', { portal: { equals: portal.id } }, { sort: 'startsAt' }),
+    rows(payload, 'rsvps', { portal: { equals: portal.id } }, { limit: 1000 }),
+    rows(payload, 'checkins', { portal: { equals: portal.id } }, { limit: 1000 }),
+    portalPeople(payload, portal.id),
+  ])
+  const here = `${base}/admin/nights`
+  const name = (id: unknown) => str(people.find((person) => person.id === ref(id))?.name) || 'Someone'
+  return (
+    <AdminFrame ctx={ctx} active="nights" title="Live in person" intro="Evenings in person. Learners who watched a part in the last week get a ticket they can use themselves; anyone else has a place held and you welcome them in at the door." testId="admin-nights">
+      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gap: 18 }}>
+          {user.role !== 'teacher' ? <DeleteMany kind="night" next={here} portalSlug={portal.slug} formId="bulk-night" /> : null}
+          {events.map((event) => {
+            const going = rsvps.filter((row) => ref(row.event) === event.id)
+            const inside = checkins.filter((row) => ref(row.event) === event.id)
+            return (
+              <section className="panel" key={event.id} data-testid="event">
+                <header><div><h2>{str(event.title)}</h2><p>{longDate(str(event.startsAt))}{event.place ? ` · ${str(event.place)}` : ''}</p></div><span className="badge gold">{going.length} coming · {inside.length} here</span></header>
+                <div className="table-wrap">
+                  <table className="data">
+                    <thead><tr><th>Name</th><th>Ticket</th><th>Kind <HelpTip topic="ticket" label="What is a ticket kind?">{TOOL.earnedTicket}</HelpTip></th><th>Arrived</th></tr></thead>
+                    <tbody>
+                      {going.map((row) => {
+                        const arrived = inside.find((item) => ref(item.user) === ref(row.user))
+                        return (
+                          <tr key={row.id} data-testid="rsvp-row">
+                            <td>{name(row.user)}</td>
+                            <td style={{ fontFamily: 'ui-monospace, monospace' }}>{str(row.ticket)}</td>
+                            <td>{row.ticketKind === 'earned' ? <span className="badge teal">Earned</span> : <span className="badge grey">Held</span>}</td>
+                            <td>{arrived ? <span className="badge ink">{arrived.override ? 'Welcomed in' : 'Checked in'}</span> : <span className="hint">Not yet</span>}</td>
+                          </tr>
+                        )
+                      })}
+                      {inside.filter((item) => !going.some((row) => ref(row.user) === ref(item.user))).map((item) => (
+                        <tr key={`walk-${item.id}`}><td>{name(item.user)}</td><td className="hint">No ticket</td><td><span className="badge purple">Walk-in</span></td><td><span className="badge ink">Welcomed in</span></td></tr>
+                      ))}
+                      {!going.length && !inside.length ? <tr><td colSpan={4}><ExampleInUse desk title="Yusuf Ali" action={{ href: `#checkin-${event.id}`, label: 'Welcome someone in' }}><p>Ticket held · not here yet</p></ExampleInUse></td></tr> : null}
+                    </tbody>
+                  </table>
+                </div>
+                <form id={`checkin-${event.id}`} className="feedback-bar" action="/api/hearts" method="post" style={{ margin: '0 18px 18px' }}>
+                  <Hidden fields={{ action: 'checkin', event: event.id, next: here }} />
+                  <select name="learner" data-testid="checkin-learner" style={{ maxWidth: 260 }} required>
+                    <option value="">Who has arrived?</option>
+                    {visiblePeople(people, ctx.user.role === 'master' ? hideTestFromQuery(ctx.query) : true).map((person) => <option key={person.id} value={person.id}>{str(person.name)}</option>)}
+                  </select>
+                  <label className="check"><input type="checkbox" name="override" data-testid="checkin-override" /> Let them in anyway</label>
+                  <HelpTip topic="checkin">{TOOL.checkinOverride}</HelpTip>
+                  <button className="btn ink small" type="submit" data-testid="staff-checkin">Check in</button>
+                </form>
+                {user.role !== 'teacher' ? (
+                  <div style={{ margin: '0 18px 18px' }}>
+                    <DeletePick formId="bulk-night" id={event.id} label={str(event.title)} />
+                    <DeleteInline kind="night" id={event.id} next={here} portalSlug={portal.slug} testId={`delete-night-${event.id}`} />
+                  </div>
+                ) : null}
+              </section>
+            )
+          })}
+          {!events.length ? <section className="panel"><div className="body"><ExampleInUse desk title="Circle after Isha" action={{ href: '#plan-a-night', label: 'Plan Live in person' }}><p>Thursday · the hall · a short note for people coming</p></ExampleInUse></div></section> : null}
+        </div>
+        {user.role !== 'teacher' ? (
+          <section className="panel">
+            <header><div><h2>Plan Live in person</h2><p>People with evening alerts on are told straight away</p></div></header>
+            <form id="plan-a-night" className="body form" action="/api/hearts" method="post">
+              <Hidden fields={{ action: 'create-event', portalSlug: portal.slug, next: here }} />
+              <label className="stack">Kind
+                <select name="kind" data-testid="event-kind" defaultValue="Night">
+                  <option>Night</option><option>Circle</option><option>Class</option><option>Gathering</option>
+                </select>
+              </label>
+              <label className="stack">Name<input type="text" data-testid="event-title" name="title" placeholder="Leave blank for Kind · date" /></label>
+              <label className="stack">Date and time<input type="datetime-local" name="startsAt" data-testid="event-starts" /></label>
+              <label className="stack">Place<input type="text" name="place" placeholder="The hall" /></label>
+              <label className="stack">A note for people coming<textarea name="note" placeholder="A short, warm note" /></label>
+              <div className="actions"><button className="btn ink" type="submit" data-testid="event-submit">Save night</button></div>
+            </form>
+          </section>
+        ) : null}
+      </div>
+    </AdminFrame>
+  )
+}
