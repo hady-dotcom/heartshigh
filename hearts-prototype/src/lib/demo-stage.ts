@@ -824,6 +824,39 @@ export function coverageWorks(row: CoverageRow) {
   return JSON.stringify(next).includes(row.sample || '___missing___')
 }
 
+/** Lines from the other desks, drawn on top of the real learner app. */
+export function phoneToasts(state: DemoState): { id: string; text: string }[] {
+  const rows: { id: string; text: string }[] = []
+  const push = (id: string, text: string) => {
+    if (!text || rows.some((row) => row.id === id)) return
+    rows.push({ id, text })
+  }
+  const fresh = new Set(state.fresh)
+  const lines = (list: { id: string; text: string }[]) => {
+    for (const row of list) if (fresh.has(row.id)) push(row.id, row.text)
+  }
+  if (fresh.size) {
+    for (const note of state.notes) if (fresh.has(note.id)) push(note.id, note.body)
+    for (const event of state.events) if (fresh.has(event.id)) push(event.id, event.title)
+    for (const course of state.courses) if (fresh.has(course.id)) push(course.id, course.title)
+    for (const prompt of state.prompts) if (fresh.has(prompt.id)) push(prompt.id, prompt.text)
+    lines(state.packs)
+    lines(state.plans)
+    lines(state.codes)
+    lines(state.missions)
+    lines(state.lanes)
+    lines(state.scenes)
+    lines(state.joining)
+    for (const item of state.queue) if (fresh.has(item.id) && item.reply) push(`${item.id}-reply`, item.reply)
+    for (const row of state.safety) if (fresh.has(row.id) && row.reply) push(row.id, row.reply)
+    if (fresh.has('paused') && state.paused) push('paused', 'Your place is paused')
+    if (fresh.has('garden')) push('garden', state.garden ? 'Garden path is on' : 'Garden path is off')
+    if (fresh.has('live') && state.liveTitle) push('live', state.liveTitle)
+  }
+  if (!rows.length && state.notes[0]) push(state.notes[0].id, state.notes[0].body)
+  return rows.slice(0, 3)
+}
+
 export function alertsFor(state: DemoState, panel: DemoPanel) {
   return state.alerts.filter((row) => row.to === panel)
 }

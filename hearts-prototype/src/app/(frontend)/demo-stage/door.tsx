@@ -11,9 +11,9 @@ const DOTS = [
   { key: 'learner', label: 'Learner', color: '#7a4fa8' },
 ] as const
 
-export function DemoDoor() {
+export function DemoDoor({ learnerSrc }: { learnerSrc: string }) {
   const [open, setOpen] = useState(false)
-  if (open) return <DemoStage />
+  if (open) return <DemoStage learnerSrc={learnerSrc} />
   return (
     <main className="demo-door" data-testid="demo-entry">
       <p className="demo-door-kicker">Hady Core · practice only</p>

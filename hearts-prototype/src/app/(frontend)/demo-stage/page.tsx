@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { getSession, loadPortal } from '@/server/context'
 import { DemoDoor } from './door'
 import './demo-stage.css'
 
@@ -9,6 +10,10 @@ export const metadata: Metadata = {
   description: 'A live four-screen walk-through. Practice data only.',
 }
 
-export default function DemoStagePage() {
-  return <DemoDoor />
+export default async function DemoStagePage() {
+  const { payload } = await getSession()
+  const demo = await loadPortal(payload, 'hearts-demo')
+  const seeded = demo ? null : await loadPortal(payload, 'east-london')
+  const slug = demo ? 'hearts-demo' : seeded ? 'east-london' : 'hearts-demo'
+  return <DemoDoor learnerSrc={`/p/${slug}/feed`} />
 }

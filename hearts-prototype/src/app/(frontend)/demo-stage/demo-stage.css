@@ -355,6 +355,44 @@
   overflow: hidden;
 }
 .demo-phone .app-scroll { flex: 1; min-height: 0; overflow: auto; padding-bottom: 78px; }
+.demo-phone-real { align-items: center; justify-content: center; padding: 0; }
+.demo-bezel-real {
+  max-width: none;
+  height: auto;
+  padding: 0;
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  background: #111018;
+}
+.demo-bezel-real iframe {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border: 0;
+  background: #111018;
+}
+.demo-phone-toasts {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 12px;
+  z-index: 8;
+  display: grid;
+  gap: 6px;
+  pointer-events: none;
+}
+.demo-phone-toast {
+  margin: 0;
+  background: #1f1d36;
+  color: #f6f0e4;
+  border-radius: 14px;
+  padding: 8px 10px;
+  font-size: 13px;
+  line-height: 1.35;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+}
+
 .demo-phone .tabbar {
   position: absolute;
   left: 8px;

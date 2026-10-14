@@ -41,6 +41,7 @@ import {
   coverageMarkdown,
   coverageWorks,
   learnerVisible,
+  phoneToasts,
 } from '../../src/lib/demo-stage'
 
 const JARGON = ['payload', 'toggle', 'draft', 'publish', 'contingent', 'scenario', 'imported']
@@ -220,6 +221,20 @@ describe('the demo door', () => {
     const packed = `${DEMO_ENTRY_TITLE} ${DEMO_ENTRY_START}`.toLowerCase()
     assert.equal(packed.includes('password'), false)
     assert.equal(packed.includes('sign in'), false)
+  })
+})
+
+describe('the real phone overlay', () => {
+  it('puts a new announcement and a new event on top of the learner app', () => {
+    const noted = reduceDemo(seedDemo(), { type: 'post-note', body: 'Bring a notebook.' })
+    assert.equal(phoneToasts(noted).some((row) => row.text === 'Bring a notebook.'), true)
+    const dated = reduceDemo(seedDemo(), { type: 'add-event', kind: 'calendar', title: 'Open evening' })
+    assert.equal(phoneToasts(dated).some((row) => row.text === 'Open evening'), true)
+    const planned = reduceDemo(seedDemo(), { type: 'add-plan', text: 'Sit for five minutes' })
+    assert.equal(phoneToasts(planned).some((row) => row.text === 'Sit for five minutes'), true)
+    const garden = reduceDemo(seedDemo(), { type: 'toggle-garden' })
+    assert.equal(phoneToasts(garden).some((row) => row.text === 'Garden path is off'), true)
+    assert.equal(phoneToasts(seedDemo())[0]?.text, SEED_NOTE)
   })
 })
 
