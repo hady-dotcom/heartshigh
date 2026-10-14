@@ -559,6 +559,26 @@
           "notNull": false,
           "default": false
         },
+        "paused": {
+          "name": "paused",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "must_change_password": {
+          "name": "must_change_password",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "last_seen_at": {
+          "name": "last_seen_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
         "updated_by_id": {
           "name": "updated_by_id",
           "type": "integer",
@@ -4406,6 +4426,12 @@
         },
         "replied_at": {
           "name": "replied_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "done_at": {
+          "name": "done_at",
           "type": "timestamp(3) with time zone",
           "primaryKey": false,
           "notNull": false
@@ -23981,6 +24007,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "c83b11a0-2230-4b2e-9d11-0b2e1a000003",
-  "prevId": "d4a7e2b1-2100-4c18-9a44-0c14e2100001"
+  "id": "c83b11a0-2350-4b2e-9d11-0b2e1a000005",
+  "prevId": "d7a288b7-2330-4284-e488-72858b000009"
 }
