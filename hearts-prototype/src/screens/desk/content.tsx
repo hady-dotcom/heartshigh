@@ -39,6 +39,7 @@ import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { courseRemovedFromDesk } from '@/lib/desk-delete'
+import { vimeoPlayerSrc } from '@/lib/vimeo'
 
 export function guardAdmin(ctx: Ctx) {
   if (ctx.user.role === 'teacher') redirect(`${ctx.base}/admin?error=${encodeURIComponent('That page is for the portal admin. Ask them if you need something changed.')}`)
@@ -358,7 +359,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
               <header><div><h2>Film: {partTitle(lesson, str(course.title))}</h2><p data-testid="lesson-meta">{youtubeId ? `YouTube ${youtubeId}` : 'No film link yet'}{lesson.durationSeconds ? ` · ${clock(Number(lesson.durationSeconds))}` : ''}{str(lesson.speaker) ? ` · ${str(lesson.speaker)}` : ''}</p></div></header>
               <div className="body" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 1fr)', gap: 18 }}>
                 <div>
-                  {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={`https://player.vimeo.com/video/${str(lesson.vimeoId)}`} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={learnerEmbedSrc(youtubeId)} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
+                  {str(lesson.videoProvider) === 'vimeo' && str(lesson.vimeoId) ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={vimeoPlayerSrc(str(lesson.vimeoId), str(lesson.vimeoHash))} allow="fullscreen; picture-in-picture" /> : str(lesson.videoProvider) === 'file' ? <video className="film-preview" style={{ padding: 0 }} controls src={`/api/hearts/film/${lesson.id}`} /> : youtubeId ? <iframe className="film-preview" style={{ padding: 0 }} title={partTitle(lesson, str(course.title))} src={learnerEmbedSrc(youtubeId)} allow="encrypted-media" /> : <div className="film-preview">{locked ? 'This film has no YouTube link.' : 'Paste a YouTube link to attach the film.'}</div>}
                   <p className="hint" style={{ marginTop: 10 }}>
                     {(() => {
                       const status = bringInStatus(str(lesson.transcriptNote))

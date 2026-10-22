@@ -90,7 +90,7 @@ export async function BringInBody({
         </header>
         <BusyForm className="body form" action="/api/hearts" method="post">
           <Hidden fields={{ next }} />
-          <label className="stack">YouTube links, playlist or channel
+          <label className="stack">Vimeo or YouTube links, playlist or channel
             <textarea className="paste-example" data-testid="bring-in-urls" name="urls" rows={6} required placeholder={'e.g. https://www.youtube.com/watch?v=…\nhttps://www.youtube.com/watch?v=… | Speaker name\nhttps://www.youtube.com/playlist?list=…'} />
           </label>
           <details className="more-options" data-testid="bring-in-more">
@@ -215,7 +215,7 @@ export async function BringInBody({
             <div style={{ marginTop: 16 }}>
               {otherDrafts.map((talk) => (
                 <div key={talk.id} data-testid="bring-in-draft-row" data-status={talk.status || 'draft'} style={{ marginBottom: 12 }}>
-                  <p><b>{talk.title}</b> {talk.courseTitle ? <span className="hint">{talk.courseTitle}</span> : null} <span className="badge gold">Draft</span> {talk.status ? <span className="badge gold">{bringInStatusLabel(talk.status)}</span> : null}</p>
+                  <p><b>{talk.title}</b> {talk.courseTitle ? <span className="hint">{talk.courseTitle}</span> : null} <span className="badge gold">Draft</span> {talk.status ? <span className="badge gold">{bringInStatusLabel(talk.status, talk.note)}</span> : null}</p>
                   <BusyForm action="/api/hearts" method="post">
                     <Hidden fields={{ action: 'publish-talks', lesson: talk.id, next }} />
                     <label className="check">
@@ -356,10 +356,11 @@ function PlaceLine({ kind, place }: { kind: string; place?: BringInRow['jibrilPl
 
 function ResultRow({ lesson, next }: { lesson: Row; next: string }) {
   const status = bringInStatus(str(lesson.transcriptNote))
-  const retry = status === 'failed' || status === 'waiting'
+  // A Vimeo talk is tried again by pasting its link again, so it has no YouTube retry button.
+  const retry = (status === 'failed' || status === 'waiting') && str(lesson.videoProvider) !== 'vimeo'
   return (
     <div data-testid="bring-in-saved" data-status={status || 'saved'} style={{ marginBottom: 12 }}>
-      <p><b>{str(lesson.title)}</b> {lesson.publishState === 'draft' ? <span className="badge gold">Draft</span> : <span className="badge teal">Published</span>} {status ? <span className="badge gold">{bringInStatusLabel(status)}</span> : null}</p>
+      <p><b>{str(lesson.title)}</b> {lesson.publishState === 'draft' ? <span className="badge gold">Draft</span> : <span className="badge teal">Published</span>} {status ? <span className="badge gold">{bringInStatusLabel(status, str(lesson.transcriptNote))}</span> : null}</p>
       {retry ? (
         <BusyForm action="/api/hearts" method="post">
           <Hidden fields={{ action: 'ingest', lesson: lesson.id, next, retry: 'yes', url: `https://www.youtube.com/watch?v=${str(lesson.youtubeId)}`, fetchTranscript: 'yes', captionLang: 'en' }} />

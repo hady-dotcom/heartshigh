@@ -14,7 +14,7 @@ export async function GET(req: Request) {
   if (!user || (user.role !== 'master' && user.role !== 'portal-admin')) {
     return NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 })
   }
-  const ids = [...new Set((new URL(req.url).searchParams.get('ids') || '').split(',').map((value) => Number(value)).filter((id) => id > 0))].slice(0, 80)
+  const ids = [...new Set((new URL(req.url).searchParams.get('ids') || '').split(',').map((value) => Number(value)).filter((id) => id > 0))].slice(0, 150)
   if (!ids.length) return NextResponse.json({ lessons: [] })
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: ids.length, where: { id: { in: ids } } })
   const lessons = (found.docs as { id: number; title?: string; transcriptNote?: string; publishState?: string; youtubeId?: string; speaker?: string }[]).map((lesson) => ({
