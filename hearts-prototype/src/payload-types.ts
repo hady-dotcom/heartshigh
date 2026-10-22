@@ -721,6 +721,10 @@ export interface Lesson {
   thumbnailClean?: boolean | null;
   videoProvider?: ('youtube' | 'vimeo' | 'file') | null;
   vimeoId?: string | null;
+  /**
+   * The extra code at the end of a private Vimeo link. Unlisted films need it to play.
+   */
+  vimeoHash?: string | null;
   film?: (number | null) | Media;
   /**
    * Mux-ready. Unused until a Mux asset is attached.
@@ -737,7 +741,7 @@ export interface Lesson {
    */
   shortWaived?: boolean | null;
   transcript?: string | null;
-  transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending') | null;
+  transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending' | 'vimeo') | null;
   transcriptNote?: string | null;
   /**
    * Earlier copies of this transcript, so a save on the Transcripts desk can be undone.
@@ -3678,6 +3682,7 @@ export interface LessonsSelect<T extends boolean = true> {
   thumbnailClean?: T;
   videoProvider?: T;
   vimeoId?: T;
+  vimeoHash?: T;
   film?: T;
   muxAssetId?: T;
   muxPlaybackId?: T;

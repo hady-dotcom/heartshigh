@@ -6,6 +6,7 @@ import path from 'node:path'
 import { promisify } from 'node:util'
 import { youtubeIdFromUrl } from './extractor'
 import { parseTranscript } from './transcript'
+import { vimeoWaitingLabel } from './vimeo'
 
 const execFileAsync = promisify(execFile)
 
@@ -161,7 +162,9 @@ export function bringInStatus(note: string | null | undefined): BringInState | '
   return ''
 }
 
-export function bringInStatusLabel(status: BringInState | '') {
+export function bringInStatusLabel(status: BringInState | '', note?: string | null) {
+  const vimeo = status === 'waiting' ? vimeoWaitingLabel(note) : ''
+  if (vimeo) return vimeo
   if (status === 'queued' || status === 'processing' || status === 'waiting') return 'Getting captions… (usually under 30 min)'
   if (status === 'processed') return 'Ready to publish'
   if (status === 'failed') return "Couldn't get captions: upload a transcript"

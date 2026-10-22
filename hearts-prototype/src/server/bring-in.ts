@@ -23,6 +23,8 @@ import { broughtInCourseName } from '@/lib/human-date'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { bringInFlash, bringInLang, bringInNote, bringInStatus, captionLang, ingestYoutubeUrl, readBringInFlags, stampBringInFlags, transcriptFor, type YoutubeMeta } from '@/lib/youtube'
 import { decideBringInWrite, draftLessonWhere } from '@/lib/bring-in-plan'
+import { ingestVimeoLink, looksLikeVimeo, parseVimeoLink, vimeoMeta } from '@/lib/vimeo'
+import { cleanedTimedTranscript } from '@/lib/youtube'
 import type { SessionUser } from './context'
 import { giveCourseToJoinedLearners } from './course-offer'
 import { giveCourseToPackHolders, packsContaining } from './publish-holders'
@@ -67,18 +69,73 @@ async function channelMap(payload: Payload): Promise<ChannelMapRow[]> {
 
 async function libraryIds(payload: Payload) {
   const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 5000, where: { youtubeId: { exists: true } } })
-  return new Set((found.docs as { youtubeId?: string }[]).map((row) => String(row.youtubeId || '')).filter(Boolean))
+  const ids = new Set((found.docs as { youtubeId?: string }[]).map((row) => String(row.youtubeId || '')).filter(Boolean))
+  for (const id of (await vimeoLessons(payload)).withWords) ids.add(id)
+  return ids
+}
+
+/** Vimeo talks already here, keyed "vimeo:<number>". Ones still without words can be pasted again to pull them. */
+async function vimeoLessons(payload: Payload) {
+  const found = await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 5000, where: { and: [{ videoProvider: { equals: 'vimeo' } }, { vimeoId: { exists: true } }] } })
+  const withWords = new Set<string>()
+  const waiting = new Map<string, number>()
+  for (const row of found.docs as { id: number; vimeoId?: string; transcript?: string }[]) {
+    const key = `vimeo:${String(row.vimeoId || '')}`
+    if (String(row.transcript || '').trim()) withWords.add(key)
+    else waiting.set(key, row.id)
+  }
+  return { withWords, waiting }
+}
+
+/** Pasted Vimeo lines become rows the same shape as YouTube ones. "link | speaker" works too. */
+async function expandVimeoLines(lines: string[]) {
+  const token = String(process.env.VIMEO_TOKEN || '').trim()
+  const videos: { id: string; url: string; title: string; durationSeconds: number | null; channel: string; channelId: string; captions: 'unknown'; lineSpeaker: string; provider: 'vimeo'; vimeoHash: string }[] = []
+  const errors: string[] = []
+  for (const line of lines) {
+    const bar = line.indexOf('|')
+    const link = (bar >= 0 ? line.slice(0, bar) : line).trim()
+    const lineSpeaker = bar >= 0 ? line.slice(bar + 1).trim() : ''
+    const parsed = parseVimeoLink(link)
+    if (!parsed) {
+      errors.push(`"${link}" is not a Vimeo film link.`)
+      continue
+    }
+    const meta = await vimeoMeta(parsed, process.env.HEARTS_YT_FIXTURE === '1' ? { token, fetcher: vimeoFixtureFetch } : { token })
+    videos.push({
+      id: `vimeo:${parsed.id}`,
+      url: parsed.url,
+      title: meta?.title || `Vimeo film ${parsed.id}`,
+      durationSeconds: meta?.durationSeconds ?? null,
+      channel: meta?.author || '',
+      channelId: '',
+      captions: 'unknown',
+      lineSpeaker,
+      provider: 'vimeo',
+      vimeoHash: parsed.hash,
+    })
+  }
+  return { videos, errors }
 }
 
 export async function previewBringIn(payload: Payload, user: SessionUser, form: FormData) {
   if (!canBring(user)) return { error: 'You cannot bring in a film.' }
   const raw = text(form, 'urls')
-  if (!raw) return { error: 'Paste a YouTube link, a playlist or a channel first.' }
+  if (!raw) return { error: 'Paste a Vimeo or YouTube link, a playlist or a channel first.' }
   const lang = captionLang(text(form, 'captionLang'))
   const typedSpeaker = text(form, 'speaker')
   const jibril = jibrilSection(text(form, 'jibril'))
   const ghunya = ghunyaHeading(text(form, 'ghunya'))
-  const expanded = await expandBringInText(raw, { lang })
+  const allLines = raw.split(/\n+/).map((line) => line.trim()).filter(Boolean)
+  const vimeoLines = allLines.filter((line) => looksLikeVimeo(line.split('|')[0] || ''))
+  const otherText = allLines.filter((line) => !vimeoLines.includes(line)).join('\n')
+  const fromYoutube = otherText ? await expandBringInText(otherText, { lang }) : { videos: [], errors: [] as string[], playlistTitle: '' }
+  const fromVimeo = vimeoLines.length ? await expandVimeoLines(vimeoLines) : { videos: [], errors: [] as string[] }
+  const expanded = {
+    ...fromYoutube,
+    videos: [...fromYoutube.videos, ...fromVimeo.videos] as typeof fromYoutube.videos,
+    errors: [...(fromYoutube.errors as unknown[]), ...fromVimeo.errors] as typeof fromYoutube.errors,
+  }
   const creating = text(form, 'course') === 'new'
   const courseSpeaker = creating ? suggestedCourseSpeaker({ typed: typedSpeaker, videos: expanded.videos }) : typedSpeaker
   const loose = looseBringInPaste(raw)
@@ -97,6 +154,7 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
       channelId: video.channelId,
       captions: video.captions || 'unknown',
       lineSpeaker: video.lineSpeaker,
+      ...('provider' in video && video.provider === 'vimeo' ? { provider: 'vimeo' as const, vimeoHash: String((video as { vimeoHash?: string }).vimeoHash || '') } : {}),
     })),
     known,
   ).map((row) => ({
@@ -117,7 +175,7 @@ export async function previewBringIn(payload: Payload, user: SessionUser, form: 
     catalogue: loadPlaceCatalogue(),
     presetJibril: jibril,
     presetGhunya: ghunya,
-    fetchTranscript: async (id) => (await transcriptFor(id, undefined, { lang })).transcript,
+    fetchTranscript: async (id) => (id.startsWith('vimeo:') ? null : (await transcriptFor(id, undefined, { lang })).transcript),
   })
   const courseId = Number(text(form, 'course') || 0) || null
   const origin = user.role === 'master' && text(form, 'origin') !== 'local' ? 'master' : 'local'
@@ -246,7 +304,19 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
     const refused: string[] = []
     const lessonIds: number[] = []
     const lang = captionLang(body.lang)
+    const vimeoWaiting = (await vimeoLessons(payload)).waiting
     for (const row of rows) {
+      if (row.provider === 'vimeo') {
+        const outcome = await bringInVimeoRow(payload, row, { course, unit, known, waitingId: vimeoWaiting.get(row.id) || null, order: orderBase + 1, lang, autoPublish })
+        if (outcome.created) orderBase += 1
+        if (outcome.lessonId) lessonIds.push(outcome.lessonId)
+        if (outcome.refusal) refused.push(outcome.refusal)
+        if (outcome.bucket === 'saved') saved++
+        else if (outcome.bucket === 'waiting') waiting++
+        else if (outcome.bucket === 'failed') failed++
+        else if (outcome.bucket === 'skipped') skipped++
+        continue
+      }
       if (known.has(row.id)) {
         skipped++
         continue
@@ -341,6 +411,78 @@ export async function commitBringIn(payload: Payload, user: SessionUser, form: F
   })
 }
 
+/** One Vimeo row: make the talk (or reuse one still waiting for words), then pull its words from Vimeo. */
+async function bringInVimeoRow(
+  payload: Payload,
+  row: BringInRow,
+  ctx: { course: Doc; unit: Doc; known: Set<string>; waitingId: number | null; order: number; lang: string; autoPublish: boolean },
+): Promise<{ created: boolean; lessonId: number | null; bucket: 'saved' | 'waiting' | 'failed' | 'skipped' | 'refused'; refusal?: string }> {
+  if (ctx.known.has(row.id) && !ctx.waitingId) return { created: false, lessonId: null, bucket: 'skipped' }
+  const link = parseVimeoLink(row.url)
+  if (!link) return { created: false, lessonId: null, bucket: 'failed' }
+  const hash = row.vimeoHash || link.hash
+  const ingest = process.env.HEARTS_YT_FIXTURE === '1'
+    ? await ingestVimeoLink({ ...link, hash }, { lang: ctx.lang, fetcher: vimeoFixtureFetch })
+    : await ingestVimeoLink({ ...link, hash }, { lang: ctx.lang })
+  const duration = ingest.durationSeconds && ingest.durationSeconds > 0 ? Math.round(ingest.durationSeconds) : row.durationSeconds || 0
+  const words = ingest.ok ? cleanedTimedTranscript(ingest.transcript).cleaned : ''
+  const refusal = refusalForTalk(sourceTalkSeconds({ durationSeconds: duration || null, transcript: words || null }))
+  if (refusal) return { created: false, lessonId: null, bucket: 'refused', refusal }
+  const bucket: 'saved' | 'waiting' | 'failed' = ingest.ok ? 'saved' : ingest.reason === 'no-key' || ingest.reason === 'no-captions' ? 'waiting' : 'failed'
+  const note = bringInNote(bucket === 'saved' ? 'processed' : bucket === 'waiting' ? 'waiting' : 'failed', ingest.ok ? 'Words pulled from Vimeo.' : ingest.note, ctx.lang)
+  const data = {
+    ...(ingest.meta?.title ? { title: ingest.meta.title, sourceTitle: ingest.meta.title } : {}),
+    ...(duration > 0 ? { durationSeconds: duration } : {}),
+    ...(words ? { transcript: words, transcriptSource: 'vimeo' } : {}),
+    transcriptNote: note,
+    ...(ctx.autoPublish && bucket === 'saved' ? { publishState: 'published' } : {}),
+    ...(row.speaker ? { speaker: row.speaker } : {}),
+    ...(row.jibril ? { jibrilSection: row.jibril } : {}),
+    ...(row.ghunya ? { ghunyaHeading: row.ghunya } : {}),
+    videoProvider: 'vimeo',
+    vimeoId: link.id,
+    vimeoHash: hash || '',
+  }
+  if (ctx.waitingId) {
+    await payload.update({ collection: 'lessons', id: ctx.waitingId, overrideAccess: true, data: data as never })
+    ctx.known.add(row.id)
+    return { created: false, lessonId: ctx.waitingId, bucket }
+  }
+  const created = (await payload.create({
+    collection: 'lessons',
+    overrideAccess: true,
+    data: {
+      title: row.title || `Vimeo film ${link.id}`,
+      unit: ctx.unit.id,
+      course: ctx.course.id,
+      portal: idOf(ctx.course.portal) || undefined,
+      master: ctx.course.origin === 'master',
+      order: ctx.order,
+      transcriptSource: 'none',
+      publishState: 'draft',
+      ...data,
+    } as never,
+  })) as unknown as Doc
+  ctx.known.add(row.id)
+  return { created: true, lessonId: created.id, bucket }
+}
+
+/** Test stand-in for Vimeo, used only when HEARTS_YT_FIXTURE=1 on a local server. */
+async function vimeoFixtureFetch(url: string): Promise<Response> {
+  const id = (/(\d{6,12})/.exec(url) || [])[1] || ''
+  const short = id.endsWith('0001')
+  const silent = id.endsWith('0002')
+  if (url.includes('/texttracks')) {
+    return Response.json({ data: silent ? [] : [{ type: 'captions', language: 'en-x-autogen', name: 'English (auto-generated)', link: `https://captions.vimeo.test/${id}.vtt` }] })
+  }
+  if (url.startsWith('https://captions.vimeo.test/')) {
+    return new Response('WEBVTT\n\n00:00:01.000 --> 00:00:05.000\nIn the name of God, the most merciful.\n\n00:00:05.000 --> 00:00:09.000\nToday we talk about patience.\n')
+  }
+  if (url.includes('api.vimeo.com/videos/')) return Response.json({ name: `Vimeo test talk ${id}`, duration: short ? 120 : 1800, user: { name: 'Test maker' } })
+  if (url.includes('vimeo.com/api/oembed.json')) return Response.json({ title: `Vimeo public talk ${id}`, duration: short ? 120 : 1800, author_name: 'Test maker' })
+  return new Response('', { status: 404 })
+}
+
 /** Paste, then one tap: look the list up and bring in every ticked film, publishing when captions are ready. */
 export async function bringInAndPublish(payload: Payload, user: SessionUser, form: FormData) {
   const preview = await previewBringIn(payload, user, form)
@@ -413,6 +555,7 @@ export async function listDraftTalks(payload: Payload, user: SessionUser) {
       courseId: idOf(row.course) || 0,
       courseTitle: titles.get(idOf(row.course) || 0) || '',
       status: bringInStatus(String(row.transcriptNote || '')),
+      note: String(row.transcriptNote || ''),
     })),
   }
 }

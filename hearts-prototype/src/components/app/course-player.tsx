@@ -20,6 +20,7 @@ import { initialsOf } from '@/lib/swarm-sort'
 import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 import { ReportButton } from '@/components/app/report-sheet'
+import { vimeoPlayerSrc } from '@/lib/vimeo'
 
 export type PointView = {
   id: number
@@ -108,7 +109,7 @@ export function CoursePlayer({
   garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null }
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
-  film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; src?: string | null } | null
+  film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; vimeoHash?: string | null; src?: string | null } | null
   upNext?: { href: string; label: string; minutes: number; last: boolean } | null
   courseHref: string
   deferred?: { pointId: number; prompt: string }[]
@@ -733,7 +734,7 @@ export function CoursePlayer({
           {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
-              <iframe title={partLabel} src={`https://player.vimeo.com/video/${vimeoId}?api=1`} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
+              <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { api: '1' })} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
             </div>
           ) : null}
           {fileSrc ? (

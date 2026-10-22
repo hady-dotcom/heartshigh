@@ -1,4 +1,5 @@
 import { youtubeIdFromUrl } from './extractor'
+import { parseVimeoLink } from './vimeo'
 import type { FieldPlacement } from './bring-in-place'
 import { broughtInCourseName } from './human-date'
 import { MIN_TALK_SECONDS, tooShortMessage } from './talk-length'
@@ -27,6 +28,10 @@ export type BringInRow = {
   ghunyaPlace?: FieldPlacement
   skipReason: '' | 'short' | 'duplicate' | 'library' | 'unavailable'
   selected: boolean
+  /** Set for Vimeo rows. YouTube rows leave it blank. */
+  provider?: 'youtube' | 'vimeo'
+  /** The private-link hash of an unlisted Vimeo film. */
+  vimeoHash?: string
 }
 
 export function bringInSourceKind(input: string): 'video' | 'playlist' | 'channel' | 'bad' {
@@ -37,6 +42,7 @@ export function bringInSourceKind(input: string): 'video' | 'playlist' | 'channe
     return 'bad'
   }
   const host = url.hostname.replace(/^www\./, '')
+  if (host === 'vimeo.com' || host === 'player.vimeo.com') return parseVimeoLink(input) ? 'video' : 'bad'
   if (!(host === 'youtu.be' || host.endsWith('youtube.com') || host.endsWith('youtube-nocookie.com'))) return 'bad'
   const path = url.pathname
   if (path === '/playlist' || (url.searchParams.get('list') && !youtubeIdFromUrl(input))) return 'playlist'

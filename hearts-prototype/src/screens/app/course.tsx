@@ -339,7 +339,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const provider = str(lesson.videoProvider)
   const vimeoId = str(lesson.vimeoId) || null
   const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
-  const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
+  const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId, vimeoHash: str(lesson.vimeoHash) || null } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
   const startAt = Math.max(0, Number(query.t || 0)) || 0
   const contextOn = query.context === '1'
   const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null

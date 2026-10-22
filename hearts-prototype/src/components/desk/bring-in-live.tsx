@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { vimeoWaitingLabel } from '@/lib/vimeo'
 
 type Row = { id: number; title: string; status: string; publishState: string; note: string; speaker: string; youtubeId: string }
 
@@ -45,7 +46,7 @@ export function BringInLive({ ids, next = '' }: { ids: number[]; next?: string }
               <td>{row.title}</td>
               <td>{row.speaker || 'Not set'}</td>
               <td>
-                <span className={`badge ${row.status === 'failed' ? 'rose' : row.status === 'processed' ? 'teal' : 'gold'}`}>{LABEL[row.status] || 'Saved'}</span>
+                <span className={`badge ${row.status === 'failed' ? 'rose' : row.status === 'processed' ? 'teal' : 'gold'}`}>{(row.status === 'waiting' && vimeoWaitingLabel(row.note)) || LABEL[row.status] || 'Saved'}</span>
                 {row.status === 'processed' && row.publishState === 'draft' ? (
                   <form action="/api/hearts" method="post">
                     <input type="hidden" name="action" value="publish-talks" />
