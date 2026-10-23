@@ -567,7 +567,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                             <td style={{ fontFamily: 'ui-monospace, monospace' }}>{clock(Number(point.second))}</td>
                             <td>{({ reflection: 'Reflection', question: 'Question', multiple_choice: 'Multiple choice', task: 'Task' } as Record<string, string>)[str(point.kind)] || 'Reflection'}</td>
                             <td>{str(point.prompt)}</td>
-                            <td>{point.timing === 'future' ? `${str(point.delayAmount)} ${str(point.delayUnit)}${Number(point.delayAmount) === 1 ? '' : 's'} after ${contingent ? `answering "${str(contingent.prompt).slice(0, 40)}"` : 'first watching'}` : 'Straight away'}</td>
+                            <td style={{ whiteSpace: 'nowrap' }}>{point.timing === 'future' ? `${str(point.delayAmount)} ${str(point.delayUnit)}${Number(point.delayAmount) === 1 ? '' : 's'} after ${contingent ? `answering "${str(contingent.prompt).slice(0, 40)}"` : 'first watching'}` : 'Straight away'}</td>
                             <td>
                               {point.audience === 'self' ? 'Only its author' : point.audience === 'selected' ? 'Chosen learners' : 'Everyone on this film'}
                               {!locked ? (
