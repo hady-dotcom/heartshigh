@@ -46,7 +46,7 @@ export function guardAdmin(ctx: Ctx) {
 }
 
 export async function ContentScreen(ctx: Ctx) {
-  guardAdmin(ctx)
+  const teacher = ctx.user.role === 'teacher'
   const { payload, portal, base, query } = ctx
   const gone = (course: unknown) => courseRemovedFromDesk(course as { hidden?: boolean | null; hiddenNote?: unknown })
   const local = (await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title' })).filter((course) => !gone(course))
@@ -102,8 +102,8 @@ export async function ContentScreen(ctx: Ctx) {
         <td className="num">{points.filter((point) => ownIds.has(ref(point.lesson) || 0)).length}</td>
         <td className="num">{cuts.filter((cut) => ownIds.has(ref(cut.lesson) || 0) && cut.status === 'approved').length}</td>
         <td>
-          <Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{isLocal ? 'Edit' : 'View'}</Link>
-          {isLocal ? (
+          <Link className="btn ghost small" href={`${base}/admin/content/${course.id}`}>{teacher ? 'Add questions' : isLocal ? 'Edit' : 'View'}</Link>
+          {isLocal && !teacher ? (
             <>
               <DeletePick formId="bulk-course" id={course.id} label={str(course.title)} />
               <DeleteInline kind="course" id={course.id} next={here} portalSlug={portal.slug} testId={`delete-course-${course.id}`} />
@@ -114,18 +114,18 @@ export async function ContentScreen(ctx: Ctx) {
     )
   }
   return (
-    <AdminFrame ctx={ctx} active="content" title="Content" intro="Build courses here: a subject, its topics, the films in each topic, and the questions that pause the film." testId="admin-content">
-      <p data-testid="content-overview">Your courses: {local.length} · From the library: {linked.length} · Add your own → <Link className="btn ink small" href={`${base}/admin/bring-in`} data-testid="content-bring-in">Bring in</Link></p>
+    <AdminFrame ctx={ctx} active="content" title={teacher ? 'Questions in talks' : 'Content'} intro={teacher ? 'Pick a talk, then place a question at the moment you want the film to pause.' : 'Build courses here: a subject, its topics, the films in each topic, and the questions that pause the film.'} testId="admin-content">
+      {teacher ? null : <p data-testid="content-overview">Your courses: {local.length} · From the library: {linked.length} · Add your own → <Link className="btn ink small" href={`${base}/admin/bring-in`} data-testid="content-bring-in">Bring in</Link></p>}
       <div className="stats-strip">
         {stat(filtered.length, 'Subjects')}
         {stat(listedUnits.length, 'Topics')}
         {stat(listedLessons.length, 'Films')}
         {stat(listedPoints.length, 'Questions')}
       </div>
-      <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
+      <div className="grid" style={{ gridTemplateColumns: teacher ? 'minmax(0, 1fr)' : 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
-          <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{TOOL.contentSearch}</HelpTip></h2><Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link></header>
-          <DeleteMany kind="course" next={here} portalSlug={portal.slug} formId="bulk-course" />
+          <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{TOOL.contentSearch}</HelpTip></h2>{teacher ? null : <Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link>}</header>
+          {teacher ? null : <DeleteMany kind="course" next={here} portalSlug={portal.slug} formId="bulk-course" />}
           <form className="content-tools" action={here} method="get" data-testid="content-filter">
             <label className="stack">Search<input className="field" name="q" defaultValue={query.q || ''} placeholder="Subject or speaker" /></label>
             <label className="stack">Show
@@ -182,7 +182,7 @@ export async function ContentScreen(ctx: Ctx) {
             </div>
           )}
         </section>
-        <section className="panel" id="new-course">
+        {teacher ? null : <section className="panel" id="new-course">
           <header><div><h2>New subject <HelpTip topic="local-course">{TOOL.localCourse}</HelpTip></h2><p>Subject, then topic, then film. Questions are added in the editor.</p></div></header>
           <form id="new-subject" className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-course', origin: 'local', portalSlug: portal.slug, next: `${base}/admin/content` }} />
@@ -202,7 +202,7 @@ export async function ContentScreen(ctx: Ctx) {
             <p className="hint">Leave this as Not yet and, after you save, you can put the course on a code. Learners cannot open it until it is on a code or given to them.</p>
             <div className="actions"><button className="btn ink" data-testid="local-course-submit" type="submit">Save subject</button></div>
           </form>
-        </section>
+        </section>}
       </div>
     </AdminFrame>
   )
@@ -241,7 +241,8 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   if (!course) notFound()
   const access = await canOpenCourse(payload, user, portal, course)
   if (!access.ok) return null
-  const locked = access.locked
+  const teacherOnly = user.role === 'teacher'
+  const locked = access.locked || teacherOnly
   const [units, filmPage, clauses, seats, people, doors, usedIn] = await Promise.all([
     allDocs(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
     courseFilms(payload, courseId, filmsPage),
@@ -278,7 +279,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
 
   return (
     <div data-testid="course-detail" data-locked={locked ? 'yes' : 'no'}>
-      {locked ? <div className="flash notice" data-testid="readonly">This course comes from the library, so it is read only here. You can add your own questions on top; the original stays as it is for every portal.</div> : null}
+      {teacherOnly ? <div className="flash notice" data-testid="readonly">You can place questions on these films. The portal admin looks after the rest of the course.</div> : locked ? <div className="flash notice" data-testid="readonly">This course comes from the library, so it is read only here. You can add your own questions on top; the original stays as it is for every portal.</div> : null}
       {portal && !locked ? await CourseOnCodes({ payload, portalId: portal.id, portalSlug: portal.slug, courseId, courseTitle, next: editorHref, accessHref: `${editorHref.replace(/\/admin\/content.*/, '/admin/access')}` }) : null}
       {usedIn ? <UsedIn use={usedIn} /> : null}
       {filmPage.total ? (
@@ -630,7 +631,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                         </select>
                       </label>
                     </div>
-                  ) : <p className="hint">On a library film your question opens straight away and does not change the original.</p>}
+                  ) : <p className="hint">{teacherOnly ? "Your question opens straight away when the learner reaches that moment." : "On a library film your question opens straight away and does not change the original."}</p>}
                   {learners.length ? (
                     <div className="checks" aria-label="Chosen learners">
                       {learners.map((learner) => <label className="check" key={learner.id}><input type="checkbox" name="learner" value={learner.id} /> {str(learner.name)}</label>)}
@@ -648,14 +649,13 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
 }
 
 export async function CourseEditorScreen(ctx: Ctx, courseId: number) {
-  guardAdmin(ctx)
   const { payload, user, portal, base, query } = ctx
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const body = await CourseEditorBody({ payload, user, portal, editorHref: `${base}/admin/content/${courseId}`, courseId, part: query.part, filmsPage: query.films })
   if (!body) redirect(`${base}/admin/content?error=${encodeURIComponent('That course is not in this portal.')}`)
   return (
-    <AdminFrame ctx={ctx} active="content" title={str(course.title)} intro={<Link href={`${base}/admin/content`}>‹ All courses</Link>} testId="admin-course">
+    <AdminFrame ctx={ctx} active="content" title={str(course.title)} intro={<Link href={`${base}/admin/content`}>{ctx.user.role === 'teacher' ? '‹ All talks' : '‹ All courses'}</Link>} testId="admin-course">
       {body}
     </AdminFrame>
   )
