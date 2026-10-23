@@ -748,8 +748,8 @@ export async function GardenWorkbookEntry({ payload, user, portal, base, query }
           {row.reply && featureOn(portal, 'feedback') ? (
             <div className="reply" data-testid="teacher-reply">
               <b>Your teacher wrote back{when ? ` · ${when}` : ''}</b>
-              <span data-testid="reply-when">{when}</span>
-              {row.reply}
+              <span data-testid="reply-when" hidden>{when}</span>
+              <p data-testid="reply-body" style={{ margin: '6px 0 0' }}>{row.reply}</p>
             </div>
           ) : null}
           {watch ? <Link className="from-lesson" href={watch} data-testid="watch-moment">Watch this moment</Link> : null}
