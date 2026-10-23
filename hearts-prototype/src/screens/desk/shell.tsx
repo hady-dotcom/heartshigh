@@ -34,7 +34,7 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
     { key: 'announcements', label: 'Announcements', href: `${base}/admin/announcements`, icon: <BellIcon /> },
   ])
   if (user.role === 'teacher') {
-    return [{ group: 'Teaching', description: 'People, gatherings and live sessions in your portal.', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, ...teach] }]
+    return [{ group: 'Teaching', description: 'People, gatherings and live sessions in your portal.', items: [{ key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> }, { key: 'content', label: 'Questions in talks', href: `${base}/admin/content`, icon: <QuestionIcon /> }, ...teach] }]
   }
   return [
     {
