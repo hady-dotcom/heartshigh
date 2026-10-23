@@ -338,7 +338,8 @@ test.describe.serial('HEARTS journeys', () => {
     await review.getByTestId('reply-text').fill('Keep that greeting. It is enough.')
     await review.getByTestId('reply-submit').click()
     await expect(page.getByTestId('notice')).toContainText('Reply saved')
-    await expect(page.getByTestId('nav-content')).toHaveCount(0)
+    await expect(page.getByTestId('nav-content')).toHaveText('Questions in talks')
+    await expect(page.getByTestId('nav-bring-in')).toHaveCount(0)
 
     await page.setViewportSize(PHONE)
     await signIn(page, learnerEmail, 'harbour-learner', `/p/${slug}/me`)
