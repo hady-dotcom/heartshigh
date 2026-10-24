@@ -1,12 +1,12 @@
 import { AdminFrame } from '@/screens/desk/overview'
-import { Flash, Hidden } from '@/components/app/shell'
+import { Hidden } from '@/components/app/shell'
 import { SequenceList } from '@/components/desk/sequence-list'
 import { SEQUENCE_COPY } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { rows, str, type Ctx } from '../common'
 
 export async function SequenceDesk(ctx: Ctx) {
-  const { payload, portal, base, query, user } = ctx
+  const { payload, portal, base, user } = ctx
   const courses = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { hidden: { not_equals: true } }] }, { sort: 'createdAt', limit: 5 })
   const course = courses[0]
   const lessonRows = course ? await rows(payload, 'lessons', { course: { equals: course.id } }, { sort: 'order' }) : []
@@ -15,7 +15,6 @@ export async function SequenceDesk(ctx: Ctx) {
   const next = `${base}/admin/sequence`
   return (
     <AdminFrame ctx={ctx} active="sequence" title="Course films" intro="Add films in the order people should watch them. Drag a row, or use Move up and Move down. Titles can be changed." testId="sequence-desk" showOnPhone>
-      <Flash error={query.error} notice={query.notice} />
       <p data-testid="sequence-paste-help">{SEQUENCE_COPY.paste}</p>
       <p data-testid="sequence-example-note">{SEQUENCE_COPY.examples}</p>
       {canEdit ? (
