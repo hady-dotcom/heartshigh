@@ -545,6 +545,11 @@ async function main() {
     await ensureStarterExperiments(payload)
   }
 
+  if (!startersOnly) {
+    const { seedParentingPortal } = await import('./parenting')
+    await seedParentingPortal(payload)
+  }
+
   const { markShortTalks } = await import('../server/short-talks')
   const shorts = await markShortTalks(payload)
   if (shorts.marked || shorts.coursesHidden) {

@@ -9,6 +9,7 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
+import { brandColours, isSequencePortal, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
@@ -195,10 +196,11 @@ function canSeePoint(point: Record<string, unknown>, userId: number) {
 
 export async function CourseScreen(ctx: Ctx, courseId: number) {
   const { payload, user, portal, base, query } = ctx
+  const sequence = isSequencePortal(portal)
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const visible = await visibleCourseIds(payload, user)
-  if (!visible.includes(courseId)) redirect(`${base}/lanes?error=${encodeURIComponent('That course is not on your code. Ask your teacher if you would like it.')}`)
+  if (!visible.includes(courseId)) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'That film is not in this course.' : 'That course is not on your code. Ask your teacher if you would like it.')}`)
   const [lessonRows, units, flags] = await Promise.all([
     rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' }),
     rows(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
@@ -210,13 +212,22 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     transcriptNote: str(row.transcriptNote),
     tooShort: row.tooShort === true,
   }))
-  if (!lessons.length) redirect(`${base}/lanes?error=${encodeURIComponent('That course has no parts yet.')}`)
+  if (!lessons.length) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'No films yet.' : 'That course has no parts yet.')}`)
   if (!query.part) {
+    if (sequence) redirect(base)
     return CourseOverview(ctx, course, lessons)
   }
   const partIndex = resolvePartIndex(lessons, query.part)
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
+  if (sequence) {
+    const locked = lockMessage(portal.lockOrder === true, partIndex === 0, partIndex)
+    if (locked) {
+      const previous = lessons[partIndex - 1]
+      const finished = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { equals: previous.id } }] }, { limit: 1 })
+      if (!finished.length) redirect(`${base}?error=${encodeURIComponent(locked)}`)
+    }
+  }
 
   const visits = await rows(payload, 'lesson-visits', { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, { limit: 1, sort: 'createdAt' })
   if (!visits.length) await payload.create({ collection: 'lesson-visits', overrideAccess: true, data: { user: user.id, lesson: lessonId, portal: portal.id } })
@@ -274,9 +285,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const swarm: Record<number, SwarmItem[]> = {}
   let circleLabel = ''
   // Swarm answers are always on (Leon, 2026-10-04): initials, read-only, screened. Sharing your own answer stays a choice.
-  const swarmOn = true
+  // A sequenced course skips the circle fill so its questions stay, without that room's sample lines.
+  const swarmOn = !sequence
   const shareChoice = Boolean(user.shareWithLearners)
-  if (points.length) {
+  if (!sequence && points.length) {
     const shared = await rows(
       payload,
       'answers',
@@ -329,7 +341,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const [completions, partCuts, doors] = await Promise.all([
     rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
     lessonIds.length ? rows(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }, { limit: 300 }) : Promise.resolve([] as Row[]),
-    loadDoors(payload),
+    sequence ? Promise.resolve([] as Door[]) : loadDoors(payload),
   ])
   const { doneLessons, done, total } = courseProgress({ lessonIds, completions: completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })), pointIds: allPoints.map((point) => point.id), answers: mine })
 
@@ -340,7 +352,14 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const vimeoId = str(lesson.vimeoId) || null
   const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
   const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId, vimeoHash: str(lesson.vimeoHash) || null } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
-  const startAt = Math.max(0, Number(query.t || 0)) || 0
+  let startAt = Math.max(0, Number(query.t || 0)) || 0
+  let showResume = false
+  if (sequence && (query.t == null || query.t === '')) {
+    const sessions = await rows(payload, 'watch-sessions', { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, { sort: '-createdAt', limit: 1 })
+    const resumed = resumeChoice(Number(sessions[0]?.position || 0), Number(lesson.durationSeconds || 0))
+    startAt = resumed || 0
+    showResume = resumed != null
+  }
   const contextOn = query.context === '1'
   const spoken = contextOn ? lineAt(str(lesson.transcript), startAt) : null
   const unread = await unreadCount(payload, user)
@@ -348,9 +367,12 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const courseHref = withCurrentQuery(`${base}/course/${courseId}`, query)
   const nextLesson = lessons[partIndex + 1] || null
   const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`, query)
+  const sequenceLabel = (index: number, row: Row) => `${index + 1}. ${str(row.title)}`
   const upNext = nextLesson && following
-    ? { href: following.href, label: following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
-    : { href: courseHref, label: lastPartCopy(lessons.length), minutes: 0, last: true }
+    ? { href: following.href, label: sequence ? sequenceLabel(partIndex + 2, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
+    : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
+  const progress = sequenceProgress(doneLessons.size, lessons.length)
+  const callout = sequence ? partCuts.find((row) => ref(row.lesson) === lessonId) : null
   const thinks = (await rows(payload, 'notifications', { and: [{ user: { equals: user.id } }, { channel: { equals: 'think' } }, { read: { not_equals: true } }] }, { limit: 50 }))
     .map((row) => {
       try {
@@ -378,10 +400,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   }))
 
   return (
-    <AppFrame testId="course" evening>
+    <AppFrame testId={sequence ? 'sequence-course' : 'course'} evening={!sequence} help={sequence ? 'sequence-course' : undefined} brand={sequence ? brandColours(portal) : undefined}>
       <div className="app-scroll">
         <Flash error={query.error} notice={query.notice} />
-        {contextOn ? (
+        {contextOn && !sequence ? (
           <section className="context-block" data-testid="context-transcript">
             <p className="eyebrow">Around this moment</p>
             {spoken ? (
@@ -395,10 +417,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </section>
         ) : null}
         <CoursePlayer
-          courseTitle={tidyTalkTitle(str(course.title))}
-          backHref={withCurrentQuery(`${base}/lanes`, query)}
+          courseTitle={sequence ? str(course.title) : tidyTalkTitle(str(course.title))}
+          backHref={withCurrentQuery(sequence ? base : `${base}/lanes`, query)}
           lessonId={lessonId}
-          partLabel={partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
+          partLabel={sequence ? sequenceLabel(partIndex + 1, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
           poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
@@ -417,12 +439,24 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
           sentences={parseTrack(lesson.framingTrack)?.sentences || []}
-          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') ? `${base}/garden` : base, query), nextPart: following, links: [
-            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
-            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
+          progressCard={sequence ? { eyebrow: progress.eyebrow, line: progress.line, backLabel: progress.back, backHref: base } : null}
+          saveOnEnd={sequence}
+          showResume={showResume}
+          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && !sequence ? `${base}/garden` : base, query), nextPart: following, links: [
+            ...(featureOn(portal, 'garden') && !sequence ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
+            ...(featureOn(portal, 'workbook') && !sequence ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
-        {related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
+        {sequence && callout ? (
+          <section className="card" data-testid="sequence-callouts">
+            <p data-testid="callout-hook"><b>{SEQUENCE_COPY.opening}.</b> {str(callout.hook)}</p>
+            <p data-testid="callout-turn"><b>{SEQUENCE_COPY.turn}.</b> {str(callout.turn)}</p>
+            <p data-testid="callout-land"><b>{SEQUENCE_COPY.landing}.</b> {str(callout.land)}</p>
+            <Link href={`${base}/course/${courseId}?part=${lessonId}&t=${Number(callout.start || 0)}`} data-testid="play-clip">{SEQUENCE_COPY.playClip}</Link>
+          </section>
+        ) : null}
+        {sequence && views[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {views[0].prompt}</p> : null}
+        {!sequence && related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
         {marks.length && featureOn(portal, 'feedback') ? (
           <section className="card" data-testid="in-video-feedback" style={{ marginTop: 14 }}>
             <h3>Feedback from your teacher</h3>
@@ -434,14 +468,14 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
-        <p className="eyebrow">Parts of this course</p>
+        {!sequence && featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
+        <p className="eyebrow">{sequence ? 'Films' : 'Parts of this course'}</p>
         {lessons.map((row, index) => {
           const week = partWeek(row, partCuts, doors, str(course.title))
           return (
             <Link key={row.id} className="part-row" href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
               <span className="grow">
-                {partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
+                {sequence ? sequenceLabel(index + 1, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>
               </span>
@@ -460,7 +494,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </details>
         ) : null}
       </div>
-      <LearnerTabBar base={base} active="lanes" portal={portal} unread={unread} />
+      <LearnerTabBar base={base} active={sequence ? 'home' : 'lanes'} portal={portal} unread={unread} />
     </AppFrame>
   )
 }

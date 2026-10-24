@@ -1101,3 +1101,34 @@ html[data-theme] .panel > header p { opacity: 1; }
 :is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
   font-size: 16px;
 }
+
+/* A sequenced course paints only its own screen. HEARTS evening colours stay on every other portal. */
+[data-portal-brand] {
+  --gold: var(--portal-accent, #e07a5f);
+  --gold-deep: var(--portal-accent, #e07a5f);
+  --green: var(--portal-colour, #1f3a5f);
+  --ink: #1c2430;
+  --paper: #f7f4ef;
+  background: #f7f4ef;
+  color: #1c2430;
+}
+[data-portal-brand] .app,
+[data-portal-brand] .tabbar {
+  background: #f7f4ef;
+  color: #1c2430;
+}
+[data-portal-brand] .pill.gold {
+  background: var(--portal-accent, #e07a5f);
+  color: #fff;
+}
+.sequence-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.portal-mark, .portal-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+.portal-mark { display: grid; place-items: center; background: var(--portal-colour, #1f3a5f); color: #fff; font-weight: 700; }
+.sequence-list, .sequence-edit { list-style: none; padding: 0; margin: 12px 0; }
+.sequence-list li, .sequence-edit li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dccd; }
+.sequence-list a { display: flex; gap: 8px; align-items: center; color: inherit; text-decoration: none; flex: 1; }
+.sequence-num { width: 28px; font-weight: 700; color: var(--portal-accent, #e07a5f); }
+.sequence-lock { margin: 0 0 0 36px; color: #8a4b3a; font-size: 14px; }
+.sequence-edit input { flex: 1; min-width: 0; }
+.sequence-edit button { font-size: 13px; }
+.sequence-actions { display: grid; gap: 8px; margin-top: 16px; }

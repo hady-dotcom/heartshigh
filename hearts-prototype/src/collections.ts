@@ -124,6 +124,16 @@ export const Portals: CollectionConfig = {
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
     {
+      name: 'shape',
+      type: 'text',
+      defaultValue: 'hearts',
+      admin: { description: 'hearts keeps the existing portal. sequence is a course watched in order, with its own library.' },
+    },
+    { name: 'lockOrder', type: 'checkbox', defaultValue: false, admin: { description: 'On a sequenced course, each film stays locked until the one before it is finished.' } },
+    { name: 'minTalkSeconds', type: 'number', admin: { description: 'Shortest film this portal will keep. Empty uses 5 minutes for a hearts portal and no minimum for a sequenced course.' } },
+    { name: 'accent', type: 'text', admin: { description: 'Second colour for a sequenced course.' } },
+    { name: 'teacherCap', type: 'number', admin: { description: 'Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.' } },
+    {
       name: 'features',
       type: 'json',
       admin: {
@@ -1291,6 +1301,7 @@ export const WatchSessions: CollectionConfig = {
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'seconds', type: 'number', defaultValue: 0 },
+    { name: 'position', type: 'number', admin: { description: 'Where the film was when this sitting was saved, so a sequenced course can resume.' } },
   ],
 }
 

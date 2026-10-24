@@ -159,7 +159,7 @@ export async function weekSeconds(payload: Payload, userId: number) {
 /** Personal sitting time for mission minutes. Teachers only see this when shareWatch is on. */
 export async function recordPersonalWatch(
   payload: Payload,
-  input: { userId: number; lessonId: number; seconds: number; portalId?: number | null },
+  input: { userId: number; lessonId: number; seconds: number; portalId?: number | null; position?: number | null },
 ) {
   const seconds = Math.max(0, Math.round(Number(input.seconds) || 0))
   if (!input.userId || !input.lessonId || seconds <= 0) return null
@@ -168,6 +168,7 @@ export async function recordPersonalWatch(
     const user = await payload.findByID({ collection: 'users', id: input.userId, depth: 0, overrideAccess: true }).catch(() => null)
     portalId = portalIdOf(user as { tenants?: { tenant?: unknown }[] } | null)
   }
+  const position = Math.round(Number(input.position || 0))
   return payload.create({
     collection: 'watch-sessions',
     overrideAccess: true,
@@ -176,6 +177,7 @@ export async function recordPersonalWatch(
       lesson: input.lessonId,
       seconds,
       portal: portalId || undefined,
+      ...(position > 0 ? { position } : {}),
     } as never,
   })
 }

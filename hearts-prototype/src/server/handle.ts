@@ -63,6 +63,7 @@ import { changeOwnPassword, dispatchLearnerDesk } from './learner-desk'
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
+import { isSequencePortal, minTalkRefusal, minTalkSecondsOf, teacherCapOf, teacherCapRefusal } from '@/lib/sequence'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, defaultFeatures, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
@@ -764,22 +765,25 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
     const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : defaultFeatures()
+    const shape = text(form, 'shape') === 'sequence' ? 'sequence' : 'hearts'
     const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
       data: {
         name,
         slug,
-        kind: (['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
-        welcome: text(form, 'welcome') || `${name} keeps a gentle room for whoever is sent.`,
-        colour: text(form, 'colour') || '#1f4d3a',
+        kind: (shape === 'sequence' ? 'other' : ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
+        welcome: text(form, 'welcome') || (shape === 'sequence' ? `${name}. Watch the films in order.` : `${name} keeps a gentle room for whoever is sent.`),
+        colour: text(form, 'colour') || (shape === 'sequence' ? '#1f3a5f' : '#1f4d3a'),
         watchHistoryOptIn: false,
         wizardDone: true,
+        shape,
+        ...(shape === 'sequence' ? { lockOrder: true, minTalkSeconds: 0, accent: text(form, 'accent') || '#e07a5f' } : {}),
         ...(features ? { features } : {}),
       },
     })
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
-    if (courseIds.length) await adoptLibraryCourses(payload, created.id, courseIds)
+    if (courseIds.length && shape !== 'sequence') await adoptLibraryCourses(payload, created.id, courseIds)
     return redirectTo(req, text(form, 'next') || '/master', undefined, `${name} is open.`)
   }
 
@@ -792,9 +796,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (form.has('welcome')) data.welcome = text(form, 'welcome')
     if (form.has('kind') && ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind'))) data.kind = text(form, 'kind')
     if (form.get('featuresForm') === 'yes') data.features = featuresFromForm(form)
+    const stored = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data })
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
-    if (form.has('course') || form.get('featuresForm') === 'yes') await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
+    if (!isSequencePortal(stored) && (form.has('course') || form.get('featuresForm') === 'yes')) await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
     return redirectTo(req, text(form, 'next') || `/master/portals/${acting.portal.slug}`, undefined, 'Features saved. They are live now.')
   }
 
@@ -880,6 +885,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if ((role === 'learner' || role === 'parent') && !text(form, 'linkedTeacherCode')) {
       return redirectTo(req, text(form, 'next') || '/master', 'A learner code needs a teacher code, so someone can see their progress.')
     }
+    if (role === 'teacher') {
+      const full = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
+      const cap = teacherCapOf(full)
+      if (cap != null) {
+        const teachers = await payload.find({
+          collection: 'access-codes',
+          overrideAccess: true,
+          depth: 0,
+          limit: cap + 1,
+          where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+        })
+        const refusal = teacherCapRefusal(teachers.docs.length, cap)
+        if (refusal) return redirectTo(req, text(form, 'next') || '/master', refusal)
+      }
+    }
     const clash = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { code: { equals: code } } })
     if (clash.docs.length) return redirectTo(req, text(form, 'next') || '/master', 'That access code is already taken.')
     const linked = text(form, 'linkedTeacherCode')
@@ -943,6 +963,19 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       const existing = teachers.docs[0] as { id: number } | undefined
       if (existing) teacherId = existing.id
       else {
+        const full = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
+        const cap = teacherCapOf(full)
+        if (cap != null) {
+          const teacherCount = await payload.find({
+            collection: 'access-codes',
+            overrideAccess: true,
+            depth: 0,
+            limit: cap + 1,
+            where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+          })
+          const refusal = teacherCapRefusal(teacherCount.docs.length, cap)
+          if (refusal) return redirectTo(req, text(form, 'next') || '/', refusal)
+        }
         const made = await payload.create({
           collection: 'access-codes',
           overrideAccess: true,
@@ -990,15 +1023,18 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!title) return redirectTo(req, next, 'Give the course a name.')
     const length = parseLengthInput(text(form, 'duration'))
     if (!length.ok) return redirectTo(req, next, length.message)
-    const shortTalk = refusalForTalk(length.seconds)
-    if (shortTalk) return redirectTo(req, next, shortTalk)
     const origin = user.role !== 'master' || text(form, 'origin') === 'local' ? 'local' : 'master'
     let portal: number | null = null
+    let minSeconds = 300
     if (origin === 'local') {
       const acting = await actingPortal(payload, user, form)
       if ('error' in acting) return redirectTo(req, next, acting.error)
       portal = acting.portal.id
+      const full = await payload.findByID({ collection: 'portals', id: portal, depth: 0, overrideAccess: true })
+      minSeconds = minTalkSecondsOf(full)
     }
+    const shortTalk = minSeconds === 300 ? refusalForTalk(length.seconds) : minTalkRefusal(length.seconds, minSeconds)
+    if (shortTalk) return redirectTo(req, next, shortTalk)
     const course = await payload.create({
       collection: 'courses',
       overrideAccess: true,
@@ -2133,25 +2169,29 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, text(form, 'next') || '/', 'That film is not in your portal.')
     }
     const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
+    const position = Number(text(form, 'at') || 0)
     const { recordPersonalWatch } = await import('./missions')
     await recordPersonalWatch(payload, {
       userId: user.id,
       lessonId,
       seconds: duration > 0 ? Math.min(Math.max(0, seconds), duration) : Math.min(Math.max(0, seconds), 3600),
       portalId: portal,
+      position,
     })
     if (asJson) return NextResponse.json({ ok: true, counted: false })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Kept with the time you have given.')
   }
 
   if (action === 'complete') {
+    const asJson = (req.headers.get('accept') || '').includes('application/json')
+    const fail = (message: string, status = 400) => (asJson ? NextResponse.json({ error: message, counted: false }, { status }) : redirectTo(req, text(form, 'next') || '/', message))
     const lessonId = Number(text(form, 'lesson'))
     if (!countsTowardProgress({ level: pieceLevel(text(form, 'level') || 'talk'), inCourse: true, event: 'watch' })) {
-      return redirectTo(req, text(form, 'next') || '/', 'A short clip does not finish a talk.')
+      return fail('A short clip does not finish a talk.')
     }
     const portal = portalIdOf(user)
     const lesson = await findDoc(payload, 'lessons', lessonId)
-    if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return redirectTo(req, '/', 'That film is not in your portal.')
+    if (!lesson || !(await visibleCourseIds(payload, user)).includes(idOf(lesson.course) || 0)) return fail('That film is not in your portal.', 403)
     const duration = Number((lesson as { durationSeconds?: number }).durationSeconds || 0)
     const seconds = Number(text(form, 'seconds') || 0)
     const media = Number(text(form, 'media') || 0)
@@ -2160,7 +2200,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await recordPersonalWatch(payload, { userId: user.id, lessonId, seconds: duration > 0 ? Math.min(seconds, duration) : Math.min(seconds, 3600), portalId: portal })
     }
     const verdict = completionVerdict({ duration, watched: seconds, ended: text(form, 'ended') === 'yes', media })
-    if (!verdict.counts) return redirectTo(req, text(form, 'next') || '/', verdict.reason)
+    if (!verdict.counts) return fail(verdict.reason)
     const percent = verdict.percent
     let onTime = false
     if (portal) {
@@ -2207,6 +2247,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       }
     }
     void recordExperimentQuietly(payload, user, 'full_talk_complete', { lesson: lessonId, seconds })
+    if (asJson) return NextResponse.json({ ok: true, counted: true })
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
   }
 
@@ -2264,6 +2305,43 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!built.ok) return redirectTo(req, next, built.error)
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { aiConnection: built.stored } })
     return redirectTo(req, next, undefined, 'This portal’s AI account is connected. The key is stored encrypted and is not shown again. A run is billed to that account, not to HEARTS.')
+  }
+
+  if (action === 'sequence-import' || action === 'sequence-order' || action === 'sequence-settings') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only a portal admin can change the course.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const { saveSequenceImport, saveSequenceOrder, saveSequenceSettings } = await import('./sequence-desk')
+    type DeskResult = { error?: string; notice?: string }
+    if (action === 'sequence-import') {
+      let raw = text(form, 'links')
+      const sheet = form.get('sheet')
+      if (sheet instanceof File && sheet.size > 0) {
+        if (sheet.size > 2_000_000) return redirectTo(req, text(form, 'next') || '/', 'That sheet is too big. Split it into a smaller file.')
+        raw = `${raw}\n${await sheet.text()}`
+      }
+      const result = await saveSequenceImport(payload, acting.portal.id, raw) as DeskResult
+      return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
+    }
+    if (action === 'sequence-order') {
+      const orderIds = text(form, 'order').split(',').map((value) => Number(value)).filter((id) => Number.isInteger(id) && id > 0)
+      const titles = new Map<number, string>()
+      for (const [key, value] of form.entries()) {
+        if (typeof key === 'string' && key.startsWith('title:') && typeof value === 'string') titles.set(Number(key.slice(6)), value)
+      }
+      const result = await saveSequenceOrder(payload, acting.portal.id, orderIds, titles) as DeskResult
+      return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
+    }
+    const result = await saveSequenceSettings(payload, acting.portal.id, {
+      name: text(form, 'name'),
+      welcome: text(form, 'welcome'),
+      colour: text(form, 'colour'),
+      accent: text(form, 'accent'),
+      logoUrl: text(form, 'logoUrl'),
+      lockOrder: text(form, 'lockOrder') !== 'no',
+      minTalkSeconds: text(form, 'minTalk') === '300' ? 300 : 0,
+    })
+    return redirectTo(req, text(form, 'next') || '/', (result as DeskResult).error, (result as DeskResult).notice)
   }
 
   if (action === 'settings') {

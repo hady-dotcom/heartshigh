@@ -87,6 +87,9 @@ export function CoursePlayer({
   deferred = [],
   initialOpenId = null,
   sentences = [],
+  progressCard = null,
+  saveOnEnd = false,
+  showResume = false,
 }: {
   courseTitle: string
   backHref: string
@@ -115,6 +118,9 @@ export function CoursePlayer({
   deferred?: { pointId: number; prompt: string }[]
   initialOpenId?: number | null
   sentences?: FramingSentence[]
+  progressCard?: { eyebrow: string; line: string; backLabel: string; backHref: string } | null
+  saveOnEnd?: boolean
+  showResume?: boolean
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -462,9 +468,19 @@ export function CoursePlayer({
   useEffect(() => {
     if (watched < 8 || watched - postedWatch.current < 15) return
     postedWatch.current = watched
-    const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)) })
+    const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)), at: String(Math.floor(timeRef.current)) })
     void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
   }, [lessonId, watched])
+
+  const savedEnd = useRef(false)
+  useEffect(() => {
+    if (!saveOnEnd || !endCard || savedEnd.current) return
+    savedEnd.current = true
+    const played = Math.max(Math.floor(watched), length > 0 ? Math.ceil(length * 0.8) : 1)
+    const body = new URLSearchParams({ action: 'complete', lesson: String(lessonId), seconds: String(played), ended: 'yes', level: 'talk' })
+    if (length > 0) body.set('media', String(Math.floor(length)))
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
+  }, [saveOnEnd, endCard, watched, length, lessonId])
 
   useEffect(() => {
     for (const point of points) {
@@ -706,6 +722,7 @@ export function CoursePlayer({
   }, [ended, startAt, youtubeId])
   return (
     <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing={learnerFramingMode()} data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+      {showResume ? <span hidden data-testid="play-start" data-at={startAt} /> : null}
       {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
           {playerReadout({ state: liveState, time, currentTime: liveTime, cover: showCover })}
@@ -902,6 +919,13 @@ export function CoursePlayer({
         </button>
         {waitingOnFilm && !nextPoint ? <TopicHelp topic="hide-until-moment" label="When do questions appear?" /> : null}
       </div>
+      {progressCard ? (
+        <section className="garden-card" data-testid="sequence-progress-card">
+          <p className="eyebrow">{progressCard.eyebrow}</p>
+          <h3 data-testid="sequence-progress-line">{progressCard.line}</h3>
+          <Link className="pill outline small" href={progressCard.backHref} data-testid="sequence-back">{progressCard.backLabel}</Link>
+        </section>
+      ) : (
       <section className="garden-card" data-testid="course-garden">
         <p className="eyebrow">Course garden</p>
         <div className="garden-grid">
@@ -918,6 +942,8 @@ export function CoursePlayer({
           </div>
         </div>
       </section>
+      )}
+      {saveOnEnd ? null : (
       <form className="watched-form" action="/api/hearts" method="post">
         <input type="hidden" name="action" value="complete" />
         <input type="hidden" name="level" value="talk" />
@@ -928,6 +954,7 @@ export function CoursePlayer({
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
       </form>
+      )}
       </div>
       {open ? (
         <Sheet

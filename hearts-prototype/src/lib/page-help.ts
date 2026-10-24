@@ -314,6 +314,43 @@ const PAGES: Record<string, HelpCopy> = {
       'Go back home, or ask your teacher if you were expecting it.',
     ],
   },
+  'sequence-home': {
+    title: 'How to use this course',
+    body: [
+      'The films are in a fixed order. Start at 1, or press Continue to pick up where you left off.',
+      'When a film ends, the next one starts.',
+      'If a film is locked, watch the one before it first.',
+    ],
+  },
+  'sequence-course': {
+    title: 'How to watch a film',
+    body: [
+      'Press play. Your place is saved, so you can leave and come back.',
+      'A question can appear while the film plays. Answer it in your own words.',
+      'The lines under the film are there to help you notice a moment. They are not a test.',
+    ],
+  },
+  'sequence-me': {
+    title: 'How to use Me',
+    body: [
+      'This page is your name, your notes, and a way to log out.',
+      'Keep my place remembers where you were in a film.',
+    ],
+  },
+  'sequence-gate': {
+    title: 'How to start',
+    body: [
+      'These are the films in this course. Sign in to watch them in order.',
+      'If you have a code, use Join with a code.',
+    ],
+  },
+  'sequence-closed': {
+    title: 'How to use this page',
+    body: [
+      'This course is paused. Your progress is kept.',
+      'Log out if you need to leave this phone.',
+    ],
+  },
 }
 
 /** Screen test ids that share another page's copy. Never point at a different kind of page. */

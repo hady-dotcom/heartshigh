@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { PageHelp } from '@/components/app/page-help'
 import { RouteFade } from '@/components/app/route-fade'
@@ -23,10 +23,11 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string } | null }) {
   const gather = tone === 'gather'
+  const branded = brand ? ({ '--portal-colour': brand.colour, '--portal-accent': brand.accent } as CSSProperties) : undefined
   return (
-    <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`}>
+    <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`} data-portal-brand={brand ? 'yes' : undefined} style={branded}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <PageHelp page={help || testId} />
         <InsightTracker trendsOptIn={trendsOptIn} />

@@ -104,6 +104,14 @@ export function PortalStudio({
           <label className="stack">Short address
             <input type="text" name="slug" defaultValue={slug} data-testid="create-portal-slug" placeholder="harbour" required={mode === 'create'} readOnly={mode === 'edit'} />
           </label>
+          {mode === 'create' ? (
+            <label className="stack">Portal type
+              <select name="shape" defaultValue="hearts" data-testid="create-portal-shape">
+                <option value="hearts">HEARTS portal</option>
+                <option value="sequence">Sequenced course</option>
+              </select>
+            </label>
+          ) : null}
           <label className="stack">Kind
             <select name="kind" defaultValue={kind} data-testid="create-portal-kind">
               <option value="mosque">Mosque</option>
