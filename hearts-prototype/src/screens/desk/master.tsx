@@ -225,7 +225,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
 
 export async function MasterTalk(ctx: MasterCtx, talkId: number) {
   return (
-    <MasterFrame ctx={ctx} active="library" title="Talk" intro={<Link href="/master/library">‹ Library</Link>} testId="master-talk" showOnPhone>
+    <MasterFrame ctx={ctx} active="library" title="Talk" intro={<Link href="/master/library">‹ Library</Link>} testId="master-library" showOnPhone>
       <TalkDetail payload={ctx.payload} id={talkId} base="/master/library" courseBase="/master/library" binHref="/master/bin" bringInHref="/master/bring-in" manageAll portalId={null} />
     </MasterFrame>
   )

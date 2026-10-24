@@ -739,7 +739,7 @@ export async function LibraryTalkScreen(ctx: Ctx, talkId: number) {
   guardAdmin(ctx)
   const { payload, base } = ctx
   return (
-    <AdminFrame ctx={ctx} active="library" title="Talk" intro={<Link href={`${base}/admin/library`}>‹ Library</Link>} testId="admin-talk" showOnPhone>
+    <AdminFrame ctx={ctx} active="library" title="Talk" intro={<Link href={`${base}/admin/library`}>‹ Library</Link>} testId="admin-library" showOnPhone>
       <TalkDetail payload={payload} id={talkId} base={`${base}/admin/library`} courseBase={`${base}/admin/content`} binHref={`${base}/admin/bin`} bringInHref={`${base}/admin/bring-in`} manageAll={false} portalId={ctx.portal.id} />
     </AdminFrame>
   )

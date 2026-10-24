@@ -58,7 +58,7 @@ test('library search, filters and the bin at phone size', async ({ page }) => {
   const courseId = Number(courseHref?.split('/').pop())
   expect(courseId).toBeGreaterThan(0)
   await page.goto(`/master/library/${courseId}`)
-  const lessonButton = page.locator('[data-testid^="delete-lesson-"]').first()
+  const lessonButton = page.locator('button[data-testid^="delete-lesson-"]').first()
   await expect(lessonButton).toBeVisible()
   const lessonId = Number((await lessonButton.getAttribute('data-testid'))?.replace('delete-lesson-', ''))
   expect(lessonId).toBeGreaterThan(0)

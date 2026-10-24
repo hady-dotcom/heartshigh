@@ -29,8 +29,11 @@ const PLAYABLE: Where = {
   ],
 }
 
-/** Talks under five minutes, and talks in the bin, are not counted as films learners can open. */
-const COUNTED: Where = { and: [{ tooShort: { not_equals: true } }, { binned: { not_equals: true } }] }
+/** Talks under five minutes are not counted. Clips use this too. */
+const NOT_SHORT: Where = { tooShort: { not_equals: true } }
+
+/** A talk in the bin is not a film learners can open. Clips have no bin flag of their own. */
+const COUNTED: Where = { and: [NOT_SHORT, { binned: { not_equals: true } }] }
 
 type FieldList = { name?: string; type?: string; relationTo?: string | string[]; fields?: FieldList[]; tabs?: { fields?: FieldList[] }[] }
 
@@ -72,7 +75,7 @@ export async function libraryTotals(payload: Payload): Promise<LibraryTotals> {
   const [films, playable, clips] = await Promise.all([
     countChunked(payload, 'lessons', courseIds, COUNTED),
     countChunked(payload, 'lessons', courseIds, { and: [PLAYABLE, COUNTED] }),
-    countChunked(payload, 'cuts', courseIds, COUNTED),
+    countChunked(payload, 'cuts', courseIds, NOT_SHORT),
   ])
   return { courses, films, playable, clips }
 }
@@ -80,7 +83,7 @@ export async function libraryTotals(payload: Payload): Promise<LibraryTotals> {
 async function statFor(payload: Payload, courseId: number): Promise<CourseStat> {
   const [films, approved, thumb] = await Promise.all([
     countDocs(payload, 'lessons', { and: [{ course: { equals: courseId } }, COUNTED] }),
-    countDocs(payload, 'cuts', { and: [{ course: { equals: courseId } }, { status: { equals: 'approved' } }, COUNTED] }),
+    countDocs(payload, 'cuts', { and: [{ course: { equals: courseId } }, { status: { equals: 'approved' } }, NOT_SHORT] }),
     payload.find({
       collection: 'lessons',
       overrideAccess: true,
