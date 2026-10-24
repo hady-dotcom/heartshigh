@@ -124,6 +124,7 @@ async function main() {
   mkdirSync(path.join(root, 'data'), { recursive: true })
   if (process.argv.includes('--reset')) await wipe()
   await clearDevPushMarker()
+  process.env.HEARTS_SEEDING = '1'
   const payload = await getPayload({ config })
   if (databaseKind() === 'postgres') await payload.db.migrate()
   const clauseIds = new Map<number, number>()
@@ -545,7 +546,10 @@ async function main() {
     await ensureStarterExperiments(payload)
   }
 
-  if (!startersOnly) {
+  if (startersOnly) {
+    const { ensureParentingCourse } = await import('./parenting')
+    await ensureParentingCourse(payload)
+  } else {
     const { seedParentingPortal } = await import('./parenting')
     await seedParentingPortal(payload)
   }

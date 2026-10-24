@@ -18,7 +18,7 @@ import { missionCollections } from './collections-missions'
 import { safetyCollections } from './collections-safety'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
-import { databaseKind, isBuildPhase, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
+import { databaseKind, isBuildPhase, isProduction, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
 import { migrations } from './migrations'
 import { copyPackCoursesOntoCodes } from './server/code-courses'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
@@ -71,6 +71,16 @@ export default buildConfig({
     await copyPackCoursesOntoCodes(payload).catch((error) => {
       payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
     })
+    // Local seed loads this itself, and that path is also where sample sign-ins are made.
+    // A live boot only creates the portal and the films. Unit tests build an empty database and must not load the course.
+    if (process.env.HEARTS_SEEDING === '1' || process.env.NODE_ENV === 'test') return
+    try {
+      const { ensureParentingCourse } = await import('./seed/parenting')
+      await ensureParentingCourse(payload)
+    } catch (error) {
+      payload.logger.error({ err: error, msg: 'Could not load the Parenting course.' })
+      if (isProduction()) throw error
+    }
   },
   db:
     kind === 'postgres'

@@ -3,6 +3,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
+import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { sequenceFeatureDefaults } from '@/lib/sequence-features'
 import { syncCourseSheet } from '@/server/sequence-desk'
 
@@ -33,12 +34,25 @@ async function ensureUser(payload: Payload, data: { email: string; password: str
   })
 }
 
+async function lessonCount(payload: Payload, courseId: number) {
+  const found = await payload.find({
+    collection: 'lessons',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { course: { equals: courseId } },
+  })
+  return found.totalDocs
+}
+
 /**
  * The Guiding Home Learning course on its own portal.
- * Safe to run again. It does not touch East London or Leeds.
- * Re-reads uploads/videos.csv so a later sheet replaces the films in place.
+ * Safe to run again. It does not create people or join codes.
+ * Films load once. A later boot leaves changes an admin has already made.
+ * Pass refresh to read uploads/videos.csv again and replace the films in place.
  */
-export async function seedParentingPortal(payload: Payload) {
+export async function ensureParentingCourse(payload: Payload, opts?: { refresh?: boolean }) {
+  const refresh = opts?.refresh === true
   const features = sequenceFeatureDefaults()
   const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'parenting' } } })
   const look = {
@@ -50,12 +64,14 @@ export async function seedParentingPortal(payload: Payload) {
     description: 'A course you watch in order.',
   }
   const portal = found.docs[0]
-    ? await payload.update({
-        collection: 'portals',
-        id: found.docs[0].id,
-        overrideAccess: true,
-        data: look,
-      })
+    ? refresh
+      ? await payload.update({
+          collection: 'portals',
+          id: found.docs[0].id,
+          overrideAccess: true,
+          data: look,
+        })
+      : found.docs[0]
     : await payload.create({
         collection: 'portals',
         overrideAccess: true,
@@ -88,12 +104,17 @@ export async function seedParentingPortal(payload: Payload) {
     visibility: 'published' as const,
   }
   const course = courseFound.docs[0]
-    ? await payload.update({ collection: 'courses', id: courseFound.docs[0].id, overrideAccess: true, data: courseFields })
+    ? refresh
+      ? await payload.update({ collection: 'courses', id: courseFound.docs[0].id, overrideAccess: true, data: courseFields })
+      : courseFound.docs[0]
     : await payload.create({ collection: 'courses', overrideAccess: true, data: courseFields })
 
-  const sheet = readFileSync(path.join(root, 'uploads/videos.csv'), 'utf8')
-  const synced = await syncCourseSheet(payload, portal.id, sheet)
-  if (synced.error) throw new Error(synced.error)
+  const count = await lessonCount(payload, Number(course.id))
+  if (refresh || count === 0) {
+    const sheet = readFileSync(path.join(root, 'uploads/videos.csv'), 'utf8')
+    const synced = await syncCourseSheet(payload, Number(portal.id), sheet)
+    if (synced.error) throw new Error(synced.error)
+  }
 
   const packFound = await payload.find({
     collection: 'packs',
@@ -106,6 +127,18 @@ export async function seedParentingPortal(payload: Payload) {
     overrideAccess: true,
     data: { title: 'Parenting course', summary: 'The films in this course.', owner: 'portal', portal: portal.id, courses: [course.id] },
   }))
+
+  return { portal, course, pack }
+}
+
+/**
+ * Local demo only. Production and any database that is not on this computer
+ * get the course, and never the sample sign-ins.
+ */
+export async function seedParentingPortal(payload: Payload) {
+  const live = isProduction() || isRemoteDatabase()
+  const { portal, course, pack } = await ensureParentingCourse(payload, { refresh: !live })
+  if (live) return
 
   async function ensureCode(label: string, role: 'admin' | 'teacher' | 'learner', linked?: number) {
     const existing = await payload.find({
