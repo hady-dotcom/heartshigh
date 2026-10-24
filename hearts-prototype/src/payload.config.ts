@@ -63,23 +63,30 @@ export default buildConfig({
   },
   onInit: async (payload) => {
     if (isBuildPhase()) return
-    const { markShortTalks } = await import('./server/short-talks')
-    const result = await markShortTalks(payload)
-    if (result.marked || result.coursesHidden) {
-      payload.logger.info(`Marked ${result.marked} talks under 5 minutes. Hid ${result.coursesHidden} courses that had only those talks.`)
-    }
-    await copyPackCoursesOntoCodes(payload).catch((error) => {
-      payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
-    })
-    // Local seed loads this itself, and that path is also where sample sign-ins are made.
-    // A live boot only creates the portal and the films. Unit tests build an empty database and must not load the course.
-    if (process.env.HEARTS_SEEDING === '1' || process.env.NODE_ENV === 'test') return
     try {
+      const { markShortTalks } = await import('./server/short-talks')
+      const result = await markShortTalks(payload)
+      if (result.marked || result.coursesHidden) {
+        payload.logger.info(`Marked ${result.marked} talks under 5 minutes. Hid ${result.coursesHidden} courses that had only those talks.`)
+      }
+      await copyPackCoursesOntoCodes(payload).catch((error) => {
+        payload.logger.error({ err: error, msg: 'Could not copy pack courses onto access codes.' })
+      })
+      // Local seed loads this itself, and that path is also where sample sign-ins are made.
+      // A live boot only creates the portal and the films. Unit tests build an empty database and must not load the course.
+      if (process.env.HEARTS_SEEDING === '1' || process.env.NODE_ENV === 'test') return
       const { ensureParentingCourse } = await import('./seed/parenting')
       await ensureParentingCourse(payload)
     } catch (error) {
-      payload.logger.error({ err: error, msg: 'Could not load the Parenting course.' })
-      if (isProduction()) throw error
+      const text = `${error instanceof Error ? error.message : error} ${error instanceof Error && error.cause instanceof Error ? error.cause.message : ''}`
+      const missingTable = /does not exist|no such table/i.test(text)
+      // npm run migrate connects before the tables exist. Production migrates first, so a missing table there is a real failure.
+      if (!isProduction() && missingTable) {
+        payload.logger.info('Startup checks are waiting until migrations create the tables.')
+        return
+      }
+      payload.logger.error({ err: error, msg: 'Could not finish startup checks.' })
+      throw error
     }
   },
   db:
