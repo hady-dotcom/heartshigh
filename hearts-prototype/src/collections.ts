@@ -511,6 +511,13 @@ export const Lessons: CollectionConfig = {
       defaultValue: false,
       admin: { description: 'A person restored this talk. The five-minute marker will not hide it again.' },
     },
+    {
+      name: 'binned',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: { description: 'In the bin. Hidden from learners and courses. The row stays, so putting it back opens the same talk.' },
+    },
     { name: 'transcript', type: 'textarea', maxLength: 500000 },
     {
       name: 'transcriptSource',

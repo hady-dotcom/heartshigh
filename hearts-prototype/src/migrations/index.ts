@@ -37,6 +37,7 @@ import * as migration_20261014_235000_see_how_clips from './20261014_235000_see_
 import * as migration_20261015_120000_desk_bin from './20261015_120000_desk_bin';
 import * as migration_20261015_130000_code_courses from './20261015_130000_code_courses';
 import * as migration_20261022_140000_vimeo_hash from './20261022_140000_vimeo_hash';
+import * as migration_20261024_160000_lesson_bin from './20261024_160000_lesson_bin';
 
 export const migrations = [
   {
@@ -233,5 +234,10 @@ export const migrations = [
     up: migration_20261022_140000_vimeo_hash.up,
     down: migration_20261022_140000_vimeo_hash.down,
     name: '20261022_140000_vimeo_hash',
+  },
+  {
+    up: migration_20261024_160000_lesson_bin.up,
+    down: migration_20261024_160000_lesson_bin.down,
+    name: '20261024_160000_lesson_bin',
   },
 ];
