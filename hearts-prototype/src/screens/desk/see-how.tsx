@@ -13,7 +13,7 @@ export async function MasterSeeHowScreen({ payload, user, query }: { payload: Pa
     .sort((a, b) => a.title.localeCompare(b.title, 'en'))
   return (
     <DeskFrame payload={payload} user={user} title="See how" intro="Each page’s short demo. Play it, replace it with your own video, or go back to the one we recorded." active="see-how" nav={masterNav()} brand="HEARTS" subBrand="Master desk" brandHref="/master" query={query} testId="see-how-desk">
-      <section className="panel" data-testid="see-how-desk-list">
+      <section className="panel" id="see-how-clips" data-testid="see-how-desk-list">
         <header><h2>Clips</h2><span className="hint">{pages.length} pages</span></header>
         <div className="table-wrap">
           <table className="data">

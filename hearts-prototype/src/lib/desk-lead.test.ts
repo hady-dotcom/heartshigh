@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { deskLead } from './desk-lead'
 
-const MASTER = ['portals', 'learners', 'diaries', 'library', 'bring-in', 'live', 'plans', 'circle', 'nights', 'missions', 'safety', 'announcements', 'bin', 'opening', 'lanes', 'experiments', 'insights', 'calendar', 'framing', 'sheet', 'transcripts', 'simulator', 'personas', 'review', 'tiers', 'create', 'questions', 'trends']
+const MASTER = ['portals', 'learners', 'diaries', 'library', 'bring-in', 'live', 'plans', 'circle', 'nights', 'missions', 'safety', 'announcements', 'bin', 'opening', 'lanes', 'experiments', 'insights', 'calendar', 'framing', 'see-how', 'sheet', 'transcripts', 'simulator', 'personas', 'review', 'tiers', 'create', 'questions', 'trends']
 
 test('master desk pages say who the result is for, except the shipped Codes and AI pages', () => {
   assert.equal(deskLead('codes', '/master'), null)

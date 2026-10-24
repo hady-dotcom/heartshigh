@@ -102,6 +102,11 @@ const MASTER: Record<string, Lead> = {
     label: 'Open the list',
     href: '/master/framing',
   },
+  'see-how': {
+    line: 'Short demos of each desk page. Learners do not see this list. The desk uses it to learn a page.',
+    label: 'Play a demo',
+    href: '#see-how-clips',
+  },
   sheet: {
     line: 'One workbook for talks and questions. Learners see a row only after you apply it.',
     label: 'Build a sheet',

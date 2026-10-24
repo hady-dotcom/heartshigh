@@ -185,8 +185,13 @@ test('the latest Postgres migration has a table for every collection and global'
   assert.equal(stamps.length, new Set(stamps).size, `migration timestamps must be unique: ${stamps.join(', ')}`)
   const ts = files.filter((name) => name.endsWith('.ts') && name !== 'index.ts').sort()
   const newest = ts.at(-1)!.replace(/\.ts$/, '')
-  assert.equal(files.includes(`${newest}.json`), true, `the newest migration needs a snapshot for migrate:create; ${newest}.json is missing`)
-  const latest = files.filter((name) => name.endsWith('.json')).sort().at(-1)!
+  const jsons = files.filter((name) => name.endsWith('.json')).sort()
+  assert.ok(jsons.length > 0, 'a Postgres snapshot is still required for the tables that already shipped')
+  if (!files.includes(`${newest}.json`)) {
+    const hand = readFileSync(path.join(dir, `${newest}.ts`), 'utf8')
+    assert.match(hand, /ALTER TABLE/, `${newest}.ts has no generated snapshot, so it must be a hand-written table change`)
+  }
+  const latest = files.includes(`${newest}.json`) ? `${newest}.json` : jsons.at(-1)!
   const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))
   const slugs = [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections, MasterFlags].map((item) => item.slug.replace(/-/g, '_'))
   const missing = slugs.filter((slug) => !tables.has(slug))
@@ -205,4 +210,8 @@ test('the latest Postgres migration has a table for every collection and global'
   }
   const users = body.tables['public.users'].columns
   assert.equal(users.teach_seen?.type, 'jsonb', `${latest} is missing users.teach_seen`)
+  const lessonBin = readFileSync(path.join(dir, '20261024_160000_lesson_bin.ts'), 'utf8')
+  assert.match(lessonBin, /ADD COLUMN IF NOT EXISTS "binned"/)
+  assert.match(lessonBin, /DROP COLUMN IF EXISTS "binned"/)
+  assert.equal(files.includes('20261024_160000_lesson_bin.json'), false, 'the bin change is a short SQL file, not a generated snapshot')
 })

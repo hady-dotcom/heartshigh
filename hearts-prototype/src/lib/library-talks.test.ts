@@ -51,6 +51,10 @@ test('the teacher filter is the approved catalogue and nothing outside it', () =
   assert.equal(matchApprovedTeacher('Amina Yusuf'), null)
   assert.equal(matchApprovedTeacher('Sh. Mohammad Elshinawy')?.slug, 'mohammad-elshinawy')
   assert.equal(matchApprovedTeacher('Shaykh Mikaeel Smith')?.name, 'Mikaeel Smith')
+  assert.equal(matchApprovedTeacher('Shaykha Muslema Purmul')?.slug, 'muslema-purmul')
+  assert.equal(matchApprovedTeacher('Shaykha Sarah Ahmed')?.slug, 'sarah-ahmed')
+  assert.equal(teacherChoices().some((teacher) => teacher.name === 'Muslema Purmul'), true)
+  assert.equal(teacherChoices().some((teacher) => teacher.name === 'Sarah Ahmed'), true)
   const options = teacherChoices().map((teacher) => teacher.slug)
   const filtered = filterLibraryTalks(
     [talk(), talk({ id: 2, title: 'Circle notes', teacher: 'Amina Yusuf' })],
