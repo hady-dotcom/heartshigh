@@ -53,9 +53,9 @@ function lesson(id: number, speaker: string, youtubeId: string) {
 
 test('the seeded speakers round-trip through the Speakers tab', async () => {
   const speakers = speakerRows()
-  assert.equal(speakers.length, 17)
+  assert.equal(speakers.length, 19)
   assert.equal(speakers.filter((speaker) => speaker.status === 'published').length, 8)
-  assert.equal(speakers.filter((speaker) => speaker.status === 'draft').length, 9)
+  assert.equal(speakers.filter((speaker) => speaker.status === 'draft').length, 11)
   const catalogue = emptyCatalogue({ speakers })
   const parsed = await readWorkbook(await buildWorkbook({ speakers: speakers.map((speaker) => speakerSheetValues(speaker)) }))
   const plan = planSheet(parsed, catalogue)

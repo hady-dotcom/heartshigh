@@ -38,6 +38,7 @@ import { bringInLang, bringInStatus, CAPTION_LANGUAGES } from '@/lib/youtube'
 import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { TalkDetail, TalkFinder } from './library-talks'
 import { courseRemovedFromDesk } from '@/lib/desk-delete'
 import { vimeoPlayerSrc } from '@/lib/vimeo'
 
@@ -78,7 +79,7 @@ export async function ContentScreen(ctx: Ctx) {
   const filled = grouped.filter((group) => group.courses.length)
   const empty = grouped.filter((group) => !group.courses.length)
   const listedIds = new Set(filtered.map((course) => course.id))
-  const listedLessons = lessons.filter((lesson) => listedIds.has(ref(lesson.course) || 0))
+  const listedLessons = lessons.filter((lesson) => listedIds.has(ref(lesson.course) || 0) && lesson.binned !== true)
   const listedUnits = units.filter((unit) => listedIds.has(ref(unit.course) || 0))
   const listedPoints = points.filter((point) => listedLessons.some((lesson) => lesson.id === ref(point.lesson)))
   const byId = new Map(filtered.map((course) => [course.id, course]))
@@ -87,7 +88,7 @@ export async function ContentScreen(ctx: Ctx) {
   const courseRow = (courseId: number) => {
     const course = byId.get(courseId)
     if (!course) return null
-    const own = lessons.filter((lesson) => ref(lesson.course) === course.id && lesson.tooShort !== true)
+    const own = lessons.filter((lesson) => ref(lesson.course) === course.id && lesson.tooShort !== true && lesson.binned !== true)
     const ownIds = new Set(own.map((lesson) => lesson.id))
     const isLocal = localIds.has(course.id)
     return (
@@ -256,7 +257,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
   let lesson = lessons.find((row) => row.id === Number(part)) || null
   if (part && (!lesson || lesson.id !== Number(part))) {
     const picked = await one(payload, 'lessons', Number(part))
-    if (picked && ref(picked.course) === courseId) lesson = picked
+    if (picked && ref(picked.course) === courseId && picked.binned !== true) lesson = picked
   }
   if (!lesson) lesson = lessons[0]
   if (lesson && !lessons.some((row) => row.id === lesson!.id)) lessons = [...lessons, lesson]
@@ -303,7 +304,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                   {!locked ? (
                     <>
                       <DeletePick formId="bulk-lesson" id={row.id} label={partTitle(row, courseTitle)} />
-                      <DeleteInline kind="lesson" id={row.id} next={here} portalSlug={portal?.slug} testId={`delete-lesson-${row.id}`} />
+                      <DeleteInline kind="lesson" id={row.id} next={here} portalSlug={portal?.slug} testId={`delete-lesson-${row.id}`} label="Move to the bin" />
                     </>
                   ) : null}
                 </article>
@@ -678,7 +679,8 @@ export async function LibraryScreen(ctx: Ctx) {
   const linkedCourse = (id: number) => adoptions.find((row) => row.kind === 'course' && ref(row.course) === id)
   const here = `${base}/admin/library`
   return (
-    <AdminFrame ctx={ctx} active="library" title="Library" intro="Courses from the main HEARTS library. Each course says which codes and portals can open it." testId="admin-library">
+    <AdminFrame ctx={ctx} active="library" title="Library" intro="Search talks, then open one. Courses from the main library sit underneath. Each course says which codes and portals can open it." testId="admin-library" showOnPhone>
+      <TalkFinder payload={payload} base={here} bringInHref={`${base}/admin/bring-in`} query={ctx.query} />
       <TooShortFilter base={here} count={shortTalks.length} active={showingShort} />
       {showingShort ? <TooShortTable talks={shortTalks} next={`${here}?show=too-short`} canRestore={false} /> : null}
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.45fr) minmax(320px, 1fr)', alignItems: 'start' }}>
@@ -729,6 +731,16 @@ export async function LibraryScreen(ctx: Ctx) {
           </form>
         </section>
       </div>
+    </AdminFrame>
+  )
+}
+
+export async function LibraryTalkScreen(ctx: Ctx, talkId: number) {
+  guardAdmin(ctx)
+  const { payload, base } = ctx
+  return (
+    <AdminFrame ctx={ctx} active="library" title="Talk" intro={<Link href={`${base}/admin/library`}>‹ Library</Link>} testId="admin-library" showOnPhone>
+      <TalkDetail payload={payload} id={talkId} base={`${base}/admin/library`} courseBase={`${base}/admin/content`} binHref={`${base}/admin/bin`} bringInHref={`${base}/admin/bring-in`} manageAll={false} portalId={ctx.portal.id} />
     </AdminFrame>
   )
 }

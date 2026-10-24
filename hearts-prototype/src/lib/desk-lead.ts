@@ -67,6 +67,11 @@ const MASTER: Record<string, Lead> = {
     label: 'Write a note',
     href: '#write-a-note',
   },
+  bin: {
+    line: 'Talks you moved here are hidden from learners. Put one back from this desk and the same talk opens again.',
+    label: 'Open the library',
+    href: '/master/library',
+  },
   opening: {
     line: 'Questions a newcomer answers before the feed. Learners see a scene once it is published.',
     label: 'Edit a scene',
@@ -96,6 +101,11 @@ const MASTER: Record<string, Lead> = {
     line: 'How a clip is cropped on the phone. Learners see the crop you leave in place.',
     label: 'Open the list',
     href: '/master/framing',
+  },
+  'see-how': {
+    line: 'Short demos of each desk page. Learners do not see this list. The desk uses it to learn a page.',
+    label: 'Play a demo',
+    href: '#see-how-clips',
   },
   sheet: {
     line: 'One workbook for talks and questions. Learners see a row only after you apply it.',
@@ -210,6 +220,11 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
     line: 'A note on Home. Learners see it until they dismiss it.',
     label: 'Write a note',
     path: '#write-a-note',
+  },
+  bin: {
+    line: 'Talks you moved here are hidden from learners. Put one back and the same talk opens again.',
+    label: 'Open the library',
+    path: 'library',
   },
   library: {
     line: 'Courses from the shared library. Each course says which codes and portals can open it. Learners see one once a code or this portal opens it.',

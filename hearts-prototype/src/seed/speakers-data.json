@@ -427,5 +427,52 @@
     "sources": "https://www.shaykhelbakri.com/about (his own site)\nhttps://www.tawasaw.org/our-team (Tawasaw Institute: founder bio; Oakland address)",
     "status": "draft",
     "sheetName": "Shaykh Alaeddin Albakri"
+  },
+  {
+    "name": "Muslema Purmul",
+    "honorific": "Shaykha",
+    "displayName": "Shaykha Muslema Purmul",
+    "slug": "muslema-purmul",
+    "aliases": [
+      "Shaykha Muslema Purmul"
+    ],
+    "bio": "Shaykha Muslema Purmul was born in Raleigh, North Carolina, and raised in San Diego. She graduated from the University of California, San Diego with a double major in Religious Studies and Middle Eastern Studies, then spent about seven years studying in Egypt. There she completed a bachelor's degree in Sharia from al-Azhar University and almost two years of graduate study in Islamic Studies at the American University in Cairo. She later completed an M.A. from Bayan Islamic Graduate School, with a thesis on Sayyidah Fatimah. With her husband, Shaykh Jamaal Diwan, she co-founded The Majlis, where she serves as Assistant Religious Director. She has taught Islamic law and ethics in mosques, universities, retreats and conferences, and has also worked in youth programmes, university chaplaincy and pastoral care in Southern California.",
+    "photoUrl": "",
+    "photoSource": "https://www.themajlis.us/who-we-are",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://www.themajlis.us/who-we-are"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.almadina.org/pearls/teachers/muslema-purmul"
+      }
+    ],
+    "sources": "https://www.themajlis.us/who-we-are (The Majlis: born Raleigh, raised San Diego, UCSD, about seven years in Egypt, al-Azhar Sharia, American University in Cairo, Bayan M.A. on Sayyidah Fatimah, co-founder and Assistant Religious Director)\nhttps://www.almadina.org/pearls/teachers/muslema-purmul (Pearls of the Qur'an: the same education and Southern California teaching)",
+    "status": "draft",
+    "sheetName": "Muslema Purmul"
+  },
+  {
+    "name": "Sarah Ahmed",
+    "honorific": "Shaykha",
+    "displayName": "Shaykha Sarah Ahmed",
+    "slug": "sarah-ahmed",
+    "aliases": [
+      "Shaykha Sarah Ahmed",
+      "Sarah Ahmed"
+    ],
+    "bio": "Shaykha Sarah Ahmed is a teacher, author and educator. She holds an alimiyyah degree in Islamic sciences and has spent more than ten years teaching, writing and speaking. She is co-director of EmpowHer Health, a faith and wellness community for Muslim women in the Dallas-Fort Worth area, and she hosts the She Should Know podcast. She wrote A Light of Her Own: Muslim Womanhood as a Path to Allah and Reading Qur'an: A Step-by-Step Guide to Qur'anic Fluency. Her teaching includes courses, halaqas, talks and one-to-one counselling.",
+    "photoUrl": "",
+    "photoSource": "https://www.bysarahahmed.com/about",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://www.bysarahahmed.com/about"
+      }
+    ],
+    "sources": "https://www.bysarahahmed.com/about (her own site: alimiyyah in Islamic sciences, more than ten years teaching, co-director of EmpowHer Health in Dallas-Fort Worth, She Should Know podcast, author of A Light of Her Own and Reading Qur'an)",
+    "status": "draft",
+    "sheetName": "Sarah Ahmed"
   }
 ]

@@ -28,7 +28,7 @@ import { CalendarPages } from '@/screens/desk/calendar'
 import { MissionPages } from '@/screens/desk/missions'
 import { MissionScreen, ShapedScreen, SupportScreen } from '@/screens/app/mission'
 import { OverviewScreen, PortalSettingsScreen, WizardScreen } from '@/screens/desk/overview'
-import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, guardAdmin } from '@/screens/desk/content'
+import { AccessScreen, ContentScreen, CourseEditorScreen, LibraryScreen, LibraryTalkScreen, guardAdmin } from '@/screens/desk/content'
 import { PortalBringInScreen } from '@/screens/desk/bring-in'
 import { PortalCompassScreen, StaffLearnerCompass } from '@/screens/desk/compass'
 import { ProposedCompassScreen } from '@/screens/desk/compass-proposed'
@@ -122,6 +122,11 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         guardAdmin(ctx)
         return PortalBringInScreen(ctx)
       case 'library':
+        if (b === 'talk') {
+          const talkId = Number(screen[3])
+          if (!talkId) notFound()
+          return LibraryTalkScreen(ctx, talkId)
+        }
         return LibraryScreen(ctx)
       case 'access':
         return AccessScreen(ctx)

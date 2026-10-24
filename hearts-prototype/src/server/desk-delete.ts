@@ -325,8 +325,24 @@ async function removeGone(payload: Payload, actorId: number, kind: DeleteKind, d
   return { notice: `${titleOf(kind, doc)} is deleted. ${tail}` }
 }
 
+async function hideLesson(payload: Payload, actorId: number, doc: Doc, portalId: number | null): Promise<Result> {
+  if (doc.binned === true || (await alreadyBinned(payload, 'lesson', doc.id))) return { error: 'That talk is already in the bin.' }
+  await payload.update({ collection: 'lessons', id: doc.id, overrideAccess: true, data: { binned: true } as never })
+  await putBin(payload, actorId, 'lesson', doc.id, titleOf('lesson', doc), portalId, 'hide', { binned: false, courseId: idOf(doc.course) })
+  return { notice: `${titleOf('lesson', doc)} is in the bin. Learners and courses will not show it. Join codes still open the same course. You can put it back from the bin.` }
+}
+
+async function eraseLesson(payload: Payload, doc: Doc) {
+  const children = CHILDREN.lesson || []
+  for (const child of [...children].reverse()) {
+    const rows = await findWhere(payload, child.collection, { [child.field]: { equals: doc.id } }, 500)
+    for (const row of rows) await payload.delete({ collection: col(child.collection), id: row.id, overrideAccess: true })
+  }
+  await payload.delete({ collection: 'lessons', id: doc.id, overrideAccess: true })
+}
+
 async function preflight(payload: Payload, kind: DeleteKind, doc: Doc): Promise<string | null> {
-  if (kind === 'lesson') return blockLesson(payload, doc.id)
+  if (kind === 'lesson' && doc.binned === true) return 'That talk is already in the bin.'
   if (kind === 'point') return blockPoint(payload, doc.id)
   if (kind === 'lane') return blockLane(payload, doc)
   if (kind === 'course' && courseRemovedFromDesk(doc as { hidden?: boolean; hiddenNote?: unknown })) return 'That course is already in the bin.'
@@ -342,6 +358,7 @@ async function preflight(payload: Payload, kind: DeleteKind, doc: Doc): Promise<
 
 async function commit(payload: Payload, actorId: number, kind: DeleteKind, doc: Doc, portalId: number | null): Promise<Result> {
   if (kind === 'course') return hideCourse(payload, actorId, doc)
+  if (kind === 'lesson') return hideLesson(payload, actorId, doc, portalId)
   if (kind === 'portal') return hidePortal(payload, actorId, doc)
   if (kind === 'scene') return hideScene(payload, actorId, doc)
   return removeGone(payload, actorId, kind, doc, portalId)
@@ -400,6 +417,15 @@ export async function deskDelete(payload: Payload, user: SessionUser, form: Form
 }
 
 async function undoHide(payload: Payload, kind: DeleteKind, recordId: number, snapshot: Record<string, unknown>) {
+  if (kind === 'lesson') {
+    await payload.update({
+      collection: 'lessons',
+      id: recordId,
+      overrideAccess: true,
+      data: { binned: snapshot.binned === true } as never,
+    })
+    return
+  }
   if (kind === 'course') {
     await payload.update({
       collection: 'courses',
@@ -484,9 +510,41 @@ export async function deskUndo(payload: Payload, user: SessionUser, binId: numbe
   return { notice: `${String(row.title || 'It')} is back.` }
 }
 
+export async function deskEmptyBin(payload: Payload, user: SessionUser): Promise<Result> {
+  const actor = actorScope(user)
+  if (actor.role !== 'master' && actor.role !== 'portal-admin') return { error: 'Only the desk can empty the bin.' }
+  const where = actor.role === 'master'
+    ? { and: [{ kind: { equals: 'lesson' } }, { undone: { not_equals: true } }] }
+    : { and: [{ kind: { equals: 'lesson' } }, { undone: { not_equals: true } }, { portal: { equals: actor.portalId } }] }
+  const rows = await findWhere(payload, BIN, where, 500)
+  let removed = 0
+  let kept = 0
+  for (const row of rows) {
+    const lessonId = Number(row.recordId)
+    const lesson = await readDoc(payload, 'lessons', lessonId)
+    if (lesson) {
+      const blocked = await blockLesson(payload, lesson.id)
+      if (blocked) {
+        kept += 1
+        continue
+      }
+      await eraseLesson(payload, lesson)
+    }
+    await payload.delete({ collection: BIN, id: row.id, overrideAccess: true })
+    removed += 1
+  }
+  if (!removed && !kept) return { notice: 'The bin has no talks. Join codes are unchanged.' }
+  if (kept) return { notice: `Removed ${removed} talks. Left ${kept} because a learner has answered ${kept === 1 ? 'it' : 'them'}. Join codes are unchanged.` }
+  return { notice: `Removed ${removed} ${removed === 1 ? 'talk' : 'talks'} from the bin. Join codes are unchanged.` }
+}
+
 export async function runDeskDelete(payload: Payload, user: SessionUser, form: FormData): Promise<Result> {
   const action = text(form, 'action')
   if (action === 'desk-undo') return deskUndo(payload, user, Number(text(form, 'bin')))
+  if (action === 'desk-empty-bin') {
+    if (text(form, 'sure') !== 'yes') return { error: 'Tick Yes, empty the bin. Nothing was removed.' }
+    return deskEmptyBin(payload, user)
+  }
   if (action === 'desk-delete' || action === 'desk-bulk-delete') return deskDelete(payload, user, form)
   return { error: 'That action is not known.' }
 }

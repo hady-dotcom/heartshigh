@@ -8,7 +8,7 @@ function identity(row: SeedSpeaker, id: number): SpeakerIdentity {
   return { id, name: row.name, displayName: row.displayName, slug: row.slug, aliases: row.aliases }
 }
 
-/** Loads the 17 speaker bios and points each talk at the one person it names. Safe to run again. */
+/** Loads the 19 speaker bios and points each talk at the one person it names. Safe to run again. */
 export async function seedSpeakers(payload: Payload) {
   const identities: SpeakerIdentity[] = []
   for (const row of rows) {
