@@ -110,6 +110,12 @@ async function heartsCourseIds() {
   return [...allowed].filter((id) => !sequence.has(id))
 }
 
+async function openHeartCourses() {
+  const allowed = new Set(await heartsCourseIds())
+  const courses = ((await json('/api/courses?limit=200&depth=0')).docs || []) as { id: number; title?: string; hidden?: boolean | null; visibility?: string }[]
+  return courses.filter((course) => allowed.has(course.id) && course.hidden !== true && course.visibility !== 'draft')
+}
+
 async function heartsLessons<T extends { course: number }>(query = ''): Promise<T[]> {
   const ids = await heartsCourseIds()
   if (!ids.length) return []
@@ -185,8 +191,9 @@ test.describe('courses and planning', () => {
   test('every overview row on a real imported course has a visible still', async ({ page }) => {
     await page.setViewportSize(PHONE)
     const lessons = await heartsLessons<{ id: number; course: number; youtubeId?: string }>()
-    const courses = ((await json('/api/courses?limit=200&depth=0')).docs || []) as { id: number; title?: string }[]
-    const real = lessons.filter((row) => row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
+    const courses = await openHeartCourses()
+    const openIds = new Set(courses.map((course) => course.id))
+    const real = lessons.filter((row) => openIds.has(row.course) && row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
     const byCourse = new Map<number, typeof real>()
     for (const row of real) {
       const list = byCourse.get(row.course) || []
@@ -358,14 +365,19 @@ test.describe('courses and planning', () => {
     const picked = await aCourse()
     const byCount = new Map<number, typeof picked.lessons>()
     const lessons = await heartsLessons<{ id: number; course: number }>()
+    const openIds = new Set((await openHeartCourses()).map((course) => course.id))
     for (const lesson of lessons) {
+      if (!openIds.has(lesson.course)) continue
       const list = byCount.get(lesson.course) || []
       list.push(lesson)
       byCount.set(lesson.course, list)
     }
     const short = [...byCount.entries()].find(([, own]) => own.length >= 2 && own.length <= 4)
-    const courseId = short?.[0] || picked.courseId
-    const own = short?.[1] || picked.lessons
+    // Ten sittings has ten talks. With every weekday ticked, that many talks no longer use an even spread.
+    const single = [...byCount.entries()].find(([, own]) => own.length === 1)
+    const chosen = short || single
+    const courseId = chosen?.[0] || picked.courseId
+    const own = chosen?.[1] || picked.lessons
     const span = Array.from({ length: 12 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
     await signIn(page, `${BASE}/week?course=${courseId}&view=new&start=2026-10-05&end=2026-10-16&days=0,1,2,3,4,5,6&minutes=20`)
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))
