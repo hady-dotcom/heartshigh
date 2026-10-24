@@ -1124,6 +1124,24 @@ html[data-theme] .panel > header p { opacity: 1; }
 .sequence-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
 .portal-mark, .portal-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
 .portal-mark { display: grid; place-items: center; background: var(--portal-colour, #1f3a5f); color: #fff; font-weight: 700; }
+.sequence-module { margin-top: 18px; }
+.sequence-module h2 { font-size: 16px; margin: 0; }
+.video-coming-label { margin-left: auto; color: #8a4b3a; font-size: 12px; }
+.video-coming {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 16px;
+  background: #1f3a5f;
+  color: #fff;
+  text-align: center;
+}
+.video-coming strong { font-size: 22px; }
+.video-coming p { margin: 0; font-size: 14px; }
 .sequence-list, .sequence-edit { list-style: none; padding: 0; margin: 12px 0; }
 .sequence-list li, .sequence-edit li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dccd; }
 .sequence-list a { display: flex; gap: 8px; align-items: center; color: inherit; text-decoration: none; flex: 1; }

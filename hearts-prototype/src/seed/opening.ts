@@ -399,9 +399,12 @@ async function seedTier(payload: Payload, lesson: Doc, youtubeId: string, length
 /** Every cut, ladder rung, pop-up and tier must sit inside its talk's real duration (bug 15). */
 export async function timingCheck(payload: Payload) {
   const all = async (collection: string) => (await payload.find({ collection: collection as never, overrideAccess: true, depth: 0, limit: 0, pagination: false })).docs as unknown as Doc[]
-  const [lessons, cuts, ladder, points, tiers] = await Promise.all([all('lessons'), all('cuts'), all('ladder-items'), all('engagement-points'), all('talk-tiers')])
+  const [lessons, cuts, ladder, points, tiers, portals] = await Promise.all([all('lessons'), all('cuts'), all('ladder-items'), all('engagement-points'), all('talk-tiers'), all('portals')])
+  const sequencePortals = new Set(portals.filter((row) => row.shape === 'sequence').map((row) => row.id))
   const problems: string[] = []
   for (const lesson of lessons) {
+    // A sequenced course can time a question before the film length is known. HEARTS talks stay checked.
+    if (sequencePortals.has(idOf(lesson.portal) || 0) && !(Number(lesson.durationSeconds) > 0)) continue
     const rows: TimingRow[] = [
       ...cuts.filter((row) => idOf(row.lesson) === lesson.id).map((row) => ({ label: `Cut ${row.id}`, start: Number(row.start), end: Number(row.end) })),
       ...ladder.filter((row) => idOf(row.lesson) === lesson.id).map((row) => ({ label: `${String(row.kind)} ${row.id}`, start: Number(row.start), end: Number(row.end) })),

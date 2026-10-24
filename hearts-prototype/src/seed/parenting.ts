@@ -3,12 +3,13 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
-import { EXAMPLE_LINES, EXAMPLE_TRANSCRIPT, PARENTING_EXAMPLES } from '@/lib/parenting-examples'
 import { sequenceFeatureDefaults } from '@/lib/sequence-features'
-import { validateTrack } from '@/lib/framing/validate'
-import type { FramingTrack } from '@/lib/framing/types'
+import { syncCourseSheet } from '@/server/sequence-desk'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
+const WELCOME = 'Welcome. Watch the films in order.'
+const COURSE_TITLE = 'Guiding Home Learning'
+const COURSE_SUMMARY = 'Watch the films in order.'
 
 function codesFile() {
   const url = process.env.DATABASE_URL || ''
@@ -32,102 +33,28 @@ async function ensureUser(payload: Payload, data: { email: string; password: str
   })
 }
 
-function exampleTrack(youtubeId: string, duration: number): FramingTrack | null {
-  const end = Math.max(duration, 4)
-  const track: FramingTrack = {
-    version: 1,
-    youtubeId,
-    start: 0,
-    end,
-    segments: [{ start: 0, end, mode: 'F', confidence: 0.5, focus: { x: 0.5, y: 0.45 } }],
-    sentences: [
-      {
-        text: EXAMPLE_LINES.hook,
-        s: 0,
-        e: 4,
-        words: [
-          { w: 'Listen', t: 0, e: 0.4 },
-          { w: 'first.', t: 0.5, e: 1.2 },
-        ],
-      },
-      {
-        text: EXAMPLE_LINES.turn,
-        s: 8,
-        e: 12,
-        words: [
-          { w: 'Turn', t: 8, e: 8.4 },
-          { w: 'toward', t: 8.5, e: 8.9 },
-          { w: 'what', t: 9, e: 9.3 },
-          { w: 'they', t: 9.4, e: 9.7 },
-          { w: 'need.', t: 9.8, e: 10.4 },
-        ],
-      },
-      {
-        text: EXAMPLE_LINES.land,
-        s: 16,
-        e: 20,
-        words: [
-          { w: 'Land', t: 16, e: 16.4 },
-          { w: 'on', t: 16.5, e: 16.7 },
-          { w: 'one', t: 16.8, e: 17 },
-          { w: 'small', t: 17.1, e: 17.4 },
-          { w: 'thing', t: 17.5, e: 17.9 },
-          { w: 'you', t: 18, e: 18.2 },
-          { w: 'can', t: 18.3, e: 18.5 },
-          { w: 'try', t: 18.6, e: 18.9 },
-          { w: 'this', t: 19, e: 19.2 },
-          { w: 'week.', t: 19.3, e: 19.8 },
-        ],
-      },
-    ],
-  }
-  return validateTrack(track).length ? null : track
-}
-
-/** A 17 second kinetic clip inside a stored window the learner never sees. */
-const KINETIC_TIER = {
-  horsStart: 1,
-  horsEnd: 18,
-  horsQuote: EXAMPLE_LINES.hook,
-  appetiserStart: 0,
-  appetiserEnd: 20,
-  hook: EXAMPLE_LINES.hook,
-  turn: EXAMPLE_LINES.turn,
-  land: EXAMPLE_LINES.land,
-  hookAt: 1,
-  turnAt: 8,
-  landAt: 16,
-  typographyStyle: 'kinetic' as const,
-  typographyInPlace: false,
-  offerResume: false,
-  status: 'checked' as const,
-  source: 'example',
-  note: EXAMPLE_LINES.note,
-}
-
-async function ensureKineticClip(payload: Payload, lessonId: number) {
-  const existing = await payload.find({ collection: 'talk-tiers', overrideAccess: true, limit: 1, where: { lesson: { equals: lessonId } } })
-  if (existing.docs[0]) return existing.docs[0]
-  return payload.create({
-    collection: 'talk-tiers',
-    overrideAccess: true,
-    data: { ...KINETIC_TIER, lesson: lessonId },
-  })
-}
-
 /**
- * A parenting course that is not a HEARTS portal: its own films, in order.
+ * The Guiding Home Learning course on its own portal.
  * Safe to run again. It does not touch East London or Leeds.
+ * Re-reads uploads/videos.csv so a later sheet replaces the films in place.
  */
 export async function seedParentingPortal(payload: Payload) {
   const features = sequenceFeatureDefaults()
   const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'parenting' } } })
+  const look = {
+    shape: 'sequence' as const,
+    features,
+    kineticOn: true,
+    minTalkSeconds: 0,
+    welcome: WELCOME,
+    description: 'A course you watch in order.',
+  }
   const portal = found.docs[0]
     ? await payload.update({
         collection: 'portals',
         id: found.docs[0].id,
         overrideAccess: true,
-        data: { shape: 'sequence', features, kineticOn: true, minTalkSeconds: 0 },
+        data: look,
       })
     : await payload.create({
         collection: 'portals',
@@ -137,16 +64,11 @@ export async function seedParentingPortal(payload: Payload) {
           organisationName: 'Parenting',
           slug: 'parenting',
           kind: 'other',
-          shape: 'sequence',
-          welcome: 'Welcome. Watch the films in order. These example films stay until the real videos arrive.',
-          description: 'A course you watch in order.',
           colour: '#1f3a5f',
           accent: '#e07a5f',
           lockOrder: true,
-          minTalkSeconds: 0,
           wizardDone: true,
-          kineticOn: true,
-          features,
+          ...look,
         },
       })
 
@@ -156,91 +78,22 @@ export async function seedParentingPortal(payload: Payload) {
     limit: 1,
     where: { and: [{ portal: { equals: portal.id } }, { origin: { equals: 'local' } }] },
   })
-  let course = courseFound.docs[0]
-  if (!course) {
-    course = await payload.create({
-      collection: 'courses',
-      overrideAccess: true,
-      data: {
-        title: 'Parenting, in order',
-        summary: 'Example films until the real videos arrive. Watch them from 1 to 10.',
-        origin: 'local',
-        portal: portal.id,
-        importable: false,
-        hidden: false,
-        visibility: 'published',
-      },
-    })
-    const unit = await payload.create({
-      collection: 'units',
-      overrideAccess: true,
-      data: { title: 'Films', course: course.id, order: 1 },
-    })
-    for (let index = 0; index < PARENTING_EXAMPLES.length; index++) {
-      const film = PARENTING_EXAMPLES[index]
-      const first = index === 0
-      const track = first ? exampleTrack(film.youtubeId, film.durationSeconds) : null
-      const lesson = await payload.create({
-        collection: 'lessons',
-        overrideAccess: true,
-        data: {
-          title: film.title,
-          unit: unit.id,
-          course: course.id,
-          portal: portal.id,
-          master: false,
-          order: index + 1,
-          speaker: film.speaker,
-          sourceTitle: film.title.replace(/^Example \d+ · /, ''),
-          youtubeUrl: `https://www.youtube.com/watch?v=${film.youtubeId}`,
-          youtubeId: film.youtubeId,
-          videoProvider: 'youtube',
-          durationSeconds: film.durationSeconds,
-          transcript: first ? EXAMPLE_TRANSCRIPT : undefined,
-          transcriptSource: first ? 'upload' : 'none',
-          transcriptNote: first ? EXAMPLE_LINES.note : undefined,
-          framingTrack: track || undefined,
-          tooShort: false,
-          publishState: 'published',
-        },
-      })
-      if (first) {
-        await payload.create({
-          collection: 'cuts',
-          overrideAccess: true,
-          data: {
-            lesson: lesson.id,
-            course: course.id,
-            status: 'approved',
-            start: 1,
-            end: 20,
-            hook: EXAMPLE_LINES.hook,
-            turn: EXAMPLE_LINES.turn,
-            land: EXAMPLE_LINES.land,
-            playable: true,
-          },
-        })
-        await payload.create({
-          collection: 'engagement-points',
-          overrideAccess: true,
-          data: {
-            lesson: lesson.id,
-            triggerType: 'timestamp',
-            second: 12,
-            kind: 'reflection',
-            prompt: EXAMPLE_LINES.question,
-            timing: 'immediate',
-            audience: 'everyone',
-            status: 'published',
-          },
-        })
-        await ensureKineticClip(payload, lesson.id)
-      }
-    }
-  } else {
-    const first = await payload.find({ collection: 'lessons', overrideAccess: true, limit: 1, sort: 'order', where: { course: { equals: course.id } } })
-    if (first.docs[0]) await ensureKineticClip(payload, first.docs[0].id)
+  const courseFields = {
+    title: COURSE_TITLE,
+    summary: COURSE_SUMMARY,
+    origin: 'local' as const,
+    portal: portal.id,
+    importable: false,
+    hidden: false,
+    visibility: 'published' as const,
   }
+  const course = courseFound.docs[0]
+    ? await payload.update({ collection: 'courses', id: courseFound.docs[0].id, overrideAccess: true, data: courseFields })
+    : await payload.create({ collection: 'courses', overrideAccess: true, data: courseFields })
+
+  const sheet = readFileSync(path.join(root, 'uploads/videos.csv'), 'utf8')
+  const synced = await syncCourseSheet(payload, portal.id, sheet)
+  if (synced.error) throw new Error(synced.error)
 
   const packFound = await payload.find({
     collection: 'packs',

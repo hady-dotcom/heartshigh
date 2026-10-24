@@ -30,15 +30,19 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await page.setViewportSize(PHONE)
   await page.goto(`${E2E_BASE}/p/parenting`)
   await expect(page.getByTestId('sequence-gate')).toBeVisible()
-  await expect(page.getByTestId('sequence-film')).toHaveCount(10)
+  await expect(page.getByTestId('sequence-module')).toHaveCount(10)
+  await expect(page.getByTestId('sequence-film')).toHaveCount(110)
   await expect(page.getByTestId('sequence-name')).toHaveText('Parenting')
-  await expect(page.getByText('Example 1 · How to raise successful kids')).toBeVisible()
+  await expect(page.getByText('Guiding Home Learning')).toBeVisible()
+  await expect(page.getByText('Home Learning Introduction 1: Why We Created This Course')).toBeVisible()
+  await expect(page.locator('[data-testid="sequence-film"][data-coming="yes"]')).toHaveCount(2)
   await expect(page.locator('body')).not.toContainText(/jibril|hadith|masjid|mosque|prayer|islam|garden/i)
   await shot(page, 'sequence-gate')
 
   await signIn(page, 'parenting-learner@hearts.test', 'portal-learner', '/p/parenting')
   await expect(page.getByTestId('sequence-home')).toBeVisible()
-  await expect(page.getByTestId('sequence-count')).toHaveText('0 of 10 videos')
+  await expect(page.getByTestId('sequence-count')).toHaveText('0 of 110 videos')
+  await expect(page.getByTestId('sequence-module')).toHaveCount(10)
   await expect(page.getByTestId('tab-garden')).toHaveCount(0)
   await expect(page.getByTestId('tab-home')).toBeVisible()
   await expect(page.getByTestId('tab-me')).toBeVisible()
@@ -48,14 +52,10 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
 
   await page.getByTestId('sequence-continue').click()
   await expect(page.getByTestId('sequence-course')).toBeVisible()
-  await expect(page.getByTestId('sequence-question')).toContainText('What is one small thing you could try at home this week?')
-  await expect(page.getByTestId('spoken-words')).toHaveAttribute('data-sentence', 'Listen first.')
-  await expect(page.getByTestId('callout-hook')).toContainText('Listen first.')
-  await expect(page.getByTestId('callout-turn')).toContainText('Turn toward what they need.')
-  await expect(page.getByTestId('callout-land')).toContainText('Land on one small thing you can try this week.')
-  await expect(page.getByTestId('kinetic-clip')).toContainText('Listen first.')
-  await expect(page.getByTestId('kinetic-clip')).toHaveAttribute('data-start', '1')
-  await expect(page.getByTestId('kinetic-clip')).toHaveAttribute('data-end', '18')
+  await expect(page.getByTestId('vimeo-player')).toBeVisible()
+  await expect(page.getByTestId('sequence-question')).toContainText('How would you describe your experience of home learning so far?')
+  await expect(page.getByTestId('kinetic-clip')).toHaveCount(0)
+  await expect(page.getByTestId('video-coming')).toHaveCount(0)
   await expect(page.getByTestId('up-next')).toBeVisible()
   await expect(page.getByTestId('course-garden')).toHaveCount(0)
   await expect(page.locator('body')).not.toContainText(/appetiser|appetizer/i)
@@ -94,13 +94,14 @@ test('admin can paste, retitle, reorder and export', async ({ page }) => {
   await page.getByTestId('sequence-paste').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
   await page.getByTestId('sequence-import').click()
   await expect(page.getByTestId('notice')).toContainText(/Added 1 film/)
-  await expect(page.getByTestId('film-title')).toHaveCount(11)
+  await expect(page.getByTestId('film-title')).toHaveCount(111)
 
   const csv = 'title,url\nA short csv film,https://www.youtube.com/watch?v=jNQXAC9IVRw\n'
   await page.getByTestId('sequence-sheet').setInputFiles({ name: 'films.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
   await page.getByTestId('sequence-paste').fill('')
   await page.getByTestId('sequence-import').click()
   await expect(page.getByTestId('notice')).toContainText(/Added 1 film/)
+  await expect(page.getByTestId('film-title')).toHaveCount(112)
   await shot(page, 'sequence-admin')
 
   const response = await page.request.get('/api/hearts/export-app?portal=parenting')
@@ -133,6 +134,41 @@ test('admin can paste, retitle, reorder and export', async ({ page }) => {
   await page.goto('/p/parenting/admin/teach')
   await expect(page.getByTestId('sequence-learners')).toBeVisible()
   await expect(page.locator('body')).not.toContainText(/Maryam|mosque|Jibril|Ghunya/i)
+})
+
+test('uploading the course sheet again updates films in place', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/sequence')
+  const csv = [
+    'order,module,title,public_title,vimeo_id,vimeo_link,final_video_drive,transcript,callouts',
+    '1,Welcome,1) Internal,Public one,496862893,https://vimeo.com/496862893,,,"[12 freetype] What is one thing you noticed?"',
+    '2,Welcome,2) Missing,Public two,,,,,"[end freetype] What would you try?"',
+  ].join('\n')
+  await page.getByTestId('sequence-sheet').setInputFiles({ name: 'videos.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
+  await page.getByTestId('sequence-paste').fill('')
+  await page.getByTestId('sequence-import').click()
+  await expect(page.getByTestId('notice')).toContainText('Updated the course. 2 films.')
+  await expect(page.getByTestId('film-title')).toHaveCount(2)
+  await expect(page.getByTestId('film-title').first()).toHaveValue('Public one')
+
+  await page.goto('/p/parenting')
+  await expect(page.getByTestId('sequence-film')).toHaveCount(2)
+  await expect(page.getByText('Public two')).toBeVisible()
+  await expect(page.locator('[data-testid="sequence-film"][data-coming="yes"]')).toHaveCount(1)
+  const first = new URL(page.url())
+  const part = await page.getByTestId('sequence-film').first().locator('a').getAttribute('href')
+  const lesson = new URL(part || '', first.origin).searchParams.get('part')
+  const done = await page.request.post('/api/hearts', {
+    form: { action: 'complete', lesson: lesson || '', seconds: '30', ended: 'yes', level: 'talk' },
+    headers: { accept: 'application/json' },
+  })
+  expect(done.ok()).toBeTruthy()
+  await page.locator('[data-testid="sequence-film"][data-coming="yes"] a').click()
+  await expect(page.getByTestId('video-coming')).toBeVisible()
+  await expect(page.getByTestId('video-coming')).toContainText('Video coming')
+  await expect(page.getByTestId('vimeo-player')).toHaveCount(0)
+  await expect(page.getByTestId('sequence-question')).toContainText('What would you try?')
+  await shot(page, 'sequence-coming')
 })
 
 test('an existing hearts portal still has the garden tab', async ({ page }) => {

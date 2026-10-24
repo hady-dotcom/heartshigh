@@ -91,6 +91,7 @@ export function CoursePlayer({
   saveOnEnd = false,
   showResume = false,
   clipEnd = null,
+  videoComing = false,
 }: {
   courseTitle: string
   backHref: string
@@ -124,6 +125,8 @@ export function CoursePlayer({
   showResume?: boolean
   /** When set, playback pauses at this second. Used for a short kinetic clip. */
   clipEnd?: number | null
+  /** A sequenced film with no Vimeo or YouTube id yet. */
+  videoComing?: boolean
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -777,7 +780,13 @@ export function CoursePlayer({
           {open && !filmed && !playing ? (
             <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
           ) : null}
-          {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+          {videoComing ? (
+            <div className="video-coming" data-testid="video-coming">
+              <strong>Video coming</strong>
+              <p>This film will play here when it is ready.</p>
+            </div>
+          ) : null}
+          {!videoComing && coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
             <button type="button" className="j-tap-catcher film-tap" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play" />
           ) : null}
         </div>
@@ -890,7 +899,7 @@ export function CoursePlayer({
           })}
         </ul>
       ) : null}
-      {mode === 'practice' ? (
+      {mode === 'practice' && !videoComing ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
           {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
         </p>

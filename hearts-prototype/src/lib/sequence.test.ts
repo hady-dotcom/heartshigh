@@ -1,5 +1,8 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
 import { test } from 'node:test'
+import { fileURLToPath } from 'node:url'
 import { DOOR_COUNT } from './doors'
 import { EXAMPLE_LINES, EXAMPLE_TRANSCRIPT, PARENTING_EXAMPLES } from './parenting-examples'
 import { tooShortMessage } from './talk-length'
@@ -10,13 +13,16 @@ import {
   hasHeartsWord,
   hasIslamicWording,
   heartsDoorCodes,
+  isCourseSheet,
   isSequencePortal,
   kineticMomentsOn,
   lockMessage,
   minTalkRefusal,
   minTalkSecondsOf,
   moveItem,
+  parseCourseSheet,
   parseVideoList,
+  plainVimeoId,
   portalShape,
   portalUsesJibrilDoors,
   resumeChoice,
@@ -89,6 +95,56 @@ test('a pasted list, a csv and a reorder keep the film order', () => {
   assert.match(tooMany.error || '', /200/)
   assert.deepEqual(moveItem(['a', 'b', 'c'], 2, 0), ['c', 'a', 'b'])
   assert.deepEqual(moveItem(['a', 'b', 'c'], 0, 1), ['b', 'a', 'c'])
+})
+
+test('a course sheet keeps modules, public titles, missing films and timed questions', () => {
+  assert.equal(plainVimeoId('4.96862893E8'), '496862893')
+  assert.equal(plainVimeoId(''), '')
+  const sample = [
+    'order,module,title,public_title,vimeo_id,vimeo_link,final_video_drive,transcript,callouts',
+    '1,Welcome,"1) Internal, name",Public one,496862893,https://vimeo.com/496862893,https://drive.google.com/file/d/abc,https://docs.google.com/document/d/abc,"[171 freetype] How would you describe it? || [90 choice] Which one fits? (One; Two; Three; correct: Two)"',
+    '2,Later,40) INTRODUCTION,INTRODUCTION,,,,,"[end freetype] What element interests you?"',
+  ].join('\n')
+  assert.equal(isCourseSheet(sample), true)
+  assert.equal(isCourseSheet('title,url\nHello,https://vimeo.com/123456789'), false)
+  const parsed = parseCourseSheet(sample)
+  assert.equal(parsed.error, undefined)
+  assert.equal(parsed.films.length, 2)
+  assert.equal(parsed.films[0].publicTitle, 'Public one')
+  assert.equal(parsed.films[0].title, '1) Internal, name')
+  assert.equal(parsed.films[0].module, 'Welcome')
+  assert.equal(parsed.films[0].vimeoId, '496862893')
+  assert.equal(parsed.films[0].callouts.length, 2)
+  assert.equal(parsed.films[0].callouts[0].second, 171)
+  assert.equal(parsed.films[0].callouts[0].kind, 'question')
+  assert.equal(parsed.films[0].callouts[1].kind, 'multiple_choice')
+  assert.deepEqual(parsed.films[0].callouts[1].options, ['One', 'Two', 'Three'])
+  assert.equal(parsed.films[0].callouts[1].correct, 'Two')
+  assert.equal(parsed.films[0].callouts[1].second, 90)
+  assert.equal(parsed.films[1].vimeoId, '')
+  assert.equal(parsed.films[1].publicTitle, 'INTRODUCTION')
+  assert.equal(parsed.films[1].callouts[0].atEnd, true)
+  assert.equal(parsed.films[1].callouts[0].second, 0)
+  const again = parseCourseSheet(sample)
+  assert.equal(again.films.length, 2)
+  assert.equal(again.films[0].vimeoId, parsed.films[0].vimeoId)
+
+  const csvPath = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads/videos.csv')
+  const course = parseCourseSheet(readFileSync(csvPath, 'utf8'))
+  assert.equal(course.films.length, 110)
+  assert.deepEqual([...new Set(course.films.map((film) => film.module))].length, 10)
+  assert.equal(course.films.filter((film) => !film.vimeoId).length, 2)
+  assert.equal(course.films[0].publicTitle, 'Home Learning Introduction 1: Why We Created This Course')
+  assert.equal(course.films[0].title, '1) 1.1 Introduction - Why')
+  assert.equal(course.films[0].vimeoId, '496862893')
+  assert.equal(course.films[0].callouts[0].second, 171)
+  assert.match(course.films[0].callouts[0].prompt, /home learning so far/)
+  assert.equal(course.films[39].publicTitle, 'INTRODUCTION')
+  assert.equal(course.films[39].vimeoId, '')
+  assert.equal(course.films[39].callouts[0].atEnd, true)
+  const shown = course.films.map((film) => `${film.module} ${film.publicTitle}`).join('\n')
+  assert.equal(hasIslamicWording(shown), false)
+  assert.equal(hasHeartsWord(shown), false)
 })
 
 test('lock and resume follow the saved place', () => {

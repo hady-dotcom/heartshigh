@@ -446,6 +446,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           saveOnEnd={sequence}
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
+          videoComing={sequence && !youtubeId && !film}
           garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && !sequence ? `${base}/garden` : base, query), nextPart: following, links: [
             ...(featureOn(portal, 'garden') && !sequence ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
             ...(featureOn(portal, 'workbook') && !sequence ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),

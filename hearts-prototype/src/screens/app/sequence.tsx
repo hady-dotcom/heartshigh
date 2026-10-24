@@ -10,17 +10,36 @@ import type { PortalDoc } from '@/server/context'
 import type { Payload } from 'payload'
 import { ref, rows, str, type Ctx, type Row } from '../common'
 
+function comingFilm(lesson: Row) {
+  return !str(lesson.vimeoId) && !str(lesson.youtubeId) && str(lesson.videoProvider) !== 'file'
+}
+
+function groupsOf(lessons: Row[], units: Map<number, string>) {
+  const groups: { title: string; rows: { lesson: Row; index: number }[] }[] = []
+  lessons.forEach((lesson, index) => {
+    const title = units.get(ref(lesson.unit) || 0) || 'Films'
+    const last = groups[groups.length - 1]
+    if (!last || last.title !== title) groups.push({ title, rows: [] })
+    groups[groups.length - 1].rows.push({ lesson, index })
+  })
+  return groups
+}
+
 async function filmsFor(payload: Payload, portalId: number) {
   const courses = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portalId } }, { hidden: { not_equals: true } }] }, { sort: 'createdAt', limit: 5 })
   const course = courses[0]
-  if (!course) return { course: null as Row | null, lessons: [] as Row[] }
-  const lessonRows = await rows(payload, 'lessons', { course: { equals: course.id } }, { sort: 'order' })
+  if (!course) return { course: null as Row | null, lessons: [] as Row[], units: new Map<number, string>() }
+  const [lessonRows, unitRows] = await Promise.all([
+    rows(payload, 'lessons', { course: { equals: course.id } }, { sort: 'order' }),
+    rows(payload, 'units', { course: { equals: course.id } }, { sort: 'order' }),
+  ])
+  const units = new Map(unitRows.map((unit) => [unit.id, str(unit.title)]))
   const lessons = sortParts(lessonRows, () => 0).filter((row) => learnerLessonVisible({
     publishState: str(row.publishState),
     transcriptNote: str(row.transcriptNote),
     tooShort: row.tooShort === true,
   }))
-  return { course, lessons }
+  return { course, lessons, units }
 }
 
 function Mark({ name, logo }: { name: string; logo: string }) {
@@ -29,28 +48,37 @@ function Mark({ name, logo }: { name: string; logo: string }) {
 }
 
 export async function SequenceGate({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
-  const { lessons } = await filmsFor(payload, portal.id)
+  const { course, lessons, units } = await filmsFor(payload, portal.id)
   const name = portalName(portal)
   const brand = brandColours(portal)
+  const groups = groupsOf(lessons, units)
   return (
     <AppFrame testId="sequence-gate" help="sequence-gate" brand={brand}>
       <div className="app-scroll">
         <header className="sequence-head">
           <Mark name={name} logo={str(portal.logoUrl)} />
           <div>
-            <p className="eyebrow">{SEQUENCE_COPY.examples}</p>
+            <p className="eyebrow">{str(course?.title) || 'Watch the films in order.'}</p>
             <h1 data-testid="sequence-name">{name}</h1>
           </div>
         </header>
         <p>{str(portal.welcome) || 'Watch the films in order.'}</p>
-        <ol className="sequence-list" data-testid="sequence-list">
-          {lessons.map((lesson, index) => (
-            <li key={lesson.id} data-testid="sequence-film">
-              <span className="sequence-num">{index + 1}</span>
-              <span>{str(lesson.title)}</span>
-            </li>
+        <div data-testid="sequence-list">
+          {groups.map((group) => (
+            <section className="sequence-module" key={group.title} data-testid="sequence-module">
+              <h2>{group.title}</h2>
+              <ol className="sequence-list">
+                {group.rows.map(({ lesson, index }) => (
+                  <li key={lesson.id} data-testid="sequence-film" data-coming={comingFilm(lesson) ? 'yes' : 'no'}>
+                    <span className="sequence-num">{index + 1}</span>
+                    <span>{str(lesson.title)}</span>
+                    {comingFilm(lesson) ? <small className="video-coming-label">Video coming</small> : null}
+                  </li>
+                ))}
+              </ol>
+            </section>
           ))}
-        </ol>
+        </div>
         {!lessons.length ? <p>Films will show here once they are added.</p> : null}
         <div className="sequence-actions">
           <Link className="pill gold block" href={`/login?next=${encodeURIComponent(base)}`} data-testid="sequence-sign-in">{SEQUENCE_COPY.signIn}</Link>
@@ -63,9 +91,10 @@ export async function SequenceGate({ payload, portal, base }: { payload: Payload
 
 export async function SequenceHome(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
-  const { course, lessons } = await filmsFor(payload, portal.id)
+  const { course, lessons, units } = await filmsFor(payload, portal.id)
   const name = portalName(portal)
   const brand = brandColours(portal)
+  const groups = groupsOf(lessons, units)
   const lessonIds = lessons.map((row) => row.id)
   const completions = lessonIds.length
     ? await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
@@ -86,26 +115,34 @@ export async function SequenceHome(ctx: Ctx) {
             <p data-testid="sequence-count">{progress.line}</p>
           </div>
         </header>
-        <p data-testid="sequence-note">{SEQUENCE_COPY.examples}</p>
+        <p data-testid="sequence-note">{str(course?.summary) || 'Watch the films in order.'}</p>
         {next && course ? (
           <Link className="pill gold block" href={`${base}/course/${course.id}?part=${next.id}`} data-testid="sequence-continue">{SEQUENCE_COPY.continue}</Link>
         ) : null}
-        <ol className="sequence-list" data-testid="sequence-list">
-          {lessons.map((lesson, index) => {
-            const locked = lockMessage(portal.lockOrder === true, index === 0 || done.has(lessons[index - 1].id), index)
-            const href = course ? `${base}/course/${course.id}?part=${lesson.id}` : base
-            return (
-              <li key={lesson.id} data-testid="sequence-film">
-                <Link href={href}>
-                  <span className="sequence-num">{index + 1}</span>
-                  <span>{str(lesson.title)}</span>
-                  {done.has(lesson.id) ? <small>Watched</small> : null}
-                </Link>
-                {locked ? <p className="sequence-lock" data-testid="sequence-lock">{locked}</p> : null}
-              </li>
-            )
-          })}
-        </ol>
+        <div data-testid="sequence-list">
+          {groups.map((group) => (
+            <section className="sequence-module" key={group.title} data-testid="sequence-module">
+              <h2>{group.title}</h2>
+              <ol className="sequence-list">
+                {group.rows.map(({ lesson, index }) => {
+                  const locked = lockMessage(portal.lockOrder === true, index === 0 || done.has(lessons[index - 1].id), index)
+                  const href = course ? `${base}/course/${course.id}?part=${lesson.id}` : base
+                  return (
+                    <li key={lesson.id} data-testid="sequence-film" data-coming={comingFilm(lesson) ? 'yes' : 'no'}>
+                      <Link href={href}>
+                        <span className="sequence-num">{index + 1}</span>
+                        <span>{str(lesson.title)}</span>
+                        {comingFilm(lesson) ? <small className="video-coming-label">Video coming</small> : null}
+                        {done.has(lesson.id) ? <small>Watched</small> : null}
+                      </Link>
+                      {locked ? <p className="sequence-lock" data-testid="sequence-lock">{locked}</p> : null}
+                    </li>
+                  )
+                })}
+              </ol>
+            </section>
+          ))}
+        </div>
         {!lessons.length ? <p>Films will show here once they are added.</p> : null}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} />

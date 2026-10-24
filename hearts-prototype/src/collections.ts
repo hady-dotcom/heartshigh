@@ -820,17 +820,21 @@ export const EngagementPoints: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [
-      ({ data, originalDoc }) => {
+      ({ data, originalDoc, req }) => {
         const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
         const options = Array.isArray(merged.options) ? (merged.options as unknown[]).map(String) : []
-        refuse(
-          authorTextProblems([
-            ['The question', typeof merged.prompt === 'string' ? merged.prompt : ''],
-            ...options.map((option, index): [string, string] => [`Option ${index + 1}`, option]),
-            ['The right answer', typeof merged.correctOption === 'string' ? merged.correctOption : ''],
-            ['The crisis option', typeof merged.crisisOption === 'string' ? merged.crisisOption : ''],
-          ]),
-        )
+        const fields: [string, string][] = [
+          ['The question', typeof merged.prompt === 'string' ? merged.prompt : ''],
+          ...options.map((option, index): [string, string] => [`Option ${index + 1}`, option]),
+          ['The right answer', typeof merged.correctOption === 'string' ? merged.correctOption : ''],
+          ['The crisis option', typeof merged.crisisOption === 'string' ? merged.crisisOption : ''],
+        ]
+        // A sequenced course sheet brings the films' own questions. They stay plain text, and are not HEARTS opener copy.
+        if (req?.context?.sequenceCallout === true) {
+          refuse(markupProblems(fields))
+          return data
+        }
+        refuse(authorTextProblems(fields))
         return data
       },
     ],
