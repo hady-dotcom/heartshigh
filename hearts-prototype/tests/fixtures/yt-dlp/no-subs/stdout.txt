@@ -1,0 +1,7 @@
+[youtube] Extracting URL: https://www.youtube.com/watch?v=kM7LVppIMl0
+[youtube] kM7LVppIMl0: Downloading webpage
+[youtube] kM7LVppIMl0: Downloading tv client config
+[youtube] kM7LVppIMl0: Downloading player 0004de42-main
+[youtube] kM7LVppIMl0: Downloading tv player API JSON
+[info] There are no subtitles for the requested languages
+348

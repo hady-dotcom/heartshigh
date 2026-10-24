@@ -1,0 +1,431 @@
+[
+  {
+    "name": "Abu Ja'far al-Hanbali",
+    "honorific": "Sheikh",
+    "displayName": "Sheikh Abu Ja'far al-Hanbali",
+    "slug": "abu-ja-far-al-hanbali",
+    "aliases": [],
+    "bio": "Sheikh Abu Ja'far al-Hanbali teaches at The Lote Tree Institute, whose YouTube channel carries his 'Reasons for Faith' lectures. He is a teacher of the Hanbali school based in Nottingham, and he has spent many years teaching creed, fiqh, tafsir and Qur'an recitation. Much of his work is about bringing classical texts into English. He has taught the Tafsir of Ibn al-Jawzi as a weekly course in English, and he has translated books such as Ibn Qudamah's 'A Word of Advice' and a life of Imam Ahmad ibn Hanbal. His lessons range from creed and Islamic history to plain advice on living well in the world as it is today.",
+    "photoUrl": "",
+    "photoSource": "None official found. Only the channel avatar at https://www.youtube.com/@TheReasons4Faith (ask the Institute).",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://www.youtube.com/@TheReasons4Faith/about"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.youtube.com/watch?v=jNghiLjK408"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.amazon.com/Word-Advice-Muwaffaq-ud-Din-Qudamah/dp/1981353208"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.ryefieldbooks.com/books/the-life-and-times-of-ahmad-ibn-hanbal-translated-by-al-hajj-abu-jafar-al-hanbali/9781326551438"
+      },
+      {
+        "label": "Source",
+        "url": "http://mahdinnm.blogspot.com/2017/12/prophets-and-warfare.html"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.youtube.com/watch?v=GEFC0quntbs"
+      },
+      {
+        "label": "Photo",
+        "url": "https://www.youtube.com/@TheReasons4Faith"
+      }
+    ],
+    "sources": "https://www.youtube.com/@TheReasons4Faith/about (channel About: 'Reasons for Faith, a series of lectures given by Sheikh Abu Ja'far Al Hanbali'; on the box in /workspace/reasons4faith/tab_channel.json)\nhttps://www.youtube.com/watch?v=jNghiLjK408 (description: Tafsir Ibn al-Jawzi as a weekly course at the Lote Tree Institute, taught by Sheikh Abu Ja'far Al-Hanbali)\nhttps://www.amazon.com/Word-Advice-Muwaffaq-ud-Din-Qudamah/dp/1981353208 (translator, A Word of Advice, 2017)\nhttps://www.ryefieldbooks.com/books/the-life-and-times-of-ahmad-ibn-hanbal-translated-by-al-hajj-abu-jafar-al-hanbali/9781326551438 (translator)\nhttp://mahdinnm.blogspot.com/2017/12/prophets-and-warfare.html (2017: translator of several Arabic works; teaches creed, fiqh, tafsir, tajweed and hifz)\nhttps://www.youtube.com/watch?v=GEFC0quntbs (2011, his own words: 'a junior theologian based here in Nottingham'); a 2026 LinkedIn post also places him in Nottingham",
+    "status": "draft",
+    "sheetName": "Abu Ja'far al-Hanbali"
+  },
+  {
+    "name": "Sheikh Babikir Ahmed Babikir",
+    "honorific": "Sheikh",
+    "displayName": "Sheikh Babikir Ahmed Babikir",
+    "slug": "babikir-ahmed-babikir",
+    "aliases": [],
+    "bio": "Sheikh Babikir Ahmed Babikir is a scholar from Sudan who has lived and taught in Britain since 1977. He studied the Islamic sciences in Sudan, where Sheikh al-Fatih Qaribullah gave him permission to teach. In London he started the Saturday circle at the Central Mosque in Regent's Park, served for many years as imam and spiritual director at Islamia School, and founded Ulfa Aid and Rumi's Cave, a community hub in north west London. Today he gives the Friday sermon at the Mosque and Islamic Centre of Brent in Cricklewood. People know him for his warmth, and for his gentle way of putting mercy and service at the heart of faith.",
+    "photoUrl": "",
+    "photoSource": "https://sheikhbabikir.com/ (portrait on the home page, img/photo-portrait.jpg; the site is run by volunteers, so ask them)",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://sheikhbabikir.com/about"
+      },
+      {
+        "label": "Source",
+        "url": "https://themuslim500.com/profiles/babikir-shaykh-ahmed/"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.iidr.org/people/14-babikar-ahmed-babikar/"
+      },
+      {
+        "label": "Source",
+        "url": "https://sdgswhoswho.org/uk/sheikh-babikir-ahmed/"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.rumis.org/"
+      },
+      {
+        "label": "Photo",
+        "url": "https://sheikhbabikir.com/"
+      }
+    ],
+    "sources": "https://sheikhbabikir.com/about (volunteer-run site: Sudan, ijazah from Sheikh al-Fatih Qaribullah, Britain since 1977, Islamia School, Rumi's Cave, Ulfa Aid, khateeb at Brent)\nhttps://themuslim500.com/profiles/babikir-shaykh-ahmed/ (gentle and warm; Islamia; Rumi's Cave)\nhttps://www.iidr.org/people/14-babikar-ahmed-babikar/ (studied under Shaykh Fatih Qaribullah; early study circle at Regent's Park Mosque; Ulfa Aid)\nhttps://sdgswhoswho.org/uk/sheikh-babikir-ahmed/ (arrived September 1977; first programme at London Central Mosque, now the Saturday Circle)\nhttps://www.rumis.org/ (founder; Ulfa Aid 2004)",
+    "status": "draft",
+    "sheetName": "Sheikh Babikir Ahmed Babikir"
+  },
+  {
+    "name": "Mikaeel Smith",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Mikaeel Smith",
+    "slug": "mikaeel-smith",
+    "aliases": [],
+    "bio": "An instructor at Qalam, teaching Tafsir, Seerah, Aqeedah and Hadith at the Qalam Seminary. He grew up in a deeply spiritual Christian home in Buffalo, NY. At eighteen he embraced Islam after reading the Qur'an and the Autobiography of Malcolm X, then completed his memorisation of the Qur'an. He continued his studies at Jami'a Abu Noor in Damascus and earned a degree in Islamic Studies at Dar ul-Uloom Canada. He is the author of With the Heart in Mind.",
+    "photoUrl": "",
+    "photoSource": "https://www.qalam.institute/mikaeel-smith (the repo already has hearts-prototype/public/speakers/mikaeel-smith.jpg). CMS photo: creators/1/0dfa0f4e-8365-4df0-8d07-0d450153798c.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://www.qalam.institute/mikaeel-smith"
+      }
+    ],
+    "sources": "Hearts CMS creator #1 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Instructor @ Qalam",
+    "status": "published",
+    "sheetName": "Mikaeel Smith"
+  },
+  {
+    "name": "Mohammad Elshinawy",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Mohammad Elshinawy",
+    "slug": "mohammad-elshinawy",
+    "aliases": [
+      "Sh. Mohammad Elshinawy",
+      "Sh Mohammad Elshinawy",
+      "Shaykh Mohammad Elshinawy"
+    ],
+    "bio": "Serves as full-time Religious Director at the Islamic Society of Allentown, where his primary passion lies in masjid orientation and community building. A graduate of English literature from Brooklyn College, he studied at the College of Hadith at the Islamic University of Madinah and completed a Bachelor's in Islamic studies. He serves as a research director at Yaqeen Institute and has translated 20+ Islamic books into English.",
+    "photoUrl": "",
+    "photoSource": "https://yaqeeninstitute.org/team/mohammad-elshinawy. CMS photo: creators/13/0c3ac607-5c89-4526-9c71-6919ce69ea89.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://yaqeeninstitute.org/team/mohammad-elshinawy"
+      }
+    ],
+    "sources": "Hearts CMS creator #13 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Religious Director at Islamic Society of Allentown",
+    "status": "published",
+    "sheetName": "Sh. Mohammad Elshinawy"
+  },
+  {
+    "name": "Suleiman Hani",
+    "honorific": "Dr",
+    "displayName": "Dr Suleiman Hani",
+    "slug": "suleiman-hani",
+    "aliases": [],
+    "bio": "Dr. Suleiman Hani is the Dean of Academic Affairs at AlMaghrib Institute, a resident scholar in Michigan, and an international lecturer on Islam, philosophy, leadership and human rights. He holds master's degrees from Harvard University and the University of Jordan, and a doctorate in leadership from NYU. Over the past decade he has delivered lectures in more than fifty countries.",
+    "photoUrl": "",
+    "photoSource": "https://yaqeeninstitute.org/team/suleiman-hani. CMS photo: creators/3/7fe1a838-15c1-4dd4-b7c0-1a11c2f3bd8b.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://yaqeeninstitute.org/team/suleiman-hani"
+      }
+    ],
+    "sources": "Hearts CMS creator #3 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Dean of Academics @ AlMaghrib Institute · Harvard · NYU",
+    "status": "published",
+    "sheetName": "Suleiman Hani"
+  },
+  {
+    "name": "Khalid Latif",
+    "honorific": "Imam",
+    "displayName": "Imam Khalid Latif",
+    "slug": "khalid-latif",
+    "aliases": [],
+    "bio": "Imam Khalid Latif is an American Muslim leader who serves as the co-founder and Director of the Islamic Center of New York City. He is widely recognised for his long-standing role as the first Muslim chaplain at New York University and the youngest chaplain in NYPD history.",
+    "photoUrl": "",
+    "photoSource": "No official page reachable from the box (icnyc.org timed out); the CMS already holds a photo. CMS photo: creators/7/9d51bdb9-e30f-4f5a-9f81-f79ebc88945c.jpg",
+    "links": [],
+    "sources": "Hearts CMS creator #7 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Director and Co-founder of ICNYC",
+    "status": "published",
+    "sheetName": "Khalid Latif"
+  },
+  {
+    "name": "Shadee Elmasry",
+    "honorific": "Dr",
+    "displayName": "Dr Shadee Elmasry",
+    "slug": "shadee-elmasry",
+    "aliases": [],
+    "bio": "Dr. Elmasry received his Ph.D. from the University of London in 2007. He is Scholar in Residence and Director of Education at the New Brunswick Islamic Center in New Jersey, and founder of Safina Society, an institution dedicated to traditional Islamic education in the West.",
+    "photoUrl": "",
+    "photoSource": "https://safinasociety.org/about (\"Meet Our Founder\"). CMS photo: creators/6/0737b01c-d508-4d15-afd5-2fbd7f61ac18.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://safinasociety.org/about"
+      }
+    ],
+    "sources": "Hearts CMS creator #6 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Imam @ NBIC · Founder @ Safina Society",
+    "status": "published",
+    "sheetName": "Shadee Elmasry"
+  },
+  {
+    "name": "Yasir Fahmy",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Yasir Fahmy",
+    "slug": "yasir-fahmy",
+    "aliases": [],
+    "bio": "Shaykh Yasir began the study of Arabic and Islamic Sciences in his high school years. At seventeen he travelled to Amman, studying at the Islamic University of Jordan, then completed a BSc at Rutgers. After three years in finance he enrolled at Al-Azhar in Cairo. After seven years of intensive study he received a degree in Islamic Studies and numerous ijazas in fiqh, hadith, aqida, usul al-fiqh, sirah, tazkiyyah, mantiq and Arabic grammar. He became the first American Azhari to teach in the Al-Azhar Mosque in 2013.",
+    "photoUrl": "",
+    "photoSource": "https://www.propheticliving.org/our-team/. CMS photo: creators/4/b09ef454-3d59-4d27-8d71-294f5529ea7b.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://www.propheticliving.org/our-team/"
+      }
+    ],
+    "sources": "Hearts CMS creator #4 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Founder, Resident Scholar @ Prophetic Living",
+    "status": "published",
+    "sheetName": "Yasir Fahmy"
+  },
+  {
+    "name": "Amjad Tarsin",
+    "honorific": "Ustadh",
+    "displayName": "Ustadh Amjad Tarsin",
+    "slug": "amjad-tarsin",
+    "aliases": [],
+    "bio": "Amjad Tarsin obtained his BA at the University of Michigan, then spent an intensive year at Dar al-Mustafa in Tarim, Yemen. He completed a Master's at Hartford Seminary's Islamic Chaplaincy program and served as Canada's first full-time Muslim university chaplain for seven years. He is full-time faculty at Al-Maqasid and hosts SoulFood FM.",
+    "photoUrl": "",
+    "photoSource": "https://almaqasid.org/faculty. CMS photo: creators/5/d4280ac4-38f7-4970-817a-94b6d5a8480f.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://almaqasid.org/faculty"
+      }
+    ],
+    "sources": "Hearts CMS creator #5 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Faculty @ Al-Maqasid · Host of Soul Food FM",
+    "status": "published",
+    "sheetName": "Amjad Tarsin"
+  },
+  {
+    "name": "Tesneem Alkiek",
+    "honorific": "Dr",
+    "displayName": "Dr Tesneem Alkiek",
+    "slug": "tesneem-alkiek",
+    "aliases": [
+      "Dr. Tesneem Alkiek",
+      "Dr Tesneem Alkiek"
+    ],
+    "bio": "Dr Tesneem Alkiek is a fellow at Yaqeen Institute, where her work has included turning the Institute's research into curricula and resources that communities can actually use. She studied Early Christianity and Islamic Studies at the University of Michigan, then completed a PhD in Islamic Studies at Georgetown University, with a focus on Islamic law. She also lectures in philosophy and religion at Rutgers University, Camden. Many people know her from Yaqeen videos such as 'Real Talk' and 'Habits to Win Here and Hereafter', where she talks honestly about faith, marriage, burnout and the small habits that shape a life.",
+    "photoUrl": "",
+    "photoSource": "https://yaqeeninstitute.org/team/tesneem-alkiek (official portrait as the page image)",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://pages.yaqeeninstitute.org/habits"
+      },
+      {
+        "label": "Source",
+        "url": "https://yaqeeninstitute.org/team/tesneem-alkiek"
+      },
+      {
+        "label": "Source",
+        "url": "https://yaqeeninstitute.org/watch/series/sincerely-yours/sincerely-tesneem-alkiek"
+      },
+      {
+        "label": "Source",
+        "url": "https://scholarworks.iu.edu/iupjournals/index.php/jems/article/view/8651"
+      },
+      {
+        "label": "Source",
+        "url": "https://orcid.org/0000-0002-4200-6174"
+      }
+    ],
+    "sources": "https://pages.yaqeeninstitute.org/habits (Fellow; Georgetown PhD with a focus on Islamic law; Michigan BA; curricula and resources)\nhttps://yaqeeninstitute.org/team/tesneem-alkiek (team page; Real Talk series)\nhttps://yaqeeninstitute.org/watch/series/sincerely-yours/sincerely-tesneem-alkiek (lecturer at Rutgers University, Camden)\nhttps://scholarworks.iu.edu/iupjournals/index.php/jems/article/view/8651 (2025: Director of Editorial Strategy at Yaqeen; Rutgers-Camden)\nhttps://orcid.org/0000-0002-4200-6174 (Georgetown PhD 2021; Michigan BA 2015)",
+    "status": "draft",
+    "sheetName": "Dr. Tesneem Alkiek"
+  },
+  {
+    "name": "Fatima Lette",
+    "honorific": "Ustadha",
+    "displayName": "Ustadha Fatima Lette",
+    "slug": "fatima-lette",
+    "aliases": [],
+    "bio": "Ustadha Fatima Lette is an instructor at Qalam and faculty at the Qalam Seminary where she teaches Ulum al-Qur'an, Usul al-Tafsir and Tafsir. She graduated from Kennesaw State University with a BA in Psychology and went on to graduate from the alimiyyah program at the Qalam Seminary.",
+    "photoUrl": "",
+    "photoSource": "https://www.qalam.institute/fatima-lette. CMS photo: creators/19/ceb27405-4157-469b-9b08-bdd2801f0da5.jpg",
+    "links": [
+      {
+        "label": "Photo",
+        "url": "https://www.qalam.institute/fatima-lette"
+      }
+    ],
+    "sources": "Hearts CMS creator #19 (build/cms_snapshot.json and app/data.js in the repo); shortBio: Instructor @ Qalam · Teacher @ The Roots Community Space",
+    "status": "published",
+    "sheetName": "Fatima Lette"
+  },
+  {
+    "name": "Dawood Yasin",
+    "honorific": "Imam",
+    "displayName": "Imam Dawood Yasin",
+    "slug": "dawood-yasin",
+    "aliases": [],
+    "bio": "Imam Dawood Yasin serves the Islamic Center of Greater Austin in Texas. Before that he was Director of Student Life and of the Center for Ethical Living and Learning at Zaytuna College in California, which he joined in 2013. There he taught Arabic at every level, led the experiential learning programme and taught archery. Earlier roles took him to Dartmouth College, the Zayed Center for Islamic Culture in the UAE and Yale University. He studied at the Abu Nour Institute in Damascus, and he holds degrees from the University of Massachusetts Boston and Dartmouth. Before he embraced Islam he worked as a fashion model in New York and Paris.",
+    "photoUrl": "",
+    "photoSource": "No official institute photo page found (zaytuna.edu faculty page no longer shows his bio). Portrait feature: https://www.americanmuslimexperience.org/stories/dawood",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://mcceastbay.org/event/practical-ramadan/"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.americanmuslimexperience.org/stories/dawood"
+      },
+      {
+        "label": "Source",
+        "url": "https://austinmosque.org/event/allah-is-not-asking-for-perfection/"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.preservinglegacy.online/portraits/dawoodyasin"
+      }
+    ],
+    "sources": "https://mcceastbay.org/event/practical-ramadan/ (Zaytuna bio: roles, Arabic, archery, UMass Boston BA 2009, Dartmouth MA 2017, Abu Nour, joined Zaytuna 2013)\nhttps://www.americanmuslimexperience.org/stories/dawood (joined ICGATX after Zaytuna; former fashion model; Abu Nour)\nhttps://austinmosque.org/event/allah-is-not-asking-for-perfection/ (leads programmes at ICGA)\nhttps://www.preservinglegacy.online/portraits/dawoodyasin (same Zaytuna bio)",
+    "status": "draft",
+    "sheetName": "Dawood Yasin"
+  },
+  {
+    "name": "Umar Faruq Abd-Allah",
+    "honorific": "Dr",
+    "displayName": "Dr Umar Faruq Abd-Allah",
+    "slug": "umar-faruq-abd-allah",
+    "aliases": [
+      "Dr. Umar Faruq Abd-Allah",
+      "Dr.Umar Faruq Abd Allah",
+      "Dr Umar Faruq Abd-Allah",
+      "Umar Faruq Abd Allah"
+    ],
+    "bio": "Dr Umar Faruq Abd-Allah is an American Muslim theologian, writer and teacher. Born in Nebraska in 1948 and raised in Georgia, he embraced Islam and went on to earn a PhD on the origins of Islamic law at the University of Chicago. He has taught Arabic, Islamic studies and comparative religion across North America, Europe and Africa, including years at King Abdulaziz University in Jeddah, and he later spent more than a decade with the Nawawi Foundation in Chicago. His books include 'A Muslim in Victorian America', a life of Alexander Russell Webb, and 'Malik and Medina', a study of early Islamic legal reasoning.",
+    "photoUrl": "",
+    "photoSource": "None official found. A group photo is on Wikimedia Commons via https://en.wikipedia.org/wiki/Umar_Faruq_Abd-Allah (check the licence).",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://renovatio.zaytuna.edu/authors/umar-faruq-abd-allah"
+      },
+      {
+        "label": "Source",
+        "url": "https://en.wikipedia.org/wiki/Umar_Faruq_Abd-Allah"
+      }
+    ],
+    "sources": "https://renovatio.zaytuna.edu/authors/umar-faruq-abd-allah (Zaytuna College: theologian, writer, teacher; Chicago PhD on the origins of Islamic law; taught in North America, Africa and Europe)\nhttps://en.wikipedia.org/wiki/Umar_Faruq_Abd-Allah (born 1948 Columbus, Nebraska; raised in Athens, Georgia; Jeddah from 1984; Nawawi Foundation from 2000 for over a decade; books)",
+    "status": "draft",
+    "sheetName": "Dr. Umar Faruq Abd-Allah"
+  },
+  {
+    "name": "Naeem Baig",
+    "honorific": "Ustadh",
+    "displayName": "Ustadh Naeem Baig",
+    "slug": "naeem-baig",
+    "aliases": [
+      "Ustadh Naeem Baig (Hāfidh)",
+      "Ustadh Naeem Baig (Hafidh)",
+      "Ustadh Naeem Baig",
+      "Naeem Baig (Hāfidh)"
+    ],
+    "bio": "Ustadh Naeem Baig is a co-founder of Rawdah, a community space for spiritual growth in the DMV area around Washington DC, and one of its teachers. He memorised the Qur'an at the DUS Hifzh school in College Park, Maryland, and completed the Alimiyyah programme at the Qalam Seminary, graduating in 2026. He has served communities in the DMV, Dallas Fort Worth, Cincinnati and Minnesota, giving halaqas, khutbahs and community programmes. He has a warm, approachable way of relating Islamic teaching to daily life, and he cares deeply about building families and communities centred on faith.",
+    "photoUrl": "",
+    "photoSource": "https://rawdah.org/about-us (team portrait, alt text 'Ustadh Naeem Baig')",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://rawdah.org/about-us"
+      }
+    ],
+    "sources": "https://rawdah.org/about-us (team bio: co-founder and teacher; DUS Hifzh school; Qalam Seminary Alimiyyah 2026; DMV, DFW, Cincinnati, Minnesota)",
+    "status": "draft",
+    "sheetName": "Ustadh Naeem Baig (Hāfidh)"
+  },
+  {
+    "name": "Shaykh Umair Haseeb",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Umair Haseeb",
+    "slug": "umair-haseeb",
+    "aliases": [],
+    "bio": "Shaykh Umair Haseeb is the founding resident scholar at Mozaic. He began studying Arabic, the Qur'an and the basics of the faith in Chicago, then moved to Morocco to study Arabic and Islamic law full time. After studying at the Qarawiyyin in Fes, he received his degree and licences directly from its scholars in legal theory, Maliki law, grammar, theology and the life of the Prophet. He has served as imam of the Sayyida Fatima Project on Chicago's south west side, and he has done postgraduate study at al-Azhar University in Cairo.",
+    "photoUrl": "",
+    "photoSource": "https://learn.icnachicago.org/umair-haseeb (faculty page portrait); also check https://www.mozaic.ing/about",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://www.mozaic.ing/about"
+      },
+      {
+        "label": "Source",
+        "url": "https://learn.icnachicago.org/umair-haseeb"
+      }
+    ],
+    "sources": "https://www.mozaic.ing/about (Founding Resident Scholar)\nhttps://learn.icnachicago.org/umair-haseeb (ICNA Chicago faculty page: Chicago, Morocco, Qarawiyyin, licences, Sayyida Fatima Project, al-Azhar)",
+    "status": "draft",
+    "sheetName": "Shaykh Umair Haseeb"
+  },
+  {
+    "name": "Omar Hedroug",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Omar Hedroug",
+    "slug": "omar-hedroug",
+    "aliases": [],
+    "bio": "Shaykh Omar Hedroug was born in Kalamazoo, Michigan, and grew up in Chicago. He studied with local scholars through school and university, then won a scholarship to the Islamic University of Madinah. There he completed an associate degree in Arabic and a bachelor's degree from the College of Shariah with the highest honours, while also attending classes in the Prophet's Mosque. Back in Chicago he has served as full time youth director at the Islamic Center of Naperville. He is one of the lead tarbiyah instructors at AlMaghrib Institute, teaching fiqh and sirah, and has appeared on Yaqeen Institute's 'Qur'an 30 for 30'.",
+    "photoUrl": "",
+    "photoSource": "https://learn.icnachicago.org/omar-hedroug (faculty page portrait)",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://learn.icnachicago.org/omar-hedroug"
+      },
+      {
+        "label": "Source",
+        "url": "https://yaqeeninstitute.org/watch/series/quran-30-for-30-season-6/juz-22-when-allah-honors-you-sh-omar-hedroug-quran-30-for-30-season-6"
+      }
+    ],
+    "sources": "https://learn.icnachicago.org/omar-hedroug (ICNA Chicago faculty page: Kalamazoo, Chicago, Madinah degrees, Islamic Center of Naperville)\nhttps://yaqeeninstitute.org/watch/series/quran-30-for-30-season-6/juz-22-when-allah-honors-you-sh-omar-hedroug-quran-30-for-30-season-6 (introduced as a lead tarbiyah instructor at AlMaghrib, teaching fiqh and sirah)",
+    "status": "draft",
+    "sheetName": "Omar Hedroug"
+  },
+  {
+    "name": "Alauddin Elbakri",
+    "honorific": "Shaykh",
+    "displayName": "Shaykh Alauddin Elbakri",
+    "slug": "alauddin-elbakri",
+    "aliases": [
+      "Alaeddin Albakri",
+      "Shaykh Alaeddin Albakri",
+      "Alaeddin El-Bakri",
+      "Alaeddin Elbakri",
+      "Shaykh Alaeddin El-Bakri"
+    ],
+    "bio": "Shaykh Alauddin Elbakri is a scholar and speaker of Palestinian heritage, and the founder of Tawasaw Institute in Oakland, California. His grandfather, Shaykh Yaseen Elbakri, was imam of al-Aqsa Mosque for thirty years. He began studying in Jordan while still at school, earned bachelor's and master's degrees in Islamic and international law and history, and received ijazahs in Qur'an, hadith and sirah from scholars in Jordan, Saudi Arabia and Pakistan. Since coming to the United States as an imam in 1996, he has helped found IMAN in Chicago, My Deen in Fresno and the Support Life Foundation, and he started Tawasaw in 2018 to serve young Muslims and their communities.",
+    "photoUrl": "",
+    "photoSource": "https://www.shaykhelbakri.com/about (portrait on the page)",
+    "links": [
+      {
+        "label": "Source",
+        "url": "https://www.shaykhelbakri.com/about"
+      },
+      {
+        "label": "Source",
+        "url": "https://www.tawasaw.org/our-team"
+      }
+    ],
+    "sources": "https://www.shaykhelbakri.com/about (his own site)\nhttps://www.tawasaw.org/our-team (Tawasaw Institute: founder bio; Oakland address)",
+    "status": "draft",
+    "sheetName": "Shaykh Alaeddin Albakri"
+  }
+]

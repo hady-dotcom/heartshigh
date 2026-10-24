@@ -1,0 +1,21 @@
+    -s, --simulate                  Do not download the video and do not write
+                                    anything to disk
+    --no-simulate                   Download the video even if printing/listing
+                                    options are used
+    --ignore-no-formats-error       Ignore "No video formats" error. Useful for
+                                    extracting metadata even if the videos are
+                                    not actually available for download
+                                    (experimental)
+    --no-ignore-no-formats-error    Throw error when no downloadable video
+                                    formats are found (default)
+    --skip-download                 Do not download the video but write all
+                                    related files (Alias: --no-download)
+    -O, --print [WHEN:]TEMPLATE     Field name or output template to print to
+                                    screen, optionally prefixed with when to
+                                    print it, separated by a ":". Supported
+                                    values of "WHEN" are the same as that of
+                                    --use-postprocessor (default: video).
+                                    Implies --quiet. Implies --simulate unless
+                                    --no-simulate or later stages of WHEN are
+                                    used. This option can be used multiple times
+    --print-to-file [WHEN:]TEMPLATE FILE
