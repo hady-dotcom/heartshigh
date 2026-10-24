@@ -59,6 +59,18 @@ export type Query = {
   films?: string
   /** Library and Review: `too-short` lists talks hidden for being under five minutes. */
   show?: string
+  /** Library talks: approved teacher slug. */
+  teacher?: string
+  /** Library talks: draft, published, or needs-captions. */
+  status?: string
+  /** Library talks: 5-15, 15-30, 30-60, or 60+. */
+  length?: string
+  /** Library talks: youtube or vimeo. */
+  source?: string
+  /** Library talks: today, 7, 30, or year. */
+  added?: string
+  /** Library talks page. */
+  tp?: string
 }
 
 export type Ctx = {

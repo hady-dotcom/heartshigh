@@ -23,8 +23,9 @@ import { TooShortFilter, TooShortTable } from './short-talks'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { courseRemovedFromDesk } from '@/lib/desk-delete'
 import { openBinRecordIds } from '@/server/desk-delete'
+import { TalkDetail, TalkFinder } from './library-talks'
 
-export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string; show?: string } }
+export type MasterCtx = { payload: Payload; user: SessionUser; query: { error?: string; notice?: string; part?: string; page?: string; films?: string; show?: string; q?: string; teacher?: string; door?: string; status?: string; length?: string; source?: string; added?: string; tp?: string } }
 
 function kindLabel(value: unknown) {
   const text = str(value).replace(/[_-]+/g, ' ').trim()
@@ -167,7 +168,8 @@ export async function MasterLibrary(ctx: MasterCtx) {
     listShortTalks(payload),
   ])
   return (
-    <MasterFrame ctx={ctx} active="library" title="Library" intro="The shared courses every portal can link. Each course says which codes and portals can open it." testId="master-library">
+    <MasterFrame ctx={ctx} active="library" title="Library" intro="Search talks, then open one. Courses sit underneath. Each course says which codes and portals can open it." testId="master-library" showOnPhone>
+      <TalkFinder payload={payload} base="/master/library" bringInHref="/master/bring-in" query={ctx.query} />
       <TooShortFilter base="/master/library" count={shortTalks.length} active={showingShort} />
       {showingShort ? <TooShortTable talks={shortTalks} next="/master/library?show=too-short" /> : null}
       <p className="library-totals" data-testid="library-totals" data-courses={totals.courses} data-films={totals.films} data-playable={totals.playable} data-clips={totals.clips}>{librarySummary(totals)}</p>
@@ -217,6 +219,14 @@ export async function MasterLibrary(ctx: MasterCtx) {
           </form>
         </section>
       </div>
+    </MasterFrame>
+  )
+}
+
+export async function MasterTalk(ctx: MasterCtx, talkId: number) {
+  return (
+    <MasterFrame ctx={ctx} active="library" title="Talk" intro={<Link href="/master/library">‹ Library</Link>} testId="master-talk" showOnPhone>
+      <TalkDetail payload={ctx.payload} id={talkId} base="/master/library" courseBase="/master/library" binHref="/master/bin" bringInHref="/master/bring-in" manageAll portalId={null} />
     </MasterFrame>
   )
 }

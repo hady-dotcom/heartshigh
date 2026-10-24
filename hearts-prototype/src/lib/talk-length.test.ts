@@ -36,6 +36,7 @@ test('five minutes is the shared floor', () => {
   assert.equal(learnerLessonVisible({ publishState: 'published', tooShort: true }), false)
   assert.equal(learnerLessonVisible({ publishState: 'published', tooShort: false }), true)
   assert.equal(learnerLessonVisible({ publishState: 'published' }), true)
+  assert.equal(learnerLessonVisible({ publishState: 'published', binned: true }), false)
 })
 
 test('length comes from YouTube metadata, then a timed transcript', () => {

@@ -17,9 +17,10 @@ export function helperAttachResult() {
   }
 }
 
-/** Learners see a talk only after it is published, the film is ready, and it is at least five minutes. */
-export function learnerLessonVisible(row: { publishState?: string | null; transcriptNote?: string | null; tooShort?: boolean | null } | null | undefined) {
+/** Learners see a talk only after it is published, the film is ready, it is at least five minutes, and it is not in the bin. */
+export function learnerLessonVisible(row: { publishState?: string | null; transcriptNote?: string | null; tooShort?: boolean | null; binned?: boolean | null } | null | undefined) {
   if (!row) return false
+  if (row.binned === true) return false
   if (row.tooShort === true) return false
   if (isDraftLesson(row)) return false
   if (hiddenFromLearners(row.transcriptNote)) return false
@@ -28,11 +29,12 @@ export function learnerLessonVisible(row: { publishState?: string | null; transc
 
 export function asLessonVisibility(row: object | null | undefined) {
   if (!row) return null
-  const doc = row as { publishState?: unknown; transcriptNote?: unknown; tooShort?: unknown }
+  const doc = row as { publishState?: unknown; transcriptNote?: unknown; tooShort?: unknown; binned?: unknown }
   return {
     publishState: typeof doc.publishState === 'string' ? doc.publishState : null,
     transcriptNote: typeof doc.transcriptNote === 'string' ? doc.transcriptNote : null,
     tooShort: doc.tooShort === true,
+    binned: doc.binned === true,
   }
 }
 

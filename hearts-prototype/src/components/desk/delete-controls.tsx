@@ -23,7 +23,7 @@ function Confirm({ kind, testId, title }: { kind: DeleteKind; testId: string; ti
   }
   return (
     <label className="check">
-      <input type="checkbox" name="sure" value="yes" required data-testid={`${testId}-sure`} /> Yes, delete it
+      <input type="checkbox" name="sure" value="yes" required data-testid={`${testId}-sure`} /> {kind === 'lesson' ? 'Yes, move it to the bin' : 'Yes, delete it'}
     </label>
   )
 }
@@ -76,7 +76,7 @@ export function DeleteMany({
       <Hidden fields={{ action: 'desk-bulk-delete', kind, next, ...(portalSlug ? { portalSlug } : {}) }} />
       <p data-testid={`${formId}-copy`}>{spec.confirm} {undoSentence(kind)}</p>
       <label className="check">
-        <input type="checkbox" name="sure" value="yes" required data-testid={`${formId}-sure`} /> Yes, delete the ticked ones
+        <input type="checkbox" name="sure" value="yes" required data-testid={`${formId}-sure`} /> {kind === 'lesson' ? 'Yes, move the ticked ones to the bin' : 'Yes, delete the ticked ones'}
       </label>
       <button className="btn danger small" type="submit" data-testid={`${formId}-go`}>Delete selected</button>
     </form>

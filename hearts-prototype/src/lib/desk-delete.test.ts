@@ -4,6 +4,7 @@ import {
   BULK_DELETE_LIMIT,
   codesStillJoin,
   confirmRefusal,
+  KINDS,
   courseRemovedFromDesk,
   deleteRefusal,
   detachCourse,
@@ -60,7 +61,11 @@ test('a portal delete needs the name, and other deletes need the tick', () => {
   assert.equal(confirmRefusal('portal', { sure: false, typed: 'Bin Harbour', title: 'Bin Harbour' }), null)
   assert.match(confirmRefusal('course', { sure: false, typed: '', title: 'Notes' }) || '', /Tick Yes/)
   assert.equal(confirmRefusal('course', { sure: true, typed: '', title: 'Notes' }), null)
+  assert.match(confirmRefusal('lesson', { sure: false, typed: '', title: 'Names' }) || '', /move it to the bin/)
+  assert.equal(confirmRefusal('lesson', { sure: true, typed: '', title: 'Names' }), null)
   assert.equal(undoSentence('course'), 'You can undo this from the bin.')
+  assert.equal(undoSentence('lesson'), 'You can put it back from the bin.')
+  assert.equal(KINDS.lesson.mode, 'hide')
   assert.equal(undoSentence('sheet'), "This can't be undone.")
   assert.equal(courseRemovedFromDesk({ hidden: true, hiddenNote: 'Deleted from the desk.' }), true)
   assert.equal(courseRemovedFromDesk({ hidden: true, hiddenNote: 'Paused' }), false)

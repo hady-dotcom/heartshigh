@@ -29,8 +29,8 @@ const PLAYABLE: Where = {
   ],
 }
 
-/** Talks under five minutes stay in the library, but they are not counted as films learners can open. */
-const COUNTED: Where = { tooShort: { not_equals: true } }
+/** Talks under five minutes, and talks in the bin, are not counted as films learners can open. */
+const COUNTED: Where = { and: [{ tooShort: { not_equals: true } }, { binned: { not_equals: true } }] }
 
 type FieldList = { name?: string; type?: string; relationTo?: string | string[]; fields?: FieldList[]; tabs?: { fields?: FieldList[] }[] }
 
@@ -113,10 +113,11 @@ export async function libraryPage(payload: Payload, rawPage: string | undefined)
 }
 
 export async function courseFilms(payload: Payload, courseId: number, rawPage: string | undefined) {
-  const total = await countDocs(payload, 'lessons', { course: { equals: courseId } })
+  const where: Where = { and: [{ course: { equals: courseId } }, { binned: { not_equals: true } }] }
+  const total = await countDocs(payload, 'lessons', where)
   const pages = pageCount(total, FILM_PAGE_SIZE)
   const page = clampPage(rawPage, pages)
-  const found = await pageDocs(payload, 'lessons', { course: { equals: courseId } }, { page, limit: FILM_PAGE_SIZE, sort: 'order' })
+  const found = await pageDocs(payload, 'lessons', where, { page, limit: FILM_PAGE_SIZE, sort: 'order' })
   return { lessons: found.docs, page, pages, total }
 }
 

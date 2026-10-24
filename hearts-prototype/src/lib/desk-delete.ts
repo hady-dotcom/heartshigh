@@ -53,7 +53,7 @@ export type KindSpec = {
 
 export const KINDS: Record<DeleteKind, KindSpec> = {
   course: { kind: 'course', confirm: 'Delete this course? Learners will no longer see it.', strong: false, mode: 'hide', undo: true, bulk: true, masterOnly: false, teacher: false },
-  lesson: { kind: 'lesson', confirm: 'Delete this film? Its questions and clips go with it. Learners will no longer see it.', strong: false, mode: 'gone', undo: true, bulk: true, masterOnly: false, teacher: false },
+  lesson: { kind: 'lesson', confirm: 'Move this talk to the bin? Learners and courses will not show it. Join codes still open the same course.', strong: false, mode: 'hide', undo: true, bulk: true, masterOnly: false, teacher: false },
   pack: { kind: 'pack', confirm: 'Delete this pack? Access codes stay. They will no longer open these courses.', strong: false, mode: 'gone', undo: true, bulk: true, masterOnly: false, teacher: false },
   code: { kind: 'code', confirm: 'Delete this access code? People who already joined keep their account. New joins will not work.', strong: false, mode: 'gone', undo: true, bulk: true, masterOnly: false, teacher: false },
   portal: { kind: 'portal', confirm: 'Delete this portal? Learners will not be able to sign in.', strong: true, mode: 'hide', undo: true, bulk: false, masterOnly: true, teacher: false },
@@ -123,7 +123,7 @@ export function confirmRefusal(kind: DeleteKind, input: { sure: boolean; typed: 
     if (!nameMatches(input.typed, input.title)) return `Type ${input.title} to delete this portal. Nothing was deleted.`
     return null
   }
-  if (!input.sure) return 'Tick Yes, delete it. Nothing was deleted.'
+  if (!input.sure) return kind === 'lesson' ? 'Tick Yes, move it to the bin. Nothing was moved.' : 'Tick Yes, delete it. Nothing was deleted.'
   return null
 }
 
@@ -134,6 +134,7 @@ export function bulkCountRefusal(count: number) {
 }
 
 export function undoSentence(kind: DeleteKind) {
+  if (kind === 'lesson') return 'You can put it back from the bin.'
   return KINDS[kind].undo ? 'You can undo this from the bin.' : "This can't be undone."
 }
 
