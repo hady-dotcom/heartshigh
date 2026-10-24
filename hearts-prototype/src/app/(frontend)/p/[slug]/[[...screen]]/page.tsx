@@ -49,7 +49,7 @@ import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 import { isSequencePortal } from '@/lib/sequence'
 import { SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
-import { SequenceDesk } from '@/screens/desk/sequence'
+import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -144,8 +144,15 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   if (area === 'admin') {
     if (user.role === 'learner') redirect(`${base}?error=${plain('That page is for the portal team. You are back in your feed.')}`)
+    if (isSequencePortal(portal)) {
+      const away = new Set(['content', 'bring-in', 'library', 'sheet', 'opening', 'questions', 'wizard', 'circle', 'ai', 'experiments', 'insights', 'calendar', 'missions', 'feedback', 'compass', 'plans', 'diaries', 'nights', 'gather', 'live', 'safety', 'announcements', 'courses', 'adopt'])
+      if (a === 'settings') redirect(`${base}/admin/sequence#look`)
+      if (a && away.has(a)) redirect(`${base}/admin/features`)
+      if (a === 'teach' && b) redirect(`${base}/admin/teach`)
+    }
     switch (a) {
       case undefined:
+        if (isSequencePortal(portal)) return SequenceOverview(ctx)
         return OverviewScreen(ctx)
       case 'content':
         return b ? CourseEditorScreen(ctx, Number(b)) : ContentScreen(ctx)
@@ -154,9 +161,15 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         return PortalBringInScreen(ctx)
       case 'library':
         return LibraryScreen(ctx)
+      case 'features':
+        if (!isSequencePortal(portal)) notFound()
+        guardAdmin(ctx)
+        return SequenceFeatures(ctx)
       case 'access':
+        if (isSequencePortal(portal)) return SequenceCodes(ctx)
         return AccessScreen(ctx)
       case 'teach':
+        if (isSequencePortal(portal)) return SequenceLearners(ctx)
         if (b) {
           if (!Number(b)) notFound()
           return PortalLearnerDetail(ctx, Number(b))

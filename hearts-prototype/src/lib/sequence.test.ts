@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { DOOR_COUNT } from './doors'
-import { EXAMPLE_LINES, PARENTING_EXAMPLES } from './parenting-examples'
+import { EXAMPLE_LINES, EXAMPLE_TRANSCRIPT, PARENTING_EXAMPLES } from './parenting-examples'
 import { tooShortMessage } from './talk-length'
 import {
   HEARTS_TEACHER_CAP,
@@ -11,6 +11,7 @@ import {
   hasIslamicWording,
   heartsDoorCodes,
   isSequencePortal,
+  kineticMomentsOn,
   lockMessage,
   minTalkRefusal,
   minTalkSecondsOf,
@@ -24,6 +25,9 @@ import {
   teacherCapRefusal,
 } from './sequence'
 import { buildExportFiles, readZipStore, zipStore } from './sequence-export'
+import { FEATURE_KEYS, featuresOf, featureOn } from './features'
+import { KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY, sequenceFeatureDefaults } from './sequence-features'
+import { saidInTalk, tierProblem } from './tiers'
 
 const hearts = { shape: 'hearts' as const }
 const sequence = { shape: 'sequence' as const }
@@ -140,4 +144,28 @@ test('the export zip is a standalone copy with a readme', () => {
   assert.equal(hasIslamicWording(bundle), false)
   assert.equal(hasHeartsWord(bundle), false)
   assert.doesNotMatch(bundle, /password|api[_-]?key|@hearts\.test/i)
+})
+
+test('kinetic clips default on, and a sequenced course can switch every other part off', () => {
+  assert.equal(kineticMomentsOn(null), true)
+  assert.equal(kineticMomentsOn({ shape: 'hearts', kineticOn: false }), true)
+  assert.equal(kineticMomentsOn(sequence), true)
+  assert.equal(kineticMomentsOn({ shape: 'sequence', kineticOn: true }), true)
+  assert.equal(kineticMomentsOn({ shape: 'sequence', kineticOn: false }), false)
+  const plain = [...Object.values(SEQUENCE_FEATURE_COPY).flatMap((row) => [row.name, row.what]), KINETIC_COPY.name, KINETIC_COPY.what, PLAYBACK_COPY.name, PLAYBACK_COPY.what].join('\n')
+  assert.equal(hasIslamicWording(plain), false)
+  assert.equal(hasHeartsWord(plain), false)
+  assert.doesNotMatch(plain, /appetis/i)
+  assert.equal(FEATURE_KEYS.includes('garden'), true)
+  assert.equal((FEATURE_KEYS as readonly string[]).includes('hors'), false)
+  const fresh = sequenceFeatureDefaults()
+  assert.equal(fresh.garden, false)
+  assert.equal(featuresOf({ shape: 'sequence' }).garden, false)
+  assert.equal(featureOn({ shape: 'sequence', features: { garden: false } }, 'garden'), false)
+  assert.equal(featureOn({ shape: 'sequence', features: { garden: true } }, 'garden'), true)
+  assert.equal(featureOn({ shape: 'hearts', features: { garden: false } }, 'garden'), true)
+  assert.equal(saidInTalk(EXAMPLE_LINES.hook, EXAMPLE_TRANSCRIPT), true)
+  assert.equal(saidInTalk(EXAMPLE_LINES.turn, EXAMPLE_TRANSCRIPT), true)
+  assert.equal(saidInTalk(EXAMPLE_LINES.land, EXAMPLE_TRANSCRIPT), true)
+  assert.equal(tierProblem({ horsStart: 1, horsEnd: 18, appetiserStart: 0, appetiserEnd: 20 }), null)
 })

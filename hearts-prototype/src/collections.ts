@@ -133,6 +133,7 @@ export const Portals: CollectionConfig = {
     { name: 'minTalkSeconds', type: 'number', admin: { description: 'Shortest film this portal will keep. Empty uses 5 minutes for a hearts portal and no minimum for a sequenced course.' } },
     { name: 'accent', type: 'text', admin: { description: 'Second colour for a sequenced course.' } },
     { name: 'teacherCap', type: 'number', admin: { description: 'Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.' } },
+    { name: 'kineticOn', type: 'checkbox', admin: { description: 'Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.' } },
     {
       name: 'features',
       type: 'json',

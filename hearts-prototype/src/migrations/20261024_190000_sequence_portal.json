@@ -207,6 +207,12 @@
           "type": "numeric",
           "primaryKey": false,
           "notNull": false
+        },
+        "kinetic_on": {
+          "name": "kinetic_on",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {

@@ -13,6 +13,7 @@ import {
   type FeatureKey,
   type FeatureMap,
   type PresetKey,
+  FEATURE_KEYS,
   defaultFeatures,
   featureLocked,
   lockBeginner,
@@ -20,6 +21,7 @@ import {
   presetFeatures,
 } from '@/lib/features'
 import { TOOL } from '@/lib/desk-help'
+import { sequenceFeatureDefaults, KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY } from '@/lib/sequence-features'
 
 type Props = {
   mode: 'create' | 'edit'
@@ -32,6 +34,9 @@ type Props = {
   courses: LibraryCoursePick[]
   selectedCourses?: number[]
   features?: FeatureMap
+  /** Saved portal type. Create starts as a HEARTS portal until someone chooses otherwise. */
+  shape?: string
+  kineticOn?: boolean
 }
 
 const STEPS = [
@@ -53,15 +58,29 @@ export function PortalStudio({
   courses,
   selectedCourses = [],
   features,
+  shape: shapeProp = 'hearts',
+  kineticOn = true,
 }: Props) {
+  const openedAsSequence = shapeProp === 'sequence'
   const [step, setStep] = useState<Step>(mode === 'edit' ? 'features' : 'details')
-  const [on, setOn] = useState<FeatureMap>(lockBeginner(features || defaultFeatures()))
+  const [shape, setShape] = useState(openedAsSequence ? 'sequence' : 'hearts')
+  const sequence = shape === 'sequence'
+  const [on, setOn] = useState<FeatureMap>(openedAsSequence ? { ...(features || sequenceFeatureDefaults()) } : lockBeginner(features || defaultFeatures()))
+  const [kinetic, setKinetic] = useState(kineticOn !== false)
 
   const preset = matchingPreset(on)
   const applyPreset = (key: PresetKey) => setOn(presetFeatures(key))
   const toggle = (key: FeatureKey) => {
-    if (featureLocked(key)) return
+    if (!sequence && featureLocked(key)) return
     setOn((current) => ({ ...current, [key]: !current[key] }))
+  }
+  const chooseShape = (value: string) => {
+    const next = value === 'sequence' ? 'sequence' : 'hearts'
+    setShape(next)
+    if (next === 'sequence') {
+      setOn(sequenceFeatureDefaults())
+      setKinetic(true)
+    } else setOn(lockBeginner(features || defaultFeatures()))
   }
   const go = (next: Step) => {
     window.setTimeout(() => setStep(next), 0)
@@ -106,12 +125,13 @@ export function PortalStudio({
           </label>
           {mode === 'create' ? (
             <label className="stack">Portal type
-              <select name="shape" defaultValue="hearts" data-testid="create-portal-shape">
+              <select name="shape" value={shape} data-testid="create-portal-shape" onChange={(event) => chooseShape(event.target.value)}>
                 <option value="hearts">HEARTS portal</option>
                 <option value="sequence">Sequenced course</option>
               </select>
             </label>
           ) : null}
+          {sequence ? <input type="hidden" name="kind" value="other" /> : (
           <label className="stack">Kind
             <select name="kind" defaultValue={kind} data-testid="create-portal-kind">
               <option value="mosque">Mosque</option>
@@ -120,6 +140,7 @@ export function PortalStudio({
               <option value="other">Other</option>
             </select>
           </label>
+          )}
           <label className="stack">Welcome line
             <textarea name="welcome" defaultValue={welcome} data-testid="create-portal-welcome" placeholder="A few words for people arriving" />
           </label>
@@ -130,11 +151,11 @@ export function PortalStudio({
         <header>
           <div>
             <h2>Courses <HelpTip topic="portal-courses">{TOOL.portalCourses}</HelpTip></h2>
-            <p>Tick the library courses this portal may use. Search, pick a whole door, or take every library course.</p>
+            <p>{sequence ? 'Films are added after it opens. The shared library is not used.' : 'Tick the library courses this portal may use. Search, pick a whole door, or take every library course.'}</p>
           </div>
         </header>
         <div className="body">
-          <LibraryCoursePicker courses={courses} selected={selectedCourses} testId="studio-course-list" />
+          {sequence ? <p data-testid="sequence-no-library">Films are added after it opens. The shared library is not used.</p> : <LibraryCoursePicker courses={courses} selected={selectedCourses} testId="studio-course-list" />}
         </div>
       </section>
 
@@ -142,11 +163,23 @@ export function PortalStudio({
         <header>
           <div>
             <h2>Features <HelpTip topic="portal-features">{TOOL.portalFeatures}</HelpTip></h2>
-            <p>Three groups. The first stays on. The next ones are on until you switch them off. The last ones you pick.</p>
+            <p>{sequence ? 'Each part can be on or off. Kinetic text starts on. Watching in order stays on.' : 'Three groups. The first stays on. The next ones are on until you switch them off. The last ones you pick.'}</p>
           </div>
         </header>
         <div className="body">
-          <div className="presets" data-testid="feature-presets">
+          {sequence ? (
+            <>
+              <input type="hidden" name="kineticField" value="yes" />
+              <div className={`feature-row${kinetic ? ' on' : ''}`} data-testid="feature-row-kinetic">
+                <label className="feature-switch">
+                  <input type="checkbox" name="kinetic" value="on" checked={kinetic} onChange={() => setKinetic((value) => !value)} data-testid="feature-kinetic" />
+                  <span><b>{KINETIC_COPY.name}</b><small>{KINETIC_COPY.what}</small></span>
+                </label>
+              </div>
+              <p data-testid="feature-playback"><b>{PLAYBACK_COPY.name}.</b> {PLAYBACK_COPY.what}</p>
+            </>
+          ) : null}
+          {sequence ? null : <div className="presets" data-testid="feature-presets">
             {(Object.keys(PRESETS) as PresetKey[]).map((key) => (
               <button
                 key={key}
@@ -158,10 +191,20 @@ export function PortalStudio({
                 {PRESETS[key].label}
               </button>
             ))}
-          </div>
-          <p className="hint" data-testid="preset-hint">{preset ? PRESETS[preset].hint : 'A mix of your own.'}</p>
+          </div>}
+          {sequence ? null : <p className="hint" data-testid="preset-hint">{preset ? PRESETS[preset].hint : 'A mix of your own.'}</p>}
           <div className="feature-board">
-            {grouped.map((group) => (
+            {sequence ? FEATURE_KEYS.map((key) => (
+              <div key={key} className={`feature-row${on[key] ? ' on' : ''}`} data-testid={`feature-row-${key}`}>
+                <label className="feature-switch">
+                  <input type="checkbox" name="feature" value={key} checked={on[key]} onChange={() => toggle(key)} data-testid={`feature-${key}`} />
+                  <span>
+                    <b>{SEQUENCE_FEATURE_COPY[key].name}</b>
+                    <small>{SEQUENCE_FEATURE_COPY[key].what}</small>
+                  </span>
+                </label>
+              </div>
+            )) : grouped.map((group) => (
               <div key={group.depth} className="feature-depth" data-testid={`feature-depth-${group.depth}`}>
                 <h3>{DEPTH_SECTION[group.depth].title}</h3>
                 <p className="hint depth-line" data-testid={`feature-depth-line-${group.depth}`}>{DEPTH_SECTION[group.depth].line}</p>

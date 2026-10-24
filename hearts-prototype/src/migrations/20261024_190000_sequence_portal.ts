@@ -8,11 +8,13 @@ export async function up({ db }: MigrateUpArgs): Promise<void> {
   ALTER TABLE "portals" ADD COLUMN IF NOT EXISTS "min_talk_seconds" numeric;
   ALTER TABLE "portals" ADD COLUMN IF NOT EXISTS "accent" varchar;
   ALTER TABLE "portals" ADD COLUMN IF NOT EXISTS "teacher_cap" numeric;
+  ALTER TABLE "portals" ADD COLUMN IF NOT EXISTS "kinetic_on" boolean;
   ALTER TABLE "watch_sessions" ADD COLUMN IF NOT EXISTS "position" numeric;`)
 }
 
 export async function down({ db }: MigrateDownArgs): Promise<void> {
   await db.execute(sql`
+  ALTER TABLE "portals" DROP COLUMN IF EXISTS "kinetic_on";
   ALTER TABLE "portals" DROP COLUMN IF EXISTS "teacher_cap";
   ALTER TABLE "portals" DROP COLUMN IF EXISTS "accent";
   ALTER TABLE "portals" DROP COLUMN IF EXISTS "min_talk_seconds";

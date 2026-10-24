@@ -359,6 +359,10 @@ export interface Portal {
    */
   teacherCap?: number | null;
   /**
+   * Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.
+   */
+  kineticOn?: boolean | null;
+  /**
    * Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.
    */
   features?:
@@ -3487,6 +3491,7 @@ export interface PortalsSelect<T extends boolean = true> {
   minTalkSeconds?: T;
   accent?: T;
   teacherCap?: T;
+  kineticOn?: T;
   features?: T;
   aiConnection?: T;
   updatedAt?: T;

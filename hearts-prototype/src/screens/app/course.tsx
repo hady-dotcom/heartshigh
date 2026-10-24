@@ -9,7 +9,8 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
-import { brandColours, isSequencePortal, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { brandColours, isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { kineticClipFor } from '@/server/sequence-desk'
 import { lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
 import { delayToMs, unlockState } from '@/lib/unlock'
@@ -197,6 +198,7 @@ function canSeePoint(point: Record<string, unknown>, userId: number) {
 export async function CourseScreen(ctx: Ctx, courseId: number) {
   const { payload, user, portal, base, query } = ctx
   const sequence = isSequencePortal(portal)
+  const showKinetic = kineticMomentsOn(portal)
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   const visible = await visibleCourseIds(payload, user)
@@ -373,6 +375,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
   const progress = sequenceProgress(doneLessons.size, lessons.length)
   const callout = sequence ? partCuts.find((row) => ref(row.lesson) === lessonId) : null
+  const kineticTier = sequence && showKinetic ? await kineticClipFor(payload, lessonId) : null
   const thinks = (await rows(payload, 'notifications', { and: [{ user: { equals: user.id } }, { channel: { equals: 'think' } }, { read: { not_equals: true } }] }, { limit: 50 }))
     .map((row) => {
       try {
@@ -438,15 +441,22 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseHref={courseHref}
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
-          sentences={parseTrack(lesson.framingTrack)?.sentences || []}
+          sentences={showKinetic ? parseTrack(lesson.framingTrack)?.sentences || [] : []}
           progressCard={sequence ? { eyebrow: progress.eyebrow, line: progress.line, backLabel: progress.back, backHref: base } : null}
           saveOnEnd={sequence}
           showResume={showResume}
+          clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && !sequence ? `${base}/garden` : base, query), nextPart: following, links: [
             ...(featureOn(portal, 'garden') && !sequence ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
             ...(featureOn(portal, 'workbook') && !sequence ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
+        {sequence && showKinetic && kineticTier ? (
+          <section className="card" data-testid="kinetic-clip" data-start={kineticTier.start} data-end={kineticTier.end}>
+            <p><b>Kinetic text.</b> {kineticTier.quote}</p>
+            <Link href={`${base}/course/${courseId}?part=${lessonId}&t=${kineticTier.start}&clip=1`} data-testid="kinetic-play">{SEQUENCE_COPY.playClip}</Link>
+          </section>
+        ) : null}
         {sequence && callout ? (
           <section className="card" data-testid="sequence-callouts">
             <p data-testid="callout-hook"><b>{SEQUENCE_COPY.opening}.</b> {str(callout.hook)}</p>

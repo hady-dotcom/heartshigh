@@ -61,8 +61,21 @@ async function json(path: string) {
   return (await (await master.get(path)).json().catch(() => ({}))) as { docs?: Record<string, unknown>[] }
 }
 
+/** The parenting demo is its own course. These checks stay on HEARTS talks. */
+async function withoutSequenceCourses<T extends { course: number }>(lessons: T[]) {
+  const portals = ((await json('/api/portals?where[shape][equals]=sequence&limit=20&depth=0')).docs || []) as { id: number }[]
+  const portalIds = new Set(portals.map((row) => row.id))
+  if (!portalIds.size) return lessons
+  const courses = ((await json('/api/courses?limit=200&depth=0')).docs || []) as { id: number; portal?: number | { id?: number } }[]
+  const skip = new Set(courses.filter((course) => {
+    const portal = typeof course.portal === 'object' ? course.portal?.id : course.portal
+    return typeof portal === 'number' && portalIds.has(portal)
+  }).map((course) => course.id))
+  return lessons.filter((lesson) => !skip.has(lesson.course))
+}
+
 async function aCourse() {
-  const lessons = ((await json('/api/lessons?limit=80&depth=0&sort=order')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number; order?: number }[]
+  const lessons = await withoutSequenceCourses(((await json('/api/lessons?limit=80&depth=0&sort=order')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number; order?: number }[])
   const byCourse = new Map<number, typeof lessons>()
   for (const lesson of lessons) {
     const list = byCourse.get(lesson.course) || []
@@ -118,7 +131,7 @@ test.describe('courses and planning', () => {
 
   test('every overview row on a real imported course has a visible still', async ({ page }) => {
     await page.setViewportSize(PHONE)
-    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; youtubeId?: string }[]
+    const lessons = await withoutSequenceCourses(((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; youtubeId?: string }[])
     const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
     const real = lessons.filter((row) => row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
     const byCourse = new Map<number, typeof real>()
@@ -291,7 +304,7 @@ test.describe('courses and planning', () => {
     await page.setViewportSize(PHONE)
     const picked = await aCourse()
     const byCount = new Map<number, typeof picked.lessons>()
-    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number }[]
+    const lessons = await withoutSequenceCourses(((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number }[])
     for (const lesson of lessons) {
       const list = byCount.get(lesson.course) || []
       list.push(lesson)

@@ -3,8 +3,8 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
-import { FEATURE_KEYS, lockBeginner, type FeatureMap } from '@/lib/features'
 import { EXAMPLE_LINES, EXAMPLE_TRANSCRIPT, PARENTING_EXAMPLES } from '@/lib/parenting-examples'
+import { sequenceFeatureDefaults } from '@/lib/sequence-features'
 import { validateTrack } from '@/lib/framing/validate'
 import type { FramingTrack } from '@/lib/framing/types'
 
@@ -50,9 +50,69 @@ function exampleTrack(youtubeId: string, duration: number): FramingTrack | null 
           { w: 'first.', t: 0.5, e: 1.2 },
         ],
       },
+      {
+        text: EXAMPLE_LINES.turn,
+        s: 8,
+        e: 12,
+        words: [
+          { w: 'Turn', t: 8, e: 8.4 },
+          { w: 'toward', t: 8.5, e: 8.9 },
+          { w: 'what', t: 9, e: 9.3 },
+          { w: 'they', t: 9.4, e: 9.7 },
+          { w: 'need.', t: 9.8, e: 10.4 },
+        ],
+      },
+      {
+        text: EXAMPLE_LINES.land,
+        s: 16,
+        e: 20,
+        words: [
+          { w: 'Land', t: 16, e: 16.4 },
+          { w: 'on', t: 16.5, e: 16.7 },
+          { w: 'one', t: 16.8, e: 17 },
+          { w: 'small', t: 17.1, e: 17.4 },
+          { w: 'thing', t: 17.5, e: 17.9 },
+          { w: 'you', t: 18, e: 18.2 },
+          { w: 'can', t: 18.3, e: 18.5 },
+          { w: 'try', t: 18.6, e: 18.9 },
+          { w: 'this', t: 19, e: 19.2 },
+          { w: 'week.', t: 19.3, e: 19.8 },
+        ],
+      },
     ],
   }
   return validateTrack(track).length ? null : track
+}
+
+/** A 17 second kinetic clip inside a stored window the learner never sees. */
+const KINETIC_TIER = {
+  horsStart: 1,
+  horsEnd: 18,
+  horsQuote: EXAMPLE_LINES.hook,
+  appetiserStart: 0,
+  appetiserEnd: 20,
+  hook: EXAMPLE_LINES.hook,
+  turn: EXAMPLE_LINES.turn,
+  land: EXAMPLE_LINES.land,
+  hookAt: 1,
+  turnAt: 8,
+  landAt: 16,
+  typographyStyle: 'kinetic' as const,
+  typographyInPlace: false,
+  offerResume: false,
+  status: 'checked' as const,
+  source: 'example',
+  note: EXAMPLE_LINES.note,
+}
+
+async function ensureKineticClip(payload: Payload, lessonId: number) {
+  const existing = await payload.find({ collection: 'talk-tiers', overrideAccess: true, limit: 1, where: { lesson: { equals: lessonId } } })
+  if (existing.docs[0]) return existing.docs[0]
+  return payload.create({
+    collection: 'talk-tiers',
+    overrideAccess: true,
+    data: { ...KINETIC_TIER, lesson: lessonId },
+  })
 }
 
 /**
@@ -60,27 +120,35 @@ function exampleTrack(youtubeId: string, duration: number): FramingTrack | null 
  * Safe to run again. It does not touch East London or Leeds.
  */
 export async function seedParentingPortal(payload: Payload) {
-  const features = lockBeginner(Object.fromEntries(FEATURE_KEYS.map((key) => [key, false])) as FeatureMap)
+  const features = sequenceFeatureDefaults()
   const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'parenting' } } })
-  const portal = found.docs[0] || (await payload.create({
-    collection: 'portals',
-    overrideAccess: true,
-    data: {
-      name: 'Parenting',
-      organisationName: 'Parenting',
-      slug: 'parenting',
-      kind: 'other',
-      shape: 'sequence',
-      welcome: 'Welcome. Watch the films in order. These example films stay until the real videos arrive.',
-      description: 'A course you watch in order.',
-      colour: '#1f3a5f',
-      accent: '#e07a5f',
-      lockOrder: true,
-      minTalkSeconds: 0,
-      wizardDone: true,
-      features,
-    },
-  }))
+  const portal = found.docs[0]
+    ? await payload.update({
+        collection: 'portals',
+        id: found.docs[0].id,
+        overrideAccess: true,
+        data: { shape: 'sequence', features, kineticOn: true, minTalkSeconds: 0 },
+      })
+    : await payload.create({
+        collection: 'portals',
+        overrideAccess: true,
+        data: {
+          name: 'Parenting',
+          organisationName: 'Parenting',
+          slug: 'parenting',
+          kind: 'other',
+          shape: 'sequence',
+          welcome: 'Welcome. Watch the films in order. These example films stay until the real videos arrive.',
+          description: 'A course you watch in order.',
+          colour: '#1f3a5f',
+          accent: '#e07a5f',
+          lockOrder: true,
+          minTalkSeconds: 0,
+          wizardDone: true,
+          kineticOn: true,
+          features,
+        },
+      })
 
   const courseFound = await payload.find({
     collection: 'courses',
@@ -166,8 +234,12 @@ export async function seedParentingPortal(payload: Payload) {
             status: 'published',
           },
         })
+        await ensureKineticClip(payload, lesson.id)
       }
     }
+  } else {
+    const first = await payload.find({ collection: 'lessons', overrideAccess: true, limit: 1, sort: 'order', where: { course: { equals: course.id } } })
+    if (first.docs[0]) await ensureKineticClip(payload, first.docs[0].id)
   }
 
   const packFound = await payload.find({
@@ -194,7 +266,7 @@ export async function seedParentingPortal(payload: Payload) {
       collection: 'access-codes',
       overrideAccess: true,
       data: {
-        code: randomCode('PARENT'),
+        code: randomCode('PNT'),
         label,
         role,
         portal: portal.id,

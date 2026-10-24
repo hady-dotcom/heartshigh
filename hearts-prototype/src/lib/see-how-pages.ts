@@ -72,6 +72,10 @@ export const SEE_HOW_SKIPPED: Record<string, string> = {
   'sequence-me': 'A sequenced course Me page. The filmed demo is a HEARTS portal.',
   'sequence-gate': 'A sequenced course sign-in page. The filmed demo is a HEARTS portal.',
   'sequence-closed': 'A sequenced course while it is paused. The filmed demo stays open.',
+  'sequence-overview': 'A sequenced course desk. The filmed demo is a HEARTS portal.',
+  'sequence-codes': 'Codes for a sequenced course. The filmed demo is a HEARTS portal.',
+  'sequence-learners': 'Learners on a sequenced course. The filmed demo is a HEARTS portal.',
+  'sequence-features': 'Feature switches for a sequenced course. The filmed demo is a HEARTS portal.',
 }
 
 /**

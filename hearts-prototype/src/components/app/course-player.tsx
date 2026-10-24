@@ -90,6 +90,7 @@ export function CoursePlayer({
   progressCard = null,
   saveOnEnd = false,
   showResume = false,
+  clipEnd = null,
 }: {
   courseTitle: string
   backHref: string
@@ -121,6 +122,8 @@ export function CoursePlayer({
   progressCard?: { eyebrow: string; line: string; backLabel: string; backHref: string } | null
   saveOnEnd?: boolean
   showResume?: boolean
+  /** When set, playback pauses at this second. Used for a short kinetic clip. */
+  clipEnd?: number | null
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -692,6 +695,13 @@ export function CoursePlayer({
       }
       const polledState = player.getPlayerState()
       const polledTime = player.getCurrentTime()
+      if (clipEnd != null && polledTime >= clipEnd) {
+        player.pauseVideo()
+        setPlaying(false)
+        setTime(clipEnd)
+        setYtState(STATE.PAUSED)
+        return
+      }
       setYtState(polledState)
       if (polledState === STATE.PLAYING) {
         setPlaying(true)
@@ -719,7 +729,7 @@ export function CoursePlayer({
       if (action === 'retry') playWithSoundFallback(player, hasSound())
     }, 400)
     return () => window.clearInterval(timer)
-  }, [ended, startAt, youtubeId])
+  }, [clipEnd, ended, startAt, youtubeId])
   return (
     <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing={learnerFramingMode()} data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
       {showResume ? <span hidden data-testid="play-start" data-at={startAt} /> : null}

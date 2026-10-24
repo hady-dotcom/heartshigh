@@ -72,6 +72,7 @@ export type PortalDoc = {
   minTalkSeconds?: number | null
   accent?: string | null
   teacherCap?: number | null
+  kineticOn?: boolean | null
   /** Encrypted portal AI account. Absent means the desk uses the built-in path. */
   aiConnection?: unknown
 }

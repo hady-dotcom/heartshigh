@@ -64,6 +64,7 @@ import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { isSequencePortal, minTalkRefusal, minTalkSecondsOf, teacherCapOf, teacherCapRefusal } from '@/lib/sequence'
+import { sequenceFeatureDefaults, sequenceFeaturesFromForm } from '@/lib/sequence-features'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
 import { FEATURE_UNAVAILABLE, defaultFeatures, featuresFromForm } from '@/lib/features'
 import { adoptLibraryCourses, loadPortalById, refuseFeature } from './features'
@@ -764,8 +765,10 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (slugIssue) return redirectTo(req, '/master', slugIssue)
     const clash = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: slug } } })
     if (clash.docs.length) return redirectTo(req, '/master', 'That address is already in use.')
-    const features = form.get('featuresForm') === 'yes' ? featuresFromForm(form) : defaultFeatures()
     const shape = text(form, 'shape') === 'sequence' ? 'sequence' : 'hearts'
+    const features = shape === 'sequence'
+      ? (form.get('featuresForm') === 'yes' ? sequenceFeaturesFromForm(form) : sequenceFeatureDefaults())
+      : (form.get('featuresForm') === 'yes' ? featuresFromForm(form) : defaultFeatures())
     const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
@@ -778,7 +781,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         watchHistoryOptIn: false,
         wizardDone: true,
         shape,
-        ...(shape === 'sequence' ? { lockOrder: true, minTalkSeconds: 0, accent: text(form, 'accent') || '#e07a5f' } : {}),
+        ...(shape === 'sequence' ? {
+          lockOrder: true,
+          minTalkSeconds: 0,
+          accent: text(form, 'accent') || '#e07a5f',
+          kineticOn: form.get('kineticField') === 'yes' ? form.get('kinetic') === 'on' : true,
+        } : {}),
         ...(features ? { features } : {}),
       },
     })
@@ -795,8 +803,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (form.has('name') && text(form, 'name')) data.name = text(form, 'name')
     if (form.has('welcome')) data.welcome = text(form, 'welcome')
     if (form.has('kind') && ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind'))) data.kind = text(form, 'kind')
-    if (form.get('featuresForm') === 'yes') data.features = featuresFromForm(form)
     const stored = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
+    if (form.get('featuresForm') === 'yes') data.features = isSequencePortal(stored) ? sequenceFeaturesFromForm(form) : featuresFromForm(form)
+    if (isSequencePortal(stored) && form.get('kineticField') === 'yes') data.kineticOn = form.get('kinetic') === 'on'
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data })
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
     if (!isSequencePortal(stored) && (form.has('course') || form.get('featuresForm') === 'yes')) await adoptLibraryCourses(payload, acting.portal.id, courseIds, true)
@@ -847,9 +856,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (days !== null && (!Number.isInteger(days) || days < 1 || days > 366)) return redirectTo(req, text(form, 'next') || '/master', 'Expiry must be 1 to 366 days, or empty for none.')
     const expiresAt = days ? new Date(now().getTime() + days * 86_400_000).toISOString() : null
     const picking = text(form, 'coursesForm') === 'yes' || courseIds.length > 0
+    const portalRow = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
     let storedCourses: number[] | undefined
     let storedPacks: number[] | undefined
-    if (picking) {
+    if (isSequencePortal(portalRow)) {
+      const { sequenceCourseFor } = await import('./sequence-desk')
+      const course = await sequenceCourseFor(payload, acting.portal.id)
+      if (!course) return redirectTo(req, text(form, 'next') || '/master', 'Add the course films first.')
+      storedCourses = [course.id]
+      storedPacks = []
+    } else if (picking) {
       if (courseIds.length) {
         const found = await payload.find({
           collection: 'courses',
@@ -886,8 +902,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       return redirectTo(req, text(form, 'next') || '/master', 'A learner code needs a teacher code, so someone can see their progress.')
     }
     if (role === 'teacher') {
-      const full = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
-      const cap = teacherCapOf(full)
+      const cap = teacherCapOf(portalRow)
       if (cap != null) {
         const teachers = await payload.find({
           collection: 'access-codes',
@@ -939,6 +954,64 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     if (!['admin', 'teacher', 'learner'].includes(role)) return redirectTo(req, text(form, 'next') || '/', 'Choose a teacher, a learner or an admin.')
+    const portalRow = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
+    if (isSequencePortal(portalRow)) {
+      const { sequenceCourseFor } = await import('./sequence-desk')
+      const course = await sequenceCourseFor(payload, acting.portal.id)
+      if (!course) return redirectTo(req, text(form, 'next') || '/', 'Add the course films first.')
+      let teacherId = 0
+      if (role === 'learner') {
+        const teachers = await payload.find({
+          collection: 'access-codes',
+          overrideAccess: true,
+          depth: 0,
+          limit: 1,
+          where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+        })
+        const existing = teachers.docs[0] as { id: number } | undefined
+        if (existing) teacherId = existing.id
+        else {
+          const cap = teacherCapOf(portalRow)
+          if (cap != null) {
+            const teacherCount = await payload.find({
+              collection: 'access-codes',
+              overrideAccess: true,
+              depth: 0,
+              limit: cap + 1,
+              where: { and: [{ portal: { equals: acting.portal.id } }, { role: { equals: 'teacher' } }, { disabled: { not_equals: true } }] },
+            })
+            const refusal = teacherCapRefusal(teacherCount.docs.length, cap)
+            if (refusal) return redirectTo(req, text(form, 'next') || '/', refusal)
+          }
+          const madeTeacher = await payload.create({
+            collection: 'access-codes',
+            overrideAccess: true,
+            data: { code: randomCode(acting.portal.slug || ''), role: 'teacher', courses: [course.id], packs: [], portal: acting.portal.id, uses: 0, disabled: false, label: 'Teacher' },
+          })
+          teacherId = madeTeacher.id
+        }
+      }
+      const made = randomCode(acting.portal.slug || '')
+      await payload.create({
+        collection: 'access-codes',
+        overrideAccess: true,
+        data: {
+          code: made,
+          role: role as 'learner',
+          courses: [course.id],
+          packs: [],
+          portal: acting.portal.id,
+          linkedTeacherCode: teacherId || undefined,
+          label: role === 'admin' ? 'Admin' : role === 'teacher' ? 'Teacher' : 'Learner',
+          uses: 0,
+          disabled: false,
+        },
+      })
+      const host = req.headers.get('x-forwarded-host') || req.headers.get('host') || ''
+      const proto = req.headers.get('x-forwarded-proto') || 'http'
+      const link = host ? `${proto}://${host}/join?code=${encodeURIComponent(made)}` : `/join?code=${made}`
+      return redirectTo(req, text(form, 'next') || '/', undefined, `New ${role} link: ${link}. Copy, WhatsApp and the QR are on the row below.`)
+    }
     const packs = await payload.find({
       collection: 'packs',
       overrideAccess: true,
@@ -1147,6 +1220,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
+    const portalRow = await payload.findByID({ collection: 'portals', id: portal, depth: 0, overrideAccess: true })
+    if (isSequencePortal(portalRow)) return redirectTo(req, text(form, 'next') || '/', 'This course keeps its own films.')
     const kind = text(form, 'kind') === 'course' ? 'course' : 'pack'
     if (kind === 'course') {
       const course = await findDoc(payload, 'courses', Number(text(form, 'course')))
@@ -1177,6 +1252,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const acting = await actingPortal(payload, user, form)
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
+    const portalRow = await payload.findByID({ collection: 'portals', id: portal, depth: 0, overrideAccess: true })
+    if (isSequencePortal(portalRow)) return redirectTo(req, text(form, 'next') || '/', 'This course keeps its own films.')
     const title = text(form, 'title')
     const courseIds = form.getAll('course').map((value) => Number(value)).filter(Boolean)
     if (!title || !courseIds.length) return redirectTo(req, text(form, 'next') || '/', 'Name the new pack and tick at least one course.')
@@ -1212,6 +1289,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const retry = text(form, 'retry') === 'yes'
     const replaceFilm = text(form, 'replaceFilm') === 'yes'
     const course = owned.course as { id: number; title?: string | null; speaker?: string | null; origin?: string; portal?: unknown }
+    const homeId = idOf(course.portal)
+    if (homeId) {
+      const home = await payload.findByID({ collection: 'portals', id: homeId, depth: 0, overrideAccess: true }).catch(() => null)
+      if (isSequencePortal(home)) return redirectTo(req, next, 'Add films from Course films.')
+    }
     const lessonSpeaker = (owned.lesson as { speaker?: string | null }).speaker
     const lockKey = `bringin:${course.id}:${lines.map((line) => line.link).sort().join('\n')}`
     return withWorkLock(lockKey, async () => {
@@ -2305,6 +2387,21 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (!built.ok) return redirectTo(req, next, built.error)
     await payload.update({ collection: 'portals', id: acting.portal.id, overrideAccess: true, data: { aiConnection: built.stored } })
     return redirectTo(req, next, undefined, 'This portal’s AI account is connected. The key is stored encrypted and is not shown again. A run is billed to that account, not to HEARTS.')
+  }
+
+  if (action === 'sequence-features') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only a portal admin can change the course.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const stored = await payload.findByID({ collection: 'portals', id: acting.portal.id, depth: 0, overrideAccess: true })
+    if (!isSequencePortal(stored)) return redirectTo(req, text(form, 'next') || '/', 'This portal does not use a sequenced course.')
+    await payload.update({
+      collection: 'portals',
+      id: acting.portal.id,
+      overrideAccess: true,
+      data: { features: sequenceFeaturesFromForm(form), kineticOn: form.get('kinetic') === 'on' },
+    })
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Features saved.')
   }
 
   if (action === 'sequence-import' || action === 'sequence-order' || action === 'sequence-settings') {

@@ -106,6 +106,23 @@ async function portalDoc(payload: Payload, portalId: number) {
   return asDoc(await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }))
 }
 
+/** The checked kinetic clip for one film, or null when there is none. */
+export async function kineticClipFor(payload: Payload, lessonId: number) {
+  const found = await payload.find({
+    collection: 'talk-tiers',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ lesson: { equals: lessonId } }, { status: { equals: 'checked' } }] },
+  })
+  const row = found.docs[0] as { horsStart?: number; horsEnd?: number; horsQuote?: string | null } | undefined
+  if (!row) return null
+  const start = Number(row.horsStart)
+  const end = Number(row.horsEnd)
+  if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) return null
+  return { start, end, quote: String(row.horsQuote || '') }
+}
+
 export async function sequenceCourseFor(payload: Payload, portalId: number) {
   const found = await payload.find({
     collection: 'courses',

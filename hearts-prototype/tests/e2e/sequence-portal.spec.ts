@@ -53,8 +53,12 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('callout-hook')).toContainText('Listen first.')
   await expect(page.getByTestId('callout-turn')).toContainText('Turn toward what they need.')
   await expect(page.getByTestId('callout-land')).toContainText('Land on one small thing you can try this week.')
+  await expect(page.getByTestId('kinetic-clip')).toContainText('Listen first.')
+  await expect(page.getByTestId('kinetic-clip')).toHaveAttribute('data-start', '1')
+  await expect(page.getByTestId('kinetic-clip')).toHaveAttribute('data-end', '18')
   await expect(page.getByTestId('up-next')).toBeVisible()
   await expect(page.getByTestId('course-garden')).toHaveCount(0)
+  await expect(page.locator('body')).not.toContainText(/appetiser|appetizer/i)
   await shot(page, 'sequence-video')
 
   const part = new URL(page.url()).searchParams.get('part')
@@ -108,6 +112,27 @@ test('admin can paste, retitle, reorder and export', async ({ page }) => {
   expect(text).toContain('README.md')
   expect(text).toContain('Open index.html')
   expect(text).not.toMatch(/portal-learner|password|api[_-]?key/i)
+
+  await page.goto('/p/parenting/admin/features')
+  await expect(page.getByTestId('sequence-features')).toBeVisible()
+  await expect(page.getByTestId('feature-kinetic')).toBeChecked()
+  await expect(page.getByTestId('feature-garden')).not.toBeChecked()
+  await expect(page.getByText('Progress', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('feature-playback')).toContainText('Watch in order')
+  await expect(page.locator('body')).not.toContainText(/\bGarden\b|appetiser|appetizer|jibril|hadith|ghunya|masjid|mosque/i)
+  await shot(page, 'sequence-features')
+
+  await page.goto('/p/parenting/admin/library')
+  await expect(page.getByTestId('sequence-features')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/main HEARTS library|Hadith|Jibril|Ghunya/i)
+
+  await page.goto('/p/parenting/admin')
+  await expect(page.getByTestId('sequence-overview')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/Maryam|Jibril|Ghunya|mosque|linked from the library/i)
+
+  await page.goto('/p/parenting/admin/teach')
+  await expect(page.getByTestId('sequence-learners')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/Maryam|mosque|Jibril|Ghunya/i)
 })
 
 test('an existing hearts portal still has the garden tab', async ({ page }) => {

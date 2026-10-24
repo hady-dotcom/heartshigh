@@ -13,6 +13,8 @@ export type ShapeSource = {
   lockOrder?: boolean | null
   colour?: string | null
   accent?: string | null
+  /** Explicit false hides kinetic clips on a sequenced course. Missing stays on. */
+  kineticOn?: boolean | null
 } | null | undefined
 
 export function portalShape(portal: ShapeSource): PortalShape {
@@ -21,6 +23,12 @@ export function portalShape(portal: ShapeSource): PortalShape {
 
 export function isSequencePortal(portal: ShapeSource) {
   return portalShape(portal) === 'sequence'
+}
+
+/** Kinetic clips stay on unless a sequenced course has switched them off. HEARTS portals are unchanged. */
+export function kineticMomentsOn(portal: ShapeSource) {
+  if (!isSequencePortal(portal)) return true
+  return portal?.kineticOn !== false
 }
 
 /** HEARTS portals keep a cap of 19 teachers. A sequenced course has no cap unless one is saved. */

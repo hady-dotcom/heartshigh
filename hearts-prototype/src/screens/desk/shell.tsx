@@ -30,10 +30,11 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
       description: 'Films in order, people, and how the portal looks.',
       items: [
         { key: 'overview', label: 'Overview', href: `${base}/admin`, icon: <HomeIcon /> },
+        films,
+        { key: 'features', label: 'Features', href: `${base}/admin/features`, icon: <SparkIcon /> },
         { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
         { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
-        films,
-        { key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> },
+        { key: 'settings', label: 'Settings', href: `${base}/admin/sequence#look`, icon: <CogIcon /> },
         { key: 'bin', label: 'Bin', href: `${base}/admin/bin`, icon: <BinIcon /> },
       ],
     }]
