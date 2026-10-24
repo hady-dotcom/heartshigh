@@ -764,6 +764,10 @@ export interface Lesson {
    * A person restored this talk. The five-minute marker will not hide it again.
    */
   shortWaived?: boolean | null;
+  /**
+   * In the bin. Hidden from learners and courses. The row stays, so putting it back opens the same talk.
+   */
+  binned?: boolean | null;
   transcript?: string | null;
   transcriptSource?: ('none' | 'youtube' | 'upload' | 'pending' | 'vimeo') | null;
   transcriptNote?: string | null;
@@ -3723,6 +3727,7 @@ export interface LessonsSelect<T extends boolean = true> {
   durationSeconds?: T;
   tooShort?: T;
   shortWaived?: T;
+  binned?: T;
   transcript?: T;
   transcriptSource?: T;
   transcriptNote?: T;

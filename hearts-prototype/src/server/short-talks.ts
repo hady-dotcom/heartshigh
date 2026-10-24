@@ -150,7 +150,7 @@ export type ShortTalkRow = {
 
 export async function listShortTalks(payload: Payload): Promise<ShortTalkRow[]> {
   const [lessons, courses] = await Promise.all([
-    allDocs(payload, 'lessons', { tooShort: { equals: true } }),
+    allDocs(payload, 'lessons', { and: [{ tooShort: { equals: true } }, { binned: { not_equals: true } }] }),
     allDocs(payload, 'courses'),
   ])
   const courseById = new Map(courses.map((course) => [course.id, course]))

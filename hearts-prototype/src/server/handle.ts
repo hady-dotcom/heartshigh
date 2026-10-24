@@ -750,7 +750,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
   }
 
-  if (action === 'desk-delete' || action === 'desk-bulk-delete' || action === 'desk-undo') {
+  if (action === 'desk-delete' || action === 'desk-bulk-delete' || action === 'desk-undo' || action === 'desk-empty-bin') {
     const { runDeskDelete } = await import('./desk-delete')
     const result = await runDeskDelete(payload, user, form)
     return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)

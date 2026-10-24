@@ -143,13 +143,14 @@ function bigLibrary() {
         youtubeId: index % 5 === 0 ? '' : 'ECaTWkof57E',
         videoProvider: 'youtube',
         tooShort: false,
+        binned: false,
       })
       lessonId += 1
     }
   }
   const cuts: Row[] = courses.flatMap((course) => [
-    { id: course.id * 2, course: course.id, lesson: 1, status: 'approved', tooShort: false },
-    { id: course.id * 2 + 1, course: course.id, lesson: 1, status: 'draft', tooShort: false },
+    { id: course.id * 2, course: course.id, lesson: 1, status: 'approved', tooShort: false, binned: false },
+    { id: course.id * 2 + 1, course: course.id, lesson: 1, status: 'draft', tooShort: false, binned: false },
   ])
   return memory(
     { courses, lessons, cuts, packs: [], 'access-codes': [], adoptions: [], portals: [] },

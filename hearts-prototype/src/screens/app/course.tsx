@@ -213,6 +213,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     publishState: str(row.publishState),
     transcriptNote: str(row.transcriptNote),
     tooShort: row.tooShort === true,
+    binned: row.binned === true,
   }))
   if (!lessons.length) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'No films yet.' : 'That course has no parts yet.')}`)
   if (!query.part) {
