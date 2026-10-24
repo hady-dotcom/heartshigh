@@ -207,7 +207,7 @@ export async function TeachScreen(ctx: Ctx) {
               const answer = answers.find((row) => row.id === ref(entry.answer))
               const prompt = (answer?.point as { prompt?: string } | undefined)?.prompt
               return (
-                <article key={entry.id} className="lib-card" data-testid="workbook-review">
+                <article key={entry.id} id={`reply-${entry.id}`} className="lib-card" data-testid="workbook-review" style={{ scrollMarginTop: 80 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}><b>{(entry.user as { name?: string } | null)?.name || 'A learner'}</b><span className="hint">{shortDate(entry.createdAt)}</span></div>
                   {prompt ? <p className="hint" style={{ margin: 0 }}>Question: {prompt}</p> : null}
                   {(answer?.point as { kind?: string } | undefined)?.kind === 'task' ? <p className="badge" data-testid="activation-task">Activation task</p> : null}
@@ -216,7 +216,7 @@ export async function TeachScreen(ctx: Ctx) {
                   {entry.teacherReply && featureOn(portal, 'feedback') ? <p className="count-tile" style={{ display: 'block', background: 'var(--mint)' }} data-testid="teacher-reply">Your reply: {str(entry.teacherReply)}</p> : null}
                   {featureOn(portal, 'feedback') ? (
                   <form className="form" action="/api/hearts" method="post">
-                    <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: here }} />
+                    <Hidden fields={{ action: 'reply', entry: entry.id, href: `${base}/garden/workbook`, next: `${here}#reply-${entry.id}` }} />
                     <textarea data-testid="reply-text" name="reply" placeholder="Write a reply. They will see it in their workbook." required />
                     <div className="actions"><button className="btn ink small" data-testid="reply-submit" type="submit">{entry.teacherReply ? 'Send another reply' : 'Send reply'}</button></div>
                   </form>
