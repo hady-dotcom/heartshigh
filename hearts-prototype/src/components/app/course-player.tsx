@@ -87,6 +87,11 @@ export function CoursePlayer({
   deferred = [],
   initialOpenId = null,
   sentences = [],
+  progressCard = null,
+  saveOnEnd = false,
+  showResume = false,
+  clipEnd = null,
+  videoComing = false,
 }: {
   courseTitle: string
   backHref: string
@@ -115,6 +120,13 @@ export function CoursePlayer({
   deferred?: { pointId: number; prompt: string }[]
   initialOpenId?: number | null
   sentences?: FramingSentence[]
+  progressCard?: { eyebrow: string; line: string; backLabel: string; backHref: string } | null
+  saveOnEnd?: boolean
+  showResume?: boolean
+  /** When set, playback pauses at this second. Used for a short kinetic clip. */
+  clipEnd?: number | null
+  /** A sequenced film with no Vimeo or YouTube id yet. */
+  videoComing?: boolean
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -462,9 +474,19 @@ export function CoursePlayer({
   useEffect(() => {
     if (watched < 8 || watched - postedWatch.current < 15) return
     postedWatch.current = watched
-    const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)) })
+    const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)), at: String(Math.floor(timeRef.current)) })
     void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
   }, [lessonId, watched])
+
+  const savedEnd = useRef(false)
+  useEffect(() => {
+    if (!saveOnEnd || !endCard || savedEnd.current) return
+    savedEnd.current = true
+    const played = Math.max(Math.floor(watched), length > 0 ? Math.ceil(length * 0.8) : 1)
+    const body = new URLSearchParams({ action: 'complete', lesson: String(lessonId), seconds: String(played), ended: 'yes', level: 'talk' })
+    if (length > 0) body.set('media', String(Math.floor(length)))
+    void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
+  }, [saveOnEnd, endCard, watched, length, lessonId])
 
   useEffect(() => {
     for (const point of points) {
@@ -676,6 +698,13 @@ export function CoursePlayer({
       }
       const polledState = player.getPlayerState()
       const polledTime = player.getCurrentTime()
+      if (clipEnd != null && polledTime >= clipEnd) {
+        player.pauseVideo()
+        setPlaying(false)
+        setTime(clipEnd)
+        setYtState(STATE.PAUSED)
+        return
+      }
       setYtState(polledState)
       if (polledState === STATE.PLAYING) {
         setPlaying(true)
@@ -703,9 +732,10 @@ export function CoursePlayer({
       if (action === 'retry') playWithSoundFallback(player, hasSound())
     }, 400)
     return () => window.clearInterval(timer)
-  }, [ended, startAt, youtubeId])
+  }, [clipEnd, ended, startAt, youtubeId])
   return (
     <div data-testid="player" data-mode={mode} data-playing={playing ? 'yes' : 'no'} data-framing={learnerFramingMode()} data-board={boardOpen ? 'open' : 'closed'} data-cover={showCover ? 'yes' : 'no'} data-popup-layout={overPlayer ? 'over' : 'strict'}>
+      {showResume ? <span hidden data-testid="play-start" data-at={startAt} /> : null}
       {debugOn ? (
         <pre className="yt-debug" data-testid="yt-debug">
           {playerReadout({ state: liveState, time, currentTime: liveTime, cover: showCover })}
@@ -750,7 +780,13 @@ export function CoursePlayer({
           {open && !filmed && !playing ? (
             <p className="paused-note" data-testid="paused-note">❚❚ Paused at question {open.number}</p>
           ) : null}
-          {coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+          {videoComing ? (
+            <div className="video-coming" data-testid="video-coming">
+              <strong>Video coming</strong>
+              <p>This film will play here when it is ready.</p>
+            </div>
+          ) : null}
+          {!videoComing && coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
             <button type="button" className="j-tap-catcher film-tap" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play" />
           ) : null}
         </div>
@@ -863,7 +899,7 @@ export function CoursePlayer({
           })}
         </ul>
       ) : null}
-      {mode === 'practice' ? (
+      {mode === 'practice' && !videoComing ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
           {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
         </p>
@@ -902,6 +938,13 @@ export function CoursePlayer({
         </button>
         {waitingOnFilm && !nextPoint ? <TopicHelp topic="hide-until-moment" label="When do questions appear?" /> : null}
       </div>
+      {progressCard ? (
+        <section className="garden-card" data-testid="sequence-progress-card">
+          <p className="eyebrow">{progressCard.eyebrow}</p>
+          <h3 data-testid="sequence-progress-line">{progressCard.line}</h3>
+          <Link className="pill outline small" href={progressCard.backHref} data-testid="sequence-back">{progressCard.backLabel}</Link>
+        </section>
+      ) : (
       <section className="garden-card" data-testid="course-garden">
         <p className="eyebrow">Course garden</p>
         <div className="garden-grid">
@@ -918,6 +961,8 @@ export function CoursePlayer({
           </div>
         </div>
       </section>
+      )}
+      {saveOnEnd ? null : (
       <form className="watched-form" action="/api/hearts" method="post">
         <input type="hidden" name="action" value="complete" />
         <input type="hidden" name="level" value="talk" />
@@ -928,6 +973,7 @@ export function CoursePlayer({
         <input type="hidden" name="next" value={next} />
         <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
       </form>
+      )}
       </div>
       {open ? (
         <Sheet

@@ -61,8 +61,77 @@ async function json(path: string) {
   return (await (await master.get(path)).json().catch(() => ({}))) as { docs?: Record<string, unknown>[] }
 }
 
+function asId(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value) && value > 0) return value
+  if (typeof value === 'string') {
+    const direct = Number(value)
+    if (Number.isFinite(direct) && direct > 0) return direct
+    try {
+      return asId(JSON.parse(value))
+    } catch {
+      return null
+    }
+  }
+  if (value && typeof value === 'object' && 'id' in value) return asId((value as { id?: unknown }).id)
+  return null
+}
+
+function idList(value: unknown): number[] {
+  let raw = value
+  if (typeof raw === 'string') {
+    try {
+      raw = JSON.parse(raw)
+    } catch {
+      return []
+    }
+  }
+  if (!Array.isArray(raw)) return []
+  return [...new Set(raw.map(asId).filter((id): id is number => Boolean(id)))]
+}
+
+/**
+ * Talks the East London learner can open. Parenting is a separate course, and
+ * later bring-in rows are not on this person's list, so a plain "first 80 lessons"
+ * sample opens a film the page will not show.
+ */
+async function heartsCourseIds() {
+  const users = ((await json('/api/users?where[email][equals]=elm-learner@hearts.test&limit=1&depth=0')).docs || []) as { courseList?: unknown; extraCourses?: unknown }[]
+  const person = users[0]
+  const allowed = new Set([...idList(person?.courseList), ...idList(person?.extraCourses)])
+  if (!allowed.size) return []
+  const portals = ((await json('/api/portals?where[shape][equals]=sequence&limit=20&depth=0')).docs || []) as { id: number }[]
+  const portalIds = new Set(portals.map((row) => row.id))
+  if (!portalIds.size) return [...allowed]
+  const courses = ((await json('/api/courses?limit=200&depth=0')).docs || []) as { id: number; portal?: number | { id?: number } }[]
+  const sequence = new Set(courses.filter((course) => {
+    const portal = asId(course.portal)
+    return portal != null && portalIds.has(portal) && allowed.has(course.id)
+  }).map((course) => course.id))
+  return [...allowed].filter((id) => !sequence.has(id))
+}
+
+async function openHeartCourses() {
+  const allowed = new Set(await heartsCourseIds())
+  const courses = ((await json('/api/courses?limit=200&depth=0')).docs || []) as { id: number; title?: string; hidden?: boolean | null; visibility?: string }[]
+  return courses.filter((course) => allowed.has(course.id) && course.hidden !== true && course.visibility !== 'draft')
+}
+
+async function heartsLessons<T extends { course: number }>(query = ''): Promise<T[]> {
+  const ids = await heartsCourseIds()
+  if (!ids.length) return []
+  const where = ids.map((id, index) => `where[course][in][${index}]=${id}`).join('&')
+  const allowed = new Set(ids)
+  const docs = ((await json(`/api/lessons?limit=800&depth=0&${where}${query}`)).docs || []) as (T & { course: number | { id?: number } })[]
+  return docs.flatMap((lesson) => {
+    const course = asId(lesson.course)
+    if (!course || !allowed.has(course)) return []
+    return [{ ...lesson, course }]
+  })
+}
+
 async function aCourse() {
-  const lessons = ((await json('/api/lessons?limit=80&depth=0&sort=order')).docs || []) as { id: number; course: number; title?: string; durationSeconds?: number; order?: number }[]
+  const allowed = new Set(await heartsCourseIds())
+  const lessons = await heartsLessons<{ id: number; course: number; title?: string; durationSeconds?: number; order?: number }>('&sort=order')
   const byCourse = new Map<number, typeof lessons>()
   for (const lesson of lessons) {
     const list = byCourse.get(lesson.course) || []
@@ -70,9 +139,12 @@ async function aCourse() {
     byCourse.set(lesson.course, list)
   }
   for (const list of byCourse.values()) list.sort((a, b) => (a.order || a.id) - (b.order || b.id))
-  const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
-  const sitting = courses.find((course) => course.title === PROOF_COURSE)
-  const names = courses.find((course) => course.title === 'The Names')
+  const named = async (title: string) => {
+    const docs = ((await json(`/api/courses?where[title][equals]=${encodeURIComponent(title)}&limit=5&depth=0`)).docs || []) as { id: number }[]
+    return docs.find((course) => allowed.has(course.id))
+  }
+  const sitting = await named(PROOF_COURSE)
+  const names = await named('The Names')
   const multi = [...byCourse.entries()].filter(([, own]) => own.length >= 2).sort((a, b) => b[1].length - a[1].length)[0]
   const courseId = sitting?.id || names?.id || multi?.[0] || lessons[0]?.course
   const own = byCourse.get(courseId) || []
@@ -118,9 +190,10 @@ test.describe('courses and planning', () => {
 
   test('every overview row on a real imported course has a visible still', async ({ page }) => {
     await page.setViewportSize(PHONE)
-    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number; youtubeId?: string }[]
-    const courses = ((await json('/api/courses?limit=80&depth=0')).docs || []) as { id: number; title?: string }[]
-    const real = lessons.filter((row) => row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
+    const lessons = await heartsLessons<{ id: number; course: number; youtubeId?: string }>()
+    const courses = await openHeartCourses()
+    const openIds = new Set(courses.map((course) => course.id))
+    const real = lessons.filter((row) => openIds.has(row.course) && row.youtubeId && /^[\w-]{11}$/.test(row.youtubeId) && row.youtubeId !== 'dQw4w9WgXcQ')
     const byCourse = new Map<number, typeof real>()
     for (const row of real) {
       const list = byCourse.get(row.course) || []
@@ -291,15 +364,20 @@ test.describe('courses and planning', () => {
     await page.setViewportSize(PHONE)
     const picked = await aCourse()
     const byCount = new Map<number, typeof picked.lessons>()
-    const lessons = ((await json('/api/lessons?limit=80&depth=0')).docs || []) as { id: number; course: number }[]
+    const lessons = await heartsLessons<{ id: number; course: number }>()
+    const openIds = new Set((await openHeartCourses()).map((course) => course.id))
     for (const lesson of lessons) {
+      if (!openIds.has(lesson.course)) continue
       const list = byCount.get(lesson.course) || []
       list.push(lesson)
       byCount.set(lesson.course, list)
     }
     const short = [...byCount.entries()].find(([, own]) => own.length >= 2 && own.length <= 4)
-    const courseId = short?.[0] || picked.courseId
-    const own = short?.[1] || picked.lessons
+    // Ten sittings has ten talks. With every weekday ticked, that many talks no longer use an even spread.
+    const single = [...byCount.entries()].find(([, own]) => own.length === 1)
+    const chosen = short || single
+    const courseId = chosen?.[0] || picked.courseId
+    const own = chosen?.[1] || picked.lessons
     const span = Array.from({ length: 12 }, (_, index) => `2026-10-${String(index + 5).padStart(2, '0')}`)
     await signIn(page, `${BASE}/week?course=${courseId}&view=new&start=2026-10-05&end=2026-10-16&days=0,1,2,3,4,5,6&minutes=20`)
     await expect(page.getByTestId('schedule-course')).toHaveValue(String(courseId))

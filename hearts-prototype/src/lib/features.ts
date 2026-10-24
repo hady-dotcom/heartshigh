@@ -414,9 +414,24 @@ export function parseFeatures(raw: unknown): FeatureMap {
   return lockBeginner(base)
 }
 
-export type FeatureSource = { features?: unknown } | null | undefined
+export type FeatureSource = { features?: unknown; shape?: string | null } | null | undefined
+
+/**
+ * A sequenced course stores each switch as saved. Missing switches are off.
+ * Beginner parts are not forced on, so a clean course can start with them off.
+ */
+export function sequenceFeatureMap(raw: unknown): FeatureMap {
+  const map = Object.fromEntries(FEATURE_KEYS.map((key) => [key, false])) as FeatureMap
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return map
+  const input = raw as Record<string, unknown>
+  for (const key of FEATURE_KEYS) {
+    if (typeof input[key] === 'boolean') map[key] = input[key]
+  }
+  return map
+}
 
 export function featuresOf(portal: FeatureSource): FeatureMap {
+  if (portal && typeof portal === 'object' && portal.shape === 'sequence') return sequenceFeatureMap(portal.features)
   return parseFeatures(portal?.features)
 }
 

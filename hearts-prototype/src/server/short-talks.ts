@@ -1,7 +1,8 @@
 import type { Payload } from 'payload'
 import { idOf } from '@/lib/ids'
 import { formatTimestamp } from '@/lib/transcript'
-import { EMPTY_SHORT_COURSE_NOTE, isUnderMinTalk } from '@/lib/talk-length'
+import { isUnderPortalMin, minTalkSecondsOf } from '@/lib/sequence'
+import { EMPTY_SHORT_COURSE_NOTE } from '@/lib/talk-length'
 
 type Doc = Record<string, unknown> & { id: number }
 
@@ -27,13 +28,20 @@ function courseIdOf(lesson: Doc) {
  */
 export async function markShortTalks(payload: Payload) {
   const lessons = await allDocs(payload, 'lessons')
+  const portals = await allDocs(payload, 'portals')
+  const minByPortal = new Map(portals.map((portal) => [portal.id, minTalkSecondsOf({
+    shape: typeof portal.shape === 'string' ? portal.shape : null,
+    minTalkSeconds: typeof portal.minTalkSeconds === 'number' ? portal.minTalkSeconds : null,
+  })]))
   let marked = 0
   let already = 0
   let cleared = 0
   for (const lesson of lessons) {
     const seconds = Number(lesson.durationSeconds || 0)
     const waived = lesson.shortWaived === true
-    const short = isUnderMinTalk(seconds) && !waived
+    const portalId = idOf(lesson.portal)
+    const minSeconds = portalId ? (minByPortal.get(portalId) ?? 300) : 300
+    const short = isUnderPortalMin(seconds, minSeconds) && !waived
     if (short && lesson.tooShort === true) {
       already += 1
       continue

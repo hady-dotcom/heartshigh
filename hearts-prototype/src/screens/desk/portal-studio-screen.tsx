@@ -22,14 +22,16 @@ export async function PortalCreateScreen(ctx: MasterCtx) {
 export async function PortalEditScreen(ctx: MasterCtx, slug: string) {
   const portal = (await rows(ctx.payload, 'portals', { slug: { equals: slug } }, { limit: 1 }))[0]
   if (!portal) notFound()
-  const [courses, selected] = await Promise.all([loadLibraryPicker(ctx.payload), adoptedCourseIds(ctx.payload, portal.id)])
+  const sequence = str(portal.shape) === 'sequence'
+  const courses = sequence ? [] : await loadLibraryPicker(ctx.payload)
+  const selected = sequence ? [] : await adoptedCourseIds(ctx.payload, portal.id)
   const aiConnected = publicAi(portal.aiConnection).connected
   return (
     <MasterFrame
       ctx={ctx}
       active="portals"
       title={`Features for ${portalDisplayName(portal)}`}
-      intro="The first group stays on. The next ones are on until you switch them off. Extras start off. Saving happens straight away."
+      intro={sequence ? 'Each part can be on or off for this course. Saving happens straight away.' : 'The first group stays on. The next ones are on until you switch them off. Extras start off. Saving happens straight away.'}
       testId="portal-edit"
     >
       <section className="panel" style={{ marginBottom: 16 }}>
@@ -48,6 +50,8 @@ export async function PortalEditScreen(ctx: MasterCtx, slug: string) {
         courses={courses}
         selectedCourses={selected}
         features={featuresOf(portal as FeatureSource)}
+        shape={str(portal.shape)}
+        kineticOn={portal.kineticOn !== false}
       />
     </MasterFrame>
   )

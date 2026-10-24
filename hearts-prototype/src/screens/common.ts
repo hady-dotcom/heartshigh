@@ -53,6 +53,8 @@ export type Query = {
   fresh?: string
   /** `?debug=yt` — kept when moving between course links. */
   debug?: string
+  /** `1` pauses a sequenced film at the end of its kinetic clip. */
+  clip?: string
   /** Library list page. */
   page?: string
   /** Course film-card page. */

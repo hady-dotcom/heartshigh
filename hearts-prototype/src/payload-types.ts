@@ -339,6 +339,30 @@ export interface Portal {
   teacherLabel?: string | null;
   wizardDone?: boolean | null;
   /**
+   * hearts keeps the existing portal. sequence is a course watched in order, with its own library.
+   */
+  shape?: string | null;
+  /**
+   * On a sequenced course, each film stays locked until the one before it is finished.
+   */
+  lockOrder?: boolean | null;
+  /**
+   * Shortest film this portal will keep. Empty uses 5 minutes for a hearts portal and no minimum for a sequenced course.
+   */
+  minTalkSeconds?: number | null;
+  /**
+   * Second colour for a sequenced course.
+   */
+  accent?: string | null;
+  /**
+   * Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.
+   */
+  teacherCap?: number | null;
+  /**
+   * Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.
+   */
+  kineticOn?: boolean | null;
+  /**
    * Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.
    */
   features?:
@@ -1594,6 +1618,10 @@ export interface WatchSession {
   user: number | User;
   lesson: number | Lesson;
   seconds?: number | null;
+  /**
+   * Where the film was when this sitting was saved, so a sequenced course can resume.
+   */
+  position?: number | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -3462,6 +3490,12 @@ export interface PortalsSelect<T extends boolean = true> {
   learnerLabel?: T;
   teacherLabel?: T;
   wizardDone?: T;
+  shape?: T;
+  lockOrder?: T;
+  minTalkSeconds?: T;
+  accent?: T;
+  teacherCap?: T;
+  kineticOn?: T;
   features?: T;
   aiConnection?: T;
   updatedAt?: T;
@@ -4207,6 +4241,7 @@ export interface WatchSessionsSelect<T extends boolean = true> {
   user?: T;
   lesson?: T;
   seconds?: T;
+  position?: T;
   updatedAt?: T;
   createdAt?: T;
 }

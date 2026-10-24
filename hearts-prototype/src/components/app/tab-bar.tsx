@@ -2,20 +2,25 @@
 
 import Link from 'next/link'
 import { track } from '@/lib/experiment-track'
-import type { FeatureSource } from '@/lib/features'
 import { useVariant } from '@/lib/use-variant'
 
 export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
-export function TabBar({ base, active = null, portal: _portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: FeatureSource; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: { features?: unknown; shape?: string | null } | null; dark?: boolean; evening?: boolean; unread?: number }) {
   const lanes = useVariant('lanes-tab-label', { payload: { label: 'Lanes' } })
-  const tabs: [Tab, string, string][] = [
-    ['home', 'Home', base],
-    ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
-    ['week', 'My week', `${base}/week`],
-    ['garden', 'Garden', `${base}/garden`],
-    ['me', 'Me', `${base}/me`],
-  ]
+  const sequence = portal?.shape === 'sequence'
+  const tabs: [Tab, string, string][] = sequence
+    ? [
+        ['home', 'Home', base],
+        ['me', 'Me', `${base}/me`],
+      ]
+    : [
+        ['home', 'Home', base],
+        ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
+        ['week', 'My week', `${base}/week`],
+        ['garden', 'Garden', `${base}/garden`],
+        ['me', 'Me', `${base}/me`],
+      ]
   return (
     <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar">
       {tabs.map(([key, label, href]) => (

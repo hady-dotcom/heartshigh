@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { PortalOpeningScreen } from '@/screens/desk/opening'
 import { PortalQuestionsScreen } from '@/screens/desk/placing'
 import { cookies, headers } from 'next/headers'
@@ -6,7 +7,7 @@ import { AppFrame } from '@/components/app/shell'
 import { Arch } from '@/components/arch'
 import { Hidden } from '@/components/app/shell'
 import { portalIdOf } from '@/lib/ids'
-import { getSession, loadPortal, requirePortal } from '@/server/context'
+import { getPayloadClient, getSession, loadPortal, requirePortal } from '@/server/context'
 import { JourneyScreen } from '@/screens/app/journey'
 import { shareOrigin } from '@/lib/site-origin'
 import { portalName } from '@/server/learner'
@@ -46,6 +47,9 @@ import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
+import { isSequencePortal } from '@/lib/sequence'
+import { SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
+import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -59,6 +63,26 @@ function gated(ctx: Ctx, key: FeatureKey, desk = false) {
 }
 
 const OPEN_TO_ALL = new Set(['start', 'help', 'feed'])
+
+const HEARTS_META = {
+  title: 'HEARTS',
+  description: 'Short clips from real talks, full courses, and a circle that meets in person.',
+}
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  try {
+    const { slug } = await params
+    const payload = await getPayloadClient()
+    const portal = await loadPortal(payload, slug)
+    if (portal && isSequencePortal(portal)) {
+      const name = portalName(portal)
+      return { title: name, description: `${name}. Watch the films in order.` }
+    }
+  } catch {
+    return HEARTS_META
+  }
+  return HEARTS_META
+}
 
 export default async function PortalScreen({ params, searchParams }: { params: Promise<{ slug: string; screen?: string[] }>; searchParams: Promise<Query> }) {
   const { slug, screen = [] } = await params
@@ -75,12 +99,19 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     if (visitor && visitor.role !== 'master' && portalIdOf(visitor) !== portal.id) redirect('/?error=That portal is not yours.')
     const shut = portal.closed && (!visitor || visitor.role === 'learner')
     if (!shut && area === undefined) {
-      if (!visitor) redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
-      if (visitor.role === 'learner' && !visitor.onboarded) {
+      if (!visitor) {
+        if (isSequencePortal(portal)) return SequenceGate({ payload: session.payload, portal, base })
+        redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
+      }
+      if (!isSequencePortal(portal) && visitor.role === 'learner' && !visitor.onboarded) {
         const started = await rows(session.payload, 'lesson-visits', { user: { equals: visitor.id } }, { limit: 1 })
         if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
       }
     } else if (!shut) {
+      if (isSequencePortal(portal)) {
+        if (!visitor) return SequenceGate({ payload: session.payload, portal, base })
+        redirect(base)
+      }
       return (
         <>
           <BackToDesk user={visitor} portal={portal} />
@@ -95,12 +126,12 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   if (portal.closed && user.role === 'learner') {
     return (
-      <AppFrame testId="closed">
+      <AppFrame testId="closed" help={isSequencePortal(portal) ? 'sequence-closed' : undefined} brand={isSequencePortal(portal) ? { colour: portal.colour || '#1f3a5f', accent: portal.accent || '#e07a5f' } : undefined}>
         <div className="splash">
           <div>
-            <span className="splash-arch" aria-hidden><Arch size={72} /></span>
+            {isSequencePortal(portal) ? null : <span className="splash-arch" aria-hidden><Arch size={72} /></span>}
             <h1>{portalName(portal)} is closed for now</h1>
-            <p data-testid="portal-closed">This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.</p>
+            <p data-testid="portal-closed">{isSequencePortal(portal) ? 'This portal is paused. Your progress is kept, and will be here when it opens again.' : 'This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.'}</p>
             <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
               <Hidden fields={{ action: 'logout' }} />
               <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
@@ -113,8 +144,15 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   if (area === 'admin') {
     if (user.role === 'learner') redirect(`${base}?error=${plain('That page is for the portal team. You are back in your feed.')}`)
+    if (isSequencePortal(portal)) {
+      const away = new Set(['content', 'bring-in', 'library', 'sheet', 'opening', 'questions', 'wizard', 'circle', 'ai', 'experiments', 'insights', 'calendar', 'missions', 'feedback', 'compass', 'plans', 'diaries', 'nights', 'gather', 'live', 'safety', 'announcements', 'courses', 'adopt'])
+      if (a === 'settings') redirect(`${base}/admin/sequence#look`)
+      if (a && away.has(a)) redirect(`${base}/admin/features`)
+      if (a === 'teach' && b) redirect(`${base}/admin/teach`)
+    }
     switch (a) {
       case undefined:
+        if (isSequencePortal(portal)) return SequenceOverview(ctx)
         return OverviewScreen(ctx)
       case 'content':
         return b ? CourseEditorScreen(ctx, Number(b)) : ContentScreen(ctx)
@@ -128,9 +166,15 @@ export default async function PortalScreen({ params, searchParams }: { params: P
           return LibraryTalkScreen(ctx, talkId)
         }
         return LibraryScreen(ctx)
+      case 'features':
+        if (!isSequencePortal(portal)) notFound()
+        guardAdmin(ctx)
+        return SequenceFeatures(ctx)
       case 'access':
+        if (isSequencePortal(portal)) return SequenceCodes(ctx)
         return AccessScreen(ctx)
       case 'teach':
+        if (isSequencePortal(portal)) return SequenceLearners(ctx)
         if (b) {
           if (!Number(b)) notFound()
           return PortalLearnerDetail(ctx, Number(b))
@@ -206,6 +250,9 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         guardAdmin(ctx)
         if (b === 'create') return PortalCreatorScreen(ctx)
         return PortalSheetScreen(ctx)
+      case 'sequence':
+        if (!isSequencePortal(portal)) notFound()
+        return SequenceDesk(ctx)
       case 'courses':
         redirect(b ? `${base}/admin/content/${b}` : `${base}/admin/content`)
       case 'codes':
@@ -227,8 +274,11 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
 async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
   const { base } = ctx
+  const sequence = isSequencePortal(ctx.portal)
+  if (sequence && area && ['lanes', 'garden', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'welcome', 'start', 'help', 'feed'].includes(area)) redirect(base)
   switch (area) {
     case undefined:
+      if (sequence) return SequenceHome(ctx)
       return HomeScreen(ctx)
     case 'lanes':
       if (a) return LaneScreen(ctx, a)
@@ -271,6 +321,10 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'week':
       return WeekScreen(ctx)
     case 'me':
+      if (sequence) {
+        if (a) redirect(`${base}/me`)
+        return SequenceMe(ctx)
+      }
       if (!a) return MeScreen(ctx)
       if (a === 'plan' || a === 'week') return gated(ctx, 'planner') || PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)
@@ -286,6 +340,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'recalibrate':
       return gated(ctx, 'compass') || RecalibrateScreen(ctx)
     case 'welcome':
+      if (sequence) redirect(base)
       return WelcomeScreen(ctx)
     case 'about':
       redirect(`${base}/welcome`)

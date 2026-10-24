@@ -124,6 +124,17 @@ export const Portals: CollectionConfig = {
     { name: 'teacherLabel', type: 'text', defaultValue: 'Teacher' },
     { name: 'wizardDone', type: 'checkbox', defaultValue: false },
     {
+      name: 'shape',
+      type: 'text',
+      defaultValue: 'hearts',
+      admin: { description: 'hearts keeps the existing portal. sequence is a course watched in order, with its own library.' },
+    },
+    { name: 'lockOrder', type: 'checkbox', defaultValue: false, admin: { description: 'On a sequenced course, each film stays locked until the one before it is finished.' } },
+    { name: 'minTalkSeconds', type: 'number', admin: { description: 'Shortest film this portal will keep. Empty uses 5 minutes for a hearts portal and no minimum for a sequenced course.' } },
+    { name: 'accent', type: 'text', admin: { description: 'Second colour for a sequenced course.' } },
+    { name: 'teacherCap', type: 'number', admin: { description: 'Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.' } },
+    { name: 'kineticOn', type: 'checkbox', admin: { description: 'Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.' } },
+    {
       name: 'features',
       type: 'json',
       admin: {
@@ -816,17 +827,21 @@ export const EngagementPoints: CollectionConfig = {
   ],
   hooks: {
     beforeChange: [
-      ({ data, originalDoc }) => {
+      ({ data, originalDoc, req }) => {
         const merged = { ...(originalDoc || {}), ...data } as Record<string, unknown>
         const options = Array.isArray(merged.options) ? (merged.options as unknown[]).map(String) : []
-        refuse(
-          authorTextProblems([
-            ['The question', typeof merged.prompt === 'string' ? merged.prompt : ''],
-            ...options.map((option, index): [string, string] => [`Option ${index + 1}`, option]),
-            ['The right answer', typeof merged.correctOption === 'string' ? merged.correctOption : ''],
-            ['The crisis option', typeof merged.crisisOption === 'string' ? merged.crisisOption : ''],
-          ]),
-        )
+        const fields: [string, string][] = [
+          ['The question', typeof merged.prompt === 'string' ? merged.prompt : ''],
+          ...options.map((option, index): [string, string] => [`Option ${index + 1}`, option]),
+          ['The right answer', typeof merged.correctOption === 'string' ? merged.correctOption : ''],
+          ['The crisis option', typeof merged.crisisOption === 'string' ? merged.crisisOption : ''],
+        ]
+        // A sequenced course sheet brings the films' own questions. They stay plain text, and are not HEARTS opener copy.
+        if (req?.context?.sequenceCallout === true) {
+          refuse(markupProblems(fields))
+          return data
+        }
+        refuse(authorTextProblems(fields))
         return data
       },
     ],
@@ -1298,6 +1313,7 @@ export const WatchSessions: CollectionConfig = {
     { name: 'user', type: 'relationship', relationTo: 'users', required: true },
     { name: 'lesson', type: 'relationship', relationTo: 'lessons', required: true },
     { name: 'seconds', type: 'number', defaultValue: 0 },
+    { name: 'position', type: 'number', admin: { description: 'Where the film was when this sitting was saved, so a sequenced course can resume.' } },
   ],
 }
 
