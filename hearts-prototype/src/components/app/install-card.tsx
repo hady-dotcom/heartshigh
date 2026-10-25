@@ -45,13 +45,23 @@ function readState(): InstallState {
 }
 
 function readSurface(kind: InstallState['kind']) {
+  if (typeof window === 'undefined') return kind === 'desktop' ? 'computer' : 'phone'
   const narrow = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 720px)').matches
   const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
   return installSurface(kind, { narrow, coarse })
 }
 
+const serverInstallState: InstallState = {
+  kind: 'android-chrome',
+  standalone: false,
+  dismissed: false,
+  installed: false,
+  prompt: false,
+}
+
 function useInstallState() {
-  const [state, setState] = useState<InstallState | null>(null)
+  // Paint the row with the HTML so it does not pop in after hydration and shift the page.
+  const [state, setState] = useState<InstallState>(serverInstallState)
   useEffect(() => {
     const sync = () => setState(readState())
     sync()
@@ -72,7 +82,6 @@ function useInstallState() {
 export function InstallCard({ forced = false, onDismiss, sheet = false, strip = false, appName = 'HEARTS' }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean; strip?: boolean; appName?: string }) {
   const [state, setState] = useInstallState()
   const [busy, setBusy] = useState(false)
-  if (!state) return null
   const prompt = state.prompt && offersInstallButton(state.kind)
   if (!shouldShowInstall({ standalone: state.standalone, dismissed: state.dismissed, installed: state.installed, forced })) return null
   const surface = readSurface(state.kind)
@@ -159,7 +168,6 @@ export function KeepHearts({ appName = 'HEARTS' }: { appName?: string }) {
   const [state] = useInstallState()
   const [open, setOpen] = useState(false)
   const [run, setRun] = useState(0)
-  if (!state) return null
   const installed = state.installed || state.standalone
   const entry = installEntry(state.kind, installed, readSurface(state.kind), appName)
   const show = () => {

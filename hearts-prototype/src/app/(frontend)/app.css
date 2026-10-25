@@ -1465,7 +1465,8 @@ html[data-theme] .card.home-plan .eyebrow,
 }
 .sheet .care-lines li { background: #163633; }
 .carry-on, .course-card { display: grid; gap: 8px; margin: 0 0 12px; padding: 12px; border-radius: 16px; background: var(--card, #fff); color: inherit; text-decoration: none; border: 1px solid var(--line, rgba(0,0,0,.08)); }
-.carry-on .thumb, .course-card .thumb { display: block; border-radius: 12px; background: #d9d3c7 center/cover no-repeat; }
+.carry-on .thumb, .course-card .thumb { display: block; border-radius: 12px; background: #d9d3c7 center/cover no-repeat; overflow: hidden; }
+.carry-on .thumb img, .course-card .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .carry-on .thumb { height: 148px; }
 .course-card { grid-template-columns: 72px 1fr; align-items: center; }
 .course-card .thumb { width: 72px; height: 72px; }

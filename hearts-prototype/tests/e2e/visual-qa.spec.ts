@@ -132,7 +132,18 @@ async function signIn(page: Page, email: string, password: string, next: string)
 
 async function settle(page: Page) {
   await page.addStyleTag({ content: 'nextjs-portal, [data-nextjs-toast], [data-next-badge-root] { display: none !important; }' }).catch(() => undefined)
-  await page.evaluate(() => document.fonts.ready).catch(() => undefined)
+  await page.evaluate(async () => {
+    const sheet = document.getElementById('hh-google-fonts') as HTMLLinkElement | null
+    if (sheet && sheet.media === 'print') {
+      await new Promise<void>((resolve) => {
+        const done = () => resolve()
+        sheet.addEventListener('load', done, { once: true })
+        if (sheet.sheet) done()
+      })
+      sheet.media = 'all'
+    }
+    await document.fonts.ready
+  }).catch(() => undefined)
   await page.waitForTimeout(200)
 }
 

@@ -191,9 +191,12 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
-            {clips.map((clip) => (
-              <span key={clip.id} className="mini" style={shownPoster(clip.poster) || shownPoster(clip.portrait) ? { backgroundImage: `url(${shownPoster(clip.poster) || shownPoster(clip.portrait)})` } : undefined} />
-            ))}
+            {clips.map((clip) => {
+              const poster = shownPoster(clip.poster) || shownPoster(clip.portrait)
+              // Slide backdrops are full-bleed files. A 64px tile must not download them.
+              const thumb = poster && !poster.includes('/slides/') ? poster : null
+              return <span key={clip.id} className="mini" style={thumb ? { backgroundImage: `url(${thumb})` } : undefined} />
+            })}
           </span>
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>

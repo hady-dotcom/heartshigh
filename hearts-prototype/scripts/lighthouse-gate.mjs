@@ -47,19 +47,29 @@ async function waitForHealth() {
   throw new Error(`No health response from ${base}`)
 }
 
-async function cookieFor(email, password) {
+async function tokenFor(email, password) {
   const response = await fetch(`${base}/api/users/login`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
     body: JSON.stringify({ email, password }),
   })
   const lines = typeof response.headers.getSetCookie === 'function' ? response.headers.getSetCookie() : []
-  const pairs = lines.map((line) => line.split(';')[0]).filter((line) => line.includes('token='))
-  if (!response.ok || !pairs.length) {
+  const token = lines.map((line) => line.split(';')[0]).find((line) => line.startsWith('payload-token='))?.slice('payload-token='.length)
+  if (!response.ok || !token) {
     const text = await response.text()
     throw new Error(`Login failed for ${email} (${response.status}): ${text.slice(0, 240)}`)
   }
-  return pairs.join('; ')
+  return token
+}
+
+async function plantSession(browser, token) {
+  const context = browser.contexts()[0]
+  await context.clearCookies()
+  await context.addCookies([{ name: 'payload-token', value: token, url: base, httpOnly: true, sameSite: 'Lax' }])
+  const page = context.pages()[0] || (await context.newPage())
+  const session = await context.newCDPSession(page)
+  await session.send('Network.clearBrowserCache').catch(() => {})
+  await session.detach()
 }
 
 if (!existsSync('data/hearts-test.db')) {
@@ -83,10 +93,10 @@ const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'star
     ...process.env,
     NODE_ENV: 'production',
     HEARTS_BUILD: '1',
+    HEARTS_E2E: '1',
     HEARTS_DIST_DIR: dist,
     DATABASE_URL: 'file:./data/hearts-lighthouse.db',
     PAYLOAD_SECRET: 'lighthouse-local-gate-secret-32chars-min',
-    SERVER_URL: base,
     HEARTS_TRUSTED_PROXY_HOPS: '0',
     PORT: port,
   },
@@ -100,26 +110,39 @@ try {
     chromePath: chromium.executablePath(),
     chromeFlags: ['--headless=new', '--no-sandbox', '--disable-gpu'],
   })
+  const browser = await chromium.connectOverCDP(`http://127.0.0.1:${chrome.port}`)
   try {
     for (const page of pages) {
-      const cookie = await cookieFor(page.email, page.password)
+      // Chrome drops a Cookie extra header after the first navigation. Plant the
+      // session in the profile instead, and keep storage so that cookie survives.
+      // The cache is cleared above so a later page is not scored from a warm disk.
+      await plantSession(browser, await tokenFor(page.email, page.password))
       const result = await lighthouse(`${base}${page.path}`, {
         port: chrome.port,
         onlyCategories: ['accessibility', 'performance'],
         formFactor: 'mobile',
         screenEmulation: { mobile: true, width: 390, height: 844, deviceScaleFactor: 2, disabled: false },
-        extraHeaders: { Cookie: cookie },
+        extraHeaders: { 'Sec-CH-Prefers-Color-Scheme': 'light' },
+        disableStorageReset: true,
         output: 'json',
         logLevel: 'error',
       })
       const accessibility = Math.round((result?.lhr?.categories?.accessibility?.score || 0) * 100)
       const performance = Math.round((result?.lhr?.categories?.performance?.score || 0) * 100)
-      const row = { name: page.name, path: page.path, accessibility, performance }
+      const audits = result?.lhr?.audits || {}
+      const opportunities = Object.values(audits)
+        .filter((audit) => audit.details?.type === 'opportunity' && audit.numericValue > 0)
+        .map((audit) => ({ id: audit.id, title: audit.title, savingsMs: Math.round(audit.numericValue) }))
+        .sort((a, b) => b.savingsMs - a.savingsMs)
+        .slice(0, 6)
+      const finalUrl = result?.lhr?.finalUrl || ''
+      const row = { name: page.name, path: page.path, finalUrl, accessibility, performance, opportunities }
       scores.push(row)
-      console.log(`${page.name}: accessibility ${accessibility}, performance ${performance}`)
+      console.log(`${page.name}: accessibility ${accessibility}, performance ${performance} ${finalUrl.replace(base, '')}`)
       if (accessibility < 95 || performance < 80) failed = true
     }
   } finally {
+    await browser.close().catch(() => {})
     await chrome.kill()
   }
 } finally {

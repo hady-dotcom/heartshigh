@@ -66,6 +66,15 @@ function Tick({ on }: { on: boolean }) {
   return <i className={on ? 'on' : ''} data-done={on ? 'yes' : 'no'} />
 }
 
+function Thumb({ src, eager }: { src: string | null; eager?: boolean }) {
+  if (!src) return <span className="thumb" />
+  return (
+    <span className="thumb">
+      <img src={src} alt="" decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'low'} />
+    </span>
+  )
+}
+
 export async function CourseHomeScreen({ payload, user, portal, base, query }: Ctx) {
   const courseIds = await visibleCourseIds(payload, user)
   const [courses, lessonRows, unitRows] = await Promise.all([
@@ -96,7 +105,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
         <div className="app-head"><h1>Courses</h1></div>
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
-            <span className="thumb" style={carry.poster ? { backgroundImage: `url(${carry.poster})` } : undefined} />
+            <Thumb src={carry.poster} eager />
             <p className="eyebrow">Carry on</p>
             <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
             <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
@@ -105,7 +114,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
           </article>
         ) : <p className="card">Films will show here once a course is added.</p>}
         <div className="course-cards">
-          {cards.map((card) => {
+          {cards.map((card, index) => {
             const groups: { title: string; count: number }[] = []
             for (const lesson of card.own) {
               const title = unitTitle.get(ref(lesson.unit) || 0) || 'Films'
@@ -115,7 +124,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             }
             return (
               <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
-                <span className="thumb" style={card.poster ? { backgroundImage: `url(${card.poster})` } : undefined} />
+                <Thumb src={card.poster} eager={index < 2} />
                 <span className="t">
                   <b>{str(card.course.title)}</b>
                   <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>

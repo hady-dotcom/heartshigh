@@ -13,7 +13,9 @@ function loadIds() {
 }
 
 export function SavedList({ base }: { base: string }) {
-  const [ids, setIds] = useState<string[] | null>(null)
+  // Empty on the server and the first paint. Reading localStorage later must not
+  // swap a one-line "loading" note for the example card, or the page jumps.
+  const [ids, setIds] = useState<string[]>([])
   const [titles, setTitles] = useState<Record<string, string>>({})
   const [meta, setMeta] = useState<SavedMeta>({})
   const [ready, setReady] = useState(false)
@@ -47,7 +49,7 @@ export function SavedList({ base }: { base: string }) {
       })
       .catch(() => setReady(true))
   }, [ids])
-  if (ids == null || (ids.length > 0 && !ready)) return <p className="muted" data-testid="saved-list">Loading saved clips…</p>
+  if (ids.length > 0 && !ready) return <p className="muted" data-testid="saved-list">Loading saved clips…</p>
   if (!ids.length) {
     return (
       <div data-testid="saved-empty">
