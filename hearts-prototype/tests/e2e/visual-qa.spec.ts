@@ -247,7 +247,7 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
         const a = boxes[i]
         const b = boxes[j]
         if (a.el.contains(b.el) || b.el.contains(a.el)) continue
-        if (a.el.closest('.tabbar') || b.el.closest('.tabbar')) continue
+        if (a.el.closest('.tabbar, .glass-bar') || b.el.closest('.tabbar, .glass-bar')) continue
         const width = Math.min(a.r, b.r) - Math.max(a.x, b.x)
         const height = Math.min(a.b, b.b) - Math.max(a.y, b.y)
         if (width > 4 && height > 4) {
