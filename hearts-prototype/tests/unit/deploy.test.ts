@@ -190,7 +190,7 @@ test('the latest Postgres migration has a table for every collection and global'
   assert.ok(jsons.length > 0, 'a Postgres snapshot is still required for the tables that already shipped')
   if (!files.includes(`${newest}.json`)) {
     const hand = readFileSync(path.join(dir, `${newest}.ts`), 'utf8')
-    assert.match(hand, /ALTER TABLE/, `${newest}.ts has no generated snapshot, so it must be a hand-written table change`)
+    assert.match(hand, /ALTER TABLE|UPDATE "lessons"/, `${newest}.ts has no generated snapshot, so it must change a table or update lesson rows`)
   }
   const latest = files.includes(`${newest}.json`) ? `${newest}.json` : jsons.at(-1)!
   const tables = new Set(Object.keys(JSON.parse(readFileSync(path.join(dir, latest), 'utf8')).tables).map((name) => name.replace(/^public\./, '')))

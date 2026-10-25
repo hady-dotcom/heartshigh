@@ -799,8 +799,7 @@ export function CoursePlayer({
           ) : null}
           {videoComing ? (
             <div className="video-coming" data-testid="video-coming">
-              <strong>Video coming</strong>
-              <p>This film will play here when it is ready.</p>
+              <strong>This film is coming soon</strong>
             </div>
           ) : null}
           {mode !== 'vimeo' && !videoComing && coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (

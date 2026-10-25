@@ -1,4 +1,5 @@
 import { crc32 } from 'node:zlib'
+import { filmCanPlay } from './film-availability'
 import { SEQUENCE_COPY } from './sequence'
 
 export type ExportVideo = {
@@ -155,6 +156,7 @@ function guidedPage(portal: ExportPortal, videos: ExportVideo[]) {
     portal: { ...portal, name: brand },
     videos: videos.map((film) => ({
       ...film,
+      playable: film.provider === 'youtube' ? Boolean(film.id) : filmCanPlay({ vimeoId: film.id, videoProvider: 'vimeo' }),
       questions: film.questions?.length ? film.questions : film.question ? [{ second: 0, prompt: film.question }] : [],
     })),
     opening: portal.opening || [],
@@ -232,8 +234,10 @@ function paintCourse() {
   const total = data.videos.length
   const done = saved.done.length
   document.getElementById('count').textContent = done + ' of ' + total + ' films'
-  const nextAt = data.videos.findIndex(function (row) { return saved.done.indexOf(row.order) < 0 })
-  const next = data.videos[nextAt >= 0 ? nextAt : 0]
+  function canPlay(row) { return row.playable !== false }
+  const nextAt = data.videos.findIndex(function (row) { return canPlay(row) && saved.done.indexOf(row.order) < 0 })
+  const fallback = data.videos.findIndex(canPlay)
+  const next = data.videos[nextAt >= 0 ? nextAt : fallback >= 0 ? fallback : 0]
   document.getElementById('next-line').textContent = next ? 'Next up: ' + next.order + '. ' + next.title : ''
   document.getElementById('open-next').onclick = function () { if (next) paintFilm(next.order) }
   const list = document.getElementById('list')
@@ -254,11 +258,11 @@ function paintFilm(order) {
   if (!film) return paintCourse()
   document.getElementById('film-title').textContent = film.order + '. ' + film.title
   const stage = document.getElementById('stage')
-  if (film.provider === 'vimeo' && film.id) {
+  if (film.provider === 'vimeo' && film.id && film.playable !== false) {
     var hash = film.hash ? '&h=' + encodeURIComponent(film.hash) : ''
     stage.innerHTML = '<iframe title="' + film.title.replace(/"/g, '') + '" src="https://player.vimeo.com/video/' + film.id + '?api=1&playsinline=1&autopause=0&autoplay=0' + hash + '" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>'
   } else {
-    stage.textContent = 'This film will play here.'
+    stage.innerHTML = '<p class="soon">This film is coming soon</p>'
   }
   const box = document.getElementById('questions')
   box.innerHTML = ''

@@ -11,6 +11,7 @@ import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
 import { answersForFilm, phaseLabel } from '@/lib/parent-feedback'
 import { learnerBrand } from '@/lib/learner-brand'
+import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from '@/lib/film-availability'
 import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -48,11 +49,8 @@ import { withCurrentQuery } from '@/lib/keep-query'
 
 const START = ['orange', 'gold', 'teal']
 
-/** The same next part for the player and the garden. */
-function nextCoursePart(lessons: Row[], partIndex: number, hrefBase: string, query?: Query) {
-  const pick = lessons[partIndex + 1]
-  if (!pick) return null
-  return { label: nextPartLabel(partIndex + 2), href: withCurrentQuery(`${hrefBase}?part=${pick.id}`, query) }
+function lessonCanPlay(lesson: Row) {
+  return filmCanPlay({ vimeoId: str(lesson.vimeoId), youtubeId: str(lesson.youtubeId), videoProvider: str(lesson.videoProvider) })
 }
 
 function partHeading(index: number, lesson: Row, courseTitle: string, total: number) {
@@ -139,9 +137,14 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
     loadDoors(payload),
   ])
   const done = new Set(completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })).map((row) => ref(row.lesson)))
-  const continueId = lessons.find((lesson) => !done.has(lesson.id))?.id || lessons[0].id
-  const continueIndex = lessons.findIndex((lesson) => lesson.id === continueId)
-  const started = done.size > 0 || continueIndex > 0
+  const sequence = isSequencePortal(portal)
+  const continueIndex = sequence
+    ? firstPlayableIndex(lessons, lessonCanPlay, (lesson) => done.has(lesson.id))
+    : Math.max(0, lessons.findIndex((lesson) => !done.has(lesson.id)))
+  const continueLesson = lessons[continueIndex] || lessons[0]
+  const started = sequence
+    ? lessons.some((lesson) => lessonCanPlay(lesson) && done.has(lesson.id))
+    : done.size > 0
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
   const title = tidyTalkTitle(str(course.title))
   return (
@@ -151,10 +154,12 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
         <p className="lead" data-testid="course-count">{talksLabel(lessons.length, seconds)}</p>
-        <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueId}`, query)} data-testid="start-part">
-          {done.size >= lessons.length && lessons.length
+        <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
+          {sequence && lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
+            ? `Watch from part ${continueIndex + 1}`
+            : done.size >= lessons.length && lessons.length && !sequence
             ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
-            : started ? `Continue part ${continueIndex + 1}` : 'Start part 1'}
+            : started ? `Continue part ${continueIndex + 1}` : `Start part ${continueIndex + 1}`}
         </Link>
         <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? 'Schedule this talk' : 'Schedule all of these'}
@@ -170,7 +175,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           const still = talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
-            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk">
+            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 <img src={still.src} alt="" />
                 {still.fallback ? <span className="thumb-title">{name}</span> : null}
@@ -179,7 +184,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
                 <small>Part {index + 1}</small>
                 <b className="talk-name">{name}</b>
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
-                <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>
+                <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}{sequence && !lessonCanPlay(lesson) ? ' · This film is coming soon' : ''}</small>
               </span>
               ›
             </Link>
@@ -227,17 +232,26 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
   const demoDoneLesson = (row: Row) => Boolean(ctx.demo && ctx.demo.state.watches.some((watch) => watch.learner === ctx.demo!.cast.learner && watch.done && (watch.lessonId === row.id || watch.film === str(row.title))))
-  if (sequence) {
-    const previousDone = partIndex === 0 || (ctx.demo ? demoDoneLesson(lessons[partIndex - 1]) : false)
-    const locked = lockMessage(portal.lockOrder === true, ctx.demo ? previousDone : partIndex === 0, partIndex)
-    if (locked && !ctx.demo) {
-      const previous = lessons[partIndex - 1]
-      const finished = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { equals: previous.id } }] }, { limit: 1 })
-      if (!finished.length) redirect(`${base}?error=${encodeURIComponent(locked)}`)
+  if (sequence && portal.lockOrder === true && lessonCanPlay(lesson)) {
+    const finishedIds = new Set<number>()
+    if (!ctx.demo && partIndex > 0) {
+      const earlierIds = lessons.slice(0, partIndex).filter(lessonCanPlay).map((row) => row.id)
+      if (earlierIds.length) {
+        const finished = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: earlierIds } }] }, { limit: earlierIds.length })
+        for (const row of finished) {
+          const id = ref(row.lesson)
+          if (id) finishedIds.add(id)
+        }
+      }
     }
-    if (locked && ctx.demo) {
-      const back = withDemoQuery(base, ctx.demo.token, ctx.demo.role)
-      redirect(`${back}${back.includes('?') ? '&' : '?'}error=${encodeURIComponent(locked)}`)
+    const blocked = earlierPlayableUnfinished(lessons, partIndex, lessonCanPlay, (row) => ctx.demo ? demoDoneLesson(row) : finishedIds.has(row.id))
+    if (blocked) {
+      const locked = lockMessage(true, false, partIndex)
+      if (ctx.demo) {
+        const back = withDemoQuery(base, ctx.demo.token, ctx.demo.role)
+        redirect(`${back}${back.includes('?') ? '&' : '?'}error=${encodeURIComponent(locked || 'Watch the previous one first.')}`)
+      }
+      redirect(`${base}?error=${encodeURIComponent(locked || 'Watch the previous one first.')}`)
     }
   }
 
@@ -370,10 +384,11 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const marks = mine.length
     ? await rows(payload, 'feedback-notes', { answer: { in: mine.map((row) => row.id) } }, { sort: 'second' })
     : []
+  const coming = sequence && !lessonCanPlay(lesson)
   const provider = str(lesson.videoProvider)
-  const vimeoId = str(lesson.vimeoId) || null
-  const youtubeId = provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
-  const film = provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId, vimeoHash: str(lesson.vimeoHash) || null } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
+  const vimeoId = coming ? null : str(lesson.vimeoId) || null
+  const youtubeId = coming || provider === 'vimeo' || provider === 'file' ? null : str(lesson.youtubeId) || null
+  const film = coming ? null : provider === 'vimeo' && vimeoId ? { provider: 'vimeo' as const, vimeoId, vimeoHash: str(lesson.vimeoHash) || null } : provider === 'file' ? { provider: 'file' as const, src: `/api/hearts/film/${lessonId}` } : null
   let startAt = Math.max(0, Number(query.t || 0)) || 0
   let showResume = false
   if (sequence && (query.t == null || query.t === '')) {
@@ -387,11 +402,12 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const unread = await unreadCount(payload, user)
   const here = withCurrentQuery(`${base}/course/${courseId}?part=${lessonId}`, query)
   const courseHref = withCurrentQuery(`${base}/course/${courseId}`, query)
-  const nextLesson = lessons[partIndex + 1] || null
-  const following = nextCoursePart(lessons, partIndex, `${base}/course/${courseId}`, query)
+  const nextAt = sequence ? lessons.findIndex((row, index) => index > partIndex && lessonCanPlay(row)) : (partIndex + 1 < lessons.length ? partIndex + 1 : -1)
+  const nextLesson = nextAt >= 0 ? lessons[nextAt] : null
+  const following = nextLesson ? { label: nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
   const sequenceLabel = (index: number, row: Row) => `${index + 1}. ${str(row.title)}`
   const upNext = nextLesson && following
-    ? { href: following.href, label: sequence ? sequenceLabel(partIndex + 2, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
+    ? { href: following.href, label: sequence ? sequenceLabel(nextAt, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
     : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
   const progress = sequenceProgress(doneLessons.size, lessons.length)
   const callout = sequence ? partCuts.find((row) => ref(row.lesson) === lessonId) : null
@@ -469,7 +485,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           saveOnEnd={sequence}
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
-          videoComing={sequence && !youtubeId && !film}
+          videoComing={coming}
           garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') ? `${base}/garden` : base, query), nextPart: following, links: [
             ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
             ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
@@ -528,7 +544,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           return (
             <Link key={row.id} className="part-row" href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
               <span className="grow">
-                {sequence ? sequenceLabel(index + 1, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
+                {sequence ? sequenceLabel(index, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>
               </span>
