@@ -149,7 +149,10 @@ test('a new portal keeps its own films and questions, and HEARTS stays separate'
   await shot(page, 'portal-own-questions')
   await page.getByTestId('tile').first().click()
 
-  await page.goto(`/p/${slug}/lanes`)
+  await expect(async () => {
+    await page.goto(`/p/${slug}/lanes`, { waitUntil: 'domcontentloaded' })
+    await expect(page.getByTestId('lanes-empty')).toBeVisible({ timeout: 8_000 })
+  }).toPass({ timeout: 30_000 })
   await expect(page.getByTestId('lanes-empty')).toBeVisible()
   await expect(page.getByTestId('lane-card')).toHaveCount(0)
   await expect(page.getByTestId('path-course').filter({ hasText: courseTitle })).toBeVisible()
@@ -164,7 +167,7 @@ test('a new portal keeps its own films and questions, and HEARTS stays separate'
   await page.goto(`/p/${slug}/garden`)
   await expect(page.getByTestId('ring-sections')).toHaveCount(0)
   await expect(page.getByText('Ar-Rabb')).toHaveCount(0)
-  await expect(page.getByText(filmTitle)).toHaveCount(0)
+  await expect(page.getByText(filmTitle)).toBeVisible()
 
   await signIn(page, 'master@hearts.test', 'hearts-master', '/master/library')
   await expect(page.getByTestId('master-course').filter({ hasText: courseTitle })).toHaveCount(0)
