@@ -12,13 +12,17 @@ import { firstNameOf, inviteLine } from '@/lib/invite'
 async function inviteFor(code: string) {
   let portal = 'Someone in your circle'
   let person = ''
-  if (!code) return inviteLine(portal)
+  let brand = ''
+  if (!code) return { line: inviteLine(portal), brand }
   try {
     const payload = await getPayload({ config })
     const found = await payload.find({ collection: 'access-codes', overrideAccess: true, depth: 1, limit: 1, where: { code: { equals: code } } })
     const row = found.docs[0]
-    const host = row?.portal as { name?: string; slug?: string } | number | null
-    if (host && typeof host === 'object') portal = portalDisplayName(host)
+    const host = row?.portal as { name?: string; slug?: string; brandName?: string | null; shape?: string | null } | number | null
+    if (host && typeof host === 'object') {
+      portal = portalDisplayName(host)
+      if (host.shape === 'sequence') brand = String(host.brandName || '').trim()
+    }
     const linked = row?.linkedTeacherCode
     const teacherCodeId = typeof linked === 'object' && linked ? linked.id : linked
     if (teacherCodeId) {
@@ -28,17 +32,32 @@ async function inviteFor(code: string) {
   } catch {
     // The join page still works without a lookup.
   }
-  return inviteLine(portal, person)
+  return { line: inviteLine(portal, person), brand }
+}
+
+function hadyIcons(name: string): Metadata {
+  return {
+    title: name,
+    description: `${name}. Watch the films in order.`,
+    applicationName: name,
+    manifest: '/hady-home.webmanifest',
+    appleWebApp: { capable: true, title: name, statusBarStyle: 'black-translucent' },
+    icons: {
+      icon: [{ url: '/icons/hady-home.svg', type: 'image/svg+xml' }],
+      apple: [{ url: '/icons/hady-home.svg' }],
+    },
+  }
 }
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ code?: string; from?: string; invitedBy?: string }> }): Promise<Metadata> {
   const query = await searchParams
-  const line = await inviteFor(query.code || '')
+  const invite = await inviteFor(query.code || '')
+  if (invite.brand) return hadyIcons(invite.brand)
   return {
-    title: `${line} to HEARTS`,
+    title: `${invite.line} to HEARTS`,
     description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
     openGraph: {
-      title: `${line} to HEARTS`,
+      title: `${invite.line} to HEARTS`,
       description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
       images: [{ url: '/theme/evening-courtyard.jpg', width: 1200, height: 630, alt: 'The HEARTS garden courtyard' }],
     },
@@ -48,12 +67,13 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
 export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; name?: string; from?: string; invitedBy?: string; gatherGuest?: string; after?: string }> }) {
   const query = await searchParams
   const code = query.code || ''
-  const invited = await inviteFor(code)
+  const invite = await inviteFor(code)
+  const invited = invite.line
   return (
-    <main className="door garden-door" data-testid="join">
+    <main className={invite.brand ? 'door hady-door' : 'door garden-door'} data-testid="join">
       <PageHelp page="join" />
       <div className="door-card">
-        <BrandLockup size={72} />
+        {invite.brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{invite.brand}</p> : <BrandLockup size={72} />}
         <h1>Come in</h1>
         <p className="lede" data-testid="join-pitch">{invited}.</p>
         <p className="lede">{code ? 'Your code is already filled in. Add your name, email and a password to join.' : 'Type the access code you were given, then your name, email and a password.'}</p>

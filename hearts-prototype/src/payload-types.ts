@@ -363,7 +363,7 @@ export interface Portal {
    */
   kineticOn?: boolean | null;
   /**
-   * Shown instead of HEARTS when this portal has its own name. Empty keeps HEARTS.
+   * Learner-facing name. Empty keeps HEARTS. Parenting uses Hady Home.
    */
   brandName?: string | null;
   /**

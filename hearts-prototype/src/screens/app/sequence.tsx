@@ -60,6 +60,7 @@ export async function SequenceGate({ payload, portal, base }: { payload: Payload
         <header className="sequence-head">
           <Mark name={name} logo={str(portal.logoUrl)} />
           <div>
+            {str(portal.brandName) ? <p className="brand-word" data-testid="portal-brand">{str(portal.brandName)}</p> : null}
             <p className="eyebrow">{str(course?.title) || 'Watch the films in order.'}</p>
             <h1 data-testid="sequence-name">{name}</h1>
           </div>
@@ -83,6 +84,7 @@ export async function SequenceGate({ payload, portal, base }: { payload: Payload
         </div>
         {!lessons.length ? <p>Films will show here once they are added.</p> : null}
         <div className="sequence-actions">
+          <Link className="pill outline block" href={`${base}/garden`} data-testid="gate-garden">Garden</Link>
           <Link className="pill gold block" href={`/login?next=${encodeURIComponent(base)}`} data-testid="sequence-sign-in">{SEQUENCE_COPY.signIn}</Link>
           <Link className="pill outline block" href={`/join?next=${encodeURIComponent(base)}`} data-testid="sequence-join">{SEQUENCE_COPY.join}</Link>
         </div>
@@ -123,6 +125,7 @@ export async function SequenceHome(ctx: Ctx) {
         <header className="sequence-head">
           <Mark name={name} logo={str(portal.logoUrl)} />
           <div>
+            {str(portal.brandName) ? <p className="brand-word" data-testid="portal-brand">{str(portal.brandName)}</p> : null}
             <p className="eyebrow" data-testid="sequence-progress">{ctx.demo && !ctx.demo.state.features.progress ? 'Progress is off' : progress.eyebrow}</p>
             <h1 data-testid="sequence-name">{name}</h1>
             {ctx.demo ? <p data-testid="demo-hello">Hello {ctx.demo.cast.learner}</p> : null}
@@ -162,6 +165,60 @@ export async function SequenceHome(ctx: Ctx) {
         {!lessons.length ? <p>Films will show here once they are added.</p> : null}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} />
+    </AppFrame>
+  )
+}
+
+async function doneLessonIds(ctx: Ctx, lessons: Row[]) {
+  if (ctx.demo) {
+    return new Set(
+      lessons
+        .filter((lesson) => ctx.demo!.state.watches.some((row) => row.learner === ctx.demo!.cast.learner && row.done && (row.lessonId === lesson.id || row.film === str(lesson.title))))
+        .map((lesson) => lesson.id),
+    )
+  }
+  const lessonIds = lessons.map((row) => row.id)
+  if (!ctx.user?.id || !lessonIds.length) return new Set<number>()
+  const completions = await rows(ctx.payload, 'completions', { and: [{ user: { equals: ctx.user.id } }, { lesson: { in: lessonIds } }] })
+  return new Set(completions.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
+}
+
+export async function SequenceGarden(ctx: Ctx) {
+  const { payload, portal, base, query } = ctx
+  const { course, lessons, units } = await filmsFor(payload, portal.id)
+  const groups = groupsOf(lessons, units)
+  const done = await doneLessonIds(ctx, lessons)
+  const link = (href: string) => (ctx.demo ? withDemoQuery(href, ctx.demo.token, ctx.demo.role) : href)
+  const brand = str(portal.brandName) || 'Hady Home'
+  const courseTitle = str(course?.title) || 'Guiding Home Learning'
+  return (
+    <AppFrame testId="sequence-garden" help="sequence-garden" brand={brandColours(portal)}>
+      <div className="app-scroll">
+        {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
+        <Flash error={query.error} notice={query.notice} />
+        <p className="brand-word" data-testid="portal-brand">{brand}</p>
+        <h1>Garden</h1>
+        <p>The course and its parts. Open any part to start there.</p>
+        <article className="garden-course" data-testid="garden-course">
+          <h2>{courseTitle}</h2>
+          <p>{done.size} of {lessons.length} films</p>
+          {course ? <Link className="pill gold" href={link(base)}>Open the course</Link> : null}
+        </article>
+        <div data-testid="garden-areas">
+          {groups.map((group) => {
+            const watched = group.rows.filter(({ lesson }) => done.has(lesson.id)).length
+            const first = group.rows[0]
+            const href = first && course ? link(`${base}/course/${course.id}?part=${first.lesson.id}`) : link(base)
+            return (
+              <Link className="garden-area" href={href} key={group.title} data-testid="garden-area">
+                <strong>{group.title}</strong>
+                <small>{watched} of {group.rows.length} films</small>
+              </Link>
+            )
+          })}
+        </div>
+      </div>
+      <LearnerTabBar base={base} active="garden" portal={portal} />
     </AppFrame>
   )
 }

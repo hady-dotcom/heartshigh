@@ -68,7 +68,7 @@ test('a sequenced course has its own cap, minimum and no doors', () => {
   assert.equal(minTalkSecondsOf({ shape: 'hearts', minTalkSeconds: 0 }), 0)
   assert.equal(minTalkRefusal(90, 0), null)
   assert.equal(portalUsesJibrilDoors(sequence), false)
-  assert.deepEqual(sequenceBar().map((item) => item.label), ['Home', 'Me'])
+  assert.deepEqual(sequenceBar().map((item) => item.label), ['Home', 'Garden', 'Me'])
 })
 
 test('a pasted list, a csv and a reorder keep the film order', () => {
