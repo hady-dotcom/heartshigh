@@ -33,8 +33,10 @@ export function portalNav(base: string, user: SessionUser, portal?: FeatureSourc
         films,
         { key: 'features', label: 'Features', href: `${base}/admin/features`, icon: <SparkIcon /> },
         { key: 'teach', label: 'Learners', href: `${base}/admin/teach`, icon: <PeopleIcon /> },
+        { key: 'bring-in', label: 'Bring in', href: `${base}/admin/bring-in`, icon: <ClapperIcon /> },
+        { key: 'opening', label: 'Opening questions', href: `${base}/admin/opening`, icon: <FrameIcon /> },
         { key: 'access', label: 'Codes', href: `${base}/admin/access`, icon: <KeyIcon /> },
-        { key: 'settings', label: 'Settings', href: `${base}/admin/sequence#look`, icon: <CogIcon /> },
+        { key: 'settings', label: 'Settings', href: `${base}/admin/settings`, icon: <CogIcon /> },
         { key: 'bin', label: 'Bin', href: `${base}/admin/bin`, icon: <BinIcon /> },
       ],
     }]

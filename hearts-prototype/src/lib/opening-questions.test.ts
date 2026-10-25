@@ -12,6 +12,7 @@ import {
   newcomerPicks,
   pullWords,
   reviewOpeningQuestions,
+  scenesForPortal,
   serveOpeningScenes,
   type RouteSlice,
 } from './opening-questions'
@@ -53,6 +54,16 @@ test('two questions stored as 6 become 6 and 7 once the account question is inse
     [1, 2, 3, 4, 5, 6, 7, 8],
   )
   assert.equal(new Set(served.map((scene) => scene.order)).size, served.length)
+})
+
+test('a portal with its own questions does not receive the starter set', () => {
+  const published = [
+    { key: 'extra', order: 1 },
+    { key: 'doors', order: 6 },
+  ]
+  const served = scenesForPortal(published, { key: 'account', order: 6 }, [{ key: 'ages', order: 100 }, { key: 'feel', order: 101 }])
+  assert.deepEqual(served.map((scene) => scene.key), ['ages', 'feel'])
+  assert.deepEqual(served.map((scene) => scene.order), [1, 2])
 })
 
 test('answers that move the same feelings are named, and an empty question barely moves', () => {

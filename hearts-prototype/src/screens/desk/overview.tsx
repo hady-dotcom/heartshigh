@@ -231,11 +231,13 @@ export async function PortalSettingsScreen(ctx: Ctx) {
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'settings', settingsForm: 'yes', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
             {field('Organisation name', 'organisationName', { 'data-testid': 'org-name-input' })}
+            <label className="row"><span>Name people see</span><input type="text" name="brandName" defaultValue={str(portal.brandName)} data-testid="brand-name" placeholder="Hady Home" /></label>
             <label className="row top"><span>Welcome line</span><textarea name="welcome" defaultValue={str(portal.welcome)} /></label>
-            {field('Logo link', 'logoUrl', { placeholder: 'https://' })}
+            {field('Logo', 'logoUrl', { placeholder: '/icons/hady-home.svg or https://', 'data-testid': 'logo-url' })}
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
             {field('Notification emails', 'notificationEmails')}
-            <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} /></label>
+            <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} data-testid="portal-colour" /></label>
+            <label className="row"><span>Accent</span><input type="text" name="accent" defaultValue={str(portal.accent)} data-testid="accent-colour" placeholder="#e07a5f" /></label>
             <label className="row"><span>Time zone <HelpTip topic="time-zone">{TOOL.timeZone}</HelpTip></span>
               <select name="timeZone" defaultValue={portalTimeZone(portal)} data-testid="time-zone">
                 {[...new Set([portalTimeZone(portal), ...PORTAL_TIME_ZONES])].map((zone) => <option key={zone} value={zone}>{zoneCity(zone)} ({zone})</option>)}

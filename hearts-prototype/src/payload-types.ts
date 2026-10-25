@@ -552,6 +552,18 @@ export interface Course {
    */
   hiddenNote?: string | null;
   visibility?: ('draft' | 'published') | null;
+  /**
+   * Sample and real answers for this course only. Other portals never see them.
+   */
+  sampleAnswers?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1890,7 +1902,7 @@ export interface OpeningConfig {
     | null;
   trendsContributionPrompt?: boolean | null;
   /**
-   * Questions this portal added on top of the starter set. Not Islamic-only.
+   * Questions this portal asks instead of the starter set.
    */
   extraScenes?:
     | {
@@ -3704,6 +3716,7 @@ export interface CoursesSelect<T extends boolean = true> {
   hidden?: T;
   hiddenNote?: T;
   visibility?: T;
+  sampleAnswers?: T;
   updatedAt?: T;
   createdAt?: T;
 }

@@ -47,7 +47,7 @@ import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
-import { learnerBrand } from '@/lib/learner-brand'
+import { learnerBrand, portalLogo } from '@/lib/learner-brand'
 import { isSequencePortal } from '@/lib/sequence'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
@@ -77,18 +77,19 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const { slug } = await params
     const payload = await getPayloadClient()
     const portal = await loadPortal(payload, slug)
-    if (portal && isSequencePortal(portal)) {
-      const name = String(portal.brandName || portalName(portal))
-      return {
-        title: name,
-        description: `${name}. Watch the films in order.`,
-        applicationName: name,
-        manifest: '/hady-home.webmanifest',
-        appleWebApp: { capable: true, title: name, statusBarStyle: 'black-translucent' },
-        icons: {
-          icon: [{ url: '/icons/hady-home.svg', type: 'image/svg+xml' }],
-          apple: [{ url: '/icons/hady-home.svg' }],
-        },
+    if (portal) {
+      const brand = learnerBrand(portal)
+      if (brand) {
+        const logo = portalLogo(portal.logoUrl)
+        const hady = logo === '/icons/hady-home.svg'
+        return {
+          title: brand.name,
+          description: `${brand.name}. Watch the films in order.`,
+          applicationName: brand.name,
+          ...(hady ? { manifest: '/hady-home.webmanifest' } : {}),
+          appleWebApp: { capable: true, title: brand.name, statusBarStyle: 'black-translucent' },
+          ...(logo ? { icons: { icon: [{ url: logo, ...(logo.endsWith('.svg') ? { type: 'image/svg+xml' } : {}) }], apple: [{ url: logo }] } } : {}),
+        }
       }
     }
   } catch {
@@ -144,13 +145,14 @@ export default async function PortalScreen({ params, searchParams }: { params: P
   const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query, demo }
 
   if (portal.closed && user.role === 'learner') {
+    const brand = learnerBrand(portal)
     return (
-      <AppFrame testId="closed" help={isSequencePortal(portal) ? 'sequence-closed' : undefined} brand={learnerBrand(portal)}>
+      <AppFrame testId="closed" help={isSequencePortal(portal) ? 'sequence-closed' : undefined} brand={brand}>
         <div className="splash">
           <div>
-            {isSequencePortal(portal) ? null : <span className="splash-arch" aria-hidden><Arch size={72} /></span>}
-            <h1>{portalName(portal)} is closed for now</h1>
-            <p data-testid="portal-closed">{isSequencePortal(portal) ? 'This portal is paused. Your progress is kept, and will be here when it opens again.' : 'This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.'}</p>
+            {brand ? <p className="brand-word" data-testid="portal-brand">{brand.name}</p> : <span className="splash-arch" aria-hidden><Arch size={72} /></span>}
+            <h1>{brand?.name || portalName(portal)} is closed for now</h1>
+            <p data-testid="portal-closed">{brand ? 'This portal is paused. Your progress is kept, and will be here when it opens again.' : 'This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.'}</p>
             <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
               <Hidden fields={{ action: 'logout' }} />
               <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
@@ -164,8 +166,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
   if (area === 'admin') {
     if (user.role === 'learner') redirect(`${base}?error=${plain('That page is for the portal team. You are back in your feed.')}`)
     if (isSequencePortal(portal)) {
-      const away = new Set(['content', 'bring-in', 'library', 'sheet', 'opening', 'questions', 'wizard', 'circle', 'ai', 'experiments', 'insights', 'calendar', 'missions', 'feedback', 'compass', 'plans', 'diaries', 'nights', 'gather', 'live', 'safety', 'announcements', 'courses', 'adopt'])
-      if (a === 'settings') redirect(`${base}/admin/sequence#look`)
+      const away = new Set(['content', 'library', 'sheet', 'wizard', 'circle', 'ai', 'experiments', 'insights', 'calendar', 'missions', 'feedback', 'compass', 'plans', 'diaries', 'nights', 'gather', 'live', 'safety', 'announcements', 'courses', 'adopt'])
       if (a && away.has(a)) redirect(`${base}/admin/features`)
       if (a === 'teach' && b) redirect(`${base}/admin/teach`)
     }

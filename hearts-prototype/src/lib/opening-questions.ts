@@ -49,6 +49,12 @@ export function serveOpeningScenes<T extends { key: string; order: number }>(pub
   return numberOpeningScenes([...scenes, ...extras])
 }
 
+/** A portal with its own questions sees only those. The starter set stays for a portal that has none. */
+export function scenesForPortal<T extends { key: string; order: number }>(published: T[], account: T | null, extras: T[]): T[] {
+  if (extras.length) return numberOpeningScenes(extras)
+  return serveOpeningScenes(published, account, [])
+}
+
 /** The first answer on each question, skipping the one that opens the help screen. */
 export function newcomerPicks(scenes: SceneDef[]): Record<string, string> {
   const picks: Record<string, string> = {}

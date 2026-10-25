@@ -9,6 +9,7 @@ import { groupThese, listDocs } from '@/server/curriculum'
 import { loadLibraryPicker, openedByLines, primaryDoorCode } from '@/server/code-courses'
 import { CourseTree } from '@/components/desk/course-tree'
 import { CodeCourseEditor, LibraryCoursePicker } from '@/components/desk/library-picker'
+import type { LibraryCoursePick } from '@/lib/code-courses'
 import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
 import { ExampleInUse } from '@/components/app/care'
@@ -804,7 +805,11 @@ export async function AccessScreen(ctx: Ctx) {
   const freshCode = codes.find((code) => str(code.code) === String(ctx.query.fresh || ''))
   const freshShare = freshCode ? `${origin}/join?code=${encodeURIComponent(str(freshCode.code))}` : ''
   const roleBadge: Record<string, string> = { admin: 'ink', teacher: 'purple', learner: 'teal', parent: 'gold' }
-  const libraryIds = new Set(library.map((course) => course.id))
+  const coursePicks: LibraryCoursePick[] = [
+    ...localCourses.map((course) => ({ id: course.id, title: str(course.title), doors: [] })),
+    ...library,
+  ]
+  const pickIds = new Set(coursePicks.map((course) => course.id))
   const requiredGroups = await groupThese(payload, [...library.map((course) => ({ id: course.id, title: course.title, summary: '' })), ...localCourses.map((course) => ({ id: course.id, title: str(course.title), summary: str(course.summary) }))])
   return (
     <AdminFrame ctx={ctx} active="access" title="Access codes" intro="A code says who someone is in the portal and which library courses they can open. Send the link rather than the code, so nobody has to type it." testId="admin-access" showOnPhone>
@@ -829,7 +834,7 @@ export async function AccessScreen(ctx: Ctx) {
                 const share = `${origin}/join?code=${encodeURIComponent(str(code.code))}`
                 const opened = openedFor(code)
                 const titles = opened.map((id) => titleById.get(id) || 'A course')
-                const selected = opened.filter((id) => libraryIds.has(id))
+                const selected = opened.filter((id) => pickIds.has(id))
                 return (
                   <tr key={code.id} data-testid="code-card">
                     <td><div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }} data-testid="code-value-cell">{str(code.code)}</div>{str(code.label) ? <div className="hint">{str(code.label)}</div> : null}</td>
@@ -844,7 +849,7 @@ export async function AccessScreen(ctx: Ctx) {
                     </td>
                     <td><div style={{ width: 84 }} className="qr-small"><Qr value={share} testId="code-qr" /></div></td>
                     <td>
-                      <CodeCourseEditor courses={library} selected={selected} portalSlug={portal.slug} codeId={code.id} next={here} />
+                      <CodeCourseEditor courses={coursePicks} selected={selected} portalSlug={portal.slug} codeId={code.id} next={here} />
                       <DeletePick formId="bulk-code" id={code.id} label={str(code.code)} />
                       <DeleteInline kind="code" id={code.id} next={here} portalSlug={portal.slug} testId={`delete-code-${code.id}`} />
                     </td>
@@ -907,7 +912,8 @@ export async function AccessScreen(ctx: Ctx) {
                 </select>
               </label>
             </div>
-            <LibraryCoursePicker courses={library} testId="new-code-courses" />
+            <p className="hint" data-testid="own-course-hint">Tick this portal’s own course. Leave “All library courses” unticked when learners should not see HEARTS.</p>
+            <LibraryCoursePicker courses={coursePicks} testId="new-code-courses" />
             <CodeLimits />
             {requiredGroups.length ? (
               <div data-testid="required-courses">

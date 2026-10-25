@@ -63,6 +63,8 @@ import { changeOwnPassword, dispatchLearnerDesk } from './learner-desk'
 import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
+import { portalLogo } from '@/lib/learner-brand'
+import { fillSampleGaps, parseSaidSheet } from '@/lib/said-answers'
 import { isSequencePortal, minTalkRefusal, minTalkSecondsOf, teacherCapOf, teacherCapRefusal } from '@/lib/sequence'
 import { sequenceFeatureDefaults, sequenceFeaturesFromForm } from '@/lib/sequence-features'
 import { screenAnswerSafe } from '@/lib/answer-moderation'
@@ -212,6 +214,29 @@ const MAX_UPLOAD = 200 * 1024 * 1024
 
 function tooBig(file: File) {
   return file.size > MAX_UPLOAD
+}
+
+/** A code may open this portal’s own courses, or a course from the HEARTS library. Other portals’ films are refused. */
+async function coursesForThisPortal(payload: Payload, portalId: number, ids: number[]) {
+  const unique = [...new Set(ids.filter((id) => Number.isInteger(id) && id > 0))]
+  if (!unique.length) return { local: [] as number[], master: [] as number[] }
+  const found = await payload.find({
+    collection: 'courses',
+    overrideAccess: true,
+    depth: 0,
+    limit: unique.length,
+    where: { id: { in: unique } },
+  })
+  if (found.docs.length !== unique.length) return { error: 'Tick a course from this portal, or from the library.' as const }
+  const local: number[] = []
+  const master: number[] = []
+  for (const course of found.docs) {
+    const row = course as { id: number; origin?: string; portal?: unknown; importable?: boolean }
+    if (row.origin === 'local' && idOf(row.portal) === portalId) local.push(row.id)
+    else if (row.origin === 'master' && row.importable !== false) master.push(row.id)
+    else return { error: 'Tick a course from this portal, or from the library.' as const }
+  }
+  return { local, master }
 }
 
 async function actingPortal(payload: Awaited<ReturnType<typeof getSession>>['payload'], user: SessionUser, form: FormData) {
@@ -770,6 +795,15 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const features = shape === 'sequence'
       ? (form.get('featuresForm') === 'yes' ? sequenceFeaturesFromForm(form) : sequenceFeatureDefaults())
       : (form.get('featuresForm') === 'yes' ? featuresFromForm(form) : defaultFeatures())
+    const colourRaw = text(form, 'colour')
+    if (colourRaw && !/^#[0-9a-f]{6}$/i.test(colourRaw)) return redirectTo(req, '/master', 'The colour needs to look like #1f3a5f.')
+    const accentRaw = text(form, 'accent')
+    if (accentRaw && !/^#[0-9a-f]{6}$/i.test(accentRaw)) return redirectTo(req, '/master', 'The accent colour needs to look like #e07a5f.')
+    const logoRaw = text(form, 'logoUrl')
+    const logo = portalLogo(logoRaw)
+    if (logoRaw && !logo) return redirectTo(req, '/master', 'The logo needs to be a path like /icons/hady-home.svg or an https link.')
+    const brandName = text(form, 'brandName').slice(0, 80)
+    const accent = accentRaw || (shape === 'sequence' ? '#e07a5f' : '')
     const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
@@ -778,14 +812,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         slug,
         kind: (shape === 'sequence' ? 'other' : ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
         welcome: text(form, 'welcome') || (shape === 'sequence' ? `${name}. Watch the films in order.` : `${name} keeps a gentle room for whoever is sent.`),
-        colour: text(form, 'colour') || (shape === 'sequence' ? '#1f3a5f' : '#1f4d3a'),
+        colour: colourRaw || (shape === 'sequence' ? '#1f3a5f' : '#1f4d3a'),
         watchHistoryOptIn: false,
         wizardDone: true,
         shape,
+        ...(brandName ? { brandName } : {}),
+        ...(accent ? { accent } : {}),
+        ...(logo ? { logoUrl: logo } : {}),
         ...(shape === 'sequence' ? {
           lockOrder: true,
           minTalkSeconds: 0,
-          accent: text(form, 'accent') || '#e07a5f',
           kineticOn: form.get('kineticField') === 'yes' ? form.get('kinetic') === 'on' : true,
         } : {}),
         ...(features ? { features } : {}),
@@ -867,19 +903,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       storedCourses = [course.id]
       storedPacks = []
     } else if (picking) {
-      if (courseIds.length) {
-        const found = await payload.find({
-          collection: 'courses',
-          overrideAccess: true,
-          depth: 0,
-          limit: courseIds.length,
-          where: { and: [{ id: { in: courseIds } }, { origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
-        })
-        if (found.docs.length !== courseIds.length) return redirectTo(req, text(form, 'next') || '/master', 'Tick courses from the library.')
-      }
-      if (role === 'parent' && courseIds.length !== 1) return redirectTo(req, text(form, 'next') || '/master', 'A parent code opens one course.')
-      await adoptLibraryCourses(payload, acting.portal.id, courseIds)
-      storedCourses = courseIds
+      const opened = await coursesForThisPortal(payload, acting.portal.id, courseIds)
+      if ('error' in opened) return redirectTo(req, text(form, 'next') || '/master', opened.error)
+      const chosen = [...opened.local, ...opened.master]
+      if (role === 'parent' && chosen.length !== 1) return redirectTo(req, text(form, 'next') || '/master', 'A parent code opens one course.')
+      await adoptLibraryCourses(payload, acting.portal.id, opened.master)
+      storedCourses = chosen
       storedPacks = []
     } else if (packId) {
       if (!(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/master', 'That course pack is not available in this portal.')
@@ -2410,6 +2439,82 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     return redirectTo(req, text(form, 'next') || '/', undefined, 'Features saved.')
   }
 
+  if (action === 'portal-sheet' || action === 'portal-answers' || action === 'portal-callout') {
+    if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only a portal admin can bring films into this portal.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    if (action === 'portal-sheet') {
+      const { importPortalSheet } = await import('./sequence-desk')
+      let raw = ''
+      const sheet = form.get('sheet')
+      if (sheet instanceof File && sheet.size > 0) {
+        if (sheet.size > 2_000_000) return redirectTo(req, text(form, 'next') || '/', 'That sheet is too big. Split it into a smaller file.')
+        raw = await sheet.text()
+      }
+      const result = await importPortalSheet(payload, acting.portal.id, raw, text(form, 'courseTitle')) as { error?: string; notice?: string }
+      return redirectTo(req, text(form, 'next') || '/', result.error, result.notice)
+    }
+    if (action === 'portal-answers') {
+      const course = await findDoc(payload, 'courses', Number(text(form, 'course')))
+      const row = course as { origin?: string; portal?: unknown; id: number } | null
+      if (!row || row.origin !== 'local' || idOf(row.portal) !== acting.portal.id) return redirectTo(req, text(form, 'next') || '/', 'Those answers belong on a course in this portal.')
+      const file = form.get('answers')
+      if (!(file instanceof File) || file.size <= 0) return redirectTo(req, text(form, 'next') || '/', 'Choose an answers sheet.')
+      if (file.size > 2_000_000) return redirectTo(req, text(form, 'next') || '/', 'That sheet is too big. Split it into a smaller file.')
+      const parsed = parseSaidSheet(await file.text())
+      if (parsed.error) return redirectTo(req, text(form, 'next') || '/', parsed.error)
+      const rows = form.get('gaps') === 'on' ? fillSampleGaps(parsed.rows) : parsed.rows
+      await payload.update({ collection: 'courses', id: row.id, overrideAccess: true, data: { sampleAnswers: rows } as never })
+      return redirectTo(req, text(form, 'next') || '/', undefined, `${rows.length} answers saved on this course.`)
+    }
+    const pointId = Number(text(form, 'point'))
+    const prompt = text(form, 'prompt').slice(0, 2000)
+    if (!prompt) return redirectTo(req, text(form, 'next') || '/', 'Write the question.')
+    const point = await findDoc(payload, 'engagement-points', pointId)
+    const lessonId = idOf(point?.lesson)
+    if (!point || !lessonId) return redirectTo(req, text(form, 'next') || '/', 'That question could not be found.')
+    const { course } = await courseOfLesson(payload, lessonId)
+    const owned = course as { origin?: string; portal?: unknown } | null
+    if (!owned || owned.origin !== 'local' || idOf(owned.portal) !== acting.portal.id) return redirectTo(req, text(form, 'next') || '/', 'That question is not on a film in this portal.')
+    await payload.update({ collection: 'engagement-points', id: pointId, overrideAccess: true, data: { prompt } })
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Question saved on this film.')
+  }
+
+  if (action === 'teacher-group-code') {
+    if (user.role !== 'teacher') return redirectTo(req, text(form, 'next') || '/', 'A teacher makes the code for their own group.')
+    const acting = await actingPortal(payload, user, form)
+    if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
+    const teacherCode = await findDoc(payload, 'access-codes', idOf(user.accessCode) || 0)
+    if (!teacherCode || teacherCode.role !== 'teacher' || idOf(teacherCode.portal) !== acting.portal.id) {
+      return redirectTo(req, text(form, 'next') || '/', 'Your teacher code could not be found in this portal.')
+    }
+    const courseIds = await openedCourseIdsForCode(payload, teacherCode as { courses?: unknown; packs?: unknown })
+    if (!courseIds.length) return redirectTo(req, text(form, 'next') || '/', 'Your teacher code has no courses yet. Ask the portal admin to add one.')
+    const code = text(form, 'code').toUpperCase().replace(/\s+/g, '') || randomCode(acting.portal.slug || '')
+    if (!/^[A-Z0-9-]{8,32}$/.test(code)) return redirectTo(req, text(form, 'next') || '/', 'Use 8 to 32 letters, numbers or dashes for the code, or leave it empty for a random one.')
+    const clash = await payload.find({ collection: 'access-codes', overrideAccess: true, limit: 1, where: { code: { equals: code } } })
+    if (clash.docs.length) return redirectTo(req, text(form, 'next') || '/', 'That access code is already taken.')
+    const opened = await coursesForThisPortal(payload, acting.portal.id, courseIds)
+    if ('error' in opened) return redirectTo(req, text(form, 'next') || '/', opened.error)
+    await adoptLibraryCourses(payload, acting.portal.id, opened.master)
+    await payload.create({
+      collection: 'access-codes',
+      overrideAccess: true,
+      data: {
+        code,
+        role: 'learner',
+        courses: [...opened.local, ...opened.master],
+        packs: [],
+        portal: acting.portal.id,
+        linkedTeacherCode: teacherCode.id,
+        label: 'Group',
+        uses: 0,
+        disabled: false,
+      },
+    })
+    return redirectTo(req, text(form, 'next') || '/', undefined, `Group code ${code} is ready.`)
+  }
+
   if (action === 'sequence-import' || action === 'sequence-order' || action === 'sequence-settings') {
     if (user.role !== 'portal-admin' && user.role !== 'master') return redirectTo(req, text(form, 'next') || '/', 'Only a portal admin can change the course.')
     const acting = await actingPortal(payload, user, form)
@@ -2441,6 +2546,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       colour: text(form, 'colour'),
       accent: text(form, 'accent'),
       logoUrl: text(form, 'logoUrl'),
+      ...(form.has('brandName') ? { brandName: text(form, 'brandName') } : {}),
       lockOrder: text(form, 'lockOrder') !== 'no',
       minTalkSeconds: text(form, 'minTalk') === '300' ? 300 : 0,
     })
@@ -2453,11 +2559,23 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if ('error' in acting) return redirectTo(req, text(form, 'next') || '/', acting.error)
     const portal = acting.portal.id
     const data: Record<string, unknown> = {}
-    for (const key of ['welcome', 'colour', 'organisationName', 'description', 'logoUrl', 'calendarUrl', 'notificationEmails', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl', 'learnerLabel', 'teacherLabel']) {
+    for (const key of ['welcome', 'colour', 'organisationName', 'description', 'calendarUrl', 'notificationEmails', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl', 'learnerLabel', 'teacherLabel']) {
       if (form.has(key)) data[key] = text(form, key)
     }
-    if (typeof data.colour === 'string' && !/^#[0-9a-f]{6}$/i.test(data.colour)) return redirectTo(req, text(form, 'next') || '/', 'The colour needs to look like #1f4d3a.')
-    for (const key of ['logoUrl', 'calendarUrl', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl']) {
+    if (form.has('brandName')) data.brandName = text(form, 'brandName').slice(0, 80)
+    if (form.has('accent')) {
+      const accent = text(form, 'accent')
+      if (accent && !/^#[0-9a-f]{6}$/i.test(accent)) return redirectTo(req, text(form, 'next') || '/', 'The accent colour needs to look like #e07a5f.')
+      data.accent = accent
+    }
+    if (form.has('logoUrl')) {
+      const logoRaw = text(form, 'logoUrl')
+      const logo = portalLogo(logoRaw)
+      if (logoRaw && !logo) return redirectTo(req, text(form, 'next') || '/', 'The logo needs to be a path like /icons/hady-home.svg or an https link.')
+      data.logoUrl = logo
+    }
+    if (typeof data.colour === 'string' && data.colour && !/^#[0-9a-f]{6}$/i.test(data.colour)) return redirectTo(req, text(form, 'next') || '/', 'The colour needs to look like #1f4d3a.')
+    for (const key of ['calendarUrl', 'learnerWelcomeUrl', 'learnerIntroUrl', 'teacherWelcomeUrl', 'teacherIntroUrl']) {
       const value = data[key]
       if (typeof value === 'string' && value && !/^https:\/\//i.test(value)) return redirectTo(req, text(form, 'next') || '/', 'Links need to start with https://')
     }
@@ -2631,29 +2749,11 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     let nextIds: number[] = []
     if (picking) {
       const picked = [...new Set(form.getAll('course').map((value) => Number(value)).filter((id) => Number.isInteger(id) && id > 0))]
-      const libraryDocs = picked.length
-        ? await payload.find({
-            collection: 'courses',
-            overrideAccess: true,
-            depth: 0,
-            limit: picked.length,
-            where: { and: [{ id: { in: picked } }, { origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
-          })
-        : { docs: [] as { id: number }[] }
-      if (libraryDocs.docs.length !== picked.length) return redirectTo(req, text(form, 'next') || '/', 'Tick courses from the library.')
-      const previous = await openedCourseIdsForCode(payload, code as { courses?: unknown; packs?: unknown })
-      const libraryAll = await payload.find({
-        collection: 'courses',
-        overrideAccess: true,
-        depth: 0,
-        limit: 500,
-        where: { and: [{ origin: { equals: 'master' } }, { importable: { not_equals: false } }] },
-      })
-      const inLibrary = new Set(libraryAll.docs.map((course) => course.id))
-      const preserved = previous.filter((id) => !inLibrary.has(id))
-      nextIds = [...new Set([...picked, ...preserved])]
+      const opened = await coursesForThisPortal(payload, acting.portal.id, picked)
+      if ('error' in opened) return redirectTo(req, text(form, 'next') || '/', opened.error)
+      nextIds = [...opened.local, ...opened.master]
       if ((code as { role?: string }).role === 'parent' && nextIds.length !== 1) return redirectTo(req, text(form, 'next') || '/', 'A parent code opens one course.')
-      await adoptLibraryCourses(payload, acting.portal.id, picked)
+      await adoptLibraryCourses(payload, acting.portal.id, opened.master)
       await payload.update({ collection: 'access-codes', id: codeId, overrideAccess: true, data: { courses: nextIds, packs: [] } })
     } else {
       if (packId && !(await packUsable(payload, user, acting.portal.id, packId))) return redirectTo(req, text(form, 'next') || '/', 'That course pack is not available in this portal.')

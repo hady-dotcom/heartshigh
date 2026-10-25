@@ -34,6 +34,7 @@ import { featureOn } from '@/lib/features'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
+import { portalOwnsLibrary } from '@/server/portal-scope'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -108,6 +109,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     ? { label: tonightLabel(Number(planLesson.order || 1), talkMinutes), href: `${base}/course/${ref(planLesson.course)}?part=${planLesson.id}`, title: learnerWords(displayTalkTitle({ title: str(planLesson.title), sourceTitle: str(planLesson.sourceTitle), courseTitle: '', part: Number(planLesson.order || 1), youtubeId: str(planLesson.youtubeId), vimeoId: str(planLesson.vimeoId) })) }
     : null
   const days = dayNumber(user)
+  const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const clips = items.slice(0, 3)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
   let demoContinue = ''
@@ -145,7 +147,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>
           <span className="tree-art" aria-hidden />
           <p className="grow-sub">Five ways to see it</p>
-          <Rings g={g} base={base} portal={portal} />
+          <Rings g={g} base={base} portal={portal} own={ownLibrary} />
           <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
         </section>
         ) : null}
@@ -218,7 +220,8 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
     rows(payload, 'completions', { user: { equals: user.id } }, { limit: 200 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { limit: 400 }),
   ])
-  const lanes = lanesWithClips(opening.route, opening.clips, opening.laneTitles)
+  const ownLibrary = await portalOwnsLibrary(payload, portal.id)
+  const lanes = ownLibrary ? [] : lanesWithClips(opening.route, opening.clips, opening.laneTitles)
   const today = dayNumber(user)
   return (
     <AppFrame testId="lanes" brand={learnerBrand(portal)}>

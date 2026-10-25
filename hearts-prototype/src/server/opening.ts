@@ -2,7 +2,7 @@ import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, SCENES as DEFAULT_SCENES } from '@/lib/opening-data'
 import { cleanPortalScenes } from '@/lib/portal-scenes'
-import { serveOpeningScenes } from '@/lib/opening-questions'
+import { numberOpeningScenes, scenesForPortal } from '@/lib/opening-questions'
 import { idOf } from '@/lib/ids'
 import { doorNumberOfClause, type Door } from '@/lib/doors'
 import { loadDoors } from './doors'
@@ -35,6 +35,8 @@ export type OpeningData = {
   portal: string
   scenesVersion: number
   scenes: SceneDef[]
+  /** True when this portal saved its own questions, so the starter set is not playing. */
+  ownQuestions: boolean
   scales: ScaleDef[]
   helpContacts: HelpContact[]
   d0CutId: number | null
@@ -505,9 +507,9 @@ function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row |
       } as SceneDef & { version: number }
     })
   const account = published.some((scene) => scene.key === 'account') ? null : DEFAULT_SCENES.find((scene) => scene.key === 'account') || null
-  const ownKeys = new Set([...published.map((scene) => scene.key), ...(account ? [account.key] : [])])
-  const extras = cleanPortalScenes(own?.extraScenes, ownKeys).scenes.map((scene) => ({ ...scene, version: 1 }) as SceneDef & { version: number })
-  return serveOpeningScenes(published, account ? ({ ...account, version: 1 } as SceneDef & { version: number }) : null, extras)
+  const extras = cleanPortalScenes(own?.extraScenes).scenes.map((scene) => ({ ...scene, version: 1 }) as SceneDef & { version: number })
+  if (extras.length) return numberOpeningScenes(extras)
+  return scenesForPortal(published, account ? ({ ...account, version: 1 } as SceneDef & { version: number }) : null, [])
 }
 
 export async function loadOpening(payload: Payload, portal: PortalDoc, user: SessionUser | null = null): Promise<OpeningData> {
@@ -517,7 +519,14 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
   const { own, master } = await openingConfig(payload, portal.id)
   const sceneRows = await all(payload, 'opening-scenes')
   const scenes = effectiveScenes(sceneRows, laneKey, own)
-  const contacts = ((own?.helpContacts as HelpContact[]) || []).length ? (own!.helpContacts as HelpContact[]) : ((master?.helpContacts as HelpContact[]) || []).length ? (master!.helpContacts as HelpContact[]) : DEFAULT_HELP_CONTACTS
+  const ownQuestions = cleanPortalScenes(own?.extraScenes).scenes.length > 0
+  const contacts = ((own?.helpContacts as HelpContact[]) || []).length
+    ? (own!.helpContacts as HelpContact[])
+    : ownQuestions
+      ? DEFAULT_HELP_CONTACTS
+      : ((master?.helpContacts as HelpContact[]) || []).length
+        ? (master!.helpContacts as HelpContact[])
+        : DEFAULT_HELP_CONTACTS
   const d0Raw = idOf(own?.defaultClip) || idOf(master?.defaultClip) || null
   const d0CutId = d0Raw ? data.alias.get(d0Raw) || d0Raw : null
   const lanes = laneDefs(data)
@@ -541,6 +550,7 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
     portal: portal.slug,
     scenesVersion: Math.max(1, ...scenes.map((scene) => (scene as SceneDef & { version: number }).version)),
     scenes: scenes.map(({ version: _version, ...scene }) => scene as SceneDef),
+    ownQuestions,
     scales: data.scales.map((row) => ({ key: row.key as ScaleDef['key'], firstOpenRead: row.firstOpenRead !== false })),
     helpContacts: contacts.map(({ label, phone, url, hours }) => ({ label, phone: phone || null, url: url || null, hours: hours || null })),
     d0CutId,

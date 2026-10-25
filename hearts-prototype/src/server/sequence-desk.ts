@@ -14,8 +14,8 @@ import {
   type ParsedVideo,
   type ShapeSource,
 } from '@/lib/sequence'
-import { OPENING_QUESTIONS, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
-import { SAMPLE_GAP_ANSWERS } from '@/lib/sample-gap-data'
+import { cleanPortalScenes } from '@/lib/portal-scenes'
+import { readSaidAnswers } from '@/lib/said-answers'
 import { buildExportZip, type ExportAnswer, type ExportPortal, type ExportVideo } from '@/lib/sequence-export'
 import { transcriptFor } from '@/lib/youtube'
 import { sortParts } from '@/lib/part-order'
@@ -201,14 +201,49 @@ function rowKey(row: Doc) {
   return title ? `title:${title}` : ''
 }
 
+async function courseNamed(payload: Payload, portal: Doc, title: string) {
+  const found = await payload.find({
+    collection: 'courses',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { title: { equals: title } }] },
+  })
+  if (found.docs[0]) return asDoc(found.docs[0])
+  const course = (await payload.create({
+    collection: 'courses',
+    overrideAccess: true,
+    data: {
+      title: title.slice(0, 200),
+      summary: 'Watch the films in order.',
+      origin: 'local',
+      portal: portal.id,
+      importable: false,
+      visibility: 'published',
+      hidden: false,
+    },
+  })) as unknown as Doc
+  return course
+}
+
+/**
+ * Bring a master sheet into this portal only.
+ * The course stays local, so it is left out of the HEARTS library.
+ */
+export async function importPortalSheet(payload: Payload, portalId: number, raw: string, title: string) {
+  const name = title.trim()
+  if (!name) return { error: 'Name the course first.' }
+  return syncCourseSheet(payload, portalId, raw, { anyPortal: true, title: name })
+}
+
 /** Replace this course with the sheet: same films update in place, missing ids stay, callouts become questions. */
-export async function syncCourseSheet(payload: Payload, portalId: number, raw: string) {
+export async function syncCourseSheet(payload: Payload, portalId: number, raw: string, opts?: { anyPortal?: boolean; title?: string }) {
   const portal = await portalDoc(payload, portalId)
-  if (!isSequencePortal(shapeOf(portal))) return { error: 'This portal does not use a sequenced course.' }
+  if (!opts?.anyPortal && !isSequencePortal(shapeOf(portal))) return { error: 'This portal does not use a sequenced course.' }
   const parsed = parseCourseSheet(raw)
   if (parsed.error) return { error: parsed.error }
   if (!parsed.films.length) return { error: 'That sheet has no films.' }
-  const course = await ensureCourse(payload, portal)
+  const course = opts?.title ? await courseNamed(payload, portal, opts.title) : await ensureCourse(payload, portal)
   const unitRows = await payload.find({
     collection: 'units',
     overrideAccess: true,
@@ -443,6 +478,7 @@ export async function saveSequenceSettings(payload: Payload, portalId: number, i
   colour: string
   accent: string
   logoUrl: string
+  brandName?: string
   lockOrder: boolean
   minTalkSeconds: number
 }) {
@@ -450,7 +486,9 @@ export async function saveSequenceSettings(payload: Payload, portalId: number, i
   if (!isSequencePortal(shapeOf(portal))) return { error: 'This portal does not use a sequenced course.' }
   const name = input.name.trim().slice(0, 80)
   if (!name) return { error: 'The portal needs a name.' }
-  if (input.logoUrl.trim() && !httpsLogo(input.logoUrl)) return { error: 'The logo link needs to start with https://.' }
+  if (input.logoUrl.trim() && !httpsLogo(input.logoUrl) && !(input.logoUrl.trim().startsWith('/') && !input.logoUrl.trim().startsWith('//') && !input.logoUrl.includes('..'))) {
+    return { error: 'The logo needs to be a path like /icons/hady-home.svg or an https link.' }
+  }
   const minTalkSeconds = input.minTalkSeconds === 300 ? 300 : 0
   await payload.update({
     collection: 'portals',
@@ -462,7 +500,8 @@ export async function saveSequenceSettings(payload: Payload, portalId: number, i
       welcome: input.welcome.trim().slice(0, 500),
       colour: hexColour(input.colour, '#1f3a5f'),
       accent: hexColour(input.accent, '#e07a5f'),
-      logoUrl: httpsLogo(input.logoUrl),
+      logoUrl: httpsLogo(input.logoUrl) || (input.logoUrl.trim().startsWith('/') && !input.logoUrl.includes('..') ? input.logoUrl.trim() : ''),
+      ...(input.brandName !== undefined ? { brandName: input.brandName.trim().slice(0, 80) } : {}),
       lockOrder: input.lockOrder,
       minTalkSeconds,
     },
@@ -535,14 +574,24 @@ export async function exportSequenceApp(payload: Payload, portal: {
       questions: filmPoints.map((item) => ({ second: Number(item.second || 0), prompt: String(item.prompt || '') })).filter((item) => item.prompt),
     }
   })
-  const parenting = String(portal.slug || '') === 'parenting'
-  const brandName = String(portal.brandName || (parenting ? 'Hady Home' : '')).trim()
-  const answers: ExportAnswer[] = parenting
-    ? [
-        ...loadRealAnswers().map((row) => ({ order: row.videoOrder, phase: row.phase, label: phaseLabel(row.phase), question: row.question, text: row.text })),
-        ...SAMPLE_GAP_ANSWERS.map((row) => ({ order: row.order, phase: 'Sample', label: 'Sample answer', question: row.prompt, text: row.body, sample: true })),
-      ]
-    : []
+  const brandName = String(portal.brandName || '').trim()
+  const stored = readSaidAnswers((course as { sampleAnswers?: unknown } | null)?.sampleAnswers)
+  const answers: ExportAnswer[] = stored.map((row) => ({
+    order: row.order,
+    phase: row.phase,
+    label: row.label,
+    question: row.question,
+    text: row.text,
+    ...(row.sample ? { sample: true } : {}),
+  }))
+  const config = await payload.find({
+    collection: 'opening-configs',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { portal: { equals: portal.id } },
+  })
+  const ownScenes = cleanPortalScenes(config.docs[0]?.extraScenes).scenes
   const packed: ExportPortal = {
     name: String(portal.organisationName || portal.name || 'Course'),
     slug: String(portal.slug || 'course'),
@@ -553,7 +602,7 @@ export async function exportSequenceApp(payload: Payload, portal: {
     note: String(portal.welcome || SEQUENCE_COPY.examples),
     joinCode: opts?.joinCode || '',
     brandName: brandName || undefined,
-    opening: parenting ? OPENING_QUESTIONS.map((question) => ({ prompt: question.prompt, options: question.options })) : undefined,
+    opening: ownScenes.length ? ownScenes.map((scene) => ({ prompt: scene.caption.replace(/\*\*/g, ''), options: scene.options.map((option) => option.label) })) : undefined,
     answers: answers.length ? answers : undefined,
   }
   return { zip: buildExportZip(packed, videos), filename: `${packed.slug}-app.zip` }

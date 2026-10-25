@@ -154,7 +154,8 @@ export async function listShortTalks(payload: Payload): Promise<ShortTalkRow[]> 
     allDocs(payload, 'courses'),
   ])
   const courseById = new Map(courses.map((course) => [course.id, course]))
-  return lessons
+  const libraryIds = new Set(courses.filter((course) => course.origin === 'master' && course.importable !== false).map((course) => course.id))
+  return lessons.filter((lesson) => libraryIds.has(courseIdOf(lesson)))
     .map((lesson) => {
       const course = courseById.get(courseIdOf(lesson))
       const speaker = String(lesson.speaker || course?.speaker || '').trim()

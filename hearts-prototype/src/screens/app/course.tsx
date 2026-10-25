@@ -9,7 +9,8 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
-import { answersForFilm, phaseLabel } from '@/lib/parent-feedback'
+import { phaseLabel } from '@/lib/parent-feedback'
+import { readSaidAnswers, saidForFilm } from '@/lib/said-answers'
 import { learnerBrand } from '@/lib/learner-brand'
 import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from '@/lib/film-availability'
 import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
@@ -506,7 +507,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </section>
         ) : null}
         {sequence && views[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {views[0].prompt}</p> : null}
-        {sequence ? <ParentSaidLine order={Number(lesson.order || partIndex + 1)} prompt={views[0]?.prompt || ''} /> : null}
+        <ParentSaidLine rows={readSaidAnswers((course as { sampleAnswers?: unknown }).sampleAnswers)} order={Number(lesson.order || partIndex + 1)} prompt={views[0]?.prompt || ''} />
         {sequence && ctx.demo ? (
           <form className="form-stack card" action="/api/hearts/demo" method="post" data-testid="demo-answer-form">
             <Hidden fields={{
@@ -568,9 +569,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   )
 }
 
-function ParentSaidLine({ order, prompt }: { order: number; prompt: string }) {
-  const rows = answersForFilm(order).filter((row) => !prompt || row.question === prompt)
-  const shown = rows.length ? rows : answersForFilm(order)
+function ParentSaidLine({ rows, order, prompt }: { rows: ReturnType<typeof readSaidAnswers>; order: number; prompt: string }) {
+  const shown = saidForFilm(rows, order, prompt)
   const phases = [...new Set(shown.map((row) => row.phase))]
   if (!phases.length) return null
   return (
@@ -579,7 +579,7 @@ function ParentSaidLine({ order, prompt }: { order: number; prompt: string }) {
         const line = shown.find((row) => row.phase === phase)
         if (!line) return null
         const text = line.text.length > 140 ? `${line.text.slice(0, 137)}...` : line.text
-        return <p key={phase} data-testid="parent-said"><b>{phaseLabel(phase)}.</b> {text}</p>
+        return <p key={phase} data-testid="parent-said"><b>{line.label || phaseLabel(phase)}.</b> {text}</p>
       })}
     </>
   )

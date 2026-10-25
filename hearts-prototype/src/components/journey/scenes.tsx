@@ -27,7 +27,7 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
         {brand ? <p className="brand-word" data-testid="portal-brand" style={{ color: '#f6eedc' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
         {signedIn ? null : <a className="j-login" href={loginHref} data-testid="opener-login">Log in</a>}
       </header>
-      <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>
+      {brand ? null : <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>}
       <div className="j-body">
         <p className="j-progress" data-testid="progress">{openingStepLabel(1, sceneCount)}</p>
         <h1 className="j-heading" data-testid="opener-heading">{OPENING_HEADING}</h1>
@@ -55,7 +55,7 @@ type SceneProps = {
   onBrowse?: () => void
 }
 
-export function SceneCard({ scene, index, total, selected, reply, picked, onPick, onPass, onJustShow }: SceneProps) {
+export function SceneCard({ scene, index, total, selected, reply, picked, onPick, onPass, onJustShow, brand = '' }: SceneProps & { brand?: string }) {
   const steps = total ?? index + 2
   const pillRef = useRef<HTMLParagraphElement>(null)
   const tilesRef = useRef<HTMLDivElement>(null)
@@ -86,7 +86,7 @@ export function SceneCard({ scene, index, total, selected, reply, picked, onPick
   return (
     <section className={`j-screen j-scene layout-${scene.layout}`} data-screen={`scene-${index + 1}`} data-testid="scene" data-scene={scene.key}>
       <header className="j-top">
-        <span className="j-mark" aria-hidden><Arch size={34} /></span>
+        {brand ? <p className="brand-word" data-testid="portal-brand" style={{ color: '#f6eedc' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
         <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Skip</button>
       </header>
       <div className="j-body">

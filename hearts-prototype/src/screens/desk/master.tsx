@@ -130,6 +130,10 @@ export async function MasterPortals(ctx: MasterCtx) {
             <label className="stack">Kind
               <select name="kind" defaultValue="mosque"><option value="mosque">Mosque</option><option value="church">Church</option><option value="synagogue">Synagogue</option><option value="other">Other</option></select>
             </label>
+            <label className="stack">Name people see<input type="text" data-testid="create-portal-brand" name="brandName" placeholder="Hady Home" /></label>
+            <label className="stack">Colour<input type="text" data-testid="create-portal-colour" name="colour" placeholder="#1f3a5f" /></label>
+            <label className="stack">Accent<input type="text" data-testid="create-portal-accent" name="accent" placeholder="#e07a5f" /></label>
+            <label className="stack">Logo<input type="text" data-testid="create-portal-logo" name="logoUrl" placeholder="/icons/hady-home.svg" /></label>
             <label className="stack">Welcome line<textarea name="welcome" placeholder="A few words for people arriving" /></label>
             <div className="actions"><button className="btn ink" data-testid="create-portal-submit" type="submit">Open portal</button></div>
           </form>

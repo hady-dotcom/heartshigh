@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import type { Payload } from 'payload'
 import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
 import { learnerBrand } from '@/lib/learner-brand'
@@ -11,6 +11,7 @@ import { now } from '@/lib/clock'
 import { shownWhen } from '@/lib/reply-queue'
 import { isNewMoment, readableHarvest } from '@/lib/harvest'
 import { getSession, type SessionUser, visibleCourseIds } from '@/server/context'
+import { portalOwnsLibrary } from '@/server/portal-scope'
 import { workbookFor } from '@/server/workbook'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
@@ -151,12 +152,14 @@ function seatsOf(g: Growth, door: Door) {
   return clausesOf(g, door).flatMap((clause) => g.seats.filter((seat) => ref(seat.clause) === clause.id).sort((a, b) => Number(a.position) - Number(b.position)))
 }
 
-export function Rings({ g, base, portal }: { g: Growth; base: string; portal?: import('@/lib/features').FeatureSource }) {
+export function Rings({ g, base, portal, own = false }: { g: Growth; base: string; portal?: import('@/lib/features').FeatureSource; own?: boolean }) {
   const sections = SECTIONS.filter((section) => sectionOf(g.doors, section.key).some((door) => (g.activityLit || g.lit).has(door.number))).length
   const items: [string, number, string, string, number?, string?][] = [
     ['Finished', g.watched, '#e2c27a', `${base}/garden/general`, undefined, 'ring-watched'],
-    ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`],
-    ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`],
+    ...(own ? [] : [
+      ['Sections', sections, '#f0e2c4', `${base}/garden/jibril`] as [string, number, string, string],
+      ['Field', g.seatVisits.length, '#b7c7a4', `${base}/garden/ghunya`] as [string, number, string, string],
+    ]),
     ['Harvest', g.harvest.length, '#8fbfb4', `${base}/garden/harvest`, g.harvestNew || undefined],
     ...((!portal || featureOn(portal, 'workbook')) ? [['Workbook', g.workbookShown ?? g.workbook.length, '#e2b08a', `${base}/garden/workbook`] as [string, number, string, string]] : []),
   ]
@@ -270,8 +273,8 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
 }
 
 export async function GardenScreen({ payload, user, portal, base, query }: Ctx) {
-  const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
-  const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g), gardenBranches(base)])
+  const [g, unread, own] = await Promise.all([growth(payload, user), unreadCount(payload, user), portalOwnsLibrary(payload, portal.id)])
+  const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g), own ? Promise.resolve([]) : gardenBranches(base)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
@@ -281,19 +284,19 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
         <Flash error={query.error} notice={query.notice} />
         <section className="garden-rings card" data-testid="garden-rings">
           <p className="eyebrow" style={{ margin: '0 0 8px' }}>Five ways to see it</p>
-          <Rings g={g} base={base} portal={portal} />
+          <Rings g={g} base={base} portal={portal} own={own} />
           <p className="muted" style={{ fontSize: 13, margin: '10px 0 0' }} data-testid="watched-rule">Finished counts every full talk you have sat with. Your path below is this course only.</p>
         </section>
         {path ? <GardenPath title={path.title} nodes={path.nodes} /> : (
           <EmptyState
             testId="garden-empty"
             action={{ href: `${base}/lanes`, label: 'Browse courses' }}
-            example={{ title: 'How to Live Like the Prophet', body: <p>Part 1 watched · Part 2 is next.</p> }}
+            example={own ? { title: 'Your first film', body: <p>Part 1 watched · Part 2 is next.</p> } : { title: 'How to Live Like the Prophet', body: <p>Part 1 watched · Part 2 is next.</p> }}
           >
             Start a course from Lanes and its path will grow here, one lesson at a time.
           </EmptyState>
         )}
-        {starting ? (
+        {starting && !own ? (
           <>
             <p className="eyebrow">Where you began</p>
             <Link className="card" href={`${base}/garden/jibril/${starting.number}`} style={{ display: 'block', textDecoration: 'none' }} data-testid="starting-door" data-door={starting.number}>
@@ -383,6 +386,7 @@ export async function GardenGeneral({ payload, user, portal, base }: Ctx) {
 }
 
 export async function GardenJibril({ payload, user, portal, base }: Ctx) {
+  if (await portalOwnsLibrary(payload, portal.id)) redirect(`${base}/garden`)
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const startDoor = doorOfClause(Number(user.startingClause || 0), g.doors)?.number
   return (
@@ -422,6 +426,7 @@ export async function GardenJibril({ payload, user, portal, base }: Ctx) {
 }
 
 export async function GardenDoor({ payload, user, portal, base, query }: Ctx, token: string) {
+  if (await portalOwnsLibrary(payload, portal.id)) redirect(`${base}/garden`)
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const door = doorFromPath(token, g.doors)
   if (!door) notFound()
@@ -545,6 +550,7 @@ export async function GardenDoor({ payload, user, portal, base, query }: Ctx, to
 }
 
 export async function GardenGhunya({ payload, user, portal, base }: Ctx) {
+  if (await portalOwnsLibrary(payload, portal.id)) redirect(`${base}/garden`)
   const [g, unread] = await Promise.all([growth(payload, user), unreadCount(payload, user)])
   const read = new Set(g.seatVisits.map((visit) => ref(visit.seat)))
   const recent = g.seatVisits

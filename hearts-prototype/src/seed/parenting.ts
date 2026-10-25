@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
-import { OPENING_QUESTIONS } from '@/lib/parent-feedback'
+import { OPENING_QUESTIONS, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
+import { parentOpeningScenes } from '@/lib/parent-opening'
+import { cleanPortalScenes } from '@/lib/portal-scenes'
+import { fillSampleGaps, readSaidAnswers } from '@/lib/said-answers'
 import { defaultFeatures } from '@/lib/features'
 import { syncCourseSheet } from '@/server/sequence-desk'
 
@@ -53,6 +56,36 @@ async function ensureOpeningQuestions(payload: Payload, portalId: number) {
   }
 }
 
+async function ensureParentScenes(payload: Payload, portalId: number) {
+  const scenes = parentOpeningScenes()
+  const found = await payload.find({
+    collection: 'opening-configs',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { portal: { equals: portalId } },
+  })
+  if (cleanPortalScenes(found.docs[0]?.extraScenes).scenes.length) return
+  if (found.docs[0]) {
+    await payload.update({ collection: 'opening-configs', id: found.docs[0].id, overrideAccess: true, data: { extraScenes: scenes } as never })
+    return
+  }
+  await payload.create({ collection: 'opening-configs', overrideAccess: true, data: { portal: portalId, extraScenes: scenes } as never })
+}
+
+async function ensureSaidAnswers(payload: Payload, courseId: number) {
+  const course = await payload.findByID({ collection: 'courses', id: courseId, depth: 0, overrideAccess: true })
+  if (readSaidAnswers((course as { sampleAnswers?: unknown }).sampleAnswers).length) return
+  const rows = fillSampleGaps(loadRealAnswers().map((row) => ({
+    order: row.videoOrder,
+    phase: row.phase,
+    label: phaseLabel(row.phase),
+    question: row.question,
+    text: row.text,
+  })))
+  await payload.update({ collection: 'courses', id: courseId, overrideAccess: true, data: { sampleAnswers: rows } as never })
+}
+
 async function lessonCount(payload: Payload, courseId: number) {
   const found = await payload.find({
     collection: 'lessons',
@@ -82,6 +115,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     welcome: WELCOME,
     description: 'A course you watch in order.',
     brandName: BRAND,
+    logoUrl: '/icons/hady-home.svg',
   }
   const saved = found.docs[0]?.features
   const switchesOff = !saved || typeof saved !== 'object' || Object.values(saved as Record<string, unknown>).every((value) => value !== true)
@@ -90,7 +124,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
         collection: 'portals',
         id: found.docs[0].id,
         overrideAccess: true,
-        data: refresh || switchesOff ? look : { brandName: BRAND },
+        data: refresh || switchesOff ? look : { brandName: BRAND, ...(String(found.docs[0]?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }) },
       })
     : await payload.create({
         collection: 'portals',
@@ -108,6 +142,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
         },
       })
   await ensureOpeningQuestions(payload, Number(portal.id))
+  await ensureParentScenes(payload, Number(portal.id))
 
   const courseFound = await payload.find({
     collection: 'courses',
@@ -136,6 +171,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     const synced = await syncCourseSheet(payload, Number(portal.id), sheet)
     if (synced.error) throw new Error(synced.error)
   }
+  await ensureSaidAnswers(payload, Number(course.id))
 
   const packFound = await payload.find({
     collection: 'packs',

@@ -2725,7 +2725,7 @@ export function Journey(props: JourneyProps) {
           ) : null}
           {leaving !== null && scenes[leaving] && phase === 'scene' ? (
             <div ref={leavingRef} className="j-scene-wrap leaving" aria-hidden>
-              <SceneCard scene={scenes[leaving]} index={leaving} total={scenes.length + 1} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} />
+              <SceneCard scene={scenes[leaving]} index={leaving} total={scenes.length + 1} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} brand={props.brand} />
             </div>
           ) : null}
           {(phase === 'scene' || phase === 'handoff') && scenes[sceneAt] ? (
@@ -2740,6 +2740,7 @@ export function Journey(props: JourneyProps) {
                 onPick={pick}
                 onPass={pass}
                 onJustShow={justShow}
+                brand={props.brand}
               />
             </div>
           ) : null}
