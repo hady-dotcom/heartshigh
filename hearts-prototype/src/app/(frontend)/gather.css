@@ -58,7 +58,7 @@ html[data-theme='dawn'] .gather-stage {
 :is(html, html[data-theme]) .public-gather {
   background:
     linear-gradient(180deg, rgba(10, 40, 40, 0.55), rgba(7, 28, 28, 0.82)),
-    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+    var(--scene) center / cover no-repeat;
 }
 :is(html, html[data-theme]) .app.gather-shell .app-head h1,
 .gather h1, .gather h2, .gather h3 { font-family: var(--serif); font-weight: 600; color: var(--g-ink); }

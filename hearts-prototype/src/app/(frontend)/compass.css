@@ -443,7 +443,7 @@ button.month-back {
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .app-scroll {
   background:
     linear-gradient(180deg, rgba(10, 40, 40, 0.5), rgba(7, 28, 28, 0.78)),
-    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+    var(--scene) center / cover no-repeat;
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] h1,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] h1,

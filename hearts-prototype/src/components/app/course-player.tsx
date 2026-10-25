@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react'
 import { newViewingId, POLL_MS, PopupWatcher, type PopupPoint } from '@/lib/popups'
+import { calloutSecond } from '@/lib/portal-look'
 import { comingAnswerLabel, comingQuestionLabel, questionDotLocked, questionMomentReached, questionRowRevealed, revealedStorageKey } from '@/lib/question-list'
 import { TopicHelp } from '@/components/app/page-help'
 import { SpokenWords } from '@/components/app/spoken-words'
@@ -111,7 +112,7 @@ export function CoursePlayer({
   circleLabel?: string
   serverNow: string
   next: string
-  garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null }
+  garden: { done: number; total: number; plain?: boolean; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null }
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
   film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; vimeoHash?: string | null; src?: string | null } | null
@@ -210,7 +211,7 @@ export function CoursePlayer({
 
   if (!watcher.current) watcher.current = new PopupWatcher([])
   useEffect(() => {
-    watcher.current?.setPoints(views.filter((point) => point.state === 'open' && !point.answered).map((point) => asPopup(point, lessonId)))
+    watcher.current?.setPoints(views.filter((point) => point.state === 'open' && !point.answered).map((point) => asPopup({ ...point, second: calloutSecond(point.second, length || duration) }, lessonId)))
   })
 
   useEffect(() => {
@@ -315,6 +316,7 @@ export function CoursePlayer({
       for (const value of ['playProgress', 'play', 'pause', 'finish', 'timeupdate']) {
         target.postMessage(JSON.stringify({ method: 'addEventListener', value }), '*')
       }
+      target.postMessage(JSON.stringify({ method: 'getDuration' }), '*')
     }
     const onMessage = (event: MessageEvent) => {
       if (!String(event.origin).includes('vimeo.com')) return
@@ -322,7 +324,8 @@ export function CoursePlayer({
       if (typeof event.data === 'string') {
         try { data = JSON.parse(event.data) } catch { return }
       }
-      const seconds = data?.data?.seconds ?? (typeof data?.value === 'number' ? data.value : null)
+      if (data?.method === 'getDuration' && typeof data.value === 'number' && data.value > 0) setLength(data.value)
+      const seconds = data?.method === 'getDuration' ? null : data?.data?.seconds ?? (typeof data?.value === 'number' ? data.value : null)
       if (typeof seconds === 'number') {
         vimeoTime.current = seconds
         setTime(seconds)
@@ -962,18 +965,17 @@ export function CoursePlayer({
         </section>
       ) : null}
       <section className="garden-card" data-testid="course-garden">
-        <p className="eyebrow">Course garden</p>
+        <p className="eyebrow">{garden.plain ? 'This course' : 'This course'}</p>
         <div className="garden-grid">
-          {/* TODO: swap this crop for the painterly tree stage PR #13 adds at public/garden/trees/<lane>/stage-N.webp after that branch merges. */}
-          <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} fruits`} />
+          <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} films`} />
           <div>
             <h3>What&apos;s done</h3>
-            <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>
-            <p className="muted fruit-explain" data-testid="fruit-explain">Talks you have watched and questions you have answered in this course.</p>
+            <small data-testid="fruit-count">{garden.done} of {garden.total} films</small>
+            <p className="muted fruit-explain" data-testid="fruit-explain">Films you have watched and questions you have answered in this course.</p>
             <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
             {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}
-            <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>Open garden</Link>
+            <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>Open courses</Link>
           </div>
         </div>
       </section>

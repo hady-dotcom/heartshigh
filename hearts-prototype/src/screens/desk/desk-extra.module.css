@@ -9,7 +9,7 @@
   width: 280px;
   min-height: 560px;
   margin: 0 auto;
-  background: #102e2c url('/theme/evening-courtyard.jpg') center/cover no-repeat;
+  background: #102e2c var(--scene) center/cover no-repeat;
   border: 10px solid #1a1408;
   border-radius: 36px;
   color: #f6eedc;
@@ -35,7 +35,7 @@
   width: 280px;
   height: 560px;
   margin: 0 auto;
-  background: #102e2c url('/theme/evening-courtyard.jpg') center/cover no-repeat;
+  background: #102e2c var(--scene) center/cover no-repeat;
   border-radius: 28px;
   overflow: hidden;
   border: 8px solid #1a1408;

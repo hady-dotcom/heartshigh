@@ -29,6 +29,9 @@ import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
 import { featureOn, featuresOf } from '@/lib/features'
 import { feedBackHref } from '@/lib/lane-progress'
+import { nextCourseFilms } from './course-home'
+import { LearnerTabBar } from '@/components/app/learner-bar'
+import Link from 'next/link'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -75,6 +78,27 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   }))
   opening.route.cuts = nudgeTalks(titled, context, popular, true)
   const mission = user ? await activeMissionCard(payload, portal.id, base) : null
+  if (initial === 'feed' && user && opening.route.cuts.length === 0) {
+    const films = await nextCourseFilms(payload, user, base, 8)
+    return (
+      <div className="app-stage">
+        <main className="app" data-testid="feed-screen">
+          <div className="app-scroll">
+            <div className="app-head"><h1>Next film</h1></div>
+            <div data-testid="next-films">
+              {films.map((film) => (
+                <Link key={film.href} className="continue-row" href={film.href} data-testid="next-film">
+                  <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+                </Link>
+              ))}
+              {!films.length ? <p>Films will show here once a course is added.</p> : null}
+            </div>
+          </div>
+          <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
+        </main>
+      </div>
+    )
+  }
   return (
     <div className="app-stage dusk">
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}

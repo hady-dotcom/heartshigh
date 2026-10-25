@@ -154,13 +154,13 @@ test('answering in the course and watching the full talk there do count', async 
 
   expect((await learner.post('/api/answers', { data: { pointId: point.id, body: `Answered in the course ${sfx}` } })).ok()).toBeTruthy()
   await page.goto(course)
-  expect(await fruits(page)).toBe(`${doneBefore + 1} of ${total} fruits`)
+  expect(await fruits(page)).toBe(`${doneBefore + 1} of ${total} films`)
   expect((await garden(page)).answers).toBe('1')
 
   const full = await form(learner, { action: 'complete', lesson: String(point.lesson.id), seconds: String(point.lesson.durationSeconds), ended: 'yes', next: '/' })
   expect(loc(full)).not.toContain('error=')
   await page.goto(course)
-  expect(await fruits(page)).toBe(`${doneBefore + 2} of ${total} fruits`)
+  expect(await fruits(page)).toBe(`${doneBefore + 2} of ${total} films`)
   const after = await garden(page)
   expect(after.sittings).toBe('1')
   expect(after.time).not.toBe('0m')

@@ -49,7 +49,7 @@ test('integration-r5 phone walk: bar, captions, course, desk, hostile file', asy
   await signIn(page, 'elm-learner@hearts.test', PORTAL)
   await expect(page.getByTestId('tabbar')).toBeVisible()
   const labels = (await page.getByTestId('tabbar').locator('a').allTextContents()).map((row) => row.replace(/\s+/g, ' ').trim())
-  expect(labels).toEqual(['Home', 'Lanes', 'My week', 'Garden', 'Me'])
+  expect(labels).toEqual(['Home', 'Lanes', 'My week', 'Courses', 'Me'])
   expect(labels).not.toContain('Gather')
   notes.push(`tabbar: ${labels.join(' · ')}`)
   await shot(page, '01-tabbar-home')

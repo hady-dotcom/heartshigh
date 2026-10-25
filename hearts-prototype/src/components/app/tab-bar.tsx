@@ -12,7 +12,7 @@ export function TabBar({ base, active = null, portal, dark = false, evening = fa
     ['home', 'Home', base],
     ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
     ['week', 'My week', `${base}/week`],
-    ['garden', 'Garden', `${base}/garden`],
+    ['garden', 'Courses', `${base}/courses`],
     ['me', 'Me', `${base}/me`],
   ]
   return (

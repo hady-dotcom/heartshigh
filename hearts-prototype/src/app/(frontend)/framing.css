@@ -16,7 +16,7 @@
 .fr-A .fr-bg, .fr-D .fr-bg { background: #000; }
 .fr-C .fr-bg { background: #071c1d; }
 .fr-E .fr-bg {
-  background: #0e2a2b url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat;
+  background: #0e2a2b var(--scene) center 40% / cover no-repeat;
 }
 .fr-E .fr-bg::after {
   content: '';

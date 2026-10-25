@@ -367,6 +367,26 @@ export interface Portal {
    */
   brandName?: string | null;
   /**
+   * Learner background. plain, a preset key, or upload. Empty stays plain.
+   */
+  sceneKey?: string | null;
+  /**
+   * Image for an uploaded scene. A site path or an https link.
+   */
+  sceneUrl?: string | null;
+  /**
+   * Course cards is the usual course home. Garden is the older picture.
+   */
+  courseHome?: ('cards' | 'garden') | null;
+  /**
+   * A short line on the welcome screen, such as a donations note. Empty hides it.
+   */
+  supportNote?: string | null;
+  /**
+   * The mark on the welcome screen. Plain shows the portal name.
+   */
+  markKind?: ('plain' | 'hearts') | null;
+  /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
    */
   demoRooms?:
@@ -3525,6 +3545,11 @@ export interface PortalsSelect<T extends boolean = true> {
   teacherCap?: T;
   kineticOn?: T;
   brandName?: T;
+  sceneKey?: T;
+  sceneUrl?: T;
+  courseHome?: T;
+  supportNote?: T;
+  markKind?: T;
   demoRooms?: T;
   features?: T;
   aiConnection?: T;

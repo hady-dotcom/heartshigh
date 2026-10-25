@@ -43,6 +43,7 @@ import * as migration_20261025_120000_parenting_demo from './20261025_120000_par
 import * as migration_20261025_160000_hady_home from './20261025_160000_hady_home';
 import * as migration_20261025_170000_vimeo_public from './20261025_170000_vimeo_public';
 import * as migration_20261025_190000_course_answers from './20261025_190000_course_answers';
+import * as migration_20261025_210000_portal_look from './20261025_210000_portal_look';
 
 export const migrations = [
   {
@@ -269,5 +270,10 @@ export const migrations = [
     up: migration_20261025_190000_course_answers.up,
     down: migration_20261025_190000_course_answers.down,
     name: '20261025_190000_course_answers',
+  },
+  {
+    up: migration_20261025_210000_portal_look.up,
+    down: migration_20261025_210000_portal_look.down,
+    name: '20261025_210000_portal_look',
   },
 ];
