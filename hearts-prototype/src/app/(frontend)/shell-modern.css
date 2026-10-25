@@ -650,3 +650,31 @@ html[data-theme] .desk.desk-modern .side a.nav.on {
 html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint) {
   color: var(--hh-ink);
 }
+
+/* Sidebar copy was cream for a dark bar. The modern bar is a light surface. */
+html[data-theme] .desk.desk-modern :is(
+  .side,
+  .side-brand,
+  .side-brand b,
+  .side-brand small,
+  .side .group,
+  .side-nav-more,
+  .side-foot,
+  .side-foot .who,
+  .side-foot .who b,
+  .side a.nav,
+  .side-foot button
+) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .side a.nav.on,
+html[data-theme] .desk.desk-modern .side a.nav.on * {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .desk.desk-modern .panel > header,
+html[data-theme] .desk.desk-modern .panel > header :is(h2, p) {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
