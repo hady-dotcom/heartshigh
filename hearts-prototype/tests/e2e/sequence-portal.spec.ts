@@ -108,6 +108,7 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('kinetic-clip')).toHaveCount(0)
   await expect(page.getByTestId('video-coming')).toHaveCount(0)
   await expect(page.getByTestId('up-next')).toBeVisible()
+  await expect(page.getByTestId('garden-next')).toContainText('Film 2 · Next')
   await expect(page.getByTestId('course-garden')).toBeVisible()
   await expect(page.getByTestId('tab-home')).toBeVisible()
   await expect(page.getByTestId('tab-lanes')).toHaveCount(0)

@@ -24,6 +24,7 @@ import { acceptLevelTap, type LevelTap } from '@/lib/level-tap'
 import { NO_EXTRACT, NO_EXTRACT_LABEL, NO_TALK, NO_TALK_LABEL, hasFullTalk, hasLongerExtract, levelSwitchPlan } from '@/lib/level-choice'
 import { appetiserSpans, piecePoint } from '@/lib/clip-piece'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
+import { FilmFallback } from '@/components/app/film-fallback'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
@@ -2598,7 +2599,7 @@ export function Journey(props: JourneyProps) {
           <h1>Next to watch</h1>
           {courseFilms.map((film) => (
             <a key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
-              {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : props.plain ? <span className="thumb is-fallback" data-testid="film-thumb" /> : null}
+              {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : props.plain ? <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={film.place} title={film.title} /></span> : null}
               <span className="t">
                 <b>{film.place}. {film.title}</b>
                 <small>{film.course}</small>

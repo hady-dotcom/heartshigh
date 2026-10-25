@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import type { Payload } from 'payload'
 import { AppFrame, Flash } from '@/components/app/shell'
 import { LearnerTabBar } from '@/components/app/learner-bar'
+import { FilmFallback } from '@/components/app/film-fallback'
 import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
 import { shellOf } from '@/lib/portal-look'
@@ -93,8 +94,14 @@ function Tick({ on }: { on: boolean }) {
   return <i className={on ? 'on' : ''} data-done={on ? 'yes' : 'no'} />
 }
 
-function Thumb({ src, eager }: { src: string | null; eager?: boolean }) {
-  if (!src) return <span className="thumb is-fallback" data-testid="film-thumb" />
+function Thumb({ src, eager, place, title }: { src: string | null; eager?: boolean; place?: number; title?: string }) {
+  if (!src) {
+    return (
+      <span className="thumb is-fallback" data-testid="film-thumb">
+        {place && title ? <FilmFallback place={place} title={title} /> : null}
+      </span>
+    )
+  }
   return (
     <span className="thumb" data-testid="film-thumb">
       <img src={src} alt="" decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'low'} />
@@ -134,7 +141,11 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
         <Flash error={query.error} notice={query.notice} />
         {modern && carry?.next ? (
           <section className="course-hero" data-testid="course-hero">
-            {carry.poster ? <img className="course-hero-still" src={carry.poster} alt="" /> : <span className="course-hero-still is-fallback" data-testid="hero-still" />}
+            {carry.poster ? <img className="course-hero-still" src={carry.poster} alt="" /> : (
+              <span className="course-hero-still is-fallback" data-testid="hero-still">
+                <FilmFallback place={carry.nextAt + 1} title={str(carry.next.title)} />
+              </span>
+            )}
             <div className="course-hero-scrim">
               <div className="course-hero-copy">
                 <p className="eyebrow">Courses</p>
@@ -149,7 +160,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
         )}
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
-            <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager />
+            <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />
             {modern ? (
               <div className="carry-copy">
                 <p className="eyebrow">Carry on</p>
@@ -182,7 +193,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             const pct = percent(card.finished, card.own.length)
             return (
               <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
-                <Thumb src={card.poster} eager={index < 2} />
+                <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
                 <span className="t">
                   <b>{str(card.course.title)}</b>
                   <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>

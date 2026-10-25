@@ -1333,16 +1333,46 @@ html[data-theme] .app-stage.shell-modern .done-check {
   color: var(--hh-on-accent);
 }
 
-html[data-theme] .app-stage.shell-modern .buffet-row .thumb.is-fallback .thumb-title {
-  color: var(--hh-on-accent);
-}
-
 html[data-theme] .app-stage.shell-modern .thumb.is-fallback,
 html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback {
-  background-color: var(--portal-accent, var(--hh-accent));
-  background-image: linear-gradient(100deg, var(--portal-accent, var(--hh-accent)) 0%, var(--hh-accent-fill) 42%, var(--portal-accent, var(--hh-accent)) 78%);
-  background-size: 220% 100%;
-  animation: hh-shimmer 1.4s var(--hh-ease) infinite;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+  background-color: var(--hh-accent-fill);
+  background-image: none;
+  color: var(--portal-accent, var(--hh-accent));
+  animation: none;
+}
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: var(--hh-space-1);
+  width: 100%;
+  min-height: 100%;
+  padding: var(--hh-space-2);
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-small);
+  font-weight: 700;
+  line-height: 1.25;
+  text-align: start;
+}
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title small,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title small {
+  font-size: var(--hh-font-size-caption);
+  font-weight: 700;
+}
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title b,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-weight: 700;
 }
 
 @keyframes hh-page-in {
