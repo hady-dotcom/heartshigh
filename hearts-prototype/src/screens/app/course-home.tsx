@@ -1,14 +1,17 @@
 import Link from 'next/link'
+import type { CSSProperties } from 'react'
 import type { Payload } from 'payload'
 import { AppFrame, Flash } from '@/components/app/shell'
 import { LearnerTabBar } from '@/components/app/learner-bar'
+import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
-import { type Ctx, ref, rows, str } from '../common'
+import { type Ctx, clock, ref, rows, str } from '../common'
 
 type FilmRow = {
   id: number
@@ -29,6 +32,27 @@ export type NextFilm = {
   course: string
   place: number
   poster: string | null
+  seconds: number
+  done: boolean
+}
+
+export function FilmChips({ seconds, done, coming }: { seconds: number; done?: boolean; coming?: boolean }) {
+  return (
+    <span className="film-meta">
+      <span className="duration-chip">{seconds > 0 ? clock(seconds) : 'Length not known yet'}</span>
+      {done ? <span className="done-check" data-testid="film-done">Done</span> : null}
+      {coming ? <span className="duration-chip">Coming soon</span> : null}
+    </span>
+  )
+}
+
+function percent(done: number, total: number) {
+  if (!total) return 0
+  return Math.round((done / total) * 100)
+}
+
+function ringStyle(value: number): CSSProperties {
+  return { ['--progress' as string]: `${value}%` }
 }
 
 export async function nextCourseFilms(payload: Payload, user: SessionUser, base: string, limit = 8): Promise<NextFilm[]> {
@@ -57,6 +81,8 @@ export async function nextCourseFilms(payload: Payload, user: SessionUser, base:
         course: str(course.title),
         place: index + 1,
         poster: shownPoster(filmPoster(lesson)),
+        seconds: Number(lesson.durationSeconds || 0),
+        done: done.has(lesson.id),
       })
     }
   }
@@ -96,22 +122,41 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
     const nextAt = own.findIndex((lesson) => !done.has(lesson.id))
     const next = own[nextAt] || own[0]
     const poster = shownPoster(own.map((lesson) => filmPoster(lesson)).find(Boolean) || null)
-    return { course, own, finished, next, nextAt: next ? Math.max(0, nextAt) : 0, poster }
+    const nextPoster = next ? shownPoster(filmPoster(next)) : null
+    return { course, own, finished, next, nextAt: next ? Math.max(0, nextAt) : 0, poster, nextPoster }
   }).filter((card) => card.own.length)
   const carry = cards.find((card) => card.finished < card.own.length) || cards[0]
+  const modern = shellOf(portal) === 'modern'
+  const carryPct = carry ? percent(carry.finished, carry.own.length) : 0
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <Flash error={query.error} notice={query.notice} />
-        <div className="app-head"><h1>Courses</h1></div>
+        {modern && carry?.next ? (
+          <section className="course-hero" data-testid="course-hero">
+            {carry.poster ? <img className="course-hero-still" src={carry.poster} alt="" /> : <span className="course-hero-still is-fallback" data-testid="hero-still" />}
+            <div className="course-hero-scrim">
+              <div className="course-hero-copy">
+                <p className="eyebrow">Courses</p>
+                <h1>{str(carry.course.title)}</h1>
+                <p className="hero-line">{carry.finished} of {carry.own.length} films</p>
+                <div className="bar" data-testid="hero-bar"><i style={{ width: `${carryPct}%` }} /></div>
+              </div>
+            </div>
+          </section>
+        ) : (
+          <div className="app-head"><h1>Courses</h1></div>
+        )}
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
-            <Thumb src={carry.poster} eager />
+            <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager />
             <p className="eyebrow">Carry on</p>
             <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
             <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
-            <div className="bar" data-testid="carry-bar"><i style={{ width: `${carry.own.length ? (carry.finished / carry.own.length) * 100 : 0}%` }} /></div>
-            <Link className="pill gold block" href={`${base}/course/${carry.course.id}?part=${carry.next.id}`} data-testid="carry-continue">Continue</Link>
+            <div className="bar" data-testid="carry-bar"><i style={{ width: `${carryPct}%` }} /></div>
+            <Link className="pill gold block play-btn" href={`${base}/course/${carry.course.id}?part=${carry.next.id}`} data-testid="carry-continue">
+              {modern ? <><PlayIcon size={22} /> Play</> : 'Continue'}
+            </Link>
           </article>
         ) : <p className="card">Films will show here once a course is added.</p>}
         <div className="course-cards">
@@ -123,16 +168,21 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
               if (!last || last.title !== title) groups.push({ title, count: 0 })
               groups[groups.length - 1].count += 1
             }
+            const pct = percent(card.finished, card.own.length)
             return (
               <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
                 <Thumb src={card.poster} eager={index < 2} />
                 <span className="t">
                   <b>{str(card.course.title)}</b>
                   <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>
-                  <span className="bar"><i style={{ width: `${card.own.length ? (card.finished / card.own.length) * 100 : 0}%` }} /></span>
-                  <span className="ticks" data-testid="course-ticks">
-                    {card.own.slice(0, 24).map((lesson) => <Tick key={lesson.id} on={done.has(lesson.id)} />)}
-                  </span>
+                  <span className="bar"><i style={{ width: `${pct}%` }} /></span>
+                  {modern ? (
+                    <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>
+                  ) : (
+                    <span className="ticks" data-testid="course-ticks">
+                      {card.own.slice(0, 24).map((lesson) => <Tick key={lesson.id} on={done.has(lesson.id)} />)}
+                    </span>
+                  )}
                   {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
                 </span>
               </Link>

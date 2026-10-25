@@ -26,21 +26,37 @@
   --hh-font-size-h3: 18px;
   --hh-font-size-body: 16px;
   --hh-font-size-small: 14px;
+  --hh-font-size-display: 34px;
+  --hh-font-size-title: 24px;
 
   --hh-space-1: 4px;
   --hh-space-2: 8px;
   --hh-space-3: 16px;
   --hh-space-4: 20px;
   --hh-space-5: 32px;
+  --hh-space-6: 48px;
   --hh-line-width: 1px;
-  --hh-bar: 4px;
+  --hh-bar: 6px;
 
-  --hh-radius-card: 16px;
-  --hh-radius-control: 12px;
+  --hh-radius-card: 20px;
+  --hh-radius-control: 14px;
   --hh-radius-pill: 99px;
 
   --hh-shadow-none: none;
   --hh-shadow-card: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --hh-shadow-lift: 0 12px 32px rgba(17, 24, 39, 0.08);
+
+  --hh-glass: rgba(255, 255, 255, 0.86);
+  --hh-glass-line: rgba(229, 231, 235, 0.9);
+  --hh-hero-scrim: linear-gradient(180deg, rgba(17, 24, 39, 0.05) 0%, rgba(17, 24, 39, 0.28) 46%, rgba(17, 24, 39, 0.72) 100%);
+  --hh-hero-track: rgba(255, 255, 255, 0.35);
+  --hh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --hh-press: 0.98;
+  --hh-hero: 248px;
+  --hh-header: 60px;
+  --hh-wash-size: 220px;
+  --hh-thumb-w: 120px;
+  --hh-ring: 48px;
 
   --hh-tap-min: 44px;
 }

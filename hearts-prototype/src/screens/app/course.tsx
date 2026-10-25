@@ -37,6 +37,7 @@ import { type Ctx, type Query, type Row, clock, one, ref, rows, str, unreadCount
 import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
 import { filmsLabel, talksLabel } from '@/lib/week'
+import { FilmChips } from './course-home'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
 import { listGatherings } from '@/server/gather'
@@ -188,7 +189,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
                 <small>Part {index + 1}</small>
                 <b className="talk-name">{name}</b>
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
-                <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}{sequence && !lessonCanPlay(lesson) ? ' · This film is coming soon' : ''}</small>
+                {sequence ? <FilmChips seconds={secondsHere} done={done.has(lesson.id)} coming={!lessonCanPlay(lesson)} /> : <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>}
               </span>
               ›
             </Link>
@@ -546,12 +547,18 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         <p className="eyebrow">{sequence ? 'Films' : 'Parts of this course'}</p>
         {lessons.map((row, index) => {
           const week = partWeek(row, partCuts, doors, str(course.title))
+          const poster = sequence ? shownPoster(filmPoster(row)) : null
           return (
-            <Link key={row.id} className="part-row" href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+            <Link key={row.id} className={`part-row${sequence ? ' film-row' : ''}`} href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
+              {sequence ? (
+                <span className={`thumb${poster ? '' : ' is-fallback'}`} data-testid="talk-thumb">
+                  {poster ? <img src={poster} alt="" /> : null}
+                </span>
+              ) : null}
               <span className="grow">
                 {sequence ? sequenceLabel(index, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
-                <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>
+                {sequence ? <FilmChips seconds={Number(row.durationSeconds || 0)} done={doneLessons.has(row.id)} /> : <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>}
               </span>
               {row.id === lessonId ? <span className="part-status" data-testid="part-playing">Playing</span> : <span className="part-chevron" aria-hidden="true">›</span>}
             </Link>

@@ -36,9 +36,16 @@ export function AppFrame({ children, dark = false, evening = false, testId, tone
   return (
     <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
       <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
-        <PageHelp page={help || testId} plain={modern} />
+        {modern ? (
+          <header className="glass-bar">
+            {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : null}
+            <PageHelp page={help || testId} plain />
+          </header>
+        ) : (
+          <PageHelp page={help || testId} plain={false} />
+        )}
         <InsightTracker trendsOptIn={trendsOptIn} />
-        {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : null}
+        {modern || !showWord ? null : <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p>}
         <RouteFade>{children}</RouteFade>
       </main>
     </div>
