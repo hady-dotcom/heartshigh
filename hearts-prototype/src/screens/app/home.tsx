@@ -98,6 +98,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         })),
         sub: minutesLeft(seconds, percent) || tidyTalkTitle(str(course?.title)),
         thumb: shownPoster(filmPoster(lesson)),
+        percent: Math.round(percent),
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
@@ -180,7 +181,12 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           {carryOn.map((row) => (
             <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
               <span className={`thumb${row.thumb ? '' : ' is-fallback'}`} style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
-              <span className="t"><b>{row.title}</b><span className="sr-only">. </span><small>{row.sub}</small></span>
+              <span className="t">
+                <b>{row.title}</b>
+                <span className="sr-only">. </span>
+                <small>{row.sub}</small>
+                {modernHome ? <span className="progress-ring" style={{ ['--progress' as string]: `${row.percent}%` }} aria-hidden="true"><span>{row.percent}%</span></span> : null}
+              </span>
             </Link>
           ))}
           {fallback.map((course) => {
@@ -323,7 +329,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
                 <b>{learnerWords(tidyTalkTitle(course.title))}</b>
                 <small>
                   {course.recommended ? <span className="drip" data-testid="recommended">This week · </span> : null}
-                  {course.open ? `${course.parts} part${course.parts === 1 ? '' : 's'} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}
+                  {course.open ? `${course.parts} ${modernLanes ? (course.parts === 1 ? 'film' : 'films') : (course.parts === 1 ? 'part' : 'parts')} · ${course.speaker}` : <span className="drip" data-testid="opens-on">Opens on day {course.opensOnDay}</span>}
                 </small>
                 <DoorChips doors={course.doors} />
               </span>

@@ -107,7 +107,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
         {theirs.map((course, index) => (
           <div className="course-row" key={course.id} data-testid="speaker-course">
             <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
-            <span className="t"><b>{tidyTalkTitle(course.title)}</b><small>{course.parts} part{course.parts === 1 ? '' : 's'}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
+            <span className="t"><b>{tidyTalkTitle(course.title)}</b><small>{course.parts} {shellOf(portal) === 'modern' ? (course.parts === 1 ? 'film' : 'films') : (course.parts === 1 ? 'part' : 'parts')}{course.open ? '' : ` · opens on day ${course.opensOnDay}`}</small><DoorChips doors={course.doors} max={1} /></span>
             <Link className={`start ${course.open ? START[index % START.length] : 'soft'}`} href={`${base}/course/${course.id}`}>{course.open ? 'Start' : 'Peek'}</Link>
           </div>
         ))}
@@ -160,10 +160,10 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
           {sequence && lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
-            ? `Watch from part ${continueIndex + 1}`
+            ? `Watch from film ${continueIndex + 1}`
             : done.size >= lessons.length && lessons.length && !sequence
             ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
-            : started ? `Continue part ${continueIndex + 1}` : `Start part ${continueIndex + 1}`}
+            : started ? (sequence ? `Continue film ${continueIndex + 1}` : `Continue part ${continueIndex + 1}`) : (sequence ? `Start film ${continueIndex + 1}` : `Start part ${continueIndex + 1}`)}
         </Link>
         <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? (sequence ? 'Schedule this film' : 'Schedule this talk') : 'Schedule all of these'}
@@ -186,7 +186,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
                 {still.fallback ? <span className="thumb-title">{name}</span> : null}
               </span>
               <span className="t">
-                <small>Part {index + 1}</small>
+                <small>{sequence ? `Film ${index + 1}` : `Part ${index + 1}`}</small>
                 <b className="talk-name">{name}</b>
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 {sequence ? <FilmChips seconds={secondsHere} done={done.has(lesson.id)} coming={!lessonCanPlay(lesson)} /> : <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>}
@@ -196,7 +196,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           )
         })}
       </div>
-      <LearnerTabBar base={base} active={sequence ? 'garden' : 'lanes'} unread={unread} />
+      <LearnerTabBar base={base} active={sequence ? 'garden' : 'lanes'} portal={portal} unread={unread} />
     </AppFrame>
   )
 }
@@ -487,14 +487,14 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
           sentences={showKinetic ? parseTrack(lesson.framingTrack)?.sentences || [] : []}
-          progressCard={sequence && (!ctx.demo || ctx.demo.state.features.progress) ? { eyebrow: progress.eyebrow, line: ctx.demo ? `${watchedCount(ctx.demo.state, ctx.demo.cast.learner)} of ${lessons.length} videos` : progress.line, backLabel: progress.back, backHref: ctx.demo ? withDemoQuery(base, ctx.demo.token, ctx.demo.role) : base } : null}
+          progressCard={sequence && (!ctx.demo || ctx.demo.state.features.progress) ? { eyebrow: progress.eyebrow, line: ctx.demo ? `${watchedCount(ctx.demo.state, ctx.demo.cast.learner)} of ${lessons.length} films` : progress.line, backLabel: progress.back, backHref: ctx.demo ? withDemoQuery(base, ctx.demo.token, ctx.demo.role) : base } : null}
           saveOnEnd={sequence}
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           videoComing={coming}
           garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : base, query), nextPart: following, links: [
             ...(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
-            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Saved answers' : 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
         {sequence && showKinetic && kineticTier ? (

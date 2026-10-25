@@ -2834,6 +2834,7 @@ export function Journey(props: JourneyProps) {
           base={base}
           unread={props.unread}
           features={props.features}
+          plain={props.plain}
           onGuard={(event) => {
             if (signedIn) return
             const target = (event.target as HTMLElement).closest('a')
@@ -2901,11 +2902,13 @@ function TabEntry({
   base,
   unread,
   features,
+  plain = false,
   onGuard,
 }: {
   base: string
   unread: number
   features?: import('@/lib/features').FeatureMap
+  plain?: boolean
   onGuard: (event: React.MouseEvent) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -2914,7 +2917,7 @@ function TabEntry({
   }, [])
   return (
     <div ref={ref} className="j-tabs" onClickCapture={onGuard}>
-      <TabBar base={`${base}`} active={null} portal={{ features }} dark unread={unread} />
+      <TabBar base={`${base}`} active={null} portal={{ features, shell: plain ? 'modern' : 'hearts' }} dark unread={unread} />
     </div>
   )
 }

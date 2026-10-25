@@ -389,7 +389,7 @@ export function sequenceProgress(done: number, total: number) {
   const safeDone = Math.max(0, Math.min(done, total))
   return {
     eyebrow: 'Your progress',
-    line: `${safeDone} of ${total} videos`,
+    line: `${safeDone} of ${total} films`,
     back: 'Back to the list',
   }
 }
@@ -431,7 +431,7 @@ export function httpsLogo(value: string) {
 export const SEQUENCE_COPY = {
   lock: 'Watch the previous one first.',
   progress: 'Your progress',
-  videos: 'videos',
+  videos: 'films',
   back: 'Back to the list',
   export: 'Export app',
   paste: 'Paste links, or upload a CSV from a Google Sheet. A course sheet with a public title column updates the films already here.',

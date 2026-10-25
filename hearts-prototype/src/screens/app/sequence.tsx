@@ -198,7 +198,7 @@ export async function SequenceGarden(ctx: Omit<Ctx, 'user'> & { user: Ctx['user'
         <Flash error={query.error} notice={query.notice} />
         <p className="brand-word" data-testid="portal-brand">{brand}</p>
         <h1>Courses</h1>
-        <p>The course and its parts. Open any part to start there.</p>
+        <p>The course and its films. Open any film to start there.</p>
         <article className="garden-course" data-testid="garden-course">
           <h2>{courseTitle}</h2>
           <p>{done.size} of {lessons.length} films</p>

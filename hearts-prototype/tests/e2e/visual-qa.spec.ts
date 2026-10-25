@@ -10,7 +10,6 @@ type Hit = { screen: string; kind: string; detail: string }
 
 const HADY_LEARNER = [
   ['home', '/p/parenting'],
-  ['lanes', '/p/parenting/lanes'],
   ['week', '/p/parenting/week'],
   ['courses', '/p/parenting/courses'],
   ['feed', '/p/parenting/feed'],
