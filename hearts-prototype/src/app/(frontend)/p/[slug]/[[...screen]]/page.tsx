@@ -107,7 +107,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     const session = await getSession()
     const portal = await loadPortal(session.payload, slug)
     if (portal && isSequencePortal(portal) && !session.user && !portal.closed) {
-      return SequenceGarden({ payload: session.payload, user: session.user as Ctx['user'], portal, slug, base, origin: '', query })
+      return SequenceGarden({ payload: session.payload, user: session.user, portal, slug, base, origin: '', query })
     }
   }
 

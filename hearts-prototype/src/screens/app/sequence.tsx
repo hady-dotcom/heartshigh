@@ -169,7 +169,7 @@ export async function SequenceHome(ctx: Ctx) {
   )
 }
 
-async function doneLessonIds(ctx: Ctx, lessons: Row[]) {
+async function doneLessonIds(ctx: Pick<Ctx, 'payload' | 'demo'> & { user: Ctx['user'] | null }, lessons: Row[]) {
   if (ctx.demo) {
     return new Set(
       lessons
@@ -183,7 +183,7 @@ async function doneLessonIds(ctx: Ctx, lessons: Row[]) {
   return new Set(completions.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)))
 }
 
-export async function SequenceGarden(ctx: Ctx) {
+export async function SequenceGarden(ctx: Omit<Ctx, 'user'> & { user: Ctx['user'] | null }) {
   const { payload, portal, base, query } = ctx
   const { course, lessons, units } = await filmsFor(payload, portal.id)
   const groups = groupsOf(lessons, units)
