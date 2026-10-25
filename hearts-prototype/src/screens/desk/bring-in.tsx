@@ -332,7 +332,7 @@ async function QuestionsTab({ ctx, courses }: { ctx: Ctx; courses: { id: number;
             <header className="light"><h2>{course.title}</h2><span className="hint">{stored} saved answers</span></header>
             <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
               <Hidden fields={{ action: 'portal-answers', portalSlug: portal.slug, course: course.id, next: here }} />
-              <p className="hint">Columns: phase, video_order, question, answer. These lines stay on this course.</p>
+              <p className="hint">Columns: video_order, question, and answer or answer_text. phase and callout_second can be there too. Without phase, each line is labelled Phase 1. These lines stay on this course.</p>
               <label className="stack">Answers sheet
                 <input type="file" name="answers" accept=".csv,text/csv,text/plain" data-testid="portal-answers" />
               </label>

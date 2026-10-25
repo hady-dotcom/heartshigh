@@ -57,7 +57,7 @@ function headerAt(head: string[], names: string[]) {
   return head.findIndex((cell) => names.includes(cell))
 }
 
-/** phase, video_order, question, answer. callout_second is kept when the sheet has it and is otherwise ignored. */
+/** video_order plus answer, text, or answer_text. phase and callout_second are optional. callout_second is not stored; the film is the video_order. */
 export function parseSaidSheet(raw: string): { rows: SaidAnswer[]; error?: string } {
   const text = String(raw || '').replace(/^\uFEFF/, '').trim()
   if (!text) return { rows: [], error: 'That answers sheet is empty.' }
@@ -66,8 +66,8 @@ export function parseSaidSheet(raw: string): { rows: SaidAnswer[]; error?: strin
   const phaseAt = headerAt(head, ['phase'])
   const orderAt = headerAt(head, ['video_order', 'order'])
   const questionAt = headerAt(head, ['question', 'prompt'])
-  const textAt = headerAt(head, ['answer', 'text'])
-  if (orderAt < 0 || textAt < 0) return { rows: [], error: 'That sheet needs a video_order column and an answer column.' }
+  const textAt = headerAt(head, ['answer', 'answer_text', 'text'])
+  if (orderAt < 0 || textAt < 0) return { rows: [], error: 'That sheet needs a video_order column and an answer or answer_text column.' }
   const rows: SaidAnswer[] = []
   for (const cells of table.slice(1)) {
     const order = Number(cells[orderAt])
