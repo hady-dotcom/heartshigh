@@ -92,7 +92,9 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
             lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
             backHref={feedBackHref(base, { from: query.from, lane: query.lane })}
             clip={Number(query.clip) || null}
-            play={query.play === 'appetiser' ? 'appetiser' : null}
+            play={portal.shape === 'sequence' ? null : query.play === 'appetiser' ? 'appetiser' : null}
+            appetisers={portal.shape !== 'sequence'}
+            brand={String(portal.brandName || '').trim()}
             afterPlacing={query.after === 'placing'}
             variants={variants}
             features={featuresOf(portal)}

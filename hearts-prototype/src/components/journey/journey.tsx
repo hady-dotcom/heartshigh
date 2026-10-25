@@ -67,6 +67,9 @@ export type JourneyProps = {
   play?: 'appetiser' | null
   /** After placing, the quiz returns to the first-talk screen instead of the feed. */
   afterPlacing?: boolean
+  /** Hors d'oeuvres stay on. When this is false the appetiser rung is not offered. */
+  appetisers?: boolean
+  brand?: string
   variants?: VariantMap
   features?: import('@/lib/features').FeatureMap
 }
@@ -140,6 +143,7 @@ export function Journey(props: JourneyProps) {
   const clipCta = useVariant('feed-cta-label', props.variants?.['feed-cta-label'])
   const talkCta = useVariant('full-talk-cta-label', props.variants?.['full-talk-cta-label'])
   const { base, opening, flags } = props
+  const appetisers = props.appetisers !== false
   const router = useRouter()
   const overlay = flags.chromeOverPlayer
   const ctx = useMemo(() => ({ ...opening.route, scales: opening.scales }), [opening])
@@ -2529,7 +2533,7 @@ export function Journey(props: JourneyProps) {
           }}
         >
           <button type="button" className={mode === 'hors' ? 'on' : undefined} data-testid="level-clip" aria-pressed={mode === 'hors'} onPointerUp={(event) => boardAction(event, () => requestClip())} onClick={(event) => boardAction(event, () => requestClip())}>{LEVEL_WORDS[0]}</button>
-          <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" data-available={extractReady ? 'yes' : 'no'} aria-pressed={mode === 'appetiser'} aria-label={extractReady ? LEVEL_WORDS[1] : NO_EXTRACT} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardAction(event, () => requestExtract())}>{extractReady ? LEVEL_WORDS[1] : NO_EXTRACT_LABEL}</button>
+          {appetisers ? <button type="button" className={mode === 'appetiser' ? 'on' : undefined} data-testid="level-minutes" data-available={extractReady ? 'yes' : 'no'} aria-pressed={mode === 'appetiser'} aria-label={extractReady ? LEVEL_WORDS[1] : NO_EXTRACT} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardAction(event, () => requestExtract())}>{extractReady ? LEVEL_WORDS[1] : NO_EXTRACT_LABEL}</button> : null}
           <button type="button" data-testid="level-lecture" data-available={talkReady ? 'yes' : 'no'} aria-label={talkReady ? LEVEL_WORDS[2] : NO_TALK} onPointerUp={(event) => boardAction(event, () => requestTalk())} onClick={(event) => boardAction(event, () => requestTalk())}>{talkReady ? LEVEL_WORDS[2] : NO_TALK_LABEL}</button>
         </div>
         {currentSpec ? (
@@ -2552,7 +2556,7 @@ export function Journey(props: JourneyProps) {
           <>
             {speakerRow}
             {item.speaker ? <button type="button" className="j-more-speaker" data-testid="more-from-speaker" onPointerUp={(event) => boardAction(event, moreFromSpeaker)} onClick={(event) => event.preventDefault()}>More from {item.speaker} ›</button> : null}
-            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level="appetiser" data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => requestExtract())} onClick={(event) => boardAction(event, () => requestExtract())}>{(() => {
+            <button type="button" className="pill gold block" data-testid="learn-more" data-parent={horsParent?.parentId || ''} data-parent-level={appetisers ? 'appetiser' : 'talk'} data-speaker={item.speaker} data-lesson={item.lessonId} onPointerUp={(event) => boardAction(event, () => (appetisers ? requestExtract() : requestTalk()))} onClick={(event) => boardAction(event, () => (appetisers ? requestExtract() : requestTalk()))}>{(() => {
               const lead = clipCta.label && !/^learn more\b/i.test(clipCta.label) ? clipCta.label : clipStepUpLabel()
               const seconds = item.talkSeconds || pieceSeconds(item.appetiser)
               return withTalkDetail(lead, 1, seconds)
@@ -2717,7 +2721,7 @@ export function Journey(props: JourneyProps) {
       {phase === 'opener' || phase === 'scene' || phase === 'handoff' ? (
         <div className="j-layer" data-testid="scene-layer">
           {phase === 'opener' ? (
-            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={letsPlay} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} />
+            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={letsPlay} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} brand={props.brand} />
           ) : null}
           {leaving !== null && scenes[leaving] && phase === 'scene' ? (
             <div ref={leavingRef} className="j-scene-wrap leaving" aria-hidden>

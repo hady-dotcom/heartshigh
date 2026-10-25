@@ -120,11 +120,16 @@ export function readZipStore(buf: Buffer) {
   return files
 }
 
+function liveJoin(portal: ExportPortal) {
+  const code = encodeURIComponent(portal.joinCode || 'PARENT-DEMO')
+  return `https://heartshigh-production.up.railway.app/join?code=${code}`
+}
+
 function readme(portal: ExportPortal) {
   const brand = portal.brandName || portal.name
   const code = portal.joinCode
     ? portal.brandName
-      ? `Join code: ${portal.joinCode}\nOpening index.html starts in ${brand}. You are already in. A few questions come first, then the films.\n\n`
+      ? `Join code: ${portal.joinCode}\nOpening index.html opens ${brand} with that code already filled in. You are already in. The films in this folder play as well.\n\n`
       : `Join code: ${portal.joinCode}\nOpening index.html starts the first film. You are already in.\n\n`
     : ''
   return `# ${brand}
@@ -169,7 +174,7 @@ function guidedPage(portal: ExportPortal, videos: ExportVideo[]) {
   main { padding: 16px; max-width: 720px; margin: 0 auto; }
   fieldset { border: 0; margin: 0 0 16px; padding: 12px; background: #fff; border-radius: 12px; }
   label { display: block; margin: 8px 0; }
-  button, a.btn { background: var(--a); color: #fff; border: 0; border-radius: 999px; padding: 12px 16px; font: inherit; }
+  button, a.btn { background: var(--a); color: #1a1408; border: 0; border-radius: 999px; padding: 12px 16px; font: inherit; font-weight: 700; }
   .film { background: #111; aspect-ratio: 16/9; }
   .film iframe { width: 100%; height: 100%; border: 0; }
   .said { background: #fff; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
@@ -180,10 +185,14 @@ function guidedPage(portal: ExportPortal, videos: ExportVideo[]) {
 </style>
 </head>
 <body>
+<script id="open-live">
+  if (!/[?&]offline=1(?:&|$)/.test(location.search)) location.replace(${JSON.stringify(liveJoin(portal))})
+</script>
 <header>
   <p class="word" id="brand">${escapeHtml(brand)}</p>
   <div>Guiding Home Learning</div>
   ${portal.joinCode ? `<div id="join-code">Join code ${escapeHtml(portal.joinCode)}</div>` : ''}
+  <p><a class="btn" id="open-app" href="${escapeHtml(liveJoin(portal))}">Open Hady Home</a></p>
 </header>
 <main id="welcome">
   <p id="note">${portal.joinCode ? `You are in. Join code ${escapeHtml(portal.joinCode)}` : 'Welcome in.'}</p>
@@ -246,12 +255,42 @@ function paintFilm(order) {
   document.getElementById('film-title').textContent = film.order + '. ' + film.title
   const stage = document.getElementById('stage')
   if (film.provider === 'vimeo' && film.id) {
-    stage.innerHTML = '<iframe title="' + film.title.replace(/"/g, '') + '" src="https://player.vimeo.com/video/' + film.id + '?autoplay=0" allow="fullscreen" allowfullscreen></iframe>'
+    var hash = film.hash ? '&h=' + encodeURIComponent(film.hash) : ''
+    stage.innerHTML = '<iframe title="' + film.title.replace(/"/g, '') + '" src="https://player.vimeo.com/video/' + film.id + '?api=1&playsinline=1&autopause=0&autoplay=0' + hash + '" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>'
   } else {
     stage.textContent = 'This film will play here.'
   }
   const box = document.getElementById('questions')
   box.innerHTML = ''
+  const live = document.createElement('p')
+  live.id = 'callout-live'
+  live.hidden = true
+  box.appendChild(live)
+  const asked = {}
+  function arm(frame) {
+    ;['playProgress', 'play', 'timeupdate', 'pause'].forEach(function (value) {
+      frame.postMessage(JSON.stringify({ method: 'addEventListener', value: value }), '*')
+    })
+  }
+  const player = stage.querySelector('iframe')
+  if (player && player.contentWindow) {
+    const kick = window.setInterval(function () { if (player.contentWindow) arm(player.contentWindow) }, 400)
+    window.setTimeout(function () { window.clearInterval(kick) }, 8000)
+  }
+  window.onmessage = function (event) {
+    if (String(event.origin).indexOf('vimeo.com') < 0) return
+    var data = event.data
+    if (typeof data === 'string') { try { data = JSON.parse(data) } catch (err) { return } }
+    if (data && data.event === 'ready' && player && player.contentWindow) arm(player.contentWindow)
+    var seconds = data && data.data && typeof data.data.seconds === 'number' ? data.data.seconds : null
+    if (seconds == null) return
+    ;(film.questions || []).forEach(function (question) {
+      if (asked[question.second] || seconds + 0.2 < question.second) return
+      asked[question.second] = true
+      live.hidden = false
+      live.textContent = question.prompt
+    })
+  }
   ;(film.questions || []).forEach(function (question) {
     const block = document.createElement('section')
     const heading = document.createElement('h2')
@@ -357,7 +396,7 @@ function show() {
   const start = Number(saved.at[film.id] || 0)
   if (film.provider === 'vimeo') {
     const hash = film.hash ? '&h=' + encodeURIComponent(film.hash) : ''
-    stage.innerHTML = '<iframe src="https://player.vimeo.com/video/' + film.id + '?autoplay=0' + hash + '" allow="autoplay; fullscreen" allowfullscreen></iframe>'
+    stage.innerHTML = '<iframe src="https://player.vimeo.com/video/' + film.id + '?api=1&playsinline=1&autopause=0&autoplay=0' + hash + '" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowfullscreen></iframe>'
   } else {
     stage.innerHTML = '<iframe id="yt" src="' + ${JSON.stringify(YOUTUBE_HOST)} + '/embed/' + film.id + '?enablejsapi=1&start=' + start + '" allow="autoplay; fullscreen" allowfullscreen></iframe>'
   }

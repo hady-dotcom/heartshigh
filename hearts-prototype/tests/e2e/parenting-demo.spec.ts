@@ -65,7 +65,7 @@ test('cast, four live screens, and a change that moves between them', async ({ p
 
   const answer = `I will keep one quiet hour after school ${Date.now()}`
   await learner.getByTestId('sequence-continue').click()
-  await expect(learner.getByTestId('sequence-course')).toBeVisible()
+  await expect(learner.getByTestId('course')).toBeVisible()
   await learner.getByTestId('demo-answer-text').fill(answer)
   await learner.getByTestId('demo-answer-send').click()
   await expect(learner.getByTestId('demo-saved-answer').filter({ hasText: answer })).toBeVisible()
@@ -120,7 +120,7 @@ test('PARENT-DEMO joins through Hady Home into the first film', async ({ page })
   await expect(page.getByTestId('start-first')).toBeVisible()
   await shot(page, 'hady-after-questions-phone')
   await page.getByTestId('start-first').click()
-  await expect(page.getByTestId('sequence-course')).toBeVisible()
+  await expect(page.getByTestId('course')).toBeVisible()
   await expect(page.getByTestId('sequence-question')).toBeVisible()
   await expect(page.getByTestId('parent-said').first()).toBeVisible()
   await shot(page, 'hady-film-phone')

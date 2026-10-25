@@ -51,8 +51,8 @@ import { isSequencePortal } from '@/lib/sequence'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
 import type { DemoBag } from '@/screens/common'
-import { SequenceGarden, SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
 import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
+import { PortalBrandProvider } from '@/components/app/portal-brand'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -103,14 +103,6 @@ export default async function PortalScreen({ params, searchParams }: { params: P
   const [area, a, b] = screen
   const base = `/p/${slug}`
 
-  if (area === 'garden') {
-    const session = await getSession()
-    const portal = await loadPortal(session.payload, slug)
-    if (portal && isSequencePortal(portal) && !session.user && !portal.closed) {
-      return SequenceGarden({ payload: session.payload, user: session.user, portal, slug, base, origin: '', query })
-    }
-  }
-
   // The opening and the feed work before an account exists (spec 7, P1). Everything else needs one.
   if (area === undefined || OPEN_TO_ALL.has(area)) {
     const session = await getSession()
@@ -121,19 +113,13 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     const shut = portal.closed && (!visitor || visitor.role === 'learner')
     if (!shut && area === undefined) {
       if (!visitor) {
-        if (isSequencePortal(portal)) return SequenceGate({ payload: session.payload, portal, base })
         redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
       }
       if (visitor.role === 'learner' && !visitor.onboarded) {
-        if (isSequencePortal(portal)) redirect(`${base}/welcome`)
         const started = await rows(session.payload, 'lesson-visits', { user: { equals: visitor.id } }, { limit: 1 })
         if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
       }
     } else if (!shut) {
-      if (isSequencePortal(portal)) {
-        if (!visitor) return SequenceGate({ payload: session.payload, portal, base })
-        redirect(base)
-      }
       return (
         <>
           <BackToDesk user={visitor} portal={portal} />
@@ -297,21 +283,24 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
+  const brandName = String(portal.brandName || '').trim()
+  const brand = isSequencePortal(portal) && brandName
+    ? { colour: portal.colour || '#1f3a5f', accent: portal.accent || '#e07a5f', name: brandName }
+    : null
   return (
     <>
       <BackToDesk user={user} portal={portal} />
-      {await learnerArea(area, a, b, ctx, payload)}
+      <PortalBrandProvider value={brand}>
+        {await learnerArea(area, a, b, ctx, payload)}
+      </PortalBrandProvider>
     </>
   )
 }
 
 async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
   const { base } = ctx
-  const sequence = isSequencePortal(ctx.portal)
-  if (sequence && area && ['lanes', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'start', 'help', 'feed'].includes(area)) redirect(base)
   switch (area) {
     case undefined:
-      if (sequence) return SequenceHome(ctx)
       return HomeScreen(ctx)
     case 'lanes':
       if (a) return LaneScreen(ctx, a)
@@ -340,7 +329,6 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
     case 'garden':
-      if (sequence) return SequenceGarden(ctx)
       if (a === 'workbook') return gated(ctx, 'workbook') || (b && /^\d+$/.test(b) ? GardenWorkbookEntry(ctx, Number(b)) : GardenWorkbook(ctx))
       {
         const closed = gated(ctx, 'garden')
@@ -355,10 +343,6 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'week':
       return WeekScreen(ctx)
     case 'me':
-      if (sequence) {
-        if (a) redirect(`${base}/me`)
-        return SequenceMe(ctx)
-      }
       if (!a) return MeScreen(ctx)
       if (a === 'plan' || a === 'week') return gated(ctx, 'planner') || PlanScreen(ctx)
       if (a === 'circle') return CircleScreen(ctx)

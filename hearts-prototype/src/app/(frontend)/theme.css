@@ -837,14 +837,40 @@ html[data-theme] .desk input[type='password'] {
   align-items: center;
   justify-content: flex-start;
   min-height: 100dvh;
-  background: #f6f1ea;
-  color: #2a211c;
   padding: 24px 16px;
 }
 .hady-door .door-card { width: min(420px, 100%); text-align: center; }
-.hady-door .brand-word { color: #1f3a5f; font-weight: 700; }
-.hady-door .door-card h1, .hady-door .door-card p { color: #2a211c; }
-.hady-door .pill.gold { background: #e07a5f; color: #fff; }
+:is(html, html[data-theme]) .hady-door .pill.gold { background: #e07a5f; color: #1a1408; }
+/* The evening door card is dark green. Paper ink (#1f3a5f / #2a211c) disappears on it.
+   Cream matches the field labels. The same colours cover a Hady sign-in card. */
+:is(html, html[data-theme]) .hady-door .door-card {
+  background: #163633;
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .hady-door .brand-word,
+:is(html, html[data-theme]) .hady-door .door-card h1,
+:is(html, html[data-theme]) .hady-door .door-card p,
+:is(html, html[data-theme]) .hady-door .door-links,
+:is(html, html[data-theme]) .hady-door .door-links a,
+:is(html, html[data-theme]) .hady-door .door-hint {
+  color: #f6eedc;
+}
+:is(html, html[data-theme]) .hady-door .door-card p.lede,
+:is(html, html[data-theme]) .hady-door .door-form label {
+  color: #e4d3a4;
+}
+:is(html, html[data-theme]) .hady-door .field {
+  background: #102e2c;
+  color: #f6eedc;
+  border-color: #c4923a;
+}
+:is(html, html[data-theme]) .hady-door .field::placeholder { color: #a89878; opacity: 1; }
+:is(html, html[data-theme]) .hady-door .page-help-btn,
+:is(html, html[data-theme]) [data-portal-brand] .page-help-btn {
+  background: #102e2c;
+  color: #f6eedc;
+  border: 1.5px solid #f6eedc;
+}
 
 /* Door, join and sign-in: always the evening garden, whichever theme the clock picked. */
 :is(html, html[data-theme]) .garden-door {
@@ -1117,24 +1143,29 @@ html[data-theme] .panel > header p { opacity: 1; }
   font-size: 16px;
 }
 
-/* A sequenced course paints only its own screen. HEARTS evening colours stay on every other portal. */
+/* A sequenced course paints only its own screen. HEARTS evening colours stay on every other portal.
+   The page behind it is the evening garden, so the ink stays cream. Light-paper ink vanished on that green. */
 [data-portal-brand] {
   --gold: var(--portal-accent, #e07a5f);
   --gold-deep: var(--portal-accent, #e07a5f);
   --green: var(--portal-colour, #1f3a5f);
-  --ink: #1c2430;
-  --paper: #f7f4ef;
-  background: #f7f4ef;
-  color: #1c2430;
+  --ink: #f6eedc;
+  --ink-2: #e4d3a4;
+  --muted: #e4d3a4;
+  --paper: #102e2c;
+  color: #f6eedc;
 }
-[data-portal-brand] .app,
-[data-portal-brand] .tabbar {
-  background: #f7f4ef;
-  color: #1c2430;
+[data-portal-brand] .app {
+  color: #f6eedc;
 }
+[data-portal-brand] .brand-word,
+[data-portal-brand] .shell-brand {
+  color: #f6eedc;
+}
+.shell-brand { margin: 10px 18px 0; }
 [data-portal-brand] .pill.gold {
   background: var(--portal-accent, #e07a5f);
-  color: #fff;
+  color: #1a1408;
 }
 .sequence-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
 .portal-mark, .portal-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
@@ -1147,12 +1178,12 @@ html[data-theme] .panel > header p { opacity: 1; }
   border-radius: 16px;
   padding: 14px 16px;
   margin: 12px 0;
-  color: inherit;
+  color: #1c2430;
   text-decoration: none;
 }
-.garden-course h2, .garden-area strong { display: block; margin: 0 0 4px; }
-.garden-area small, .garden-course p { color: #6d4c41; }
-.video-coming-label { margin-left: auto; color: #8a4b3a; font-size: 12px; }
+.garden-course h2, .garden-area strong { display: block; margin: 0 0 4px; color: #1c2430; }
+.garden-area small, .garden-course p { color: #5c3f32; }
+.video-coming-label { margin-left: auto; color: #e4d3a4; font-size: 12px; }
 .video-coming {
   position: absolute;
   inset: 0;
@@ -1172,7 +1203,7 @@ html[data-theme] .panel > header p { opacity: 1; }
 .sequence-list li, .sequence-edit li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dccd; }
 .sequence-list a { display: flex; gap: 8px; align-items: center; color: inherit; text-decoration: none; flex: 1; }
 .sequence-num { width: 28px; font-weight: 700; color: var(--portal-accent, #e07a5f); }
-.sequence-lock { margin: 0 0 0 36px; color: #8a4b3a; font-size: 14px; }
+.sequence-lock { margin: 0 0 0 36px; color: #e4d3a4; font-size: 14px; }
 .sequence-edit input { flex: 1; min-width: 0; }
 .sequence-edit button { font-size: 13px; }
 .sequence-actions { display: grid; gap: 8px; margin-top: 16px; }
