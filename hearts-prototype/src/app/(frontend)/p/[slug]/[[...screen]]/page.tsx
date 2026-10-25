@@ -47,12 +47,12 @@ import { PortalAnnounceScreen, PortalSafetyScreen } from '@/screens/desk/safety'
 import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
+import { learnerBrand } from '@/lib/learner-brand'
 import { isSequencePortal } from '@/lib/sequence'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
 import type { DemoBag } from '@/screens/common'
 import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
-import { PortalBrandProvider } from '@/components/app/portal-brand'
 
 function originOf(reqHeaders: Headers) {
   return shareOrigin(reqHeaders)
@@ -62,7 +62,7 @@ const plain = (value: string) => encodeURIComponent(value)
 
 function gated(ctx: Ctx, key: FeatureKey, desk = false) {
   if (featureOn(ctx.portal, key)) return null
-  return FeatureUnavailable({ base: ctx.base, feature: key, desk })
+  return FeatureUnavailable({ base: ctx.base, feature: key, desk, brand: learnerBrand(ctx.portal) })
 }
 
 const OPEN_TO_ALL = new Set(['start', 'help', 'feed'])
@@ -145,7 +145,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 
   if (portal.closed && user.role === 'learner') {
     return (
-      <AppFrame testId="closed" help={isSequencePortal(portal) ? 'sequence-closed' : undefined} brand={isSequencePortal(portal) ? { colour: portal.colour || '#1f3a5f', accent: portal.accent || '#e07a5f' } : undefined}>
+      <AppFrame testId="closed" help={isSequencePortal(portal) ? 'sequence-closed' : undefined} brand={learnerBrand(portal)}>
         <div className="splash">
           <div>
             {isSequencePortal(portal) ? null : <span className="splash-arch" aria-hidden><Arch size={72} /></span>}
@@ -283,16 +283,10 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
-  const brandName = String(portal.brandName || '').trim()
-  const brand = isSequencePortal(portal) && brandName
-    ? { colour: portal.colour || '#1f3a5f', accent: portal.accent || '#e07a5f', name: brandName }
-    : null
   return (
     <>
       <BackToDesk user={user} portal={portal} />
-      <PortalBrandProvider value={brand}>
-        {await learnerArea(area, a, b, ctx, payload)}
-      </PortalBrandProvider>
+      {await learnerArea(area, a, b, ctx, payload)}
     </>
   )
 }

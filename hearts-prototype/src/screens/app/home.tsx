@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekStrip } from '@/components/app/week-strip'
 import { weekView } from '@/server/week-plan'
@@ -115,7 +116,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     if (local[0] && firstLesson) demoContinue = `${base}/course/${local[0].id}?part=${firstLesson.id}`
   }
   return (
-    <AppFrame testId="home">
+    <AppFrame testId="home" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head">
           <h1>Home</h1>
@@ -218,7 +219,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   const lanes = lanesWithClips(opening.route, opening.clips, opening.laneTitles)
   const today = dayNumber(user)
   return (
-    <AppFrame testId="lanes">
+    <AppFrame testId="lanes" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head lanes-head">
           <div>

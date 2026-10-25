@@ -7,14 +7,16 @@ export function FeatureUnavailable({
   base,
   feature,
   desk,
+  brand,
 }: {
   base: string
   feature?: FeatureKey
   desk?: boolean
+  brand?: { colour: string; accent: string; name?: string } | null
 }) {
   const copy = unavailableCopy(feature)
   return (
-    <AppFrame testId="feature-unavailable" evening>
+    <AppFrame testId="feature-unavailable" evening brand={brand}>
       <div className="splash">
         <div>
           <h1>{copy.title}</h1>

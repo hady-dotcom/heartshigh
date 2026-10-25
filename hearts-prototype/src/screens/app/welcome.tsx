@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { Arch } from '@/components/arch'
 import { BrandLockup } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
@@ -19,7 +20,7 @@ export async function WelcomeScreen(ctx: Ctx) {
   if (step === 'start') {
     const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/start`
     return (
-      <AppFrame testId="welcome">
+      <AppFrame testId="welcome" brand={learnerBrand(portal)}>
         <div className="splash" data-testid="splash">
           <div>
             {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : <BrandLockup size={88} />}
@@ -37,7 +38,7 @@ export async function WelcomeScreen(ctx: Ctx) {
 
   if (step === 'films') {
     return (
-      <AppFrame testId="welcome-films">
+      <AppFrame testId="welcome-films" brand={learnerBrand(portal)}>
         <div className="app-scroll">
           <Journey at={0} />
           <div className="app-head"><h1>Before you begin</h1></div>
@@ -57,7 +58,7 @@ export async function WelcomeScreen(ctx: Ctx) {
   if (step === 'placing') {
     const questions = await rows(payload, 'placing-questions', brand ? { portal: { equals: portal.id } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal.id } }] }, { sort: 'order', limit: 20 })
     return (
-      <AppFrame testId="placing">
+      <AppFrame testId="placing" brand={learnerBrand(portal)}>
         <div className="app-scroll">
           <Journey at={1} />
           <div className="app-head"><h1>Where to begin</h1></div>
@@ -87,7 +88,7 @@ export async function WelcomeScreen(ctx: Ctx) {
   const door = doorOfClause(Number(user.startingClause || 0), await loadDoors(payload))
   const first = (await courseCards(payload, user))[0]
   return (
-    <AppFrame testId="placing-result">
+    <AppFrame testId="placing-result" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />

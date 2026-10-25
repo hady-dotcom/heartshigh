@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import { LaneProgressSlot } from '@/components/app/lane-progress'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { AppFrame, Back, Flash } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { getLaneProgress, isLaneId, lanePlayPath, type LaneProgressClip, type LaneWatch } from '@/lib/lane-progress'
 import { lanesWithClips } from '@/lib/lanes'
 import { LANE_BLURBS } from '@/lib/opening-data'
@@ -60,7 +61,7 @@ export async function LaneScreen({ payload, user, portal, base, query }: Ctx, la
   const playHref = progress.playCutId ? lanePlayPath(base, laneId, progress.playCutId) : ''
   const doneCuts = new Set(progress.doneCutIds)
   return (
-    <AppFrame testId="lane">
+    <AppFrame testId="lane" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/lanes`} label="Lanes" />
         <div className="app-head">
