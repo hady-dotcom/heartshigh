@@ -20,11 +20,11 @@ export function Caption({ text, className = 'j-caption', testId, as: Tag = 'h1' 
   )
 }
 
-export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signedIn, sceneCount = 7 }: { caption: string; subline: string; onPlay: () => void; onJustShow: () => void; loginHref: string; signedIn: boolean; sceneCount?: number }) {
+export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signedIn, sceneCount = 7, brand = '' }: { caption: string; subline: string; onPlay: () => void; onJustShow: () => void; loginHref: string; signedIn: boolean; sceneCount?: number; brand?: string }) {
   return (
     <section className="j-screen j-opener" data-screen="opener" data-testid="opener">
       <header className="j-top">
-        <span className="j-mark" aria-hidden><Arch size={34} /></span>
+        {brand ? <p className="brand-word" data-testid="portal-brand" style={{ color: '#f6eedc' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
         {signedIn ? null : <a className="j-login" href={loginHref} data-testid="opener-login">Log in</a>}
       </header>
       <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>

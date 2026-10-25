@@ -31,6 +31,7 @@ import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
+import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -40,7 +41,7 @@ function minutesLeft(seconds: number, percent: number) {
 }
 
 /** Home: the growth banner, what to carry on with, then the way into today's clips (board 00). */
-export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
+export async function HomeScreen({ payload, user, portal, base, query, demo }: Ctx) {
   if (user.role === 'learner' && !user.onboarded) {
     const started = await rows(payload, 'lesson-visits', { user: { equals: user.id } }, { limit: 1 })
     const taps = started.length ? [] : await rows(payload, 'opening-answers', { user: { equals: user.id } }, { limit: 1 })
@@ -107,6 +108,12 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
   const days = dayNumber(user)
   const clips = items.slice(0, 3)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
+  let demoContinue = ''
+  if (demo) {
+    const local = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { hidden: { not_equals: true } }] }, { limit: 1 })
+    const firstLesson = local[0] ? (await rows(payload, 'lessons', { course: { equals: local[0].id } }, { sort: 'order', limit: 1 }))[0] : null
+    if (local[0] && firstLesson) demoContinue = `${base}/course/${local[0].id}?part=${firstLesson.id}`
+  }
   return (
     <AppFrame testId="home">
       <div className="app-scroll">
@@ -121,6 +128,11 @@ export async function HomeScreen({ payload, user, portal, base, query }: Ctx) {
         <SavedToast />
         <span className="sr-only">{portalName(portal)}</span>
         <Flash error={query.error} notice={query.notice} />
+        {demo ? <DemoFrameTools token={demo.token} role={demo.role} cast={demo.cast} seq={demo.state.seq} /> : null}
+        {demo ? <p data-testid="demo-hello">Hello {demo.cast.learner}</p> : null}
+        {demo && demo.state.features.notes && demo.state.notes[0] ? <p className="card" data-testid="demo-note">{demo.state.notes[0].from}: {demo.state.notes[0].body}</p> : null}
+        {demo && demo.state.features.plan ? <p className="card" data-testid="demo-plan">This week: watch one film.</p> : null}
+        {demo && demoContinue ? <a className="pill gold block" href={demoContinue} data-testid="sequence-continue">Continue</a> : null}
         {notes.map((note) => (
           <AnnounceCard key={note.id} id={note.id} body={str(note.body)} next={base} />
         ))}

@@ -221,10 +221,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     binned: row.binned === true,
   }))
   if (!lessons.length) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'No films yet.' : 'That course has no parts yet.')}`)
-  if (!query.part) {
-    if (sequence) redirect(base)
-    return CourseOverview(ctx, course, lessons)
-  }
+  if (!query.part) return CourseOverview(ctx, course, lessons)
   const partIndex = resolvePartIndex(lessons, query.part)
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
@@ -425,7 +422,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   }))
 
   return (
-    <AppFrame testId={sequence ? 'sequence-course' : 'course'} evening={!sequence} help={sequence ? 'sequence-course' : undefined} brand={sequence ? brandColours(portal) : undefined}>
+    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={sequence ? brandColours(portal) : undefined}>
       <div className="app-scroll">
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />
@@ -472,9 +469,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           videoComing={sequence && !youtubeId && !film}
-          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && !sequence ? `${base}/garden` : base, query), nextPart: following, links: [
-            ...(featureOn(portal, 'garden') && !sequence ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
-            ...(featureOn(portal, 'workbook') && !sequence ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
+          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') ? `${base}/garden` : base, query), nextPart: following, links: [
+            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
         {sequence && showKinetic && kineticTier ? (
@@ -523,7 +520,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {!sequence && featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
+        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">{sequence ? 'Films' : 'Parts of this course'}</p>
         {lessons.map((row, index) => {
           const week = partWeek(row, partCuts, doors, str(course.title))

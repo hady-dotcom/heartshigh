@@ -1,7 +1,8 @@
 import Link from 'next/link'
-import type { CSSProperties, ReactNode } from 'react'
+import { useContext, type CSSProperties, type ReactNode } from 'react'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { PageHelp } from '@/components/app/page-help'
+import { PortalBrandContext } from '@/components/app/portal-brand'
 import { RouteFade } from '@/components/app/route-fade'
 
 export { TabBar, type Tab } from './tab-bar'
@@ -23,14 +24,21 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string } | null }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand: brandProp }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string; name?: string } | null }) {
+  const inherited = useContext(PortalBrandContext)
+  const colour = brandProp?.colour || inherited?.colour
+  const accent = brandProp?.accent || inherited?.accent
+  const name = brandProp?.name || inherited?.name || ''
+  const brand = colour && accent ? { colour, accent, name } : null
   const gather = tone === 'gather'
   const branded = brand ? ({ '--portal-colour': brand.colour, '--portal-accent': brand.accent } as CSSProperties) : undefined
+  const showWord = Boolean(name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (
     <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}`} data-portal-brand={brand ? 'yes' : undefined} style={branded}>
       <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <PageHelp page={help || testId} />
         <InsightTracker trendsOptIn={trendsOptIn} />
+        {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{name}</p> : null}
         <RouteFade>{children}</RouteFade>
       </main>
     </div>

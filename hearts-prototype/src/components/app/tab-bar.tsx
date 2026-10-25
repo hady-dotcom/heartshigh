@@ -8,22 +8,15 @@ export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
 export function TabBar({ base, active = null, portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: { features?: unknown; shape?: string | null } | null; dark?: boolean; evening?: boolean; unread?: number }) {
   const lanes = useVariant('lanes-tab-label', { payload: { label: 'Lanes' } })
-  const sequence = portal?.shape === 'sequence'
-  const tabs: [Tab, string, string][] = sequence
-    ? [
-        ['home', 'Home', base],
-        ['garden', 'Garden', `${base}/garden`],
-        ['me', 'Me', `${base}/me`],
-      ]
-    : [
-        ['home', 'Home', base],
-        ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
-        ['week', 'My week', `${base}/week`],
-        ['garden', 'Garden', `${base}/garden`],
-        ['me', 'Me', `${base}/me`],
-      ]
+  const tabs: [Tab, string, string][] = [
+    ['home', 'Home', base],
+    ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
+    ['week', 'My week', `${base}/week`],
+    ['garden', 'Garden', `${base}/garden`],
+    ['me', 'Me', `${base}/me`],
+  ]
   return (
-    <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar">
+    <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar" data-shape={portal?.shape || 'hearts'}>
       {tabs.map(([key, label, href]) => (
         <Link
           key={key}

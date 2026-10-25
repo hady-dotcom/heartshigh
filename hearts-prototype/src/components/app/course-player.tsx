@@ -308,6 +308,14 @@ export function CoursePlayer({
 
   useEffect(() => {
     if (!vimeoId) return
+    const frame = () => filmBox.current?.querySelector('iframe')?.contentWindow
+    const listen = () => {
+      const target = frame()
+      if (!target) return
+      for (const value of ['playProgress', 'play', 'pause', 'finish', 'timeupdate']) {
+        target.postMessage(JSON.stringify({ method: 'addEventListener', value }), '*')
+      }
+    }
     const onMessage = (event: MessageEvent) => {
       if (!String(event.origin).includes('vimeo.com')) return
       let data = event.data as { event?: string; method?: string; value?: number; data?: { seconds?: number } }
@@ -315,18 +323,27 @@ export function CoursePlayer({
         try { data = JSON.parse(event.data) } catch { return }
       }
       const seconds = data?.data?.seconds ?? (typeof data?.value === 'number' ? data.value : null)
-      if (typeof seconds === 'number') vimeoTime.current = seconds
-      if (data?.event === 'play') setPlaying(true)
+      if (typeof seconds === 'number') {
+        vimeoTime.current = seconds
+        setTime(seconds)
+      }
+      if (data?.event === 'play' || data?.event === 'playProgress' || data?.event === 'timeupdate') {
+        setPlaying(true)
+        setLit(true)
+        setCoverHeld(false)
+      }
       if (data?.event === 'pause' || data?.event === 'finish') setPlaying(false)
       if (data?.event === 'finish') setEnded(true)
-      if (data?.event === 'ready') {
-        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'playProgress' }), '*')
-        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'play' }), '*')
-        filmBox.current?.querySelector('iframe')?.contentWindow?.postMessage(JSON.stringify({ method: 'addEventListener', value: 'pause' }), '*')
-      }
+      if (data?.event === 'ready') listen()
     }
     window.addEventListener('message', onMessage)
-    return () => window.removeEventListener('message', onMessage)
+    const arm = window.setInterval(listen, 500)
+    const stop = window.setTimeout(() => window.clearInterval(arm), 8000)
+    return () => {
+      window.removeEventListener('message', onMessage)
+      window.clearInterval(arm)
+      window.clearTimeout(stop)
+    }
   }, [vimeoId])
 
   // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
@@ -653,7 +670,7 @@ export function CoursePlayer({
   const livePlayer = getPlayer(PLAYER_ID)
   const liveState = livePlayer?.getPlayerState() ?? ytState
   const liveTime = livePlayer?.getCurrentTime() ?? time
-  const showCover = coverHeld || ended || mode === 'loading'
+  const showCover = mode === 'vimeo' || mode === 'file' ? false : coverHeld || ended || mode === 'loading'
   useEffect(() => {
     if (!youtubeId) return
     const specKey = `${lessonId}:full`
@@ -750,7 +767,7 @@ export function CoursePlayer({
             </div>
           </div>
         </div>
-        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${mode === 'vimeo' ? ' vimeo-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
           <div key={coverKey} className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
           {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
           {failed ? (
@@ -764,7 +781,7 @@ export function CoursePlayer({
           {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
-              <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { api: '1' })} allow="autoplay; fullscreen; picture-in-picture" data-testid="vimeo-player" />
+              <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { api: '1', playsinline: '1', autopause: '0' })} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-testid="vimeo-player" />
             </div>
           ) : null}
           {fileSrc ? (
@@ -786,7 +803,7 @@ export function CoursePlayer({
               <p>This film will play here when it is ready.</p>
             </div>
           ) : null}
-          {!videoComing && coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
+          {mode !== 'vimeo' && !videoComing && coursePlayVisible({ loading: mode === 'loading', questionOpen: open !== null }) ? (
             <button type="button" className="j-tap-catcher film-tap" aria-label={playing ? 'Pause' : 'Play'} onClick={togglePlay} data-testid="player-play" />
           ) : null}
         </div>
@@ -944,7 +961,7 @@ export function CoursePlayer({
           <h3 data-testid="sequence-progress-line">{progressCard.line}</h3>
           <Link className="pill outline small" href={progressCard.backHref} data-testid="sequence-back">{progressCard.backLabel}</Link>
         </section>
-      ) : (
+      ) : null}
       <section className="garden-card" data-testid="course-garden">
         <p className="eyebrow">Course garden</p>
         <div className="garden-grid">
@@ -961,7 +978,6 @@ export function CoursePlayer({
           </div>
         </div>
       </section>
-      )}
       {saveOnEnd ? null : (
       <form className="watched-form" action="/api/hearts" method="post">
         <input type="hidden" name="action" value="complete" />

@@ -500,6 +500,15 @@
   opacity: 1;
   z-index: 1;
 }
+.app[data-testid="course"] .course-film-band.vimeo-on,
+.app[data-testid="course"] .course-film-band.vimeo-on .j-film-band,
+.app[data-testid="course"] .course-film-band.vimeo-on iframe,
+.player-card.vimeo-on .yt,
+.player-card.vimeo-on .yt iframe,
+.player-card.vimeo-on .j-film-band,
+.player-card.vimeo-on .j-film-band iframe {
+  pointer-events: auto !important;
+}
 .app[data-testid="course"] .course-film-band .j-tap-catcher,
 .app[data-testid="course"] .course-film-band .film-tap {
   position: absolute;

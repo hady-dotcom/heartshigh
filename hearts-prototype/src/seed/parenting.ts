@@ -5,7 +5,7 @@ import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
 import { OPENING_QUESTIONS } from '@/lib/parent-feedback'
-import { sequenceFeatureDefaults } from '@/lib/sequence-features'
+import { defaultFeatures } from '@/lib/features'
 import { syncCourseSheet } from '@/server/sequence-desk'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -72,7 +72,7 @@ async function lessonCount(payload: Payload, courseId: number) {
  */
 export async function ensureParentingCourse(payload: Payload, opts?: { refresh?: boolean }) {
   const refresh = opts?.refresh === true
-  const features = sequenceFeatureDefaults()
+  const features = defaultFeatures()
   const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'parenting' } } })
   const look = {
     shape: 'sequence' as const,
@@ -83,12 +83,14 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     description: 'A course you watch in order.',
     brandName: BRAND,
   }
+  const saved = found.docs[0]?.features
+  const switchesOff = !saved || typeof saved !== 'object' || Object.values(saved as Record<string, unknown>).every((value) => value !== true)
   const portal = found.docs[0]
     ? await payload.update({
         collection: 'portals',
         id: found.docs[0].id,
         overrideAccess: true,
-        data: refresh ? look : { brandName: BRAND },
+        data: refresh || switchesOff ? look : { brandName: BRAND },
       })
     : await payload.create({
         collection: 'portals',
