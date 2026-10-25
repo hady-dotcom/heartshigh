@@ -94,12 +94,12 @@ export function supportNoteOf(portal: LookSource) {
 }
 
 /**
- * The welcome line. A stored note wins. HEARTS with no note stored keeps the donations sentence.
- * A modern portal with no note shows nothing.
+ * The welcome line. A blank string hides it, including on HEARTS.
+ * Nothing stored keeps the donations sentence for HEARTS and stays hidden everywhere else.
  */
 export function shownSupportNote(portal: LookSource) {
-  if (portal && Object.prototype.hasOwnProperty.call(portal, 'supportNote')) return supportNoteOf(portal)
-  return shellOf(portal) === 'hearts' ? HEARTS_LOOK.supportNote : ''
+  if (!portal || portal.supportNote == null) return shellOf(portal) === 'hearts' ? HEARTS_LOOK.supportNote : ''
+  return String(portal.supportNote).trim()
 }
 
 /** A site path or https image. Anything else is dropped. */

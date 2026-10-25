@@ -200,6 +200,7 @@ async function main() {
       colour: '#1f4d3a',
       shell: 'hearts',
       sceneKey: 'courtyard',
+      supportNote: 'This has been powered by donations.',
     },
     {
       name: 'Leeds Chapter',
@@ -212,6 +213,7 @@ async function main() {
       colour: '#6b3a2f',
       shell: 'hearts',
       sceneKey: 'courtyard',
+      supportNote: 'This has been powered by donations.',
     },
   ]
   const portalIds = new Map<string, number>()

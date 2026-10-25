@@ -2569,6 +2569,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       if (form.has(key)) data[key] = text(form, key)
     }
     if (form.has('brandName')) data.brandName = text(form, 'brandName').slice(0, 80)
+    if (form.has('supportNote')) data.supportNote = text(form, 'supportNote').slice(0, 180)
     if (form.has('accent')) {
       const accent = text(form, 'accent')
       if (accent && !/^#[0-9a-f]{6}$/i.test(accent)) return redirectTo(req, text(form, 'next') || '/', 'The accent colour needs to look like #e07a5f.')

@@ -183,6 +183,7 @@ export const Portals: CollectionConfig = {
       admin: { description: 'Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard.' },
     },
     { name: 'sceneUrl', type: 'text', admin: { description: 'Picture uploaded by the portal admin, when the background is Upload.' } },
+    { name: 'supportNote', type: 'text', admin: { description: 'A line on the welcome page. Blank hides it. HEARTS keeps the donations sentence until an admin clears it.' } },
     {
       name: 'demoRooms',
       type: 'json',

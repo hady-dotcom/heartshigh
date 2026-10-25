@@ -12,6 +12,7 @@ import { doorLabel, type Door } from '@/lib/doors'
 import { phaseLabel } from '@/lib/parent-feedback'
 import { readSaidAnswers, saidForFilm } from '@/lib/said-answers'
 import { learnerBrand } from '@/lib/learner-brand'
+import { calloutSecond, filmLabel } from '@/lib/portal-look'
 import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from '@/lib/film-availability'
 import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
@@ -301,7 +302,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     return {
       id: point.id,
       number: index + 1,
-      second: Number(point.second || 0),
+      second: calloutSecond(Number(point.second || 0), Number(lesson.durationSeconds || 0)),
       prompt: tidyQuestionPrompt(str(point.prompt)) || `Question ${index + 1}`,
       kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
       options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
@@ -407,7 +408,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const nextAt = sequence ? lessons.findIndex((row, index) => index > partIndex && lessonCanPlay(row)) : (partIndex + 1 < lessons.length ? partIndex + 1 : -1)
   const nextLesson = nextAt >= 0 ? lessons[nextAt] : null
   const following = nextLesson ? { label: nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
-  const sequenceLabel = (index: number, row: Row) => `${index + 1}. ${str(row.title)}`
+  const sequenceLabel = (index: number, row: Row) => filmLabel(index, str(row.title))
   const upNext = nextLesson && following
     ? { href: following.href, label: sequence ? sequenceLabel(nextAt, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
     : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }

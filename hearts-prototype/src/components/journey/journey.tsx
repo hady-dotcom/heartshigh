@@ -74,6 +74,8 @@ export type JourneyProps = {
   plain?: boolean
   variants?: VariantMap
   features?: import('@/lib/features').FeatureMap
+  /** Shown when this portal has no approved clips, so the feed is never a blank page. */
+  courseFilms?: { href: string; title: string; course: string; place: number; poster: string | null }[]
 }
 
 const TAB_DELAY = 200
@@ -2587,6 +2589,23 @@ export function Journey(props: JourneyProps) {
       ) : null}
     </>
   ) : null
+
+  const courseFilms = props.courseFilms || []
+  if (phase === 'feed' && items.length === 0 && courseFilms.length) {
+    return (
+      <div className="journey phase-feed" data-testid="journey" data-phase="feed">
+        <div className="app-scroll" data-testid="feed-films">
+          <h1>Next to watch</h1>
+          {courseFilms.map((film) => (
+            <a key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
+              {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
+              <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+            </a>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={learnerFramingMode(item?.framingTrack, spokenAt)} data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
