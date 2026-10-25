@@ -248,8 +248,9 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     sort: 'order',
     where: { course: { equals: course.id } },
   })
+  const rows = existing.docs.map((item) => asDoc(item))
   const buckets = new Map<string, Doc[]>()
-  for (const row of existing.docs.map((item) => asDoc(item))) {
+  for (const row of rows) {
     const key = rowKey(row)
     if (!key) continue
     const list = buckets.get(key) || []
@@ -259,7 +260,9 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
   const kept = new Set<number>()
   for (const film of parsed.films) {
     const bucket = buckets.get(filmKey(film)) || []
-    const current = bucket.find((row) => !kept.has(row.id))
+    const byFilm = bucket.find((row) => !kept.has(row.id))
+    const byOrder = rows.find((row) => !kept.has(row.id) && Number(row.order) === film.order)
+    const current = byFilm || byOrder
     const unit = unitId.get(film.module)
     if (!unit) return { error: 'A film is missing its section.' }
     const data = {

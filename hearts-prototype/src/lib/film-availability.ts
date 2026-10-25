@@ -1,28 +1,12 @@
-/** Vimeo ids that refuse to embed. Films 40 and 41 have no id at all. */
-export const EMBED_RESTRICTED_VIMEO_IDS = new Set([
-  '496862893', // 1
-  '496862550', // 2
-  '496862832', // 4
-  '496880867', // 17
-  '496861656', // 22
-  '496879209', // 23
-  '496880331', // 42
-  '496879175', // 49
-  '496893629', // 61
-  '496895289', // 75
-  '496893712', // 90
-  '496943558', // 108
-])
-
 export type PlaySource = { vimeoId?: string | null; youtubeId?: string | null; videoProvider?: string | null }
 
-/** A film can play when its host will actually embed. A missing or restricted Vimeo id cannot. */
+/** A film plays when the course row has a video. An empty id is still coming. */
 export function filmCanPlay(lesson: PlaySource) {
   const provider = String(lesson.videoProvider || '')
   if (provider === 'file') return true
   const vimeo = String(lesson.vimeoId || '').trim()
   const youtube = String(lesson.youtubeId || '').trim()
-  if (provider === 'vimeo' || vimeo) return Boolean(vimeo) && !EMBED_RESTRICTED_VIMEO_IDS.has(vimeo)
+  if (provider === 'vimeo' || vimeo) return Boolean(vimeo)
   return Boolean(youtube)
 }
 

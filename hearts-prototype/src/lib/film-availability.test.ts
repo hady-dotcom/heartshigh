@@ -5,21 +5,22 @@ import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from './fi
 const row = (order: number, vimeoId: string) => ({ order, vimeoId, videoProvider: vimeoId ? 'vimeo' : null })
 
 const films = [
-  row(1, '496862893'),
-  row(2, '496862550'),
-  row(3, '496852675'),
-  row(4, '496862832'),
+  row(1, '1239173361'),
+  row(2, '1239173362'),
+  row(22, ''),
+  row(23, '1239173387'),
   row(40, ''),
 ]
 
-test('restricted and missing films cannot play, and the course opens on film 3', () => {
-  assert.equal(filmCanPlay(films[0]), false)
-  assert.equal(filmCanPlay(films[1]), false)
-  assert.equal(filmCanPlay(films[2]), true)
-  assert.equal(filmCanPlay(films[3]), false)
+test('a film plays when it has a video id, and a film with no video is skipped', () => {
+  assert.equal(filmCanPlay(films[0]), true)
+  assert.equal(filmCanPlay(films[1]), true)
+  assert.equal(filmCanPlay(films[2]), false)
+  assert.equal(filmCanPlay(films[3]), true)
   assert.equal(filmCanPlay(films[4]), false)
   assert.equal(filmCanPlay({ youtubeId: 'abcdefghijk', videoProvider: 'youtube' }), true)
-  assert.equal(firstPlayableIndex(films, filmCanPlay), 2)
-  assert.equal(earlierPlayableUnfinished(films, 2, filmCanPlay, () => false), false)
+  assert.equal(filmCanPlay({ videoProvider: 'file' }), true)
+  assert.equal(firstPlayableIndex(films, filmCanPlay), 0)
+  assert.equal(earlierPlayableUnfinished(films, 3, filmCanPlay, (film) => film.order < 22), false)
   assert.equal(earlierPlayableUnfinished(films, 3, filmCanPlay, () => false), true)
 })

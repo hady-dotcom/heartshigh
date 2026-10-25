@@ -68,6 +68,7 @@ export const SEE_HOW_SKIPPED: Record<string, string> = {
   closed: 'Shown only when a portal is paused. The seeded demo stays open so the other pages can be filmed.',
   'feature-unavailable': 'Shown only when a feature is switched off. The seeded demo has every feature on.',
   'sequence-home': 'A sequenced course home. The filmed demo is a HEARTS portal.',
+  'sequence-garden': 'A sequenced course garden. The filmed demo is a HEARTS portal.',
   'sequence-course': 'A sequenced course film. The filmed demo is a HEARTS portal.',
   'sequence-me': 'A sequenced course Me page. The filmed demo is a HEARTS portal.',
   'sequence-gate': 'A sequenced course sign-in page. The filmed demo is a HEARTS portal.',
