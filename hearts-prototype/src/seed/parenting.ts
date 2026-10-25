@@ -95,7 +95,7 @@ function hadyLook(existing?: { accent?: string | null; colour?: string | null; f
     shell: 'modern' as const,
     courseHome: 'cards' as const,
     ...(!scene ? { sceneKey: 'plain' as const } : {}),
-    ...(!font ? { fontPair: 'jakarta' as const } : {}),
+    ...(!font ? { fontPair: 'system' as const } : {}),
     ...(!accent || accent === '#e07a5f' ? { accent: '#2563EB' } : {}),
     ...(!colour || colour === '#1f3a5f' ? { colour: '#2563EB' } : {}),
     ...(String(existing?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }),

@@ -76,7 +76,7 @@ export type PortalDoc = {
   /** Empty keeps HEARTS. Parenting is Hady Home. */
   brandName?: string | null
   shell?: 'modern' | 'hearts' | null
-  fontPair?: 'jakarta' | 'bricolage' | 'outfit' | 'inter' | null
+  fontPair?: 'system' | 'jakarta' | 'bricolage' | 'outfit' | 'inter' | null
   courseHome?: 'cards' | 'garden' | null
   sceneKey?: 'plain' | 'courtyard' | 'office' | 'staff-room' | 'kitchen' | 'living-room' | 'upload' | null
   sceneUrl?: string | null

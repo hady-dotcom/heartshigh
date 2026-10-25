@@ -32,7 +32,7 @@ import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
 import { shellOf } from '@/lib/portal-look'
-import { nextCourseFilms } from './course-home'
+import { FilmChips, nextCourseFilms } from './course-home'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -208,7 +208,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
             {nextFilms.map((film) => (
               <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
                 <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
-                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small>{modernHome ? <FilmChips seconds={film.seconds} done={film.done} /> : null}</span>
               </Link>
             ))}
           </div>
@@ -250,6 +250,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
     rows(payload, 'completions', { user: { equals: user.id } }, { limit: 200 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { limit: 400 }),
   ])
+  const modernLanes = shellOf(portal) === 'modern'
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const lanes = ownLibrary ? [] : lanesWithClips(opening.route, opening.clips, opening.laneTitles)
   const nextFilms = lanes.length ? [] : await nextCourseFilms(payload, user, base, 4)
@@ -307,7 +308,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             {nextFilms.length ? nextFilms.map((film) => (
               <Link key={film.href} className="continue-row" href={film.href} data-testid="lane-film">
                 <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
-                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small>{modernLanes ? <FilmChips seconds={film.seconds} done={film.done} /> : null}</span>
               </Link>
             )) : <p className="card"><span>No clips have been approved yet. The courses below are ready to watch.</span></p>}
           </div>

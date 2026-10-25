@@ -368,8 +368,8 @@ export interface Portal {
   brandName?: string | null;
   /** Modern is the white learner shell. HEARTS keeps the evening theme. */
   shell?: ('modern' | 'hearts') | null;
-  /** Heading and body type on the modern shell. */
-  fontPair?: ('jakarta' | 'bricolage' | 'outfit' | 'inter') | null;
+  /** Type on the modern shell. System is the Apple-style default. */
+  fontPair?: ('system' | 'jakarta' | 'bricolage' | 'outfit' | 'inter') | null;
   /** Course cards is the usual course home. Garden is the older picture. */
   courseHome?: ('cards' | 'garden') | null;
   /** Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard. */

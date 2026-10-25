@@ -75,6 +75,11 @@
   src: url('/fonts/inter-latin-800-normal.woff2') format('woff2');
 }
 
+html[data-theme] .app-stage.shell-modern,
+html[data-theme] .app-stage.shell-modern[data-font='system'] {
+  --heading-font: var(--hh-font-display);
+  --body-font: var(--hh-font-system);
+}
 html[data-theme] .app-stage.shell-modern[data-font='jakarta'] {
   --heading-font: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
   --body-font: 'Inter', system-ui, sans-serif;
@@ -119,7 +124,7 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] {
   --focus: var(--portal-accent, var(--hh-accent));
   --serif: var(--heading-font);
   --sans: var(--body-font);
-  background: var(--hh-paper);
+  background: var(--hh-canvas);
   background-image: none;
   color: var(--hh-ink);
   color-scheme: light;
@@ -133,7 +138,7 @@ html[data-theme] .app-stage.shell-modern .app,
 html[data-theme] .app-stage.shell-modern main.app.evening,
 html[data-theme] .app-stage.shell-modern main.app.dark,
 html[data-theme] .app-stage.shell-modern[data-portal-brand] .app {
-  background-color: var(--hh-paper);
+  background-color: var(--hh-canvas);
   background-image: none;
   color: var(--hh-ink);
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
@@ -156,7 +161,10 @@ html[data-theme] .app-stage.shell-modern.has-scene[data-portal-brand] .app {
 }
 
 html[data-theme] .app-stage.shell-modern .app-scroll {
-  padding: var(--hh-space-2) var(--hh-space-4) var(--hh-space-5);
+  padding: var(--hh-space-4) var(--hh-space-4) calc(var(--hh-space-6) + var(--hh-chrome) + env(safe-area-inset-bottom, 0px));
+  background-color: var(--hh-canvas);
+  background-image: linear-gradient(180deg, var(--hh-accent-fill) 0, var(--hh-canvas) var(--hh-wash-size));
+  background-repeat: no-repeat;
 }
 
 html[data-theme] .app-stage.shell-modern .app-head,
@@ -186,35 +194,36 @@ html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1, .splash h1, 
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1) {
-  font-size: var(--hh-font-size-h1);
-  font-weight: 800;
-  line-height: 1.15;
+  font-size: var(--hh-font-size-display) !important;
+  font-weight: 700;
+  line-height: var(--hh-line-large-title);
+  letter-spacing: -0.02em;
   margin: 0 0 var(--hh-space-2);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h2, .q-card h2, .sheet h2, .grow-banner h2, .carry-on h2, .part-chip.off-film) {
   font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: var(--hh-font-size-h2);
+  font-size: var(--hh-font-size-title) !important;
   font-weight: 700;
-  line-height: 1.25;
+  line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h3, .card h3, .lane-card h3) {
   font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: var(--hh-font-size-h3);
+  font-size: var(--hh-font-size-h3) !important;
   font-weight: 700;
-  letter-spacing: -0.015em;
-  line-height: 1.35;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
   color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern :is(p, li, label, td, .lead, .card p, .q-card p, .note p) {
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
-  font-size: var(--hh-font-size-body);
+  font-size: var(--hh-font-size-body-lg) !important;
   font-weight: 400;
-  line-height: 1.6;
+  line-height: 1.47;
 }
 
 html[data-theme] .app-stage.shell-modern :is(small, .muted, .eyebrow, .page-sub) {
@@ -232,9 +241,9 @@ html[data-theme] .app-stage.shell-modern :is(.card, .q-card, .carry-on, .course-
   background: var(--hh-paper);
   background-image: none;
   color: var(--hh-ink);
-  border: var(--hh-line-width) solid var(--hh-line);
+  border: none;
   border-radius: var(--hh-radius-card);
-  box-shadow: var(--hh-shadow-none);
+  box-shadow: var(--hh-shadow-card);
 }
 
 html[data-theme] .app-stage.shell-modern .carry-on,
@@ -321,10 +330,11 @@ html[data-theme] .app-stage.shell-modern .start {
 }
 
 html[data-theme] .app-stage.shell-modern .week-strip {
-  background: var(--hh-surface);
+  background: var(--hh-paper);
   color: var(--hh-ink);
-  border: var(--hh-line-width) solid var(--hh-line);
+  border: none;
   border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-card);
 }
 
 html[data-theme] .app-stage.shell-modern .week-day small,
@@ -568,12 +578,12 @@ html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'],
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .app-scroll,
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'] .app-scroll,
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'] .app-scroll {
-  background: var(--hh-paper);
+  background: var(--hh-canvas);
   background-image: none;
   color: var(--hh-ink);
 }
 
-html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] :is(.card, .card p, .card h2, .card h3, .list-link, .back, .app-head h1, .app-scroll) {
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] :is(.card, .card p, .card h2, .card h3, .list-link, .back, .app-head h1) {
   color: var(--hh-ink);
   background-color: var(--hh-paper);
   background-image: none;
@@ -935,4 +945,568 @@ html[data-theme] .app-stage.shell-modern a.pill.outline[data-testid='schedule-th
   color: var(--portal-accent, var(--hh-accent));
   border-color: var(--portal-accent, var(--hh-accent));
   background: var(--hh-paper);
+}
+
+/* 2026 shell: glass chrome, image-led courses, motion. HEARTS never gets .shell-modern. */
+
+html[data-theme] .app-stage.shell-modern .glass-bar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--hh-space-2);
+  min-height: var(--hh-header);
+  padding: calc(var(--hh-space-1) + env(safe-area-inset-top, 0px)) var(--hh-space-3) var(--hh-space-2);
+  background: var(--hh-glass);
+  border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
+  box-shadow: inset 0 1px 0 var(--hh-glass-edge);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-theme] .app-stage.shell-modern .glass-bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: calc(var(--hh-space-3) * -1);
+  height: var(--hh-space-3);
+  background: linear-gradient(to bottom, var(--hh-glass), transparent);
+  pointer-events: none;
+}
+
+html[data-theme] .app-stage.shell-modern .glass-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+}
+
+html[data-theme] .app-stage.shell-modern .glass-row > :is(.brand-word, span) {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .glass-row > .page-help {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .bar-title {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  justify-self: center;
+  max-width: 62%;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateY(var(--hh-space-1));
+  color: var(--hh-ink);
+  font-family: var(--heading-font), var(--hh-font-display);
+  font-size: var(--hh-font-size-headline);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  pointer-events: none;
+  transition: opacity 320ms var(--hh-spring), transform 320ms var(--hh-spring);
+}
+
+html[data-theme] .app-stage.shell-modern.title-collapsed .bar-title {
+  opacity: 1;
+  transform: none;
+}
+
+html[data-theme] .app-stage.shell-modern.title-collapsed .glass-bar .brand-word {
+  opacity: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .glass-bar:not(:has(.brand-word)) {
+  justify-content: flex-end;
+}
+
+html[data-theme] .app-stage.shell-modern .glass-bar .page-help {
+  width: auto;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .glass-bar .brand-word,
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .glass-bar .shell-brand {
+  margin: 0;
+  color: var(--hh-ink);
+  font-weight: 800;
+}
+
+html[data-theme] .app-stage.shell-modern .app-head,
+html[data-theme] .app-stage.shell-modern .main-head {
+  position: static;
+  background: transparent;
+  backdrop-filter: none;
+}
+
+html[data-theme] .app-stage.shell-modern .route-fade {
+  animation: hh-page-in 520ms var(--hh-spring);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.course-card, .carry-on, .buffet-row, .continue-row, .part-row, .pill, .list-link, .j-tile) {
+  transition: transform 420ms var(--hh-spring), box-shadow 420ms var(--hh-spring);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.course-card, .carry-on, .buffet-row, .continue-row, .part-row, .pill, .tab):active {
+  transform: scale(var(--hh-press));
+}
+
+html[data-theme] .app-stage.shell-modern :is(.tabbar, .tabbar.dark, .tabbar.evening) {
+  background: var(--hh-glass);
+  border: var(--hh-line-width) solid var(--hh-glass-line);
+  border-bottom: none;
+  border-radius: var(--hh-radius-card) var(--hh-radius-card) 0 0;
+  box-shadow: inset 0 1px 0 var(--hh-glass-edge);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-theme] .app-stage.shell-modern .tabbar::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--hh-space-4) * -1);
+  height: var(--hh-space-4);
+  background: linear-gradient(to top, var(--hh-glass), transparent);
+  pointer-events: none;
+}
+
+html[data-theme] .app-stage.shell-modern .tab {
+  border-radius: var(--hh-radius-pill);
+  transition: background 160ms var(--hh-ease), color 160ms var(--hh-ease);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.tab.on, .tabbar.dark .tab.on, .tabbar.evening .tab.on) {
+  background: var(--hh-accent-fill);
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .tab.on .tab-icon,
+html[data-theme] .app-stage.shell-modern .tab.on[data-testid='tab-garden'] .tab-icon {
+  background: transparent;
+  color: var(--portal-accent, var(--hh-accent));
+  filter: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero {
+  position: relative;
+  min-height: var(--hh-hero);
+  margin: 0 0 var(--hh-space-4);
+  border-radius: var(--hh-radius-card);
+  overflow: hidden;
+  background: var(--portal-accent, var(--hh-accent));
+  box-shadow: var(--hh-shadow-lift);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-scrim {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: var(--hh-hero);
+  background: var(--hh-hero-scrim);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy {
+  background: var(--hh-video);
+  color: var(--hh-on-accent);
+  padding: var(--hh-space-4);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy :is(h1, p, .eyebrow, .hero-line) {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy h1 {
+  margin-bottom: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy .bar {
+  background: var(--hh-hero-track);
+  margin-bottom: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy .bar > i {
+  background: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .course-cards {
+  display: grid;
+  gap: var(--hh-space-4);
+}
+
+html[data-theme] .app-stage.shell-modern .course-card,
+html[data-theme] .app-stage.shell-modern .carry-on {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--hh-space-3);
+  padding: var(--hh-space-2);
+  border: none;
+  box-shadow: var(--hh-shadow-lift);
+  overflow: hidden;
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .thumb,
+html[data-theme] .app-stage.shell-modern .carry-on .thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .t {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--hh-space-1) var(--hh-space-3);
+  align-items: center;
+  padding: 0 var(--hh-space-2) var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .t > b,
+html[data-theme] .app-stage.shell-modern .course-card .t > small {
+  grid-column: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .t b {
+  font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: var(--hh-font-size-h3);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .bar,
+html[data-theme] .app-stage.shell-modern .carry-on .bar {
+  grid-column: 1 / -1;
+  height: var(--hh-bar);
+  margin: var(--hh-space-1) 0 0;
+  background: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .bar > i,
+html[data-theme] .app-stage.shell-modern .carry-on .bar > i {
+  background: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .progress-ring {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  width: var(--hh-ring);
+  height: var(--hh-ring);
+  border-radius: 50%;
+  background: conic-gradient(var(--portal-accent, var(--hh-accent)) var(--progress, 0%), var(--hh-surface) 0);
+  display: grid;
+  place-items: center;
+}
+
+html[data-theme] .app-stage.shell-modern .progress-ring span {
+  width: calc(var(--hh-ring) - var(--hh-space-3));
+  height: calc(var(--hh-ring) - var(--hh-space-3));
+  border-radius: 50%;
+  background: var(--hh-paper);
+  display: grid;
+  place-items: center;
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-small);
+  font-weight: 800;
+}
+
+html[data-theme] .app-stage.shell-modern .carry-on .play-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hh-space-2);
+  min-height: var(--hh-tap-min);
+  border-radius: var(--hh-radius-pill);
+  font-weight: 800;
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row,
+html[data-theme] .app-stage.shell-modern .continue-row,
+html[data-theme] .app-stage.shell-modern .part-row.film-row {
+  border: none;
+  box-shadow: var(--hh-shadow-lift);
+  padding: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .continue-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-items: stretch;
+  gap: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .continue-row .thumb {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-control);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb,
+html[data-theme] .app-stage.shell-modern .part-row.film-row .thumb {
+  width: var(--hh-thumb-w);
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-control);
+  border: none;
+}
+
+html[data-theme] .app-stage.shell-modern .film-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hh-space-2);
+  align-items: center;
+  margin-top: var(--hh-space-1);
+}
+
+html[data-theme] .app-stage.shell-modern .duration-chip,
+html[data-theme] .app-stage.shell-modern .done-check {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hh-space-5);
+  padding: 0 var(--hh-space-2);
+  border-radius: var(--hh-radius-pill);
+  background: var(--hh-accent-fill);
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-small);
+  font-weight: 700;
+}
+
+html[data-theme] .app-stage.shell-modern .done-check {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb.is-fallback .thumb-title {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback {
+  background-color: var(--portal-accent, var(--hh-accent));
+  background-image: linear-gradient(100deg, var(--portal-accent, var(--hh-accent)) 0%, var(--hh-accent-fill) 42%, var(--portal-accent, var(--hh-accent)) 78%);
+  background-size: 220% 100%;
+  animation: hh-shimmer 1.4s var(--hh-ease) infinite;
+}
+
+@keyframes hh-page-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes hh-shimmer {
+  from { background-position: 100% 0; }
+  to { background-position: 0 0; }
+}
+
+html[data-theme] .app-stage.shell-modern :is(.card, .q-card, .carry-on, .course-card, .continue-row, .part-row, .buffet-row, .list-link, .j-tile, .course-hero) {
+  corner-shape: squircle;
+}
+
+html[data-theme] .app-stage.shell-modern .app-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  min-height: var(--hh-tap-min);
+  padding: 0 var(--hh-space-3);
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-paper);
+  color: var(--hh-muted);
+  border: var(--hh-line-width) solid var(--hh-glass-line);
+}
+
+html[data-theme] .app-stage.shell-modern .app-search input {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--hh-tap-min);
+  border: 0;
+  background: transparent;
+  color: var(--hh-ink);
+  font-family: var(--body-font), var(--hh-font-system);
+  font-size: var(--hh-font-size-body-lg);
+  font-weight: 400;
+}
+
+html[data-theme] .app-stage.shell-modern .app-search input:focus {
+  outline: none;
+}
+
+html[data-theme] .app-stage.shell-modern .app-search:focus-within {
+  box-shadow: 0 0 0 var(--hh-line-width) var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .search-panel[hidden] {
+  display: none;
+}
+
+html[data-theme] .app-stage.shell-modern .search-panel {
+  position: absolute;
+  z-index: 60;
+  left: 0;
+  right: 0;
+  top: calc(100% + var(--hh-space-2));
+  display: grid;
+  max-height: 60vh;
+  overflow: auto;
+  padding: var(--hh-space-2);
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-glass);
+  box-shadow: inset 0 1px 0 var(--hh-glass-edge), var(--hh-shadow-lift);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-theme] .app-stage.shell-modern .search-hit {
+  display: flex;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  border: 0;
+  border-radius: var(--hh-radius-control);
+  background: transparent;
+  color: var(--hh-ink);
+  font-family: var(--body-font), var(--hh-font-system);
+  font-size: var(--hh-font-size-body-lg);
+  font-weight: 600;
+  text-align: left;
+  text-decoration: none;
+}
+
+html[data-theme] .app-stage.shell-modern .search-hit small {
+  display: block;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 500;
+}
+
+html[data-theme] .app-stage.shell-modern .search-label {
+  margin: var(--hh-space-2) var(--hh-space-3) var(--hh-space-1);
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 600;
+}
+
+html[data-theme] .app-stage.shell-modern .eyebrow {
+  font-size: var(--hh-font-size-caption) !important;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+html[data-theme] .app-stage.shell-modern .list-link {
+  border: none;
+  border-radius: var(--hh-radius-control);
+  margin: 0 0 var(--hh-space-2);
+  padding: var(--hh-space-3);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
+  font-size: var(--hh-font-size-headline);
+  font-weight: 600;
+}
+
+html[data-theme] .app-stage.shell-modern .profile b {
+  font-family: var(--heading-font), var(--hh-font-display);
+  font-size: var(--hh-font-size-title);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+html[data-theme] .app-stage.shell-modern .profile .avatar {
+  width: 72px;
+  height: 72px;
+}
+
+html[data-theme] .app-stage.shell-modern .course-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--hh-space-2);
+  align-items: center;
+  padding: var(--hh-space-2);
+  border: none;
+  border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-lift);
+  background: var(--hh-paper);
+}
+
+html[data-theme] .app-stage.shell-modern .course-row .thumb {
+  grid-column: 1 / -1;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-control);
+  background-color: var(--portal-accent, var(--hh-accent));
+  background-image: none;
+  background-size: cover;
+}
+
+html[data-theme] .app-stage.shell-modern main.app .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) {
+  background-color: var(--hh-canvas);
+  background-image: linear-gradient(180deg, var(--hh-accent-fill) 0, var(--hh-canvas) var(--hh-wash-size));
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile {
+  box-shadow: var(--hh-shadow-lift);
+  border: none;
+  border-radius: var(--hh-radius-card);
+}
+
+/* The player film used to pin over the glass search, so Back and the course links sat on the field. */
+html[data-theme] .app-stage.shell-modern:has([data-testid='player']) .glass-bar {
+  position: relative;
+  top: auto;
+}
+
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film {
+  position: relative;
+  top: auto;
+  z-index: 1;
+  margin-top: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='sequence-question'] {
+  scroll-margin-top: calc(var(--hh-chrome) + var(--hh-space-4));
+  scroll-margin-bottom: calc(var(--hh-chrome) + var(--hh-space-4));
+}
+
+html[data-theme] .app-stage.shell-modern .journey .j-top {
+  position: sticky;
+  top: 0;
+  z-index: 6;
+  background: var(--hh-glass);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .app-stage.shell-modern .route-fade,
+  html[data-theme] .app-stage.shell-modern .thumb.is-fallback,
+  html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback {
+    animation: none;
+  }
+
+  html[data-theme] .app-stage.shell-modern :is(.course-card, .carry-on, .buffet-row, .continue-row, .part-row, .pill, .tab):active {
+    transform: none;
+  }
 }

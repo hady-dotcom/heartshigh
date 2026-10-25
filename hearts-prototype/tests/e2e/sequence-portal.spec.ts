@@ -59,9 +59,9 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
     }
   })
   expect(coursesLook.shell).toBe('modern')
-  expect(coursesLook.font).toBe('jakarta')
+  expect(coursesLook.font).toBe('system')
   expect(coursesLook.bg).toBe('rgb(255, 255, 255)')
-  expect(coursesLook.heading.toLowerCase()).toContain('jakarta')
+  expect(coursesLook.heading.toLowerCase()).toMatch(/inter|sf pro|system/)
   await shot(page, 'hady-courses-phone')
 
   await page.getByTestId('course-card').filter({ hasText: 'Guiding Home Learning' }).click()
@@ -116,7 +116,7 @@ test('admin can paste, retitle, reorder and export', async ({ page }) => {
   await page.setViewportSize(PHONE)
   await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/settings')
   await expect(page.getByTestId('shell-look')).toHaveValue('modern')
-  await expect(page.getByTestId('font-pair')).toHaveValue('jakarta')
+  await expect(page.getByTestId('font-pair')).toHaveValue('system')
   await expect(page.getByTestId('course-home')).toHaveValue('cards')
   await expect(page.getByTestId('accent-colour')).toHaveValue(/#2563eb/i)
   await page.getByTestId('save-settings').click()

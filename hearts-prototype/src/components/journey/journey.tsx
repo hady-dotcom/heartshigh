@@ -75,7 +75,7 @@ export type JourneyProps = {
   variants?: VariantMap
   features?: import('@/lib/features').FeatureMap
   /** Shown when this portal has no approved clips, so the feed is never a blank page. */
-  courseFilms?: { href: string; title: string; course: string; place: number; poster: string | null }[]
+  courseFilms?: { href: string; title: string; course: string; place: number; poster: string | null; seconds?: number; done?: boolean }[]
 }
 
 const TAB_DELAY = 200
@@ -2598,8 +2598,17 @@ export function Journey(props: JourneyProps) {
           <h1>Next to watch</h1>
           {courseFilms.map((film) => (
             <a key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
-              {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
-              <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+              {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : props.plain ? <span className="thumb is-fallback" data-testid="film-thumb" /> : null}
+              <span className="t">
+                <b>{film.place}. {film.title}</b>
+                <small>{film.course}</small>
+                {props.plain ? (
+                  <span className="film-meta">
+                    <span className="duration-chip">{film.seconds ? clock(film.seconds) : 'Length not known yet'}</span>
+                    {film.done ? <span className="done-check" data-testid="film-done">Done</span> : null}
+                  </span>
+                ) : null}
+              </span>
             </a>
           ))}
         </div>

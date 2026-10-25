@@ -966,18 +966,18 @@ export function CoursePlayer({
         </section>
       ) : null}
       <section className="garden-card" data-testid="course-garden">
-        <p className="eyebrow">Course garden</p>
+        <p className="eyebrow">{films ? 'This course' : 'Course garden'}</p>
         <div className="garden-grid">
           {/* TODO: swap this crop for the painterly tree stage PR #13 adds at public/garden/trees/<lane>/stage-N.webp after that branch merges. */}
-          <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} fruits`} />
+          {films ? null : <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} fruits`} />}
           <div>
-            <h3>What&apos;s done</h3>
-            <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>
+            <h3>{films ? 'Progress' : "What's done"}</h3>
+            <small data-testid="fruit-count">{garden.done} of {garden.total} {films ? 'films' : 'fruits'}</small>
             <p className="muted fruit-explain" data-testid="fruit-explain">{films ? 'Films you have watched and questions you have answered in this course.' : 'Talks you have watched and questions you have answered in this course.'}</p>
             <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
             {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}
-            <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>Open garden</Link>
+            <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>{films ? 'Courses' : 'Open garden'}</Link>
           </div>
         </div>
       </section>

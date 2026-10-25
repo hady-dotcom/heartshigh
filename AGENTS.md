@@ -28,10 +28,16 @@ Run these on port 3100 (the e2e server) unless a gate says otherwise. Do not mer
 3. **Visual QA.** `npm run test:visual` opens every learner and admin screen linked from Hady Home and HEARTS. It runs in Chromium and WebKit at 390×844 and 1280×800, and in mobile Chrome emulation. It fails on clipped text, overlapping controls, tap targets under 44px, body text under 15px, headings that are not clearly larger than body text, WCAG AA contrast failures, horizontal page scroll, empty sections, film order that does not match the sheet, or a HEARTS colour, string, or image on Hady Home.
 4. **Screenshot baselines.** The same command compares Playwright `toHaveScreenshot` baselines. An unexpected difference fails the run. Update baselines only for a change you intended, with `npx playwright test -c playwright.visual.config.ts --update-snapshots`, and list every updated baseline in the pull request.
 5. **Lighthouse, mobile, on the production bundle.** `npm run test:lighthouse` fails if accessibility is under 95 or performance is under 80 on the key learner pages. This uses local Lighthouse, not a paid service.
+6. **Never less finished.** Before a merge, put a phone screenshot of each changed learner screen beside the same screen from the last richly styled build (the garden look, before the white-theme change in pull request 141). The new screen has to be at least as finished in imagery, depth, motion, and hierarchy. A plainer screen blocks the merge. HEARTS evening screens are the reference for HEARTS and must not get plainer.
+7. **House style.** The modern learner shell follows Apple’s Human Interface Guidelines for the iOS 26 Liquid Glass era. The standard lives in `tokens.css`: system type by default, the Apple type scale, an 8pt grid, continuous-corner cards, translucent glass bars, a large title that collapses on scroll, live search, spring motion, and line icons. The portal accent is the only tint. A screen that would not ship on an Apple product does not merge.
 
 ## Fonts
 
-Hady Home (the white shell) uses at most two type families: a heading face and Inter. HEARTS keeps its evening set: Cormorant Garamond, Libre Caslon Text, Inter, and Noto Naskh Arabic. Do not restyle HEARTS down to two families.
+The modern shell defaults to the system stack: `-apple-system`, SF Pro where the phone has it, then Inter. A portal can still choose Jakarta, Bricolage, Outfit, or Inter. At most two type families show at once. HEARTS keeps its evening set: Cormorant Garamond, Libre Caslon Text, Inter, and Noto Naskh Arabic. Do not restyle HEARTS down to two families, and do not put the liquid-glass shell on a HEARTS portal.
+
+## House style
+
+Judge every modern learner screen with one question: would this pass on an Apple product? The page is the grouped grey, cards are white, titles are large, glass blurs what scrolls under it, rows are image-led, and the accent tint is used sparingly. On a film, the picture sits below the search field. Do not add religious motifs, textures, or a scene unless an admin has chosen one.
 
 ## Look
 

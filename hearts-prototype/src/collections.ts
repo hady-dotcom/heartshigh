@@ -148,14 +148,15 @@ export const Portals: CollectionConfig = {
     {
       name: 'fontPair',
       type: 'select',
-      defaultValue: 'jakarta',
+      defaultValue: 'system',
       options: [
+        { label: 'System', value: 'system' },
         { label: 'Jakarta', value: 'jakarta' },
         { label: 'Bricolage', value: 'bricolage' },
         { label: 'Outfit', value: 'outfit' },
         { label: 'Inter', value: 'inter' },
       ],
-      admin: { description: 'Heading and body type on the modern shell.' },
+      admin: { description: 'Type on the modern shell. System is the Apple-style default. The other pairs stay available.' },
     },
     {
       name: 'courseHome',
