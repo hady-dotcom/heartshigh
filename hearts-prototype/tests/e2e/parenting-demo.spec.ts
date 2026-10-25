@@ -99,7 +99,7 @@ test('cast, four live screens, and a change that moves between them', async ({ p
   await shot(page, 'parenting-demo-stage-reset')
 })
 
-test('PARENT-DEMO joins straight into the course', async ({ page }) => {
+test('PARENT-DEMO joins through Hady Home into the first film', async ({ page }) => {
   await page.setViewportSize(PHONE)
   const email = `abdallah.parent.${Date.now()}@example.com`
   await page.goto(`${E2E_BASE}/join?code=PARENT-DEMO`)
@@ -108,8 +108,20 @@ test('PARENT-DEMO joins straight into the course', async ({ page }) => {
   await page.getByTestId('join-email').fill(email)
   await page.getByTestId('join-password').fill('demo-pass-1')
   await page.getByTestId('join-submit').click()
-  await page.waitForURL(/\/p\/parenting\/course\//)
+  await page.waitForURL(/\/p\/parenting\/welcome/)
+  await expect(page.getByTestId('portal-brand')).toHaveText('Hady Home')
+  await expect(page.locator('body')).not.toContainText(/\bHEARTS\b/)
+  await shot(page, 'hady-welcome-phone')
+  await page.getByTestId('welcome-begin').click()
+  await expect(page.getByTestId('placing-question')).toHaveCount(4)
+  const questions = page.getByTestId('placing-question')
+  for (let index = 0; index < 4; index++) await questions.nth(index).locator('input').first().check()
+  await page.getByTestId('placing-submit').click()
+  await expect(page.getByTestId('start-first')).toBeVisible()
+  await shot(page, 'hady-after-questions-phone')
+  await page.getByTestId('start-first').click()
   await expect(page.getByTestId('sequence-course')).toBeVisible()
   await expect(page.getByTestId('sequence-question')).toBeVisible()
-  await shot(page, 'parenting-demo-join-phone')
+  await expect(page.getByTestId('parent-said').first()).toBeVisible()
+  await shot(page, 'hady-film-phone')
 })

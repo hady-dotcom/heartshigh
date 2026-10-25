@@ -4,6 +4,7 @@ import { Hidden } from '@/components/app/shell'
 import { GiveCourse } from '@/components/desk/give-course'
 import { SequenceList } from '@/components/desk/sequence-list'
 import { FEATURE_KEYS, featuresOf } from '@/lib/features'
+import { answersForFilm, feedbackPhaseLabel, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
 import { PARENTING_DEMO_CODE, learnerAnswers, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { SEQUENCE_COPY, kineticMomentsOn } from '@/lib/sequence'
 import { portalWithDemoFeatures } from '@/server/parenting-demo'
@@ -173,6 +174,33 @@ export async function SequenceCodes(ctx: Ctx) {
   )
 }
 
+function ParentSaid({ base, film }: { base: string; film?: string }) {
+  const all = loadRealAnswers()
+  const orders = [...new Set(all.map((row) => row.videoOrder))].sort((a, b) => a - b)
+  const current = Number(film || orders[0] || 0)
+  const rows = answersForFilm(current, all)
+  const phases = [...new Set(rows.map((row) => row.phase))]
+  return (
+    <section className="panel" data-testid="what-parents-said">
+      <h2>What parents said</h2>
+      <p className="muted">Real answers from the sheets, kept off learner accounts. Sample lines fill the films with none.</p>
+      <p>
+        {orders.map((order) => (
+          <Link key={order} href={`${base}${base.includes('?') ? '&' : '?'}film=${order}`} style={{ marginRight: 8 }}>{order}</Link>
+        ))}
+      </p>
+      {phases.length ? phases.map((phase) => (
+        <div key={phase} data-testid="parent-phase">
+          <h3>{phaseLabel(phase)}</h3>
+          {rows.filter((row) => row.phase === phase).map((row, index) => (
+            <p key={`${phase}-${index}`} data-testid="parent-said"><span className="muted">{feedbackPhaseLabel(phase)}. </span>{row.text}</p>
+          ))}
+        </div>
+      )) : <p>No parent notes on this film yet.</p>}
+    </section>
+  )
+}
+
 export async function SequenceLearners(ctx: Ctx) {
   if (ctx.demo) return demoLearners(ctx)
   const { payload, portal, base } = ctx
@@ -192,6 +220,7 @@ export async function SequenceLearners(ctx: Ctx) {
           />
         </div>
       </section>
+      <ParentSaid base={here} film={ctx.query.film} />
       {learners.length ? (
         <ul data-testid="sequence-learner-list">
           {learners.map((learner) => <li key={learner.id} data-testid="sequence-learner">{str(learner.name)}</li>)}
@@ -222,10 +251,12 @@ async function demoOverview(ctx: Ctx) {
         <div className="count-tile"><span>Codes</span><b data-testid="sequence-code-count">1</b></div>
       </div>
       <p data-testid="demo-join-code">Join code {PARENTING_DEMO_CODE}. It opens this course.</p>
+      <ParentSaid base={here} film={ctx.query.film} />
       <ul data-testid="demo-answer-list">
-        {demo.state.answers.map((answer) => (
+        {demo.state.answers.filter((answer) => answer.source !== 'real').map((answer) => (
           <li key={answer.id} data-testid="demo-answer">
             <b>{answer.learner}</b> on {answer.film}: {answer.body}
+            {answer.phaseLabel ? <span> {answer.phaseLabel}</span> : null}
             {answer.reply ? <span data-testid="demo-reply"> Reply: {answer.reply}</span> : null}
           </li>
         ))}
@@ -267,8 +298,9 @@ function demoLearners(ctx: Ctx) {
           <button className="pill ink" type="submit" data-testid="demo-note-send">Send note</button>
         </form>
       ) : null}
+      <ParentSaid base={withDemoQuery(`${ctx.base}/admin/teach`, demo.token, demo.role)} film={ctx.query.film} />
       <ul data-testid="demo-answer-list">
-        {demo.state.answers.map((answer) => (
+        {demo.state.answers.filter((answer) => answer.source !== 'real').map((answer) => (
           <li key={answer.id} data-testid="demo-answer">
             <Link href={withDemoQuery(`${ctx.base}/admin/teach?who=${encodeURIComponent(answer.learner)}`, demo.token, demo.role)}>
               <b>{answer.learner}</b> on {answer.film}

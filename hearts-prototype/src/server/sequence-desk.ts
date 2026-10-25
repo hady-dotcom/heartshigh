@@ -14,7 +14,9 @@ import {
   type ParsedVideo,
   type ShapeSource,
 } from '@/lib/sequence'
-import { buildExportZip, type ExportPortal, type ExportVideo } from '@/lib/sequence-export'
+import { OPENING_QUESTIONS, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
+import { SAMPLE_GAP_ANSWERS } from '@/lib/sample-gap-data'
+import { buildExportZip, type ExportAnswer, type ExportPortal, type ExportVideo } from '@/lib/sequence-export'
 import { transcriptFor } from '@/lib/youtube'
 import { sortParts } from '@/lib/part-order'
 
@@ -472,6 +474,7 @@ export async function exportSequenceApp(payload: Payload, portal: {
   name?: string | null
   slug?: string | null
   organisationName?: string | null
+  brandName?: string | null
   welcome?: string | null
   colour?: string | null
   accent?: string | null
@@ -505,15 +508,17 @@ export async function exportSequenceApp(payload: Payload, portal: {
   const [cuts, points] = ids.length
     ? await Promise.all([
         payload.find({ collection: 'cuts', overrideAccess: true, depth: 0, limit: 300, where: { lesson: { in: ids } } }),
-        payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 300, where: { lesson: { in: ids } } }),
+        payload.find({ collection: 'engagement-points', overrideAccess: true, depth: 0, limit: 400, where: { lesson: { in: ids } } }),
       ])
     : [{ docs: [] as unknown[] }, { docs: [] as unknown[] }]
   const videos: ExportVideo[] = ordered.map((row, index) => {
     const cut = cuts.docs.map((item) => asDoc(item)).find((item) => idOf(item.lesson) === row.id)
-    const point = points.docs.map((item) => asDoc(item)).find((item) => idOf(item.lesson) === row.id)
+    const filmPoints = points.docs.map((item) => asDoc(item)).filter((item) => idOf(item.lesson) === row.id)
+    const point = filmPoints[0]
     const provider = String(row.videoProvider || 'youtube') === 'vimeo' ? 'vimeo' : 'youtube'
+    const order = Number(row.order || index + 1)
     return {
-      order: index + 1,
+      order,
       title: String(row.title || `Film ${index + 1}`),
       speaker: String(row.speaker || ''),
       provider,
@@ -524,8 +529,17 @@ export async function exportSequenceApp(payload: Payload, portal: {
       turn: String(cut?.turn || ''),
       land: String(cut?.land || ''),
       question: String(point?.prompt || ''),
+      questions: filmPoints.map((item) => ({ second: Number(item.second || 0), prompt: String(item.prompt || '') })).filter((item) => item.prompt),
     }
   })
+  const parenting = String(portal.slug || '') === 'parenting'
+  const brandName = String(portal.brandName || (parenting ? 'Hady Home' : '')).trim()
+  const answers: ExportAnswer[] = parenting
+    ? [
+        ...loadRealAnswers().map((row) => ({ order: row.videoOrder, phase: row.phase, label: phaseLabel(row.phase), question: row.question, text: row.text })),
+        ...SAMPLE_GAP_ANSWERS.map((row) => ({ order: row.order, phase: 'Sample', label: 'Sample answer', question: row.prompt, text: row.body, sample: true })),
+      ]
+    : []
   const packed: ExportPortal = {
     name: String(portal.organisationName || portal.name || 'Course'),
     slug: String(portal.slug || 'course'),
@@ -535,6 +549,9 @@ export async function exportSequenceApp(payload: Payload, portal: {
     lockOrder: portal.lockOrder !== false,
     note: String(portal.welcome || SEQUENCE_COPY.examples),
     joinCode: opts?.joinCode || '',
+    brandName: brandName || undefined,
+    opening: parenting ? OPENING_QUESTIONS.map((question) => ({ prompt: question.prompt, options: question.options })) : undefined,
+    answers: answers.length ? answers : undefined,
   }
   return { zip: buildExportZip(packed, videos), filename: `${packed.slug}-app.zip` }
 }

@@ -13,6 +13,16 @@ export type ExportVideo = {
   turn: string
   land: string
   question: string
+  questions?: { second: number; prompt: string }[]
+}
+
+export type ExportAnswer = {
+  order: number
+  phase: string
+  label: string
+  question: string
+  text: string
+  sample?: boolean
 }
 
 export type ExportPortal = {
@@ -23,8 +33,12 @@ export type ExportPortal = {
   logoUrl: string
   lockOrder: boolean
   note: string
-  /** When set, opening the file starts the first film and shows this code. */
+  /** When set, the file shows this code and does not ask anyone to join again. */
   joinCode?: string
+  /** Set on Hady Home. Opening the file starts here, then the questions, then the films. */
+  brandName?: string
+  opening?: { prompt: string; options: string[] }[]
+  answers?: ExportAnswer[]
 }
 
 function dosStamp(date = new Date('2026-01-01T00:00:00Z')) {
@@ -107,8 +121,13 @@ export function readZipStore(buf: Buffer) {
 }
 
 function readme(portal: ExportPortal) {
-  const code = portal.joinCode ? `Join code: ${portal.joinCode}\nOpening index.html starts the first film. You are already in.\n\n` : ''
-  return `# ${portal.name}
+  const brand = portal.brandName || portal.name
+  const code = portal.joinCode
+    ? portal.brandName
+      ? `Join code: ${portal.joinCode}\nOpening index.html starts in ${brand}. You are already in. A few questions come first, then the films.\n\n`
+      : `Join code: ${portal.joinCode}\nOpening index.html starts the first film. You are already in.\n\n`
+    : ''
+  return `# ${brand}
 
 This folder is a copy of the learner app for demos.
 
@@ -125,7 +144,161 @@ You do not need an account for this copy.
 
 const YOUTUBE_HOST = 'https://www.youtube.com'
 
+function guidedPage(portal: ExportPortal, videos: ExportVideo[]) {
+  const brand = portal.brandName || portal.name
+  const data = JSON.stringify({
+    portal: { ...portal, name: brand },
+    videos: videos.map((film) => ({
+      ...film,
+      questions: film.questions?.length ? film.questions : film.question ? [{ second: 0, prompt: film.question }] : [],
+    })),
+    opening: portal.opening || [],
+    answers: portal.answers || [],
+  }).replace(/</g, '\\u003c')
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(brand)}</title>
+<style>
+  :root { --c: ${portal.colour}; --a: ${portal.accent}; }
+  body { margin: 0; font-family: Georgia, "Iowan Old Style", serif; background: #f6f1ea; color: #2a211c; }
+  header { background: var(--c); color: #fff8f2; padding: 18px; }
+  .word { font-size: 28px; margin: 0; letter-spacing: 0.01em; }
+  main { padding: 16px; max-width: 720px; margin: 0 auto; }
+  fieldset { border: 0; margin: 0 0 16px; padding: 12px; background: #fff; border-radius: 12px; }
+  label { display: block; margin: 8px 0; }
+  button, a.btn { background: var(--a); color: #fff; border: 0; border-radius: 999px; padding: 12px 16px; font: inherit; }
+  .film { background: #111; aspect-ratio: 16/9; }
+  .film iframe { width: 100%; height: 100%; border: 0; }
+  .said { background: #fff; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }
+  .phase { font-size: 13px; color: #6d4c41; margin: 0 0 4px; }
+  ol { padding: 0; list-style: none; }
+  li { border-bottom: 1px solid #eadfd4; padding: 10px 0; }
+  li button { background: transparent; color: inherit; padding: 0; }
+</style>
+</head>
+<body>
+<header>
+  <p class="word" id="brand">${escapeHtml(brand)}</p>
+  <div>Guiding Home Learning</div>
+  ${portal.joinCode ? `<div id="join-code">Join code ${escapeHtml(portal.joinCode)}</div>` : ''}
+</header>
+<main id="welcome">
+  <p id="note">${portal.joinCode ? `You are in. Join code ${escapeHtml(portal.joinCode)}` : 'Welcome in.'}</p>
+  <p>A few questions, then the films. There are no wrong answers.</p>
+  <form id="opening">
+    ${(portal.opening || []).map((question, index) => `<fieldset>
+      <legend>${escapeHtml(question.prompt)}</legend>
+      ${question.options.map((option) => `<label><input type="radio" name="q${index}" value="${escapeHtml(option)}" required> ${escapeHtml(option)}</label>`).join('')}
+    </fieldset>`).join('')}
+    <button type="submit" id="begin">See the course</button>
+  </form>
+</main>
+<main id="course" hidden>
+  <p id="count"></p>
+  <p id="next-line"></p>
+  <p><button type="button" id="open-next">Open the next film</button></p>
+  <ol id="list"></ol>
+</main>
+<main id="film" hidden>
+  <p><button type="button" id="back">Back to the course</button></p>
+  <h1 id="film-title"></h1>
+  <div class="film" id="stage"></div>
+  <div id="questions"></div>
+</main>
+<script id="data" type="application/json">${data}</script>
+<script>
+const data = JSON.parse(document.getElementById('data').textContent)
+const key = 'hady-home:' + data.portal.slug
+const saved = JSON.parse(localStorage.getItem(key) || '{"done":[],"opening":false}')
+function remember() { localStorage.setItem(key, JSON.stringify(saved)) }
+function show(which) {
+  document.getElementById('welcome').hidden = which !== 'welcome'
+  document.getElementById('course').hidden = which !== 'course'
+  document.getElementById('film').hidden = which !== 'film'
+}
+function paintCourse() {
+  const total = data.videos.length
+  const done = saved.done.length
+  document.getElementById('count').textContent = done + ' of ' + total + ' films'
+  const nextAt = data.videos.findIndex(function (row) { return saved.done.indexOf(row.order) < 0 })
+  const next = data.videos[nextAt >= 0 ? nextAt : 0]
+  document.getElementById('next-line').textContent = next ? 'Next up: ' + next.order + '. ' + next.title : ''
+  document.getElementById('open-next').onclick = function () { if (next) paintFilm(next.order) }
+  const list = document.getElementById('list')
+  list.innerHTML = ''
+  data.videos.forEach(function (row) {
+    const item = document.createElement('li')
+    const button = document.createElement('button')
+    button.type = 'button'
+    button.textContent = row.order + '. ' + row.title
+    button.addEventListener('click', function () { paintFilm(row.order) })
+    item.appendChild(button)
+    list.appendChild(item)
+  })
+  show('course')
+}
+function paintFilm(order) {
+  const film = data.videos.filter(function (row) { return row.order === order })[0]
+  if (!film) return paintCourse()
+  document.getElementById('film-title').textContent = film.order + '. ' + film.title
+  const stage = document.getElementById('stage')
+  if (film.provider === 'vimeo' && film.id) {
+    stage.innerHTML = '<iframe title="' + film.title.replace(/"/g, '') + '" src="https://player.vimeo.com/video/' + film.id + '?autoplay=0" allow="fullscreen" allowfullscreen></iframe>'
+  } else {
+    stage.textContent = 'This film will play here.'
+  }
+  const box = document.getElementById('questions')
+  box.innerHTML = ''
+  ;(film.questions || []).forEach(function (question) {
+    const block = document.createElement('section')
+    const heading = document.createElement('h2')
+    heading.textContent = question.prompt
+    block.appendChild(heading)
+    const rows = data.answers.filter(function (row) {
+      return row.order === film.order && row.question.replace(/\\s+/g, ' ').trim().toLowerCase() === question.prompt.replace(/\\s+/g, ' ').trim().toLowerCase()
+    })
+    const phases = []
+    rows.forEach(function (row) {
+      if (phases.indexOf(row.label) < 0) phases.push(row.label)
+    })
+    phases.forEach(function (label) {
+      rows.filter(function (row) { return row.label === label }).forEach(function (row) {
+        const card = document.createElement('article')
+        card.className = 'said'
+        const who = document.createElement('p')
+        who.className = 'phase'
+        who.textContent = row.label
+        const body = document.createElement('p')
+        body.textContent = row.text
+        card.appendChild(who)
+        card.appendChild(body)
+        block.appendChild(card)
+      })
+    })
+    box.appendChild(block)
+  })
+  show('film')
+}
+document.getElementById('opening').addEventListener('submit', function (event) {
+  event.preventDefault()
+  saved.opening = true
+  remember()
+  paintCourse()
+})
+document.getElementById('back').addEventListener('click', paintCourse)
+if (saved.opening) paintCourse()
+else show('welcome')
+</script>
+</body>
+</html>
+`
+}
+
 function page(portal: ExportPortal, videos: ExportVideo[]) {
+  if (portal.brandName) return guidedPage(portal, videos)
   const data = JSON.stringify({ portal, videos }).replace(/</g, '\\u003c')
   return `<!doctype html>
 <html lang="en">
@@ -255,8 +428,8 @@ export function buildExportZip(portal: ExportPortal, videos: ExportVideo[]) {
   return zipStore(buildExportFiles(portal, videos))
 }
 
-/** Learner titles, Vimeo ids, and the first question. Drive and transcript links stay out. */
-export function courseFilmsToExport(films: { order: number; publicTitle: string; vimeoId: string; callouts: { prompt: string }[] }[]): ExportVideo[] {
+/** Learner titles, Vimeo ids, and every callout question. Drive and transcript links stay out. */
+export function courseFilmsToExport(films: { order: number; publicTitle: string; vimeoId: string; callouts: { second?: number; prompt: string }[] }[]): ExportVideo[] {
   return films.map((film, index) => ({
     order: film.order || index + 1,
     title: film.publicTitle,
@@ -269,5 +442,6 @@ export function courseFilmsToExport(films: { order: number; publicTitle: string;
     turn: '',
     land: '',
     question: film.callouts[0]?.prompt || '',
+    questions: film.callouts.filter((callout) => callout.prompt).map((callout) => ({ second: Number(callout.second) || 0, prompt: callout.prompt })),
   }))
 }

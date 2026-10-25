@@ -363,6 +363,10 @@ export interface Portal {
    */
   kineticOn?: boolean | null;
   /**
+   * Shown instead of HEARTS when this portal has its own name. Empty keeps HEARTS.
+   */
+  brandName?: string | null;
+  /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
    */
   demoRooms?:
@@ -3508,6 +3512,7 @@ export interface PortalsSelect<T extends boolean = true> {
   accent?: T;
   teacherCap?: T;
   kineticOn?: T;
+  brandName?: T;
   demoRooms?: T;
   features?: T;
   aiConnection?: T;
