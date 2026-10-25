@@ -418,8 +418,16 @@ test('Hady Home learner screens', async ({ page }, info) => {
     await page.goto('/p/parenting/start', { waitUntil: 'domcontentloaded' })
     await settle(page)
     const play = page.getByTestId('lets-play')
-    if (await play.count()) await play.click()
-    await page.getByTestId('progress').waitFor({ timeout: 15_000 })
+    if (await play.count()) {
+      await play.click()
+      const shown = await page.getByTestId('progress').waitFor({ timeout: 8_000 }).then(() => true).catch(() => false)
+      if (!shown) {
+        await play.click()
+        await page.getByTestId('progress').waitFor({ timeout: 15_000 })
+      }
+    } else {
+      await page.getByTestId('progress').waitFor({ timeout: 15_000 })
+    }
     await settle(page)
     const progress = ((await page.getByTestId('progress').textContent()) || '').replace(/\s+/g, ' ').trim()
     if (progress !== '1 of 8') hits.push({ screen: 'hady-learner-opening', kind: 'order', detail: `counter is “${progress}”` })

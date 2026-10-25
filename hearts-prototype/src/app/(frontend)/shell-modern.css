@@ -802,18 +802,22 @@ html[data-theme] .desk .scene-picker input[type='file'] {
   max-width: 100%;
 }
 
-/* Opening questions use the white shell. The feed stays on the video colour. */
-html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) {
+/* Opening questions use the white shell. The feed stays on the video colour.
+   The clip behind the questions is a full-bleed video plate, so it has to step aside. */
+html[data-theme] .app-stage.shell-modern main.app .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) {
   background-color: var(--hh-paper);
   background-image: none;
   color: var(--hh-ink);
 }
 
-html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) .j-sky {
-  display: none;
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) :is(.j-sky, .j-clip, .j-slot, .j-peek, .j-poster, .j-film-band) {
+  background-color: transparent;
+  background-image: none;
+  visibility: hidden;
+  pointer-events: none;
 }
 
-html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) :is(.j-caption, .j-heading, .j-progress, .j-line, .j-pass, .j-login) {
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) :is(.j-caption, .j-heading, .j-progress, .j-line, .j-pass, .j-login, .brand-word) {
   color: var(--hh-ink);
 }
 
