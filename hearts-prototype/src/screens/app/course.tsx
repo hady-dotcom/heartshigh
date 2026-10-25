@@ -232,7 +232,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
   const demoDoneLesson = (row: Row) => Boolean(ctx.demo && ctx.demo.state.watches.some((watch) => watch.learner === ctx.demo!.cast.learner && watch.done && (watch.lessonId === row.id || watch.film === str(row.title))))
-  if (sequence && portal.lockOrder === true) {
+  if (sequence && portal.lockOrder === true && lessonCanPlay(lesson)) {
     const finishedIds = new Set<number>()
     if (!ctx.demo && partIndex > 0) {
       const earlierIds = lessons.slice(0, partIndex).filter(lessonCanPlay).map((row) => row.id)
@@ -407,7 +407,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const following = nextLesson ? { label: nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
   const sequenceLabel = (index: number, row: Row) => `${index + 1}. ${str(row.title)}`
   const upNext = nextLesson && following
-    ? { href: following.href, label: sequence ? sequenceLabel(partIndex + 2, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
+    ? { href: following.href, label: sequence ? sequenceLabel(nextAt, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
     : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
   const progress = sequenceProgress(doneLessons.size, lessons.length)
   const callout = sequence ? partCuts.find((row) => ref(row.lesson) === lessonId) : null
@@ -544,7 +544,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           return (
             <Link key={row.id} className="part-row" href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
               <span className="grow">
-                {sequence ? sequenceLabel(index + 1, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
+                {sequence ? sequenceLabel(index, row) : partHeading(index + 1, row, tidyTalkTitle(str(course.title)), lessons.length)}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 <small>{row.durationSeconds ? clock(Number(row.durationSeconds)) : 'Length not known yet'}{doneLessons.has(row.id) ? ' · watched' : ''}</small>
               </span>
