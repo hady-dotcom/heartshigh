@@ -1,8 +1,10 @@
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
+import { AppleSearch } from '@/components/app/apple-search'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { PageHelp } from '@/components/app/page-help'
 import { RouteFade } from '@/components/app/route-fade'
+import { ScrollChrome } from '@/components/app/scroll-chrome'
 
 export { TabBar, type Tab } from './tab-bar'
 
@@ -34,12 +36,17 @@ export function AppFrame({ children, dark = false, evening = false, testId, tone
   } as CSSProperties
   const showWord = Boolean(brand?.name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (
-    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
+    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'system' : undefined} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
       <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         {modern ? (
           <header className="glass-bar">
-            {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : null}
-            <PageHelp page={help || testId} plain />
+            <div className="glass-row">
+              {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : <span />}
+              <p className="bar-title" data-testid="bar-title" aria-hidden="true" />
+              <PageHelp page={help || testId} plain />
+            </div>
+            <AppleSearch />
+            <ScrollChrome />
           </header>
         ) : (
           <PageHelp page={help || testId} plain={false} />

@@ -3,12 +3,13 @@
 export type CourseHome = 'cards' | 'garden'
 export type MarkKind = 'plain' | 'hearts'
 export type ShellLook = 'modern' | 'hearts'
-export type FontPairKey = 'jakarta' | 'bricolage' | 'outfit' | 'inter'
+export type FontPairKey = 'system' | 'jakarta' | 'bricolage' | 'outfit' | 'inter'
 
 export const MODERN_ACCENT = '#2563EB'
 
-/** Curated pairs. Headings are a geometric grotesk; body is Inter, except the quiet Inter pair. */
+/** Curated pairs. System is the house style. The others stay available in portal settings. */
 export const FONT_PAIRS: readonly { key: FontPairKey; label: string; heading: string; body: string }[] = [
+  { key: 'system', label: 'System', heading: 'SF Pro', body: 'SF Pro' },
   { key: 'jakarta', label: 'Jakarta', heading: 'Plus Jakarta Sans', body: 'Inter' },
   { key: 'bricolage', label: 'Bricolage', heading: 'Bricolage Grotesque', body: 'Inter' },
   { key: 'outfit', label: 'Outfit', heading: 'Outfit', body: 'Inter' },
@@ -46,7 +47,7 @@ export const PLAIN_LOOK = {
   supportNote: '',
   markKind: 'plain' as MarkKind,
   shell: 'modern' as ShellLook,
-  fontPair: 'jakarta' as FontPairKey,
+  fontPair: 'system' as FontPairKey,
 }
 
 type LookSource = {
@@ -67,7 +68,7 @@ export function shellOf(portal: LookSource): ShellLook {
 
 export function fontPairOf(portal: LookSource): FontPairKey {
   const key = String(portal?.fontPair || '')
-  return FONT_PAIRS.some((pair) => pair.key === key) ? (key as FontPairKey) : 'jakarta'
+  return FONT_PAIRS.some((pair) => pair.key === key) ? (key as FontPairKey) : 'system'
 }
 
 export function fontFaces(portal: LookSource) {

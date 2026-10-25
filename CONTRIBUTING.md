@@ -30,6 +30,11 @@ Screenshot baselines live next to `tests/e2e/visual-qa.spec.ts`. Update them onl
 
 The first time you need Lighthouse’s packages: `npm install -D lighthouse chrome-launcher`. The script then builds a production bundle and scores it locally.
 
+Before you merge, also check:
+
+- Phone screenshots of each changed learner screen sit beside the garden-era screen (the richly styled look from before pull request 141). The new screen is at least as finished in imagery, depth, motion, and hierarchy.
+- The modern shell still reads as an Apple product: system type, liquid glass bars, a collapsing large title, live search, and the portal accent as the only tint. HEARTS keeps the evening theme.
+
 ## Tokens
 
 New colours and font sizes go in `src/app/(frontend)/tokens.css`. The unit test rejects new hard-coded colours and font sizes in learner and admin CSS. Lower a file’s number in `tests/unit/design-token-debt.json` when you move that file onto the tokens.

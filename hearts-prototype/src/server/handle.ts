@@ -821,7 +821,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         ...(brandName ? { brandName } : {}),
         ...(accent ? { accent } : {}),
         shell: 'modern',
-        fontPair: 'jakarta',
+        fontPair: 'system',
         courseHome: 'cards',
         ...(logo ? { logoUrl: logo } : {}),
         ...(shape === 'sequence' ? {
@@ -2590,7 +2590,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     if (form.has('shell')) data.shell = text(form, 'shell') === 'hearts' ? 'hearts' : 'modern'
     if (form.has('fontPair')) {
       const font = text(form, 'fontPair')
-      data.fontPair = font === 'bricolage' || font === 'outfit' || font === 'inter' ? font : 'jakarta'
+      data.fontPair = font === 'jakarta' || font === 'bricolage' || font === 'outfit' || font === 'inter' ? font : 'system'
     }
     if (form.has('courseHome')) data.courseHome = text(form, 'courseHome') === 'garden' ? 'garden' : 'cards'
     const sceneFile = form.get('sceneFile')

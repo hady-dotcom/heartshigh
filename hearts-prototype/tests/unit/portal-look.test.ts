@@ -25,7 +25,7 @@ test('a portal with no look stored stays plain and white', () => {
   assert.equal(sceneUrlOf({ sceneKey: 'upload', sceneUrl: 'javascript:alert(1)' }), '')
   assert.equal(shellOf({}), 'modern')
   assert.equal(shellOf(null), 'modern')
-  assert.equal(fontPairOf({}), 'jakarta')
+  assert.equal(fontPairOf({}), 'system')
   assert.equal(accentOf({}), '#2563EB')
 })
 
