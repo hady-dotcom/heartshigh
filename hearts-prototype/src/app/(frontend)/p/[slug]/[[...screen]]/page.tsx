@@ -78,7 +78,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const payload = await getPayloadClient()
     const portal = await loadPortal(payload, slug)
     if (portal && isSequencePortal(portal)) {
-      const name = portalName(portal)
+      const name = String(portal.brandName || portalName(portal))
       return { title: name, description: `${name}. Watch the films in order.` }
     }
   } catch {
@@ -106,7 +106,8 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         if (isSequencePortal(portal)) return SequenceGate({ payload: session.payload, portal, base })
         redirect((await cookies()).get('hearts_opened')?.value === '1' ? `${base}/feed` : `${base}/start`)
       }
-      if (!isSequencePortal(portal) && visitor.role === 'learner' && !visitor.onboarded) {
+      if (visitor.role === 'learner' && !visitor.onboarded) {
+        if (isSequencePortal(portal)) redirect(`${base}/welcome`)
         const started = await rows(session.payload, 'lesson-visits', { user: { equals: visitor.id } }, { limit: 1 })
         if (!started.length) redirect(visitor.startingClause ? `${base}/start?after=placing` : `${base}/welcome`)
       }
@@ -289,7 +290,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
   const { base } = ctx
   const sequence = isSequencePortal(ctx.portal)
-  if (sequence && area && ['lanes', 'garden', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'welcome', 'start', 'help', 'feed'].includes(area)) redirect(base)
+  if (sequence && area && ['lanes', 'garden', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'start', 'help', 'feed'].includes(area)) redirect(base)
   switch (area) {
     case undefined:
       if (sequence) return SequenceHome(ctx)
@@ -354,7 +355,6 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'recalibrate':
       return gated(ctx, 'compass') || RecalibrateScreen(ctx)
     case 'welcome':
-      if (sequence) redirect(base)
       return WelcomeScreen(ctx)
     case 'about':
       redirect(`${base}/welcome`)

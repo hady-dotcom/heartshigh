@@ -25,9 +25,8 @@ export function portalHomePath(slug: string, role: string | null | undefined) {
   return isAppRole(role) ? portalAppPath(slug) : portalDeskPath(slug)
 }
 
-/** A new account from a join code. Learners still see Welcome. A sequenced course opens the first film. A teacher opens Teach, not the learner feed. */
-export function afterJoinPath(slug: string, codeRole: string | null | undefined, shape?: 'hearts' | 'sequence') {
-  if ((codeRole === 'learner' || codeRole === 'parent') && shape === 'sequence') return `${portalAppPath(slug)}?open=1`
+/** A new account from a join code. Learners and parents see Welcome, including a sequenced course. A teacher opens Teach. */
+export function afterJoinPath(slug: string, codeRole: string | null | undefined, _shape?: 'hearts' | 'sequence') {
   if (codeRole === 'learner' || codeRole === 'parent') return `${portalAppPath(slug)}/welcome`
   if (codeRole === 'teacher') return teacherDeskPath(slug)
   return portalDeskPath(slug)

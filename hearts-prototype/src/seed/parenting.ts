@@ -4,11 +4,13 @@ import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
 import { randomCode } from '@/lib/access-codes'
 import { isProduction, isRemoteDatabase } from '@/lib/env'
+import { OPENING_QUESTIONS } from '@/lib/parent-feedback'
 import { sequenceFeatureDefaults } from '@/lib/sequence-features'
 import { syncCourseSheet } from '@/server/sequence-desk'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const WELCOME = 'Welcome. Watch the films in order.'
+const BRAND = 'Hady Home'
 const COURSE_TITLE = 'Guiding Home Learning'
 const COURSE_SUMMARY = 'Watch the films in order.'
 
@@ -32,6 +34,23 @@ async function ensureUser(payload: Payload, data: { email: string; password: str
     overrideAccess: true,
     data: { ...data, onboarded: true, seenWelcome: true },
   })
+}
+
+async function ensureOpeningQuestions(payload: Payload, portalId: number) {
+  for (const [index, question] of OPENING_QUESTIONS.entries()) {
+    const found = await payload.find({
+      collection: 'placing-questions',
+      overrideAccess: true,
+      limit: 1,
+      where: { and: [{ portal: { equals: portalId } }, { prompt: { equals: question.prompt } }] },
+    })
+    if (found.docs[0]) continue
+    await payload.create({
+      collection: 'placing-questions',
+      overrideAccess: true,
+      data: { prompt: question.prompt, why: question.why, options: question.options, order: index + 1, portal: portalId },
+    })
+  }
 }
 
 async function lessonCount(payload: Payload, courseId: number) {
@@ -62,16 +81,15 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     minTalkSeconds: 0,
     welcome: WELCOME,
     description: 'A course you watch in order.',
+    brandName: BRAND,
   }
   const portal = found.docs[0]
-    ? refresh
-      ? await payload.update({
-          collection: 'portals',
-          id: found.docs[0].id,
-          overrideAccess: true,
-          data: look,
-        })
-      : found.docs[0]
+    ? await payload.update({
+        collection: 'portals',
+        id: found.docs[0].id,
+        overrideAccess: true,
+        data: refresh ? look : { brandName: BRAND },
+      })
     : await payload.create({
         collection: 'portals',
         overrideAccess: true,
@@ -87,6 +105,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
           ...look,
         },
       })
+  await ensureOpeningQuestions(payload, Number(portal.id))
 
   const courseFound = await payload.find({
     collection: 'courses',

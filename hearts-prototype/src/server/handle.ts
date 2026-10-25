@@ -1957,12 +1957,14 @@ async function handleForm(req: Request, form: FormData, session: Session) {
 
   if (action === 'placing') {
     const portal = portalIdOf(user)
+    const portalRow = portal ? await payload.findByID({ collection: 'portals', id: portal, overrideAccess: true, depth: 0 }) : null
+    const sequence = isSequencePortal(portalRow)
     const questions = await payload.find({
       collection: 'placing-questions',
       overrideAccess: true,
       limit: 20,
       sort: 'order',
-      where: { or: [{ portal: { exists: false } }, { portal: { equals: portal } }] },
+      where: sequence ? { portal: { equals: portal } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal } }] },
     })
     const answers: { options: unknown; choice: string }[] = []
     for (const question of questions.docs as { id: number; options?: unknown }[]) {
@@ -1976,15 +1978,18 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await payload.create({ collection: 'placing-answers', overrideAccess: true, data: { user: user.id, question: question.id, choice: answers[index].choice, portal: portal || undefined } })
     }
     const doors = await loadDoors(payload)
-    const starting = startingClause(answers, doors)
-    const startDoor = doorOfClause(starting, doors)
+    const starting = sequence ? null : startingClause(answers, doors)
+    const startDoor = starting ? doorOfClause(starting, doors) : null
     const learner = user.role === 'learner'
     await payload.update({
       collection: 'users',
       id: user.id,
       overrideAccess: true,
-      data: learner ? { startingClause: starting } : { onboarded: true, startingClause: starting },
+      data: sequence
+        ? { onboarded: true, seenWelcome: true }
+        : learner ? { startingClause: starting } : { onboarded: true, startingClause: starting },
     })
+    if (sequence) return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. Your first film is ready.')
     return redirectTo(req, text(form, 'next') || '/', undefined, startDoor ? `Thank you. We have chosen a first sitting for you, starting from door ${startDoor.number}: ${startDoor.title}.` : 'Thank you. We have chosen a first sitting for you.')
   }
 

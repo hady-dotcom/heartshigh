@@ -202,20 +202,38 @@ test('the export zip is a standalone copy with a readme', () => {
   assert.doesNotMatch(bundle, /password|api[_-]?key|@hearts\.test/i)
 })
 
-test('a parenting export opens straight in with the demo join code', () => {
+test('a parenting export opens in Hady Home with the demo code and parent answers', () => {
   const files = buildExportFiles(
-    { name: 'Guiding Home Learning', slug: 'parenting', colour: '#1f3a5f', accent: '#e07a5f', logoUrl: '', lockOrder: true, note: 'Watch the films in order.', joinCode: 'PARENT-DEMO' },
-    [{ order: 1, title: 'Home Learning Introduction 1: Why We Created This Course', speaker: '', provider: 'vimeo', id: '496862893', hash: '', durationSeconds: 0, hook: '', turn: '', land: '', question: 'How would you describe your experience of home learning so far?' }],
+    {
+      name: 'Guiding Home Learning',
+      slug: 'parenting',
+      colour: '#1f3a5f',
+      accent: '#e07a5f',
+      logoUrl: '',
+      lockOrder: true,
+      note: 'Watch the films in order.',
+      joinCode: 'PARENT-DEMO',
+      brandName: 'Hady Home',
+      opening: [{ prompt: 'How old are your children?', options: ['Under 5', '5 to 7'] }],
+      answers: [{ order: 1, phase: 'Phase 1', label: 'Real parent answer, Phase 1 (Jan 2021)', question: 'How would you describe your experience of home learning so far?', text: 'It is busy after school.' }],
+    },
+    [{ order: 1, title: 'Home Learning Introduction 1: Why We Created This Course', speaker: '', provider: 'vimeo', id: '496862893', hash: '', durationSeconds: 0, hook: '', turn: '', land: '', question: 'How would you describe your experience of home learning so far?', questions: [{ second: 171, prompt: 'How would you describe your experience of home learning so far?' }] }],
   )
   const opened = readZipStore(zipStore(files))
   const bundle = Object.values(opened).join('\n')
   assert.match(opened['README.md'], /Open index\.html/)
   assert.match(opened['README.md'], /PARENT-DEMO/)
+  assert.match(opened['README.md'], /Hady Home/)
   assert.match(opened['index.html'], /You are in\. Join code/)
   assert.match(opened['index.html'], /"joinCode":"PARENT-DEMO"/)
   assert.match(opened['index.html'], /id="join-code">Join code PARENT-DEMO/)
+  assert.match(opened['index.html'], /id="welcome"/)
+  assert.match(opened['index.html'], /How old are your children\?/)
+  assert.match(opened['index.html'], /Real parent answer, Phase 1 \(Jan 2021\)/)
+  assert.doesNotMatch(opened['index.html'], /<main id="welcome" hidden/)
   assert.doesNotMatch(bundle, /drive\.google|docs\.google|password|api[_-]?key|@hearts\.test/i)
   assert.equal(hasHeartsWord(bundle), false)
+  assert.equal(hasIslamicWording(bundle), false)
 })
 
 test('kinetic clips default on, and a sequenced course can switch every other part off', () => {

@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
+import { filmTitles, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
 import {
   PARENTING_DEMO_CODE,
   demoFramePath,
@@ -9,6 +10,7 @@ import {
   safeDemoNext,
   seedParentingDemo,
   tidyParentingCast,
+  type DemoAnswer,
   type DemoRole,
   type DemoState,
   type ParentingCast,
@@ -37,9 +39,34 @@ function roomsOf(raw: unknown): RoomMap {
   return raw as RoomMap
 }
 
+function realDemoAnswers(): DemoAnswer[] {
+  const titles = filmTitles()
+  return loadRealAnswers().map((row, index) => ({
+    id: `real-${row.videoOrder}-${row.calloutSecond}-${index}`,
+    learner: phaseLabel(row.phase),
+    film: titles.get(row.videoOrder) || `Film ${row.videoOrder}`,
+    lessonId: 0,
+    prompt: row.question,
+    body: row.text,
+    reply: '',
+    source: 'real' as const,
+    order: row.videoOrder,
+    phaseLabel: phaseLabel(row.phase),
+  }))
+}
+
+function withRealAnswers(state: DemoState): DemoState {
+  const own = state.answers.filter((row) => row.source !== 'real')
+  return { ...state, answers: [...own, ...realDemoAnswers()] }
+}
+
+function withoutRealAnswers(state: DemoState): DemoState {
+  return { ...state, answers: state.answers.filter((row) => row.source !== 'real') }
+}
+
 function readRoom(token: string, row: { cast?: ParentingCast; state?: DemoState } | undefined): DemoRoom | null {
   if (!TOKEN.test(token) || !row?.state || !Array.isArray(row.state.answers) || !Array.isArray(row.state.people) || !row.state.features) return null
-  return { token, cast: tidyParentingCast(row.cast), state: row.state }
+  return { token, cast: tidyParentingCast(row.cast), state: withRealAnswers(row.state) }
 }
 
 async function writeRooms(payload: Payload, id: number, rooms: RoomMap) {
@@ -66,9 +93,9 @@ export async function openDemoRoom(payload: Payload, castInput: Partial<Parentin
   const state = seedParentingDemo(cast)
   const token = randomBytes(18).toString('base64url')
   const rooms = roomsOf(portal.demoRooms)
-  rooms[token] = { cast, state }
+  rooms[token] = { cast, state: withoutRealAnswers(state) }
   await writeRooms(payload, portal.id, rooms)
-  return { token, cast, state }
+  return { token, cast, state: withRealAnswers(state) }
 }
 
 export async function saveDemoRoom(payload: Payload, room: DemoRoom) {
@@ -77,7 +104,7 @@ export async function saveDemoRoom(payload: Payload, room: DemoRoom) {
   if (!portal) return
   const rooms = roomsOf(portal.demoRooms)
   if (!rooms[room.token]) return
-  rooms[room.token] = { cast: room.cast, state: room.state }
+  rooms[room.token] = { cast: room.cast, state: withoutRealAnswers(room.state) }
   await writeRooms(payload, portal.id, rooms)
 }
 

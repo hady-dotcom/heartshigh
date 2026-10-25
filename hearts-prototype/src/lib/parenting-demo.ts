@@ -1,3 +1,5 @@
+import { SAMPLE_GAP_ANSWERS, SAMPLE_OPENING_ANSWERS, SAMPLE_PARENTS } from './sample-gap-data'
+
 /**
  * Practice room for the Parenting course.
  * Films stay on the live course. Answers, notes and switches stay in this room.
@@ -34,6 +36,10 @@ export type DemoAnswer = {
   prompt: string
   body: string
   reply: string
+  /** real rows are the sheet answers. sample rows fill questions the sheets do not cover. */
+  source?: 'real' | 'sample'
+  order?: number
+  phaseLabel?: string
 }
 
 export type DemoNote = { id: string; body: string; from: string }
@@ -136,6 +142,28 @@ export function seedParentingDemo(castInput?: Partial<ParentingCast>): DemoState
       { id: 'ans-1', learner: first, film: FILM_1, lessonId: 0, prompt: ASK_1, body: 'It is busy, but a quiet hour after school helps.', reply: '' },
       { id: 'ans-2', learner: second, film: FILM_1, lessonId: 0, prompt: ASK_1, body: 'I want a clearer plan for the week.', reply: `${cast.teacher} will look at that plan with you.` },
       { id: 'ans-3', learner, film: FILM_2, lessonId: 0, prompt: 'What aspects of home learning would you like further guidance with?', body: 'How to keep the same time each day.', reply: '' },
+      ...SAMPLE_OPENING_ANSWERS.map((row, index) => ({
+        id: `open-${index + 1}`,
+        learner: row.name,
+        film: 'Opening questions',
+        lessonId: 0,
+        prompt: row.prompt,
+        body: row.body,
+        reply: '',
+        source: 'sample' as const,
+      })),
+      ...SAMPLE_GAP_ANSWERS.map((row, index) => ({
+        id: `gap-${index + 1}`,
+        learner: row.name,
+        film: row.film,
+        lessonId: 0,
+        prompt: row.prompt,
+        body: row.body,
+        reply: '',
+        source: 'sample' as const,
+        order: row.order,
+        phaseLabel: 'Sample answer',
+      })),
     ],
     watches: [
       { learner: first, film: FILM_1, lessonId: 0, seconds: 180, done: true },
@@ -155,6 +183,12 @@ export function seedParentingDemo(castInput?: Partial<ParentingCast>): DemoState
       { name: first, role: 'learner', watched: 3, watching: FILM_4 },
       { name: second, role: 'learner', watched: 1, watching: FILM_2 },
       { name: third, role: 'learner', watched: 1, watching: FILM_1 },
+      ...SAMPLE_PARENTS.filter((name) => name !== learner).map((name, index) => ({
+        name,
+        role: 'learner' as const,
+        watched: [2, 8, 15, 22, 40, 55, 70, 96][index] || 4,
+        watching: '',
+      })),
     ],
     seq: 4,
   }
@@ -195,7 +229,8 @@ export function reduceParentingDemo(state: DemoState, action: DemoAction, castIn
     if (!body || !film) return state
     const id = `ans-${state.seq + 1}`
     const lessonId = Number(action.lessonId) || 0
-    const answers: DemoAnswer[] = [{ id, learner: cast.learner, film, lessonId, prompt: prompt || ASK_1, body, reply: '' }, ...state.answers].slice(0, 40)
+    const kept = state.answers.filter((row) => row.source !== 'real')
+    const answers: DemoAnswer[] = [{ id, learner: cast.learner, film, lessonId, prompt: prompt || ASK_1, body, reply: '' }, ...kept].slice(0, 400)
     const people = state.people.map((person) => person.name === cast.learner ? { ...person, watching: film, watched: watchedCount({ ...state, watches: markDone(state.watches, cast.learner, film, lessonId) }, cast.learner) } : person)
     return bump(state, { answers, people, watches: markDone(state.watches, cast.learner, film, lessonId) })
   }

@@ -9,6 +9,7 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
+import { answersForFilm, phaseLabel } from '@/lib/parent-feedback'
 import { brandColours, isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -491,6 +492,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </section>
         ) : null}
         {sequence && views[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {views[0].prompt}</p> : null}
+        {sequence ? <ParentSaidLine order={Number(lesson.order || partIndex + 1)} prompt={views[0]?.prompt || ''} /> : null}
         {sequence && ctx.demo ? (
           <form className="form-stack card" action="/api/hearts/demo" method="post" data-testid="demo-answer-form">
             <Hidden fields={{
@@ -549,5 +551,22 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       </div>
       <LearnerTabBar base={base} active={sequence ? 'home' : 'lanes'} portal={portal} unread={unread} />
     </AppFrame>
+  )
+}
+
+function ParentSaidLine({ order, prompt }: { order: number; prompt: string }) {
+  const rows = answersForFilm(order).filter((row) => !prompt || row.question === prompt)
+  const shown = rows.length ? rows : answersForFilm(order)
+  const phases = [...new Set(shown.map((row) => row.phase))]
+  if (!phases.length) return null
+  return (
+    <>
+      {phases.slice(0, 2).map((phase) => {
+        const line = shown.find((row) => row.phase === phase)
+        if (!line) return null
+        const text = line.text.length > 140 ? `${line.text.slice(0, 137)}...` : line.text
+        return <p key={phase} data-testid="parent-said"><b>{phaseLabel(phase)}.</b> {text}</p>
+      })}
+    </>
   )
 }
