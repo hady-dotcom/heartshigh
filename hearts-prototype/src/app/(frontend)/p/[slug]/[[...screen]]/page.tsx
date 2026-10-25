@@ -355,7 +355,6 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'recalibrate':
       return gated(ctx, 'compass') || RecalibrateScreen(ctx)
     case 'welcome':
-      if (sequence) redirect(base)
       return WelcomeScreen(ctx)
     case 'about':
       redirect(`${base}/welcome`)
