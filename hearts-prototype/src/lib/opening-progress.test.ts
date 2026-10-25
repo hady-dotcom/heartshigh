@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { openingStepLabel, openingStepTotal } from './opening-progress'
+import { openingStepLabel, openingStepTotal, questionStepLabel } from './opening-progress'
 
 test('opening progress is opener plus each served scene', () => {
   assert.equal(openingStepTotal(7), 8)
@@ -8,4 +8,9 @@ test('opening progress is opener plus each served scene', () => {
   assert.equal(openingStepLabel(2, 7), '2 of 8')
   assert.equal(openingStepTotal(4), 5)
   assert.equal(openingStepLabel(1, 4), '1 of 5')
+})
+
+test('a question list counts the questions, not the opener', () => {
+  assert.equal(questionStepLabel(0, 8), '1 of 8')
+  assert.equal(questionStepLabel(7, 8), '8 of 8')
 })

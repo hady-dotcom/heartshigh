@@ -127,6 +127,8 @@ export function CoursePlayer({
   clipEnd?: number | null
   /** A sequenced film with no Vimeo or YouTube id yet. */
   videoComing?: boolean
+  /** Course pages say film. HEARTS keeps talk. */
+  films?: boolean
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -661,7 +663,8 @@ export function CoursePlayer({
   const nextPoint = views.find((point) => point.state === 'open' && !point.answered) || null
   const waitingOnFilm = views.some((point) => !point.answered)
   const open = views.find((point) => point.id === openId) || null
-  const total = length || Math.max(60, ...views.map((point) => point.second + 30))
+  const knownLength = length > 0 ? length : 0
+  const total = knownLength || Math.max(1, ...views.map((point) => Math.max(0, point.second) + 1))
   const filmed = mode === 'youtube' || mode === 'vimeo' || mode === 'file'
   const coverUrl = landscapeThumb(youtubeId) || poster
   const coverKey = youtubeId || poster || 'none'
@@ -861,7 +864,7 @@ export function CoursePlayer({
           >
             <span className="j-board-handle" data-testid="board-handle" />
           </div>
-          <span className="time-read" data-testid="player-time">{clock(time)} / {clock(total)}</span>
+          <span className="time-read" data-testid="player-time">{knownLength ? `${clock(time)} / ${clock(knownLength)}` : 'Length not known yet'}</span>
           <button type="button" className="lecture-speed" data-testid="lecture-speed" aria-label="Playback speed" onClick={(event) => boardAction(event, cycleSpeed)}>{speed}×</button>
         <div className="timeline" data-testid="timeline" ref={timelineRef}>
           <div className="track" />
@@ -917,7 +920,7 @@ export function CoursePlayer({
       ) : null}
       {mode === 'practice' && !videoComing ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
-          {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
+          {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : films ? 'This film has no link yet, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
         </p>
       ) : null}
       {notice ? <p className="flash notice" data-testid="notice" role="status">{notice}</p> : null}
@@ -969,7 +972,7 @@ export function CoursePlayer({
           <div>
             <h3>What&apos;s done</h3>
             <small data-testid="fruit-count">{garden.done} of {garden.total} fruits</small>
-            <p className="muted fruit-explain" data-testid="fruit-explain">Talks you have watched and questions you have answered in this course.</p>
+            <p className="muted fruit-explain" data-testid="fruit-explain">{films ? 'Films you have watched and questions you have answered in this course.' : 'Talks you have watched and questions you have answered in this course.'}</p>
             <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
             {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}
@@ -1200,7 +1203,7 @@ function Sheet({
             <input type="hidden" name="pointId" value={point.id} />
             {point.kind === 'task' ? (
               <div data-testid="task-form" data-evidence={point.evidence || 'none'}>
-                {point.dueDays ? <p data-testid="task-due">Due within {point.dueDays} days of opening this talk.</p> : null}
+                {point.dueDays ? <p data-testid="task-due">Due within {point.dueDays} days of opening this {films ? 'film' : 'talk'}.</p> : null}
                 {point.gatherings?.length ? (
                   <div data-testid="task-gatherings">
                     <p>This asks you to do it with others. These gatherings match.</p>

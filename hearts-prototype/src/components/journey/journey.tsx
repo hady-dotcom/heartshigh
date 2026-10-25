@@ -2742,11 +2742,11 @@ export function Journey(props: JourneyProps) {
       {phase === 'opener' || phase === 'scene' || phase === 'handoff' ? (
         <div className="j-layer" data-testid="scene-layer">
           {phase === 'opener' ? (
-            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={scenes.length ? letsPlay : justShow} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} brand={props.brand} />
+            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={scenes.length ? letsPlay : justShow} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} brand={props.brand} light={props.plain} />
           ) : null}
           {leaving !== null && scenes[leaving] && phase === 'scene' ? (
             <div ref={leavingRef} className="j-scene-wrap leaving" aria-hidden>
-              <SceneCard scene={scenes[leaving]} index={leaving} total={scenes.length + 1} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} brand={props.brand} />
+              <SceneCard scene={scenes[leaving]} index={leaving} total={props.plain ? scenes.length : scenes.length + 1} selected={null} reply={null} picked={null} onPick={() => undefined} onPass={() => undefined} onJustShow={() => undefined} brand={props.brand} light={props.plain} />
             </div>
           ) : null}
           {(phase === 'scene' || phase === 'handoff') && scenes[sceneAt] ? (
@@ -2754,7 +2754,7 @@ export function Journey(props: JourneyProps) {
               <SceneCard
                 scene={scenes[sceneAt]}
                 index={sceneAt}
-                total={scenes.length + 1}
+                total={props.plain ? scenes.length : scenes.length + 1}
                 selected={heart?.taps.find((tap) => tap.scene === scenes[sceneAt].key)?.option || null}
                 reply={reply}
                 picked={picked || (phase === 'handoff' ? 'x' : null)}
@@ -2762,6 +2762,7 @@ export function Journey(props: JourneyProps) {
                 onPass={pass}
                 onJustShow={justShow}
                 brand={props.brand}
+                light={props.plain}
               />
             </div>
           ) : null}

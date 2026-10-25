@@ -15,7 +15,7 @@ import { displayTalkTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { daysWithUsLabel } from '@/lib/days-with-us'
 import { learnerWords } from '@/lib/tidy-caption'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
-import { courseCards, dayNumber, portalName, posterFor, shownPoster } from '@/server/learner'
+import { courseCards, dayNumber, filmPoster, portalName, shownPoster } from '@/server/learner'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { LaneProgressSlot } from '@/components/app/lane-progress'
@@ -97,10 +97,14 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           vimeoId: str(lesson.vimeoId),
         })),
         sub: minutesLeft(seconds, percent) || tidyTalkTitle(str(course?.title)),
-        thumb: shownPoster(posterFor(str(lesson.youtubeId) || null)),
+        thumb: shownPoster(filmPoster(lesson)),
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
+  const modernHome = shellOf(portal) === 'modern'
+  const fallbackLessons = fallback.length
+    ? await rows(payload, 'lessons', { course: { in: fallback.map((course) => course.id) } }, { limit: 400 })
+    : []
   const plans = await rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 20 })
   const plan = plans.find((row) => ref(row.owner) === user.id || ((row.learners as unknown[]) || []).some((item) => ref(item) === user.id))
   const slot = plan ? tonightSlot((plan.slots as { date?: string; lessonId?: number | null; title?: string }[]) || [], dateKeyInZone(clockNow(), portal.timeZone || 'Europe/London'), done) : null
@@ -175,17 +179,25 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         <div data-testid="continue">
           {carryOn.map((row) => (
             <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
-              <span className="thumb" style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
+              <span className={`thumb${row.thumb ? '' : ' is-fallback'}`} style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
               <span className="t"><b>{row.title}</b><span className="sr-only">. </span><small>{row.sub}</small></span>
             </Link>
           ))}
-          {fallback.map((course) => (
-            <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
-              <span className="thumb" style={shownPoster(course.poster) ? { backgroundImage: `url(${shownPoster(course.poster)})` } : undefined} />
-              <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{course.speaker} · {plural(course.parts, 'part')}</small><DoorChips doors={course.doors} max={1} /></span>
-            </Link>
-          ))}
-          {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
+          {fallback.map((course) => {
+            const own = fallbackLessons.filter((lesson) => ref(lesson.course) === course.id)
+            const watched = own.filter((lesson) => done.has(lesson.id)).length
+            const poster = shownPoster(course.poster) || shownPoster(own.map((lesson) => filmPoster(lesson)).find(Boolean) || null)
+            const meta = modernHome
+              ? `${watched} of ${course.parts} film${course.parts === 1 ? '' : 's'}`
+              : [course.speaker, plural(course.parts, 'part')].filter(Boolean).join(' · ')
+            return (
+              <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
+                <span className={`thumb${poster ? '' : ' is-fallback'}`} style={poster ? { backgroundImage: `url(${poster})` } : undefined} />
+                <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{meta}</small><DoorChips doors={course.doors} max={1} /></span>
+              </Link>
+            )
+          })}
+          {!carryOn.length && !fallback.length ? <p className="muted">{modernHome ? 'Start a course from Courses and it will wait for you here.' : 'Start a course from Lanes and it will wait for you here.'}</p> : null}
         </div>
         {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null}
         <InstallCard strip appName={appNameOf(portal)} />
@@ -195,7 +207,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           <div data-testid="feed-films">
             {nextFilms.map((film) => (
               <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
-                {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
+                <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
                 <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
               </Link>
             ))}
@@ -294,7 +306,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
           <div data-testid="lanes-empty">
             {nextFilms.length ? nextFilms.map((film) => (
               <Link key={film.href} className="continue-row" href={film.href} data-testid="lane-film">
-                {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
+                <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
                 <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
               </Link>
             )) : <p className="card"><span>No clips have been approved yet. The courses below are ready to watch.</span></p>}

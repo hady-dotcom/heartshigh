@@ -12,7 +12,9 @@ function loadIds() {
   return parseIdList(typeof localStorage === 'undefined' ? '' : localStorage.getItem(SAVED_KEY))
 }
 
-export function SavedList({ base }: { base: string }) {
+type SavedExample = { title: string; detail: string; hint: string; href: string; action: string }
+
+export function SavedList({ base, example }: { base: string; example?: SavedExample | null }) {
   // Empty on the server and the first paint. Reading localStorage later must not
   // swap a one-line "loading" note for the example card, or the page jumps.
   const [ids, setIds] = useState<string[]>([])
@@ -53,9 +55,9 @@ export function SavedList({ base }: { base: string }) {
   if (!ids.length) {
     return (
       <div data-testid="saved-empty">
-        <ExampleInUse title="Patience · a short clip" action={{ href: `${base}/feed`, label: 'Watch today’s clips' }}>
-          <p>Shaykh Mikaeel Smith · The Names</p>
-          <p className="hint">Opens in today’s clips</p>
+        <ExampleInUse title={example?.title || 'Patience · a short clip'} action={{ href: example?.href || `${base}/feed`, label: example?.action || 'Watch today’s clips' }}>
+          <p>{example?.detail || 'Shaykh Mikaeel Smith · The Names'}</p>
+          <p className="hint">{example?.hint || 'Opens in today’s clips'}</p>
         </ExampleInUse>
       </div>
     )

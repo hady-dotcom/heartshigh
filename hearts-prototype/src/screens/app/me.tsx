@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/app/empty'
 import { KeepHearts } from '@/components/app/install-card'
 import { Qr } from '@/components/qr'
 import { dayNumber, portalName } from '@/server/learner'
+import { nextCourseFilms } from './course-home'
 import { shapedFor } from '@/server/missions'
 import { featureOn } from '@/lib/features'
 import { type Ctx, longDate, ref, rows, shortDate, str, unreadCount } from '../common'
@@ -23,6 +24,13 @@ function noteBody(body: string) {
 
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub' && note.channel !== 'think')
+  const modern = shellOf(portal) === 'modern'
+  const sampleFilm = modern ? (await nextCourseFilms(payload, user, base, 1))[0] : null
+  const savedExample = modern
+    ? sampleFilm
+      ? { title: sampleFilm.title, detail: sampleFilm.course, hint: 'A film in this course', href: sampleFilm.href, action: 'Watch this film' }
+      : { title: 'A film from your course', detail: appNameOf(portal), hint: 'Films show here once a course is added.', href: `${base}/courses`, action: 'Open courses' }
+    : null
   const shaped = await shapedFor(payload, user.id)
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
@@ -46,7 +54,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <SavedToast />
         <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
-        <SavedList base={base} />
+        <SavedList base={base} example={savedExample} />
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -241,13 +249,19 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
 
 export async function SavedScreen({ payload, user, portal, base }: Ctx) {
   const unread = await unreadCount(payload, user)
+  const sampleFilm = shellOf(portal) === 'modern' ? (await nextCourseFilms(payload, user, base, 1))[0] : null
+  const savedExample = shellOf(portal) === 'modern'
+    ? sampleFilm
+      ? { title: sampleFilm.title, detail: sampleFilm.course, hint: 'A film in this course', href: sampleFilm.href, action: 'Watch this film' }
+      : { title: 'A film from your course', detail: appNameOf(portal), hint: 'Films show here once a course is added.', href: `${base}/courses`, action: 'Open courses' }
+    : null
   return (
     <AppFrame testId="saved" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Saved</h1></div>
         <p className="lead">Clips you kept from the feed. They stay on this phone.</p>
-        <SavedList base={base} />
+        <SavedList base={base} example={savedExample} />
       </div>
       <LearnerTabBar base={base} active="me" unread={unread} />
     </AppFrame>

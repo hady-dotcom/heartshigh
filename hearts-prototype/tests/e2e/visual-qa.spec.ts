@@ -415,6 +415,18 @@ test('Hady Home learner screens', async ({ page }, info) => {
   const hits: Hit[] = []
   try {
     await signIn(page, 'parenting-learner@hearts.test', 'portal-learner', '/p/parenting')
+    await page.goto('/p/parenting/start', { waitUntil: 'domcontentloaded' })
+    await settle(page)
+    const play = page.getByTestId('lets-play')
+    if (await play.count()) await play.click()
+    await page.getByTestId('progress').waitFor({ timeout: 15_000 })
+    await settle(page)
+    const progress = ((await page.getByTestId('progress').textContent()) || '').replace(/\s+/g, ' ').trim()
+    if (progress !== '1 of 8') hits.push({ screen: 'hady-learner-opening', kind: 'order', detail: `counter is “${progress}”` })
+    const openingHits = await audit(page, 'hady-learner-opening', 'hady')
+    hits.push(...openingHits)
+    await shoot(page, info, 'hady-learner-opening')
+    remember(info, 'hady-learner-opening', openingHits)
     for (const [name, url] of HADY_LEARNER) await visit(page, info, 'hady', `hady-learner-${name}`, url, hits)
     const href = await page.goto('/p/parenting/courses').then(() => page.getByTestId('course-card').first().getAttribute('href'))
     if (!href) hits.push({ screen: 'hady-learner-course', kind: 'order', detail: 'no course card' })

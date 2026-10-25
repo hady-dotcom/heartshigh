@@ -87,6 +87,11 @@ export function talksLabel(talks: number, seconds: number) {
   return count
 }
 
+/** Same length line as talksLabel, for a course that calls each part a film. */
+export function filmsLabel(films: number, seconds: number) {
+  return talksLabel(films, seconds).replace(/\btalks\b/g, 'films').replace(/\btalk\b/g, 'film')
+}
+
 export function minutesLabel(seconds: number) {
   if (!seconds) return ''
   return `${Math.max(1, Math.round(seconds / 60))} min`

@@ -26,7 +26,7 @@ import { sortParts } from '@/lib/part-order'
 import { learnerLessonVisible } from '@/lib/publish-state'
 import { tidyQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
-import { courseCards, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
+import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -36,7 +36,7 @@ import { answerCounts, courseProgress } from '@/lib/nesting'
 import { type Ctx, type Query, type Row, clock, one, ref, rows, str, unreadCount } from '../common'
 import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
-import { talksLabel } from '@/lib/week'
+import { filmsLabel, talksLabel } from '@/lib/week'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
 import { listGatherings } from '@/server/gather'
@@ -153,10 +153,10 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   return (
     <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
       <div className="app-scroll">
-        <Back href={`${base}/lanes`} label="Lanes" />
+        <Back href={sequence ? `${base}/courses` : `${base}/lanes`} label={sequence ? 'Courses' : 'Lanes'} />
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
-        <p className="lead" data-testid="course-count">{talksLabel(lessons.length, seconds)}</p>
+        <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
           {sequence && lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
             ? `Watch from part ${continueIndex + 1}`
@@ -165,22 +165,23 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
             : started ? `Continue part ${continueIndex + 1}` : `Start part ${continueIndex + 1}`}
         </Link>
         <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
-          {lessons.length === 1 ? 'Schedule this talk' : 'Schedule all of these'}
+          {lessons.length === 1 ? (sequence ? 'Schedule this film' : 'Schedule this talk') : 'Schedule all of these'}
         </Link>
-        <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0', fontSize: 13 }}>
-          Questions appear inside each talk, once you open it.
+        <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0' }}>
+          {sequence ? 'Questions appear inside each film, once you open it.' : 'Questions appear inside each talk, once you open it.'}
         </p>
-        <p className="eyebrow">Talks in this course</p>
+        <p className="eyebrow">{sequence ? 'Films in this course' : 'Talks in this course'}</p>
         {lessons.map((lesson, index) => {
           const secondsHere = Number(lesson.durationSeconds || 0)
           const youtubeId = str(lesson.youtubeId) || null
           const name = partTitle(lesson, title)
-          const still = talkStill(youtubeId, str(lesson.speaker || course.speaker))
+          const stored = filmPoster(lesson)
+          const still = stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
             <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
-                <img src={still.src} alt="" />
+                {still.src ? <img src={still.src} alt="" /> : null}
                 {still.fallback ? <span className="thumb-title">{name}</span> : null}
               </span>
               <span className="t">
@@ -194,7 +195,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           )
         })}
       </div>
-      <LearnerTabBar base={base} active="lanes" unread={unread} />
+      <LearnerTabBar base={base} active={sequence ? 'garden' : 'lanes'} unread={unread} />
     </AppFrame>
   )
 }
@@ -468,7 +469,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           partLabel={sequence ? sequenceLabel(partIndex, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
-          poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}
+          poster={shownPoster(filmPoster(lesson)) || (sequence ? null : portraitFor(slugify(str(lesson.speaker || course.speaker))))}
+          films={sequence}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={startAt}
           points={withGather}
@@ -540,7 +542,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             ))}
           </section>
         ) : null}
-        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : 'Schedule this talk'}</Link></p> : null}
+        {featureOn(portal, 'planner') ? <p style={{ margin: '16px 0 0' }}><Link className="pill outline" href={withCurrentQuery(`${base}/week?course=${courseId}&view=new&from=course`, query)} data-testid={lessons.length >= 2 ? 'plan-rest' : 'schedule-this'}>{lessons.length >= 2 ? 'Plan the rest of this course' : sequence ? 'Schedule this film' : 'Schedule this talk'}</Link></p> : null}
         <p className="eyebrow">{sequence ? 'Films' : 'Parts of this course'}</p>
         {lessons.map((row, index) => {
           const week = partWeek(row, partCuts, doors, str(course.title))

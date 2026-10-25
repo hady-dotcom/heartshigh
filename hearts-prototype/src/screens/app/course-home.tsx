@@ -5,7 +5,7 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { learnerBrand } from '@/lib/learner-brand'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
-import { posterFor, shownPoster } from '@/server/learner'
+import { filmPoster, shownPoster } from '@/server/learner'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, ref, rows, str } from '../common'
@@ -20,6 +20,7 @@ type FilmRow = {
   vimeoId?: string | null
   videoProvider?: string | null
   durationSeconds?: number | null
+  posterUrl?: string | null
 }
 
 export type NextFilm = {
@@ -55,7 +56,7 @@ export async function nextCourseFilms(payload: Payload, user: SessionUser, base:
         title: str(lesson.title),
         course: str(course.title),
         place: index + 1,
-        poster: shownPoster(posterFor(str(lesson.youtubeId) || null)),
+        poster: shownPoster(filmPoster(lesson)),
       })
     }
   }
@@ -67,9 +68,9 @@ function Tick({ on }: { on: boolean }) {
 }
 
 function Thumb({ src, eager }: { src: string | null; eager?: boolean }) {
-  if (!src) return <span className="thumb" />
+  if (!src) return <span className="thumb is-fallback" data-testid="film-thumb" />
   return (
-    <span className="thumb">
+    <span className="thumb" data-testid="film-thumb">
       <img src={src} alt="" decoding="async" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'low'} />
     </span>
   )
@@ -94,7 +95,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
     const finished = own.filter((lesson) => done.has(lesson.id)).length
     const nextAt = own.findIndex((lesson) => !done.has(lesson.id))
     const next = own[nextAt] || own[0]
-    const poster = shownPoster(posterFor(str(own.find((lesson) => lesson.youtubeId)?.youtubeId) || null))
+    const poster = shownPoster(own.map((lesson) => filmPoster(lesson)).find(Boolean) || null)
     return { course, own, finished, next, nextAt: next ? Math.max(0, nextAt) : 0, poster }
   }).filter((card) => card.own.length)
   const carry = cards.find((card) => card.finished < card.own.length) || cards[0]

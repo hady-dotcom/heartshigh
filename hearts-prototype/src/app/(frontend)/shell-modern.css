@@ -247,9 +247,13 @@ html[data-theme] .app-stage.shell-modern .q-card {
 html[data-theme] .app-stage.shell-modern .carry-on .thumb,
 html[data-theme] .app-stage.shell-modern .course-card .thumb,
 html[data-theme] .app-stage.shell-modern .continue-row .thumb,
-html[data-theme] .app-stage.shell-modern .course-row .thumb {
-  background-color: var(--hh-surface);
+html[data-theme] .app-stage.shell-modern .course-row .thumb,
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback {
+  background-color: var(--portal-accent, var(--hh-accent));
   background-image: none;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
   border-radius: var(--hh-radius-control);
 }
 
@@ -350,7 +354,8 @@ html[data-theme] .app-stage.shell-modern .buffet-row {
 }
 
 html[data-theme] .app-stage.shell-modern .buffet-row .thumb {
-  background: var(--hh-surface);
+  background-color: var(--portal-accent, var(--hh-accent));
+  background-image: none;
   border: var(--hh-line-width) solid var(--hh-line);
 }
 
@@ -795,4 +800,135 @@ html[data-theme] .desk .scene-picker input[type='file'] {
   min-height: var(--hh-tap-min);
   width: 100%;
   max-width: 100%;
+}
+
+/* Opening questions use the white shell. The feed stays on the video colour. */
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) {
+  background-color: var(--hh-paper);
+  background-image: none;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) .j-sky {
+  display: none;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) :is(.j-caption, .j-heading, .j-progress, .j-line, .j-pass, .j-login) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) :is(.j-sub, .j-private, .j-contacts small) {
+  color: var(--hh-muted);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-handoff, .phase-help) .j-caption em {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-help) .j-escape,
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-help) .j-contacts a {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile.chosen {
+  border-color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile.picked {
+  background: var(--portal-accent, var(--hh-accent));
+  border-color: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile.picked .j-glyph {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-glyph {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-reply {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-help .j-contacts li {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-help .j-contacts b {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-help .j-contacts a[data-testid='help-phone'],
+html[data-theme] .app-stage.shell-modern .journey.phase-help .pill.outline-light {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  border-color: transparent;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-help .j-contacts small {
+  font-size: var(--hh-font-size-small);
+}
+
+/* The help control sits clear of the portal name. Skip stays in the header. */
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene, .phase-help) > .page-help {
+  left: auto;
+  right: var(--hh-space-3);
+  top: calc(var(--hh-space-2) + var(--safe-top, env(safe-area-inset-top, 0px)));
+  justify-content: flex-end;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-top {
+  padding-right: 72px;
+}
+
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .page-help-btn,
+html[data-theme] .app-stage.shell-modern .journey-frame > .page-help .page-help-btn,
+html[data-theme] .app-stage.shell-modern .journey > .page-help .page-help-btn {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  border-color: transparent;
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board :is(.j-board-title, .time-read, .j-board-handle) {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board .j-board-handle {
+  background: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .course-board .time-read,
+html[data-theme] .app-stage.shell-modern .lecture-speed {
+  background: var(--hh-paper);
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .answer-btn,
+html[data-theme] .app-stage.shell-modern .answer-btn[disabled] {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  opacity: 1;
+}
+
+html[data-theme] .app-stage.shell-modern a.pill.outline[data-testid='schedule-all'],
+html[data-theme] .app-stage.shell-modern a.pill.outline[data-testid='schedule-this'] {
+  color: var(--portal-accent, var(--hh-accent));
+  border-color: var(--portal-accent, var(--hh-accent));
+  background: var(--hh-paper);
 }

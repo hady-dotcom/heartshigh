@@ -130,3 +130,17 @@ export function saidForFilm(rows: SaidAnswer[], order: number, prompt = '') {
   const matched = prompt ? mine.filter((row) => row.question === prompt) : []
   return matched.length ? matched : mine
 }
+
+/**
+ * Home Learning sample lines were saved onto Book Summaries.
+ * Guiding Home Learning keeps its own lines. Any other Book Summaries row loses them.
+ */
+export function misplacedHomeAnswers(course: { id?: number | null; title?: string | null; sampleAnswers?: unknown }) {
+  const title = String(course.title || '')
+  if (/guiding home learning/i.test(title)) return false
+  const rows = readSaidAnswers(course.sampleAnswers)
+  if (!rows.length) return false
+  if (/book summar/i.test(title)) return true
+  const home = rows.some((row) => /home learning/i.test(`${row.question} ${row.text}`))
+  return home && Number(course.id) === 77
+}
