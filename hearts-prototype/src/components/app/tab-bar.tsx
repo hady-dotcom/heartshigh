@@ -12,6 +12,7 @@ export function TabBar({ base, active = null, portal, dark = false, evening = fa
   const tabs: [Tab, string, string][] = sequence
     ? [
         ['home', 'Home', base],
+        ['garden', 'Garden', `${base}/garden`],
         ['me', 'Me', `${base}/me`],
       ]
     : [

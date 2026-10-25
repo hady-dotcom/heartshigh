@@ -1,0 +1,14 @@
+{
+  "name": "Hady Home",
+  "short_name": "Hady Home",
+  "description": "Hady Home. Watch the films in order.",
+  "start_url": "/p/parenting",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f1ea",
+  "theme_color": "#1f3a5f",
+  "icons": [
+    { "src": "/icons/hady-home.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

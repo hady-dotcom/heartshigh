@@ -51,7 +51,7 @@ import { isSequencePortal } from '@/lib/sequence'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
 import type { DemoBag } from '@/screens/common'
-import { SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
+import { SequenceGarden, SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
 import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
 
 function originOf(reqHeaders: Headers) {
@@ -79,7 +79,17 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const portal = await loadPortal(payload, slug)
     if (portal && isSequencePortal(portal)) {
       const name = String(portal.brandName || portalName(portal))
-      return { title: name, description: `${name}. Watch the films in order.` }
+      return {
+        title: name,
+        description: `${name}. Watch the films in order.`,
+        applicationName: name,
+        manifest: '/hady-home.webmanifest',
+        appleWebApp: { capable: true, title: name, statusBarStyle: 'black-translucent' },
+        icons: {
+          icon: [{ url: '/icons/hady-home.svg', type: 'image/svg+xml' }],
+          apple: [{ url: '/icons/hady-home.svg' }],
+        },
+      }
     }
   } catch {
     return HEARTS_META
@@ -92,6 +102,14 @@ export default async function PortalScreen({ params, searchParams }: { params: P
   const query = await searchParams
   const [area, a, b] = screen
   const base = `/p/${slug}`
+
+  if (area === 'garden') {
+    const session = await getSession()
+    const portal = await loadPortal(session.payload, slug)
+    if (portal && isSequencePortal(portal) && !session.user && !portal.closed) {
+      return SequenceGarden({ payload: session.payload, user: session.user, portal, slug, base, origin: '', query })
+    }
+  }
 
   // The opening and the feed work before an account exists (spec 7, P1). Everything else needs one.
   if (area === undefined || OPEN_TO_ALL.has(area)) {
@@ -290,7 +308,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
 async function learnerArea(area: string | undefined, a: string | undefined, b: string | undefined, ctx: Ctx, payload: Ctx['payload']) {
   const { base } = ctx
   const sequence = isSequencePortal(ctx.portal)
-  if (sequence && area && ['lanes', 'garden', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'start', 'help', 'feed'].includes(area)) redirect(base)
+  if (sequence && area && ['lanes', 'week', 'gather', 'live', 'mission', 'recalibrate', 'speaker', 'start', 'help', 'feed'].includes(area)) redirect(base)
   switch (area) {
     case undefined:
       if (sequence) return SequenceHome(ctx)
@@ -322,6 +340,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
     case 'garden':
+      if (sequence) return SequenceGarden(ctx)
       if (a === 'workbook') return gated(ctx, 'workbook') || (b && /^\d+$/.test(b) ? GardenWorkbookEntry(ctx, Number(b)) : GardenWorkbook(ctx))
       {
         const closed = gated(ctx, 'garden')

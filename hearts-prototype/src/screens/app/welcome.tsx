@@ -9,8 +9,9 @@ import { isSequencePortal } from '@/lib/sequence'
 import { courseCards, portalName } from '@/server/learner'
 import { type Ctx, embedUrl, rows, str } from '../common'
 
-export async function WelcomeScreen({ payload, user, portal, base, query }: Ctx) {
-  if (isSequencePortal(portal)) return SequenceWelcome({ payload, user, portal, base, query })
+export async function WelcomeScreen(ctx: Ctx) {
+  if (isSequencePortal(ctx.portal)) return SequenceWelcome(ctx)
+  const { payload, user, portal, base, query } = ctx
   const staff = user.role !== 'learner'
   const welcome = staff ? portal.teacherWelcomeUrl : portal.learnerWelcomeUrl
   const intro = staff ? portal.teacherIntroUrl : portal.learnerIntroUrl
