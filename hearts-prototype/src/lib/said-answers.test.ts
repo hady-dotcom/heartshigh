@@ -20,3 +20,17 @@ test('an answers sheet stays on the film it names', () => {
   assert.equal(filled.some((row) => row.order === 1 && row.sample), false)
   assert.equal(filled.some((row) => row.sample && row.order !== 1), true)
 })
+
+test('an answers sheet with answer_text and no phase still lands on the film', () => {
+  const parsed = parseSaidSheet([
+    'video_order,callout_second,question,answer_text',
+    '1,171,"How is home learning?","A little messy, and that is fine"',
+  ].join('\n'))
+  assert.equal(parsed.error, undefined)
+  assert.equal(parsed.rows.length, 1)
+  assert.equal(parsed.rows[0].order, 1)
+  assert.equal(parsed.rows[0].question, 'How is home learning?')
+  assert.equal(parsed.rows[0].text, 'A little messy, and that is fine')
+  assert.equal(parsed.rows[0].phase, 'Phase 1')
+  assert.match(parsed.rows[0].label, /Phase 1/)
+})
