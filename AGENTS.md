@@ -37,7 +37,7 @@ The modern shell defaults to the system stack: `-apple-system`, SF Pro where the
 
 ## House style
 
-Judge every modern learner screen with one question: would this pass on an Apple product? Large titles, glass that blurs what scrolls under it, image-led cards, and the accent tint used sparingly. Do not add religious motifs, textures, or a scene unless an admin has chosen one.
+Judge every modern learner screen with one question: would this pass on an Apple product? The page is the grouped grey, cards are white, titles are large, glass blurs what scrolls under it, rows are image-led, and the accent tint is used sparingly. On a film, the picture sits below the search field. Do not add religious motifs, textures, or a scene unless an admin has chosen one.
 
 ## Look
 
