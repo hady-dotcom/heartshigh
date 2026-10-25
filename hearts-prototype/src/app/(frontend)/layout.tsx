@@ -1,4 +1,5 @@
 import './tokens.css'
+import './a11y.css'
 import './globals.css'
 import './app.css'
 import './desk.css'

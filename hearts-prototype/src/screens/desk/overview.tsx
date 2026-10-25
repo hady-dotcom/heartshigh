@@ -44,6 +44,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
     items: group.items.map((item) => ({ ...item, href: stamp(item.href) })),
   }))
   const brand = demo ? demo.cast.portalName : portalName(portal)
+  const modern = shellOf(portal) === 'modern'
   return (
     <DeskFrame
       payload={payload}
@@ -68,7 +69,8 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       query={query}
       testId={testId}
       primary={primary}
-      evening
+      evening={!modern}
+      modern={modern}
       showOnPhone={showOnPhone}
       logoUrl={portal.logoUrl}
       gatherDesk={tone === 'evening'}
@@ -304,7 +306,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <header className="light"><h2>This portal’s AI account <HelpTip topic="portal-ai">{TOOL.portalAi}</HelpTip></h2></header>
             <form className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'ai-connect', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
-              <p className="hint">Connect your own provider. HEARTS never pays for a run, and a key in the server environment is ignored. Only a portal admin can start a run. The master desk has no spend path.</p>
+              <p className="hint">Connect your own provider. {shellOf(portal) === 'modern' ? 'A run is never paid for by this app' : 'HEARTS never pays for a run'}, and a key in the server environment is ignored. Only a portal admin can start a run. The master desk has no spend path.</p>
               <p className="hint" data-testid="mcp-seam">{mcpConnectorStatus().note}</p>
               {ai.connected ? <p className="hint" data-testid="portal-ai-connected">Connected to {ai.baseUrl} as {ai.model}. Key ending {ai.keyHint}. Leave the key blank to keep it.</p> : <p className="hint" data-testid="portal-ai-missing">No account is connected. Desk tools that can use one stay on the built-in path.</p>}
               <label className="row"><span>Address</span><input type="url" name="baseUrl" defaultValue={ai.baseUrl} placeholder="https://api.example.com/v1" data-testid="portal-ai-url" required={!ai.connected} /></label>

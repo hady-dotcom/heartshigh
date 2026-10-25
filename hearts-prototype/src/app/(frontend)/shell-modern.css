@@ -291,7 +291,170 @@ html[data-theme] .app-stage.shell-modern :is(.pill, .btn, .tab, .field, select.f
 
 html[data-theme] .app-stage.shell-modern :is(.mini-btn, a[data-testid='home-avatar']) {
   min-width: var(--hh-tap-min);
+  min-height: var(--hh-tap-min);
   font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .start {
+  min-height: var(--hh-tap-min);
+  min-width: var(--hh-tap-min);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  font-size: var(--hh-font-size-small);
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  border-radius: var(--hh-radius-pill);
+}
+
+html[data-theme] .app-stage.shell-modern .week-strip {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .week-day small,
+html[data-theme] .app-stage.shell-modern .week-day.today small {
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.week-day.today, .week-day.scheduled) {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .week-day.today small {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .week-day .dot {
+  background: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb .thumb-title {
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row small {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .door-chip {
+  color: var(--hh-ink-2);
+  background: var(--hh-surface);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .example-in-use {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .example-kicker {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .feed-door {
+  background: var(--hh-paper);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .feed-door .go {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  min-height: var(--hh-tap-min);
+  border-radius: var(--hh-radius-control);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.week-today, .week-today.empty) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .q-list li {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  font-size: var(--hh-font-size-body);
+  min-height: var(--hh-tap-min);
+}
+
+html[data-theme] .app-stage.shell-modern .chip {
+  min-height: var(--hh-tap-min);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-link {
+  display: flex;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-theme] .app-stage.shell-modern .thumb .thumb-title { display: none; }
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback img { display: none; }
+
+html[data-theme] .app-stage.shell-modern .example-sample {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .example-note,
+html[data-theme] .app-stage.shell-modern .example-body,
+html[data-theme] .app-stage.shell-modern .example-body p {
+  color: var(--hh-ink-2);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card :is(.eyebrow, h3, small, .garden-link, .muted, p) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card .eyebrow {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern :is(.journey, .j-slot, .j-clip, .j-peek, .j-poster, .j-film-band, .phase-feed .j-clip) {
+  background-color: var(--hh-video);
+  background-image: none;
+}
+
+html[data-theme] .app-stage.shell-modern .feed-card-bg { display: none; }
+
+html[data-theme] .app-stage.shell-modern .j-coach-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .j-coach-card :is(h2, p, li, b) {
+  color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern .page-help-btn {
@@ -419,6 +582,7 @@ html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film
   background: var(--hh-surface);
   color: var(--hh-ink);
   border: var(--hh-line-width) solid var(--hh-line);
+  min-height: var(--hh-tap-min);
 }
 html[data-theme] .app-stage.shell-modern .player-card,
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card.course-film-band {
@@ -433,5 +597,56 @@ html[data-theme] .app-stage.shell-modern .rings .r {
 
 html[data-theme] .app-stage.shell-modern .flash.notice {
   background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern {
+  color-scheme: light;
+  background-color: var(--hh-paper);
+  background-image: none;
+  color: var(--hh-ink);
+  --desk-page: var(--hh-paper);
+  --desk-card: var(--hh-paper);
+  --desk-ink: var(--hh-ink);
+  --desk-heading: var(--hh-ink);
+  --desk-muted: var(--hh-muted);
+  --desk-line: var(--hh-line);
+  --desk-gold: var(--hh-accent);
+  --desk-gold-ink: var(--hh-on-accent);
+  --desk-header: var(--hh-surface);
+  --desk-sidebar: var(--hh-surface);
+  --desk-teal: var(--hh-accent);
+  --desk-on-dark: var(--hh-on-accent);
+  --desk-field: var(--hh-paper);
+  --paper: var(--hh-paper);
+  --card: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-ink-2);
+  --muted: var(--hh-muted);
+  --line: var(--hh-line);
+  --gold: var(--hh-accent);
+  --gold-ink: var(--hh-on-accent);
+  --teal: var(--hh-accent);
+  --teal-deep: var(--hh-surface);
+  --cream: var(--hh-paper);
+  --glass: var(--hh-paper);
+  --glass-solid: var(--hh-paper);
+  --field: var(--hh-paper);
+  --mint: var(--hh-surface);
+}
+
+html[data-theme] .desk.desk-modern :is(.side, .side-brand, .side a.nav, header, .app-head, .main-head, .empty, .empty-state) {
+  background-image: none;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .side { background: var(--hh-surface); }
+
+html[data-theme] .desk.desk-modern .side a.nav.on {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint) {
   color: var(--hh-ink);
 }

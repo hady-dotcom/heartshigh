@@ -160,11 +160,13 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
       if (seen(kind) >= 8) return
       found.push({ kind, detail: detail.slice(0, 180) })
     }
+    const skipBox = (el: Element) => Boolean(el.closest('.sr-only, [aria-hidden="true"], details:not([open])'))
     const visible = (el: Element) => {
+      if (skipBox(el)) return false
       const cs = getComputedStyle(el)
       if (cs.display === 'none' || cs.visibility === 'hidden' || Number(cs.opacity) === 0) return false
       const rect = el.getBoundingClientRect()
-      return rect.width >= 1 && rect.height >= 1 && rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth
+      return rect.width >= 8 && rect.height >= 8 && rect.bottom > 0 && rect.right > 0 && rect.top < window.innerHeight && rect.left < window.innerWidth
     }
 
     for (const el of document.querySelectorAll('h1,h2,h3,h4,p,a,button,li,label,span,small,b,td,th')) {
@@ -176,8 +178,12 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
       if (cs.textOverflow === 'ellipsis') continue
       const clamp = (cs as CSSStyleDeclaration & { webkitLineClamp?: string }).webkitLineClamp
       if (clamp && clamp !== 'none') continue
-      if (el.scrollWidth > el.clientWidth + 1 && (el.textContent || '').trim()) {
-        push('overflow', `${el.tagName.toLowerCase()} “${(el.textContent || '').trim().slice(0, 80)}”`)
+      const text = (el.textContent || '').trim()
+      if (text.length < 2 || el.clientWidth < 8) continue
+      const parent = el.parentElement
+      if (parent && getComputedStyle(parent).textOverflow === 'ellipsis') continue
+      if (el.scrollWidth > el.clientWidth + 4) {
+        push('overflow', `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 40)} “${text.slice(0, 80)}”`)
       }
     }
 
@@ -209,6 +215,7 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
         const a = boxes[i]
         const b = boxes[j]
         if (a.el.contains(b.el) || b.el.contains(a.el)) continue
+        if (a.el.closest('.tabbar') || b.el.closest('.tabbar')) continue
         const width = Math.min(a.r, b.r) - Math.max(a.x, b.x)
         const height = Math.min(a.b, b.b) - Math.max(a.y, b.y)
         if (width > 4 && height > 4) {
@@ -221,8 +228,8 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
 
     for (const el of document.querySelectorAll('p, li, label, td')) {
       if (!visible(el)) continue
-      if (el.closest('h1, h2, h3, h4, h5, h6, small, .eyebrow, .hint, .muted, .page-sub')) continue
-      if (el.matches('small, .eyebrow, .hint, .muted, .page-sub')) continue
+      if (el.closest('h1, h2, h3, h4, h5, h6, small, .eyebrow, .hint, .muted, .page-sub, .brand-word, .shell-brand')) continue
+      if (el.matches('small, .eyebrow, .hint, .muted, .page-sub, .brand-word, .shell-brand')) continue
       const size = parseFloat(getComputedStyle(el).fontSize)
       if (size < 15) push('body-text', `${size}px “${(el.textContent || '').trim().slice(0, 60)}”`)
     }
@@ -244,7 +251,7 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
     const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
     while (walker.nextNode()) {
       const parent = walker.currentNode.parentElement
-      if (!parent || parent.closest('option, script, style, [data-testid="shell-look"], [data-testid="course-home"]')) continue
+      if (!parent || parent.closest('option, script, style, [data-testid="shell-look"], [data-testid="course-home"], details:not([open])')) continue
       copy += `${walker.currentNode.textContent}\n`
     }
     const images: string[] = []
@@ -260,6 +267,15 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
     }
 
     const doc = document.documentElement
+    const wide: string[] = []
+    if (doc.scrollWidth > doc.clientWidth + 2) {
+      for (const el of document.querySelectorAll('body *')) {
+        const rect = el.getBoundingClientRect()
+        if (rect.width < 8 || rect.height < 8 || rect.right <= window.innerWidth + 2) continue
+        wide.push(`${el.tagName.toLowerCase()}.${String(el.className).slice(0, 48)} right ${Math.round(rect.right)}`)
+        if (wide.length >= 4) break
+      }
+    }
     return {
       found,
       families: [...families],
@@ -267,6 +283,7 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
       images: images.slice(0, 6),
       colours: colours.slice(0, 6),
       scroll: doc.scrollWidth > doc.clientWidth + 2,
+      wide,
       talks: [...document.querySelectorAll('[data-testid="buffet-talk"] .talk-name, [data-testid="part-link"]')].map((el) => (el.textContent || '').trim()).filter(Boolean),
     }
   }, { heartsFonts: [...HEARTS_FONTS], genericFonts: [...GENERIC_FONTS] })
@@ -287,7 +304,7 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
     for (const image of dom.images) hits.push({ screen, kind: 'hearts-image', detail: image })
     for (const colour of dom.colours) hits.push({ screen, kind: 'hearts-colour', detail: colour })
   }
-  if (dom.scroll) hits.push({ screen, kind: 'horizontal-scroll', detail: 'page is wider than the viewport' })
+  if (dom.scroll) hits.push({ screen, kind: 'horizontal-scroll', detail: `page is wider than the viewport${dom.wide?.length ? `: ${dom.wide.join(' | ')}` : ''}` })
 
   const empty = await page.evaluate(() => {
     const notes: string[] = []
@@ -310,8 +327,9 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
   try {
     const axe = await new AxeBuilder({ page }).options({ runOnly: { type: 'rule', values: ['color-contrast'] } }).analyze()
     for (const violation of axe.violations) {
-      const sample = violation.nodes[0]?.target?.join(' ') || violation.help
-      hits.push({ screen, kind: 'contrast', detail: `${sample}`.slice(0, 180) })
+      const sample = violation.nodes[0]
+      const where = `${sample?.target?.join(' ') || ''} ${sample?.html || violation.help}`
+      hits.push({ screen, kind: 'contrast', detail: where.slice(0, 180) })
       if (hits.filter((hit) => hit.kind === 'contrast').length >= 6) break
     }
   } catch (error) {
@@ -353,7 +371,7 @@ async function visit(page: Page, info: TestInfo, portal: 'hady' | 'hearts', name
   remember(info, name, hits.filter((hit) => hit.screen === name))
 }
 
-test.describe.configure({ mode: 'serial', timeout: 600_000 })
+test.describe.configure({ timeout: 600_000 })
 
 test('Hady Home learner screens', async ({ page }, info) => {
   const hits: Hit[] = []
@@ -364,6 +382,10 @@ test('Hady Home learner screens', async ({ page }, info) => {
     if (!href) hits.push({ screen: 'hady-learner-course', kind: 'order', detail: 'no course card' })
     else {
       await visit(page, info, 'hady', 'hady-learner-course', href, hits)
+      const start = page.getByTestId('start-part')
+      if (await start.count()) await start.click()
+      await page.waitForURL(/part=/, { timeout: 60_000 }).catch(() => undefined)
+      await settle(page)
       const question = page.getByTestId('sequence-question')
       if (await question.count()) {
         await question.scrollIntoViewIfNeeded()

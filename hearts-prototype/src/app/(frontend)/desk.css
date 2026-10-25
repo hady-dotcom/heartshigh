@@ -361,6 +361,15 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk.desk-phone .form input,
   .desk.desk-phone .form select,
   .desk.desk-phone .form textarea { max-width: 100%; min-width: 0; }
+  .desk.desk-phone .sequence-edit li { flex-wrap: wrap; }
+  .desk.desk-phone .sequence-edit input {
+    flex: 1 1 100%;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
+  .desk.desk-phone .sequence-edit button { flex: 1 1 8rem; }
+  .desk.desk-phone input[type='file'] { width: 100%; max-width: 100%; }
   .desk.desk-phone .main { padding: 16px 12px; min-width: 0; }
   .desk.desk-phone .desk-split { grid-template-columns: 1fr; }
   .desk.desk-phone .panel { overflow-x: auto; max-width: 100%; }

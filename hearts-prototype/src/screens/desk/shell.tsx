@@ -177,6 +177,7 @@ export async function DeskFrame({
   query,
   testId,
   evening = true,
+  modern = false,
   logoUrl,
   gatherDesk,
   showOnPhone = true,
@@ -200,6 +201,8 @@ export async function DeskFrame({
   query: { error?: string | string[]; notice?: string | string[] }
   testId?: string
   evening?: boolean
+  /** White desk. Used when the portal shell is modern, so the evening garden stays on HEARTS. */
+  modern?: boolean
   /** A portal logo, when one has been set. Otherwise the HEARTS arch. */
   logoUrl?: string | null
   /** Gather's desk look. Kept off the library, access and teach desks. */
@@ -233,7 +236,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className={`desk${evening ? ' evening' : ''}${gatherDesk ? ' gather-desk' : ''}${showOnPhone ? ' desk-phone' : ''}`} data-testid={testId}>
+    <div className={`desk${evening ? ' evening' : ''}${modern ? ' desk-modern' : ''}${gatherDesk ? ' gather-desk' : ''}${showOnPhone ? ' desk-phone' : ''}`} data-testid={testId}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}
