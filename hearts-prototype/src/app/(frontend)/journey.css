@@ -206,7 +206,7 @@
   pointer-events: none;
 }
 html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/dawn-courtyard.jpg'); }
-.j-poster-play { position: absolute; left: 50%; top: 26%; z-index: 7; width: 76px; height: 76px; margin: -38px 0 0 -38px; border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
+.j-poster-play { position: absolute; left: 50%; top: 42%; z-index: 7; width: 76px; height: 76px; margin: 0; transform: translate(-50%, -50%); border: 0; border-radius: 50%; display: grid; place-items: center; padding: 0 0 0 4px; background: #d4a84b; color: #1a1408; box-shadow: 0 10px 30px rgba(0,0,0,0.35); cursor: pointer; }
 .j-poster img { position: absolute; inset: 0; width: 100%; height: 100%; max-width: none; object-fit: cover; opacity: 1; }
 .journey[data-vertical='yes'] .j-poster { height: min(60dvh, calc(min(430px, 100vw) * 16 / 9)); aspect-ratio: auto; }
 .journey[data-vertical='yes'] .j-poster img { height: 100%; object-fit: cover; }

@@ -193,9 +193,9 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
       if (cs.pointerEvents === 'none') continue
       if (cs.display === 'inline' && el.closest('p, li, h1, h2, h3, h4, h5, h6')) continue
       if (el.matches('input[type="checkbox"], input[type="radio"]')) {
-        const label = el.closest('label')
-        if (label) {
-          const box = label.getBoundingClientRect()
+        const host = el.closest('label, td, th')
+        if (host) {
+          const box = host.getBoundingClientRect()
           if (box.width >= 44 && box.height >= 44) continue
         }
       }
@@ -206,10 +206,32 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
       }
     }
 
-    const boxes = taps.map((el) => {
-      const rect = el.getBoundingClientRect()
-      return { el, x: rect.left, y: rect.top, r: rect.right, b: rect.bottom }
-    })
+    const clipped = (el: Element) => {
+      let left = 0
+      let top = 0
+      let right = window.innerWidth
+      let bottom = window.innerHeight
+      const own = el.getBoundingClientRect()
+      left = own.left
+      top = own.top
+      right = own.right
+      bottom = own.bottom
+      let node = el.parentElement
+      while (node && node !== document.documentElement) {
+        const cs = getComputedStyle(node)
+        const clip = `${cs.overflow}${cs.overflowX}${cs.overflowY}`
+        if (/auto|hidden|clip|scroll/.test(clip)) {
+          const box = node.getBoundingClientRect()
+          left = Math.max(left, box.left)
+          top = Math.max(top, box.top)
+          right = Math.min(right, box.right)
+          bottom = Math.min(bottom, box.bottom)
+        }
+        node = node.parentElement
+      }
+      return { x: left, y: top, r: right, b: bottom }
+    }
+    const boxes = taps.map((el) => ({ el, ...clipped(el) })).filter((box) => box.r - box.x > 8 && box.b - box.y > 8)
     for (let i = 0; i < boxes.length; i++) {
       for (let j = i + 1; j < boxes.length; j++) {
         const a = boxes[i]

@@ -6,7 +6,7 @@ import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash } from '@/components/app/shell'
 import { filmCanPlay } from '@/lib/film-availability'
-import { learnerBrand } from '@/lib/learner-brand'
+import { appNameOf, learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekStrip } from '@/components/app/week-strip'
 import { weekView } from '@/server/week-plan'
@@ -186,7 +186,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
         {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base) : null}
-        <InstallCard strip />
+        <InstallCard strip appName={appNameOf(portal)} />
         {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">

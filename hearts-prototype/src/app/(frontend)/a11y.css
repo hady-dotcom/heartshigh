@@ -26,3 +26,13 @@ html[data-theme] .sr-only :is(a, button, input, select, textarea, summary, [role
   width: 1px !important;
   height: 1px !important;
 }
+
+html[data-theme] input[type='file'] {
+  min-height: var(--hh-tap-min) !important;
+  max-width: 100%;
+}
+
+html[data-theme] :is(label, td, th):has(input[type='checkbox'], input[type='radio']) {
+  min-height: var(--hh-tap-min) !important;
+  min-width: var(--hh-tap-min) !important;
+}

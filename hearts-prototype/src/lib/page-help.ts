@@ -124,7 +124,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use Me',
     body: [
       'This is your name, your week, your saved clips, your workbook and your settings.',
-      'Keep HEARTS on this phone opens the install card again. Settings holds sound, privacy and the account.',
+      'Keep this app on this phone opens the install card again. Settings holds sound, privacy and the account.',
     ],
   },
   settings: {
