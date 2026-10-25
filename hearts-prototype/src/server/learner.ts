@@ -138,10 +138,12 @@ export function posterFor(youtubeId: string | null | undefined) {
 }
 
 /** A stored Vimeo oEmbed thumbnail, else the YouTube frame. Never a blank or a courtyard. */
-export function filmPoster(lesson: { posterUrl?: string | null; youtubeId?: string | null } | null | undefined) {
-  const stored = String(lesson?.posterUrl || '').trim()
+export function filmPoster(lesson: object | null | undefined) {
+  const row = lesson as { posterUrl?: unknown; youtubeId?: unknown } | null | undefined
+  const stored = String(row?.posterUrl || '').trim()
   if (/^https:\/\//i.test(stored)) return stored
-  return posterFor(lesson?.youtubeId)
+  const youtubeId = typeof row?.youtubeId === 'string' ? row.youtubeId : null
+  return posterFor(youtubeId)
 }
 
 /** A still we can paint as a thumbnail, including YouTube frames and the copies under /clips/. */
