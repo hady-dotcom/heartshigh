@@ -678,3 +678,36 @@ html[data-theme] .desk.desk-modern .panel > header :is(h2, p) {
   background: var(--hh-surface);
   color: var(--hh-ink);
 }
+
+html[data-theme] .desk.desk-modern .example-in-use {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-kicker {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-sample {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .desk.desk-modern .example-sample h3,
+html[data-theme] .desk.desk-modern .example-note,
+html[data-theme] .desk.desk-modern .example-body,
+html[data-theme] .desk.desk-modern .example-body p {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-sample .hint,
+html[data-theme] .desk.desk-modern .example-body .hint {
+  color: var(--hh-muted);
+}
+
+html[data-theme] .desk.desk-modern .sequence-num {
+  color: var(--hh-accent);
+}
