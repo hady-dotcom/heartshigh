@@ -372,6 +372,10 @@ export interface Portal {
   fontPair?: ('jakarta' | 'bricolage' | 'outfit' | 'inter') | null;
   /** Course cards is the usual course home. Garden is the older picture. */
   courseHome?: ('cards' | 'garden') | null;
+  /** Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard. */
+  sceneKey?: ('plain' | 'courtyard' | 'office' | 'staff-room' | 'kitchen' | 'living-room' | 'upload') | null;
+  /** Picture uploaded by the portal admin, when the background is Upload. */
+  sceneUrl?: string | null;
   /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
    */
@@ -3534,6 +3538,8 @@ export interface PortalsSelect<T extends boolean = true> {
   shell?: T;
   fontPair?: T;
   courseHome?: T;
+  sceneKey?: T;
+  sceneUrl?: T;
   demoRooms?: T;
   features?: T;
   aiConnection?: T;

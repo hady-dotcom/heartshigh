@@ -86,13 +86,15 @@ async function ensureSaidAnswers(payload: Payload, courseId: number) {
   await payload.update({ collection: 'courses', id: courseId, overrideAccess: true, data: { sampleAnswers: rows } as never })
 }
 
-function hadyLook(existing?: { accent?: string | null; colour?: string | null; fontPair?: string | null; logoUrl?: string | null }) {
+function hadyLook(existing?: { accent?: string | null; colour?: string | null; fontPair?: string | null; logoUrl?: string | null; sceneKey?: string | null }) {
   const accent = String(existing?.accent || '').trim().toLowerCase()
   const colour = String(existing?.colour || '').trim().toLowerCase()
   const font = String(existing?.fontPair || '').trim()
+  const scene = String(existing?.sceneKey || '').trim()
   return {
     shell: 'modern' as const,
     courseHome: 'cards' as const,
+    ...(!scene ? { sceneKey: 'plain' as const } : {}),
     ...(!font ? { fontPair: 'jakarta' as const } : {}),
     ...(!accent || accent === '#e07a5f' ? { accent: '#2563EB' } : {}),
     ...(!colour || colour === '#1f3a5f' ? { colour: '#2563EB' } : {}),

@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneUrlOf, shellOf, showHeartsMark, shownSupportNote, supportNoteOf } from '../../src/lib/portal-look'
+import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneCssOf, sceneKeyOf, sceneUrlOf, shellOf, showHeartsMark, shownSupportNote, supportNoteOf } from '../../src/lib/portal-look'
 
 test('a portal with no look stored stays plain and white', () => {
   assert.equal(courseHomeOf(null), 'cards')
@@ -13,6 +13,14 @@ test('a portal with no look stored stays plain and white', () => {
   assert.equal(shownSupportNote({ shell: 'hearts', supportNote: '' }), '')
   assert.equal(sceneUrlOf({}), '')
   assert.equal(sceneUrlOf({ sceneKey: 'plain' }), '')
+  assert.equal(sceneKeyOf({}), 'plain')
+  assert.equal(sceneKeyOf({ shell: 'hearts' }), 'courtyard')
+  assert.equal(sceneCssOf({}), null)
+  assert.equal(sceneCssOf({ shell: 'hearts' }), null)
+  assert.equal(sceneCssOf({ shell: 'hearts', sceneKey: 'plain' }), 'none')
+  assert.equal(sceneCssOf({ sceneKey: 'kitchen' }), 'url("/theme/scenes/kitchen.jpg")')
+  assert.equal(sceneUrlOf({ sceneKey: 'upload', sceneUrl: 'https://cdn.example/a.jpg' }), 'https://cdn.example/a.jpg')
+  assert.equal(sceneUrlOf({ sceneKey: 'upload', sceneUrl: 'javascript:alert(1)' }), '')
   assert.equal(shellOf({}), 'modern')
   assert.equal(shellOf(null), 'modern')
   assert.equal(fontPairOf({}), 'jakarta')

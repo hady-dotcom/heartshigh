@@ -23,7 +23,8 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { loginFailurePath } from '@/lib/demo-stage-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
-import { MODERN_ACCENT, shellOf } from '@/lib/portal-look'
+import { MODERN_ACCENT, SCENE_KEYS, safeSceneUrl, shellOf } from '@/lib/portal-look'
+import { heartsFileUrl } from '@/lib/media-access'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { deskScreenName, escapeHtml } from '@/lib/action-error'
 import { humanDayMonth } from '@/lib/human-date'
@@ -2591,6 +2592,25 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data.fontPair = font === 'bricolage' || font === 'outfit' || font === 'inter' ? font : 'jakarta'
     }
     if (form.has('courseHome')) data.courseHome = text(form, 'courseHome') === 'garden' ? 'garden' : 'cards'
+    const sceneFile = form.get('sceneFile')
+    if (sceneFile instanceof File && sceneFile.size > 0) {
+      if (sceneFile.size > 4 * 1024 * 1024) return redirectTo(req, text(form, 'next') || '/', 'That picture needs to be under 4 MB.')
+      if (!/^image\/(jpeg|png|webp)$/.test(sceneFile.type)) return redirectTo(req, text(form, 'next') || '/', 'Use a JPEG, PNG, or WebP picture.')
+      const mediaId = await saveOwnedMedia(payload, sceneFile, { portal, owner: user.id, purpose: 'portal-asset', alt: 'Background' })
+      const uploaded = heartsFileUrl(mediaId)
+      if (!uploaded) return redirectTo(req, text(form, 'next') || '/', 'That picture could not be saved.')
+      data.sceneKey = 'upload'
+      data.sceneUrl = uploaded
+    } else if (form.has('sceneKey')) {
+      const key = text(form, 'sceneKey')
+      if (!(SCENE_KEYS as readonly string[]).includes(key)) return redirectTo(req, text(form, 'next') || '/', 'Choose a background from the list.')
+      if (key === 'upload') {
+        const existing = safeSceneUrl((acting.portal as { sceneUrl?: string | null }).sceneUrl)
+        if (!existing) return redirectTo(req, text(form, 'next') || '/', 'Choose a picture to upload, or pick one of the places.')
+        data.sceneKey = 'upload'
+        data.sceneUrl = existing
+      } else data.sceneKey = key
+    }
     if (form.has('timeZone')) {
       if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as Europe/London.')
       data.timeZone = text(form, 'timeZone')

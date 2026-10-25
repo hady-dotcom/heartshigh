@@ -1,4 +1,5 @@
 import { cookies } from 'next/headers'
+import type { CSSProperties } from 'react'
 import type { Payload } from 'payload'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { JourneyErrorBoundary } from '@/components/app/error-boundary'
@@ -30,7 +31,7 @@ import { homeLive } from '@/server/live'
 import { featureOn, featuresOf } from '@/lib/features'
 import { feedBackHref } from '@/lib/lane-progress'
 import { appNameOf } from '@/lib/learner-brand'
-import { fontPairOf, shellOf } from '@/lib/portal-look'
+import { fontPairOf, sceneCssOf, shellOf } from '@/lib/portal-look'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -78,8 +79,9 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   opening.route.cuts = nudgeTalks(titled, context, popular, true)
   const mission = user ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null
   const modern = shellOf(portal) === 'modern'
+  const sceneCss = modern ? sceneCssOf(portal) : null
   return (
-    <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined}>
+    <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
       <main className={`app journey-frame${modern ? '' : ' dark'}`} data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
