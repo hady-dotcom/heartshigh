@@ -135,6 +135,12 @@ export const Portals: CollectionConfig = {
     { name: 'teacherCap', type: 'number', admin: { description: 'Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.' } },
     { name: 'kineticOn', type: 'checkbox', admin: { description: 'Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.' } },
     {
+      name: 'demoRooms',
+      type: 'json',
+      access: { read: () => false, create: () => false, update: () => false },
+      admin: { hidden: true, disableListColumn: true, description: 'Practice rooms for the parenting demo. Real learners are not stored here.' },
+    },
+    {
       name: 'features',
       type: 'json',
       admin: {

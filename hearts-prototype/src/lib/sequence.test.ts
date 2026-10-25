@@ -202,6 +202,22 @@ test('the export zip is a standalone copy with a readme', () => {
   assert.doesNotMatch(bundle, /password|api[_-]?key|@hearts\.test/i)
 })
 
+test('a parenting export opens straight in with the demo join code', () => {
+  const files = buildExportFiles(
+    { name: 'Guiding Home Learning', slug: 'parenting', colour: '#1f3a5f', accent: '#e07a5f', logoUrl: '', lockOrder: true, note: 'Watch the films in order.', joinCode: 'PARENT-DEMO' },
+    [{ order: 1, title: 'Home Learning Introduction 1: Why We Created This Course', speaker: '', provider: 'vimeo', id: '496862893', hash: '', durationSeconds: 0, hook: '', turn: '', land: '', question: 'How would you describe your experience of home learning so far?' }],
+  )
+  const opened = readZipStore(zipStore(files))
+  const bundle = Object.values(opened).join('\n')
+  assert.match(opened['README.md'], /Open index\.html/)
+  assert.match(opened['README.md'], /PARENT-DEMO/)
+  assert.match(opened['index.html'], /You are in\. Join code/)
+  assert.match(opened['index.html'], /"joinCode":"PARENT-DEMO"/)
+  assert.match(opened['index.html'], /id="join-code">Join code PARENT-DEMO/)
+  assert.doesNotMatch(bundle, /drive\.google|docs\.google|password|api[_-]?key|@hearts\.test/i)
+  assert.equal(hasHeartsWord(bundle), false)
+})
+
 test('kinetic clips default on, and a sequenced course can switch every other part off', () => {
   assert.equal(kineticMomentsOn(null), true)
   assert.equal(kineticMomentsOn({ shape: 'hearts', kineticOn: false }), true)

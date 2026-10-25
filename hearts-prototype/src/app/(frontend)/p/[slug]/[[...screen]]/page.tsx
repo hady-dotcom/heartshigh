@@ -48,6 +48,9 @@ import { BackToDesk } from '@/components/app/back-to-desk'
 import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 import { isSequencePortal } from '@/lib/sequence'
+import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
+import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
+import type { DemoBag } from '@/screens/common'
 import { SequenceGate, SequenceHome, SequenceMe } from '@/screens/app/sequence'
 import { SequenceCodes, SequenceDesk, SequenceFeatures, SequenceLearners, SequenceOverview } from '@/screens/desk/sequence'
 
@@ -121,8 +124,19 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
-  const { payload, user, portal } = await requirePortal(slug)
-  const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query }
+  const loaded = await requirePortal(slug)
+  let { payload, user, portal } = loaded
+  let demo: DemoBag | undefined
+  if (slug === 'parenting' && query.demo) {
+    const room = await loadDemoRoom(payload, String(query.demo))
+    if (!room) notFound()
+    const role: DemoRole = isDemoRole(String(query.as || '')) ? (query.as as DemoRole) : 'learner'
+    if ((area === 'admin' || area === 'master') && role === 'learner') redirect(withDemoQuery(base, room.token, 'learner'))
+    user = demoUser(role === 'master' ? 'portal' : role, room.cast, portal.id)
+    portal = portalWithDemoFeatures(portal, room.state)
+    demo = { token: room.token, role, cast: room.cast, state: room.state }
+  }
+  const ctx: Ctx = { payload, user, portal, slug, base, origin: originOf(await headers()), query, demo }
 
   if (portal.closed && user.role === 'learner') {
     return (

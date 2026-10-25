@@ -1,10 +1,11 @@
 import Link from 'next/link'
+import { Hidden } from '@/components/app/shell'
+import { defaultParentingCast } from '@/lib/parenting-demo'
 import { loadDoors } from '@/server/doors'
 import { doorLabel, doorOfClause } from '@/lib/doors'
 import { notFound } from 'next/navigation'
 import type { ReactNode } from 'react'
 import type { Payload } from 'payload'
-import { Hidden } from '@/components/app/shell'
 import { LibraryCoursePicker } from '@/components/desk/library-picker'
 import { loadLibraryPicker, openedByLines } from '@/server/code-courses'
 import { CodeLimits, CodeStatus } from '@/components/desk/codes'
@@ -55,6 +56,15 @@ export async function MasterPortals(ctx: MasterCtx) {
   return (
     <MasterFrame ctx={ctx} active="portals" title="Portals" intro="Each mosque or community has its own portal, with its own admin, codes and people. You open portals here; each portal admin runs their own." testId="master">
       <p className="hint" style={{ marginTop: 0 }}><Link href="/demo-stage" data-testid="open-demo-stage">Open the demo stage</Link> — four people on one page. A course, a note, a question, and a reply move between them. Nothing is saved.</p>
+      <section className="panel" data-testid="role-switch" style={{ marginBottom: 18 }}>
+        <header><div><h2>Parenting course</h2><p>Step into Guiding Home Learning, or open all four screens. Practice answers stay in that room.</p></div></header>
+        <div className="body" style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+          <Link className="btn ink" href="/demo" data-testid="open-parenting-demo">Open the four screens</Link>
+          <StepButton step="portal" label="Step in as the portal admin" testId="role-switch-portal" />
+          <StepButton step="teacher" label="Step in as the teacher" testId="role-switch-teacher" />
+          <StepButton step="learner" label="Step in as the learner" testId="role-switch-learner" />
+        </div>
+      </section>
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
           <table className="data">
@@ -293,5 +303,15 @@ export async function MasterQuestions(ctx: MasterCtx) {
         </section>
       </div>
     </MasterFrame>
+  )
+}
+
+function StepButton({ step, label, testId }: { step: string; label: string; testId: string }) {
+  const cast = defaultParentingCast()
+  return (
+    <form action="/api/hearts/demo" method="post">
+      <Hidden fields={{ action: 'open', step, master: cast.master, portalAdmin: cast.portalAdmin, portalName: cast.portalName, teacher: cast.teacher, learner: cast.learner }} />
+      <button className="btn ghost" type="submit" data-testid={testId}>{label}</button>
+    </form>
   )
 }

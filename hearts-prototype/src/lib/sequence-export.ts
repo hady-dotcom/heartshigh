@@ -23,6 +23,8 @@ export type ExportPortal = {
   logoUrl: string
   lockOrder: boolean
   note: string
+  /** When set, opening the file starts the first film and shows this code. */
+  joinCode?: string
 }
 
 function dosStamp(date = new Date('2026-01-01T00:00:00Z')) {
@@ -105,11 +107,12 @@ export function readZipStore(buf: Buffer) {
 }
 
 function readme(portal: ExportPortal) {
+  const code = portal.joinCode ? `Join code: ${portal.joinCode}\nOpening index.html starts the first film. You are already in.\n\n` : ''
   return `# ${portal.name}
 
 This folder is a copy of the learner app for demos.
 
-1. Open index.html in a browser. You can double-click it.
+${code}1. Open index.html in a browser. You can double-click it.
 2. The films play in order, from 1 to the last.
 3. Your place is saved in this browser only. It is not sent anywhere.
 4. When a film ends, the next one starts after a short pause. Press Next if it does not.
@@ -149,7 +152,7 @@ function page(portal: ExportPortal, videos: ExportVideo[]) {
 <body>
 <header>
   ${portal.logoUrl ? `<img alt="" src="${escapeHtml(portal.logoUrl)}">` : ''}
-  <div><strong>${escapeHtml(portal.name)}</strong><div>Watch in order</div></div>
+  <div><strong>${escapeHtml(portal.name)}</strong><div>Watch in order</div>${portal.joinCode ? `<div id="join-code">Join code ${escapeHtml(portal.joinCode)}</div>` : ''}</div>
 </header>
 <main>
   <p class="note" id="note"></p>
@@ -173,7 +176,8 @@ function show() {
   const film = data.videos[index]
   document.getElementById('count').textContent = (saved.done.length) + ' of ' + data.videos.length + ' videos'
   const note = document.getElementById('note')
-  note.textContent = locked(index) ? 'Watch the previous one first.' : (data.portal.note || '')
+  if (data.portal.joinCode && index === 0 && !saved.done.length) note.textContent = 'You are in. Join code ' + data.portal.joinCode
+  else note.textContent = locked(index) ? 'Watch the previous one first.' : (data.portal.note || '')
   const lines = [film.hook && ('Opening line: ' + film.hook), film.turn && ('The turn: ' + film.turn), film.land && ('Landing line: ' + film.land), film.question && ('A question: ' + film.question)].filter(Boolean)
   document.getElementById('callouts').textContent = lines.join(' ')
   const stage = document.getElementById('stage')
@@ -249,4 +253,21 @@ export function buildExportFiles(portal: ExportPortal, videos: ExportVideo[]) {
 
 export function buildExportZip(portal: ExportPortal, videos: ExportVideo[]) {
   return zipStore(buildExportFiles(portal, videos))
+}
+
+/** Learner titles, Vimeo ids, and the first question. Drive and transcript links stay out. */
+export function courseFilmsToExport(films: { order: number; publicTitle: string; vimeoId: string; callouts: { prompt: string }[] }[]): ExportVideo[] {
+  return films.map((film, index) => ({
+    order: film.order || index + 1,
+    title: film.publicTitle,
+    speaker: '',
+    provider: 'vimeo' as const,
+    id: film.vimeoId,
+    hash: '',
+    durationSeconds: 0,
+    hook: '',
+    turn: '',
+    land: '',
+    question: film.callouts[0]?.prompt || '',
+  }))
 }

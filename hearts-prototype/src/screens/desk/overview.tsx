@@ -9,6 +9,8 @@ import { TOOL } from '@/lib/desk-help'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
+import { withDemoQuery } from '@/lib/parenting-demo'
+import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { type Ctx, clock, portalPeople, rows, str } from '../common'
 import { sharedAnswerText } from '@/lib/shared-answers'
 import { markTeachVisit, newSharedAnswers, seenFor } from '@/server/teach-seen'
@@ -28,12 +30,19 @@ function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null
 
 export async function AdminFrame({ ctx, active, title, intro, tools, help, children, testId, tone, showOnPhone, primary }: { ctx: Ctx; active: string; title: string; intro?: ReactNode; tools?: ReactNode; help?: ReactNode; children: ReactNode; testId?: string; tone?: 'evening'; showOnPhone?: boolean; primary?: { label: string; href: string } }) {
   const { payload, user, portal, base, query } = ctx
-  const seenAt = active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
-  const fresh = await newSharedAnswers(payload, portal.id, seenAt, 1)
+  const demo = ctx.demo
+  const seenAt = demo ? null : active === 'teach' ? await markTeachVisit(payload, user, portal.id) : seenFor(user, portal.id)
+  const fresh = demo ? { total: 0, docs: [] as { id: number }[] } : await newSharedAnswers(payload, portal.id, seenAt, 1)
   const freshAnswers = fresh.total
   const newestHref = fresh.docs[0] ? `${base}/admin/answers/${fresh.docs[0].id}` : null
-  const extra = [{ label: 'See what a learner sees', href: base }]
-  if (user.role === 'master') extra.push({ label: 'Back to master desk', href: '/master' })
+  const stamp = (href: string) => (demo ? withDemoQuery(href, demo.token, demo.role) : href)
+  const extra = [{ label: 'See what a learner sees', href: stamp(base) }]
+  if (user.role === 'master' && !demo) extra.push({ label: 'Back to master desk', href: '/master' })
+  const nav = withAnswerBadge(portalNav(base, user, portal), freshAnswers, newestHref).map((group) => ({
+    ...group,
+    items: group.items.map((item) => ({ ...item, href: stamp(item.href) })),
+  }))
+  const brand = demo ? demo.cast.portalName : portalName(portal)
   return (
     <DeskFrame
       payload={payload}
@@ -41,16 +50,16 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       title={title}
       intro={intro}
       active={active}
-      nav={withAnswerBadge(portalNav(base, user, portal), freshAnswers, newestHref)}
-      brand={portalName(portal)}
-      subBrand={portal.closed ? 'Deactivated' : 'Portal desk'}
-      deskName={`${portalName(portal)} portal desk`}
-      brandHref={`${base}/admin`}
+      nav={nav}
+      brand={brand}
+      subBrand={portal.closed ? 'Deactivated' : demo ? (user.role === 'teacher' ? 'Teacher' : 'Portal admin') : 'Portal desk'}
+      deskName={`${brand} portal desk`}
+      brandHref={stamp(`${base}/admin`)}
       extraLinks={extra}
       tools={
         <>
-          <Link className="btn ghost small" href={base} data-testid="see-as-learner">See what a learner sees</Link>
-          {user.role === 'master' ? <Link className="btn ghost small" href="/master" data-testid="back-master">Back to master desk</Link> : null}
+          <Link className="btn ghost small" href={stamp(base)} data-testid="see-as-learner">See what a learner sees</Link>
+          {user.role === 'master' && !demo ? <Link className="btn ghost small" href="/master" data-testid="back-master">Back to master desk</Link> : null}
           {tools}
         </>
       }
@@ -63,6 +72,7 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
       logoUrl={portal.logoUrl}
       gatherDesk={tone === 'evening'}
     >
+      {demo ? <DemoFrameTools token={demo.token} role={demo.role} cast={demo.cast} seq={demo.state.seq} /> : null}
       {portal.closed ? <div className="flash error" data-testid="portal-closed">This portal is deactivated. Learners cannot sign in until the master desk opens it again.</div> : null}
       {children}
     </DeskFrame>

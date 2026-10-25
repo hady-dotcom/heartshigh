@@ -10,6 +10,8 @@ test('teachers land on Teach, learners stay in the app, portal admins keep the d
   assert.equal(afterJoinPath('hearts-demo', 'learner'), '/p/hearts-demo/welcome')
   assert.equal(afterJoinPath('hearts-demo', 'parent'), '/p/hearts-demo/welcome')
   assert.equal(afterJoinPath('hearts-demo', 'admin'), '/p/hearts-demo/admin')
+  assert.equal(afterJoinPath('parenting', 'learner', 'sequence'), '/p/parenting?open=1')
+  assert.equal(afterJoinPath('parenting', 'learner', 'hearts'), '/p/parenting/welcome')
   assert.equal(deskAppHref('/p/hearts-demo/admin'), '/p/hearts-demo')
   assert.equal(deskAppHref('/master'), null)
   const here = { id: 4, slug: 'hearts-demo' }

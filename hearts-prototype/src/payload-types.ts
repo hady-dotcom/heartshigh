@@ -363,6 +363,18 @@ export interface Portal {
    */
   kineticOn?: boolean | null;
   /**
+   * Practice rooms for the parenting demo. Real learners are not stored here.
+   */
+  demoRooms?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
    * Per-portal feature switches. Empty means the portal keeps every part it already had. A new portal is saved with an explicit map: beginner stays on, intermediate starts on, extras start off.
    */
   features?:
@@ -3496,6 +3508,7 @@ export interface PortalsSelect<T extends boolean = true> {
   accent?: T;
   teacherCap?: T;
   kineticOn?: T;
+  demoRooms?: T;
   features?: T;
   aiConnection?: T;
   updatedAt?: T;

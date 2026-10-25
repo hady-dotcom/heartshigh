@@ -1,0 +1,61 @@
+.parenting-demo {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #f6f1e8;
+  color: #1c2430;
+  overflow: hidden;
+}
+.parenting-demo-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: #1f3a5f;
+  color: #fff;
+}
+.parenting-demo-kicker { margin: 0; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+.parenting-demo-bar h1 { margin: 0; font-size: 28px; font-family: Georgia, serif; }
+.parenting-demo-switch, .parenting-cast-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.parenting-demo-switch button, .parenting-demo-reset, .parenting-cast button {
+  border: 0;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e07a5f;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.parenting-demo-switch button[aria-pressed="true"] { background: #fff; color: #1f3a5f; }
+.parenting-demo-board {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 8px;
+  min-height: 0;
+}
+.parenting-demo-cell {
+  min-width: 0;
+  min-height: 0;
+  background: #fff;
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(31, 58, 95, 0.08);
+}
+.parenting-demo-cell[hidden] { display: none; }
+.parenting-demo-caption { margin: 0; padding: 8px 10px; background: #f3e6df; font-size: 14px; }
+.parenting-demo-phone, .parenting-demo-desk { flex: 1; min-height: 0; overflow: auto; background: #111; }
+.parenting-demo-phone { display: flex; justify-content: center; padding: 8px 0 16px; background: #1c2430; }
+.parenting-demo-phone iframe { border-radius: 24px; }
+.parenting-cast { max-width: 640px; margin: 24px auto; padding: 0 16px 32px; }
+.parenting-cast h1 { font-family: Georgia, serif; font-size: 36px; margin-bottom: 8px; }
+.parenting-cast label { display: grid; gap: 4px; margin: 12px 0; }
+.parenting-cast input { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid #d5cbbd; }
+@media (max-width: 1100px) {
+  .parenting-demo-board { grid-template-columns: 1fr; }
+}
