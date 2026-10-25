@@ -374,7 +374,10 @@ async function shoot(page: Page, info: TestInfo, name: string) {
 }
 
 async function visit(page: Page, info: TestInfo, portal: 'hady' | 'hearts', name: string, url: string, hits: Hit[]) {
-  const response = await page.goto(url, { waitUntil: 'domcontentloaded' })
+  const response = await page.goto(url, { waitUntil: 'domcontentloaded' }).catch(async (error: unknown) => {
+    if (!/interrupted/i.test(String(error))) throw error
+    return page.goto(url, { waitUntil: 'domcontentloaded' })
+  })
   await settle(page)
   if (response && response.status() >= 400) hits.push({ screen: name, kind: 'http', detail: String(response.status()) })
   const found = await audit(page, name, portal)

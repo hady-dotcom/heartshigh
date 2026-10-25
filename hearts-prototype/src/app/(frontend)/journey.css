@@ -171,7 +171,7 @@
 .yt-title-mask { position: absolute; left: 0; right: 0; top: 0; height: 56px; z-index: 2; pointer-events: none; background: linear-gradient(#000 0 70%, transparent); }
 .j-tap-catcher {
   position: absolute;
-  top: calc(56px + var(--safe-top));
+  top: calc(96px + var(--safe-top));
   left: 0;
   width: 100%;
   height: auto;
