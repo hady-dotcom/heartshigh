@@ -446,6 +446,7 @@ export const Courses: CollectionConfig = {
         { label: 'Published', value: 'published' },
       ],
     },
+    { name: 'sampleAnswers', type: 'json', admin: { description: 'Sample and real answers for this course only. Other portals never see them.' } },
   ],
 }
 

@@ -6,6 +6,7 @@ import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
 import { getPayload } from 'payload'
 import config from '@payload-config'
+import { portalLogo } from '@/lib/learner-brand'
 import { portalDisplayName } from '@/lib/portal-name'
 import { firstNameOf, inviteLine } from '@/lib/invite'
 
@@ -13,15 +14,17 @@ async function inviteFor(code: string) {
   let portal = 'Someone in your circle'
   let person = ''
   let brand = ''
-  if (!code) return { line: inviteLine(portal), brand }
+  let logo = ''
+  if (!code) return { line: inviteLine(portal), brand, logo }
   try {
     const payload = await getPayload({ config })
     const found = await payload.find({ collection: 'access-codes', overrideAccess: true, depth: 1, limit: 1, where: { code: { equals: code } } })
     const row = found.docs[0]
-    const host = row?.portal as { name?: string; slug?: string; brandName?: string | null; shape?: string | null } | number | null
+    const host = row?.portal as { name?: string; slug?: string; brandName?: string | null; logoUrl?: string | null } | number | null
     if (host && typeof host === 'object') {
       portal = portalDisplayName(host)
-      if (host.shape === 'sequence') brand = String(host.brandName || '').trim()
+      brand = String(host.brandName || '').trim()
+      logo = portalLogo(host.logoUrl)
     }
     const linked = row?.linkedTeacherCode
     const teacherCodeId = typeof linked === 'object' && linked ? linked.id : linked
@@ -32,27 +35,27 @@ async function inviteFor(code: string) {
   } catch {
     // The join page still works without a lookup.
   }
-  return { line: inviteLine(portal, person), brand }
+  return { line: inviteLine(portal, person), brand, logo }
 }
 
-function hadyIcons(name: string): Metadata {
+function brandIcons(name: string, logo: string): Metadata {
+  const hady = logo === '/icons/hady-home.svg'
   return {
     title: name,
     description: `${name}. Watch the films in order.`,
     applicationName: name,
-    manifest: '/hady-home.webmanifest',
+    ...(hady ? { manifest: '/hady-home.webmanifest' } : {}),
     appleWebApp: { capable: true, title: name, statusBarStyle: 'black-translucent' },
-    icons: {
-      icon: [{ url: '/icons/hady-home.svg', type: 'image/svg+xml' }],
-      apple: [{ url: '/icons/hady-home.svg' }],
-    },
+    ...(logo
+      ? { icons: { icon: [{ url: logo, ...(logo.endsWith('.svg') ? { type: 'image/svg+xml' } : {}) }], apple: [{ url: logo }] } }
+      : {}),
   }
 }
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ code?: string; from?: string; invitedBy?: string }> }): Promise<Metadata> {
   const query = await searchParams
   const invite = await inviteFor(query.code || '')
-  if (invite.brand) return hadyIcons(invite.brand)
+  if (invite.brand) return brandIcons(invite.brand, invite.logo)
   return {
     title: `${invite.line} to HEARTS`,
     description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',

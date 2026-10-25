@@ -4,13 +4,13 @@ import { Hidden } from '@/components/app/shell'
 import { GiveCourse } from '@/components/desk/give-course'
 import { SequenceList } from '@/components/desk/sequence-list'
 import { FEATURE_KEYS, featuresOf } from '@/lib/features'
-import { answersForFilm, feedbackPhaseLabel, loadRealAnswers, phaseLabel } from '@/lib/parent-feedback'
+import { readSaidAnswers } from '@/lib/said-answers'
 import { PARENTING_DEMO_CODE, learnerAnswers, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { SEQUENCE_COPY, kineticMomentsOn } from '@/lib/sequence'
 import { portalWithDemoFeatures } from '@/server/parenting-demo'
 import { KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY } from '@/lib/sequence-features'
 import { sortParts } from '@/lib/part-order'
-import { portalPeople, rows, str, type Ctx } from '../common'
+import { portalPeople, ref, rows, str, type Ctx } from '../common'
 
 export async function SequenceDesk(ctx: Ctx) {
   const { payload, portal, base, user } = ctx
@@ -56,10 +56,11 @@ export async function SequenceDesk(ctx: Ctx) {
           <h2>How this portal looks</h2>
           <Hidden fields={{ action: 'sequence-settings', portalSlug: portal.slug, next }} />
           <label className="row"><span>Name</span><input name="name" defaultValue={str(portal.organisationName || portal.name)} data-testid="sequence-name-input" /></label>
+          <label className="row"><span>Name people see</span><input name="brandName" defaultValue={str(portal.brandName)} data-testid="sequence-brand" placeholder="Hady Home" /></label>
           <label className="row top"><span>Welcome line</span><textarea name="welcome" defaultValue={str(portal.welcome)} data-testid="sequence-welcome" /></label>
           <label className="row"><span>Colour</span><input name="colour" defaultValue={portal.colour || '#1f3a5f'} data-testid="sequence-colour" /></label>
           <label className="row"><span>Second colour</span><input name="accent" defaultValue={portal.accent || '#e07a5f'} data-testid="sequence-accent" /></label>
-          <label className="row"><span>Logo link</span><input name="logoUrl" defaultValue={str(portal.logoUrl)} placeholder="https://" data-testid="sequence-logo" /></label>
+          <label className="row"><span>Logo</span><input name="logoUrl" defaultValue={str(portal.logoUrl)} placeholder="/icons/hady-home.svg or https://" data-testid="sequence-logo" /></label>
           <label className="row">
             <span>Order</span>
             <select name="lockOrder" defaultValue={portal.lockOrder === false ? 'no' : 'yes'} data-testid="sequence-lock">
@@ -174,16 +175,18 @@ export async function SequenceCodes(ctx: Ctx) {
   )
 }
 
-function ParentSaid({ base, film }: { base: string; film?: string }) {
-  const all = loadRealAnswers()
-  const orders = [...new Set(all.map((row) => row.videoOrder))].sort((a, b) => a - b)
+async function ParentSaid({ payload, portalId, base, film }: { payload: Ctx['payload']; portalId: number; base: string; film?: string }) {
+  const { sequenceCourseFor } = await import('@/server/sequence-desk')
+  const course = await sequenceCourseFor(payload, portalId)
+  const all = readSaidAnswers((course as { sampleAnswers?: unknown } | null)?.sampleAnswers)
+  const orders = [...new Set(all.map((row) => row.order))].sort((a, b) => a - b)
   const current = Number(film || orders[0] || 0)
-  const rows = answersForFilm(current, all)
+  const rows = all.filter((row) => row.order === current)
   const phases = [...new Set(rows.map((row) => row.phase))]
   return (
     <section className="panel" data-testid="what-parents-said">
       <h2>What parents said</h2>
-      <p className="muted">Real answers from the sheets, kept off learner accounts. Sample lines fill the films with none.</p>
+      <p className="muted">Lines stored on this course. They are not attached to learner accounts.</p>
       <p>
         {orders.map((order) => (
           <Link key={order} href={`${base}${base.includes('?') ? '&' : '?'}film=${order}`} style={{ marginRight: 8 }}>{order}</Link>
@@ -191,9 +194,9 @@ function ParentSaid({ base, film }: { base: string; film?: string }) {
       </p>
       {phases.length ? phases.map((phase) => (
         <div key={phase} data-testid="parent-phase">
-          <h3>{phaseLabel(phase)}</h3>
+          <h3>{rows.find((row) => row.phase === phase)?.label || phase}</h3>
           {rows.filter((row) => row.phase === phase).map((row, index) => (
-            <p key={`${phase}-${index}`} data-testid="parent-said"><span className="muted">{feedbackPhaseLabel(phase)}. </span>{row.text}</p>
+            <p key={`${phase}-${index}`} data-testid="parent-said"><span className="muted">{row.label}. </span>{row.text}</p>
           ))}
         </div>
       )) : <p>No parent notes on this film yet.</p>}
@@ -201,15 +204,34 @@ function ParentSaid({ base, film }: { base: string; film?: string }) {
   )
 }
 
+function TeacherGroupCode({ slug, next, codes }: { slug: string; next: string; codes: { id: number; code: string }[] }) {
+  return (
+    <section className="panel" data-testid="teacher-group" style={{ marginBottom: 18 }}>
+      <header><div><h2>A code for your group</h2><p>People who use it see the same courses as you.</p></div></header>
+      <form className="body form" action="/api/hearts" method="post">
+        <Hidden fields={{ action: 'teacher-group-code', portalSlug: slug, next }} />
+        <label className="stack">Code<input type="text" name="code" data-testid="group-code" placeholder="Leave empty for a random code" /></label>
+        <div className="actions"><button className="btn ink" type="submit" data-testid="group-code-save">Make a group code</button></div>
+      </form>
+      {codes.map((row) => <p key={row.id} data-testid="group-code-row">{row.code}</p>)}
+    </section>
+  )
+}
+
 export async function SequenceLearners(ctx: Ctx) {
   if (ctx.demo) return demoLearners(ctx)
-  const { payload, portal, base } = ctx
+  const { payload, portal, base, user } = ctx
   const people = await portalPeople(payload, portal.id)
   const learners = people.filter((person) => person.role === 'learner')
   const courses = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { hidden: { not_equals: true } }] }, { sort: 'title' })
   const here = `${base}/admin/teach`
+  const teacherCodeId = user.role === 'teacher' ? ref(user.accessCode) : 0
+  const groupCodes = teacherCodeId
+    ? await rows(payload, 'access-codes', { and: [{ portal: { equals: portal.id } }, { role: { equals: 'learner' } }, { linkedTeacherCode: { equals: teacherCodeId } }] }, { sort: '-createdAt', limit: 20 })
+    : []
   return (
     <AdminFrame ctx={ctx} active="teach" title="Learners" intro="People in this course." testId="sequence-learners" showOnPhone>
+      {user.role === 'teacher' ? <TeacherGroupCode slug={portal.slug} next={here} codes={groupCodes.map((row) => ({ id: row.id, code: str(row.code) }))} /> : null}
       <section className="panel" data-testid="give-course-panel">
         <header><div><h2>Give this course</h2><p>Search by name, then tick who should have it.</p></div></header>
         <div className="body">
@@ -220,7 +242,7 @@ export async function SequenceLearners(ctx: Ctx) {
           />
         </div>
       </section>
-      <ParentSaid base={here} film={ctx.query.film} />
+      {await ParentSaid({ payload, portalId: portal.id, base: here, film: ctx.query.film })}
       {learners.length ? (
         <ul data-testid="sequence-learner-list">
           {learners.map((learner) => <li key={learner.id} data-testid="sequence-learner">{str(learner.name)}</li>)}
@@ -251,7 +273,7 @@ async function demoOverview(ctx: Ctx) {
         <div className="count-tile"><span>Codes</span><b data-testid="sequence-code-count">1</b></div>
       </div>
       <p data-testid="demo-join-code">Join code {PARENTING_DEMO_CODE}. It opens this course.</p>
-      <ParentSaid base={here} film={ctx.query.film} />
+      {await ParentSaid({ payload: ctx.payload, portalId: ctx.portal.id, base: here, film: ctx.query.film })}
       <ul data-testid="demo-answer-list">
         {demo.state.answers.filter((answer) => answer.source !== 'real').map((answer) => (
           <li key={answer.id} data-testid="demo-answer">
@@ -282,7 +304,7 @@ function demoCodes(ctx: Ctx) {
   )
 }
 
-function demoLearners(ctx: Ctx) {
+async function demoLearners(ctx: Ctx) {
   const demo = ctx.demo!
   const who = ctx.query.who || ''
   const focus = demo.state.people.find((person) => person.name === who && person.role === 'learner')
@@ -298,7 +320,7 @@ function demoLearners(ctx: Ctx) {
           <button className="pill ink" type="submit" data-testid="demo-note-send">Send note</button>
         </form>
       ) : null}
-      <ParentSaid base={withDemoQuery(`${ctx.base}/admin/teach`, demo.token, demo.role)} film={ctx.query.film} />
+      {await ParentSaid({ payload: ctx.payload, portalId: ctx.portal.id, base: withDemoQuery(`${ctx.base}/admin/teach`, demo.token, demo.role), film: ctx.query.film })}
       <ul data-testid="demo-answer-list">
         {demo.state.answers.filter((answer) => answer.source !== 'real').map((answer) => (
           <li key={answer.id} data-testid="demo-answer">

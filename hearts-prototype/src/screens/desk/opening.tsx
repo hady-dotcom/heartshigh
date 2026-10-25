@@ -310,8 +310,8 @@ export async function PortalOpeningScreen(ctx: Ctx) {
   const contacts = (config?.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []
   const extras = cleanPortalScenes(config?.extraScenes).scenes
   return (
-    <AdminFrame ctx={ctx} active="opening" title="Opening questions" intro="These are the questions a newcomer sees before the feed. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal and can be for any kind of work." testId="admin-opening">
-      {scenes.map((scene) => {
+    <AdminFrame ctx={ctx} active="opening" title="Opening questions" intro="Questions you add here are the only ones a newcomer sees. A portal with none of its own keeps the starter set." testId="admin-opening">
+      {extras.length ? <p data-testid="portal-own-replaces">Learners in this portal see only the questions below. The starter set stays off.</p> : scenes.map((scene) => {
         const own = wording.find((row) => idOf(row.scene) === scene.id)
         const crisis = ((scene.options as Option[]) || []).some((option) => option.crisis)
         return (
@@ -340,7 +340,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
       <section className="panel" style={{ marginBottom: 18 }} data-testid="portal-own-scenes">
         <header className="light">
           <h2>Your questions <HelpTip topic="add-opening-scene">{TOOL.addOpeningScene}</HelpTip></h2>
-          <span className="hint">On top of the starter set</span>
+          <span className="hint">These replace the starter set</span>
         </header>
         <div className="body" style={{ display: 'grid', gap: 12 }}>
           {extras.map((scene) => (
@@ -357,7 +357,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
               </form>
             </div>
           ))}
-          {!extras.length ? <div data-testid="portal-own-empty"><ExampleInUse desk title="What brings you here?" action={{ href: '#portal-own-form', label: 'Add a question' }}><p>Work · family · I am not sure yet. The starter set still plays underneath.</p></ExampleInUse></div> : null}
+          {!extras.length ? <div data-testid="portal-own-empty"><ExampleInUse desk title="How old are the children at home?" action={{ href: '#portal-own-form', label: 'Add a question' }}><p>Under 5 · 5 to 11 · 12 to 16 · Mixed ages. The starter set plays until you add your own.</p></ExampleInUse></div> : null}
           <form id="portal-own-form" className="form" action="/api/hearts" method="post" data-testid="portal-own-form">
             <Hidden fields={{ action: 'opening-extra-scene', portalSlug: portal.slug, next: here }} />
             <div className="cols">
@@ -389,7 +389,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
                 </form>
               </div>
             ))}
-            {!contacts.length ? <ExampleInUse desk title="Muslim Youth Helpline" action={{ href: '#add-help-contact', label: 'Add a local line' }}><p>0808 808 2008 · any time. National lines stay until you add your own.</p></ExampleInUse> : null}
+            {!contacts.length ? <ExampleInUse desk title="A local helpline" action={{ href: '#add-help-contact', label: 'Add a local line' }}><p>0800 000 0000 · any time. Add the line people in this portal can call.</p></ExampleInUse> : null}
             <form id="add-help-contact" className="form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'help-contact', portalSlug: portal.slug, next: here }} />
               <div className="cols">

@@ -7,6 +7,7 @@ import { Arch } from '@/components/arch'
 import { BrandLockup } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
 import { courseCards, portalName } from '@/server/learner'
+import { portalOwnsLibrary } from '@/server/portal-scope'
 import { type Ctx, embedUrl, rows, str } from '../common'
 
 export async function WelcomeScreen(ctx: Ctx) {
@@ -55,8 +56,10 @@ export async function WelcomeScreen(ctx: Ctx) {
     )
   }
 
+  const ownLibrary = brand ? true : await portalOwnsLibrary(payload, portal.id)
+
   if (step === 'placing') {
-    const questions = await rows(payload, 'placing-questions', brand ? { portal: { equals: portal.id } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal.id } }] }, { sort: 'order', limit: 20 })
+    const questions = await rows(payload, 'placing-questions', ownLibrary ? { portal: { equals: portal.id } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal.id } }] }, { sort: 'order', limit: 20 })
     return (
       <AppFrame testId="placing" brand={learnerBrand(portal)}>
         <div className="app-scroll">
@@ -92,9 +95,9 @@ export async function WelcomeScreen(ctx: Ctx) {
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />
-        <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>
+        {ownLibrary ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36, textAlign: 'center' }}>{brand || portalName(portal)}</p> : <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>}
         <h1 style={{ fontFamily: 'var(--serif)', fontSize: 34, textAlign: 'center', margin: '6px 0 14px', fontWeight: 600 }}>A good place to start</h1>
-        {door ? (
+        {door && !ownLibrary ? (
           <article className="clause-card" data-testid="starting-door" data-door={door.number}>
             <div className="clause-num">{door.number}</div>
             <p className="lbl" style={{ margin: '0 0 4px' }}>A door of the hadith of Jibril</p>

@@ -146,8 +146,15 @@ async function contextFor(payload: Payload, lessons: Doc[]) {
   return { courseTitle, courseSpeaker, unitTitle, tags: tagMap, cutDoor }
 }
 
+function isLibraryCourse(course: Doc | null | undefined) {
+  return Boolean(course && course.origin === 'master' && course.importable !== false)
+}
+
 export async function loadLibraryTalks(payload: Payload) {
-  const lessons = await every(payload, 'lessons', undefined, LESSON_FIELDS)
+  const courses = await every(payload, 'courses', { and: [{ origin: { equals: 'master' } }, { importable: { not_equals: false } }] })
+  const ids = courses.map((course) => course.id)
+  if (!ids.length) return []
+  const lessons = await every(payload, 'lessons', { course: { in: ids } }, LESSON_FIELDS)
   const ctx = await contextFor(payload, lessons)
   return lessons.map((lesson) => toTalk(lesson, ctx))
 }
@@ -164,6 +171,9 @@ export async function loadLibraryTalk(payload: Payload, id: number) {
   }).catch(() => null)
   const lesson = (found?.docs?.[0] as Doc | undefined) || null
   if (!lesson) return null
+  const courseId = idOf(lesson.course)
+  const course = courseId ? await payload.findByID({ collection: 'courses', id: courseId, depth: 0, overrideAccess: true }).catch(() => null) : null
+  if (!isLibraryCourse(course as Doc | null | undefined)) return null
   const ctx = await contextFor(payload, [lesson])
   return toTalk(lesson, ctx)
 }

@@ -285,18 +285,106 @@ export async function BringInBody({
   )
 }
 
+function SheetBringIn({ slug, next }: { slug: string; next: string }) {
+  return (
+    <section className="panel" id="portal-sheet" data-testid="portal-sheet-panel" style={{ marginBottom: 18 }}>
+      <header>
+        <div>
+          <h2>Master sheet</h2>
+          <p>A spreadsheet saved as CSV, with a public title column and a Vimeo id column. The films and their questions stay in this portal. They are not added to the HEARTS library.</p>
+        </div>
+      </header>
+      <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
+        <Hidden fields={{ action: 'portal-sheet', portalSlug: slug, next }} />
+        <label className="stack">Course name
+          <input type="text" name="courseTitle" required data-testid="portal-sheet-title" placeholder="Guiding Home Learning" />
+        </label>
+        <label className="stack">Sheet
+          <input type="file" name="sheet" accept=".csv,text/csv,text/plain" required data-testid="portal-sheet" />
+        </label>
+        <div className="actions"><button className="btn teal" type="submit" data-testid="portal-sheet-save">Bring this sheet into this portal</button></div>
+      </form>
+    </section>
+  )
+}
+
+async function QuestionsTab({ ctx, courses }: { ctx: Ctx; courses: { id: number; title: string }[] }) {
+  const { payload, portal, base } = ctx
+  const here = `${base}/admin/bring-in?view=questions`
+  const courseIds = courses.map((course) => course.id)
+  const lessons = courseIds.length
+    ? await rows(payload, 'lessons', { course: { in: courseIds } }, { sort: 'order', limit: 400 })
+    : []
+  const lessonIds = lessons.map((lesson) => lesson.id)
+  const points = lessonIds.length
+    ? await rows(payload, 'engagement-points', { lesson: { in: lessonIds } }, { sort: 'second', limit: 500 })
+    : []
+  const fullCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { limit: 20 }) : []
+  return (
+    <div data-testid="portal-questions">
+      <p><Link href={`${base}/admin/bring-in`}>Back to the sheet</Link></p>
+      {courses.map((course) => {
+        const stored = Array.isArray((fullCourses.find((row) => row.id === course.id) as { sampleAnswers?: unknown } | undefined)?.sampleAnswers)
+          ? ((fullCourses.find((row) => row.id === course.id) as { sampleAnswers?: unknown[] }).sampleAnswers?.length || 0)
+          : 0
+        return (
+          <section className="panel" key={course.id} style={{ marginTop: 18 }} data-testid="portal-answer-course">
+            <header className="light"><h2>{course.title}</h2><span className="hint">{stored} saved answers</span></header>
+            <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
+              <Hidden fields={{ action: 'portal-answers', portalSlug: portal.slug, course: course.id, next: here }} />
+              <p className="hint">Columns: phase, video_order, question, answer. These lines stay on this course.</p>
+              <label className="stack">Answers sheet
+                <input type="file" name="answers" accept=".csv,text/csv,text/plain" data-testid="portal-answers" />
+              </label>
+              <label className="check"><input type="checkbox" name="gaps" value="on" data-testid="portal-answer-gaps" /> Add a sample line on films that have none</label>
+              <div className="actions"><button className="btn ink" type="submit" data-testid="portal-answers-save">Save answers on this course</button></div>
+            </form>
+          </section>
+        )
+      })}
+      <section className="panel" style={{ marginTop: 18 }}>
+        <header className="light"><h2>Questions on the films</h2><span className="hint">Each one pauses its film</span></header>
+        <div className="body" style={{ display: 'grid', gap: 12 }}>
+          {points.map((point) => {
+            const lesson = lessons.find((row) => row.id === ref(point.lesson))
+            return (
+              <form key={point.id} className="form" action="/api/hearts" method="post" data-testid="portal-callout">
+                <Hidden fields={{ action: 'portal-callout', portalSlug: portal.slug, point: point.id, next: here }} />
+                <p className="hint" style={{ margin: 0 }}>Film {str(lesson?.order)} · {str(lesson?.title)} · {str(point.second)}s</p>
+                <label className="stack">Question
+                  <textarea name="prompt" rows={2} defaultValue={str(point.prompt)} data-testid="callout-prompt" />
+                </label>
+                <div className="actions"><button className="btn ghost small" type="submit" data-testid="callout-save">Save question</button></div>
+              </form>
+            )
+          })}
+          {!points.length ? <p data-testid="portal-questions-empty">Bring in a sheet first. Its questions show up here.</p> : null}
+        </div>
+      </section>
+    </div>
+  )
+}
+
 export async function PortalBringInScreen(ctx: Ctx) {
   const courses = await rows(ctx.payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: ctx.portal.id } }] }, { sort: 'title', limit: 500 })
+  const coursePicks = courses.map((course) => ({ id: course.id, title: str(course.title), speaker: str(course.speaker) }))
+  const next = `${ctx.base}/admin/bring-in`
   return (
-    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Paste YouTube links, a playlist or a channel. Films arrive as drafts. Learners see a talk only after you publish it." testId="admin-bring-in" showOnPhone>
-      <BringInBody
-        payload={ctx.payload}
-        user={ctx.user}
-        next={`${ctx.base}/admin/bring-in`}
-        courses={courses.map((course) => ({ id: course.id, title: str(course.title), speaker: str(course.speaker) }))}
-        query={ctx.query}
-        portal={{ id: ctx.portal.id, slug: ctx.portal.slug }}
-      />
+    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Bring a master sheet into this portal, or paste a Vimeo or YouTube link. Films made here stay out of the HEARTS library." testId="admin-bring-in" showOnPhone>
+      <p data-testid="bring-in-tabs"><Link href={next}>Sheet</Link> · <Link href={`${next}?view=questions`} data-testid="questions-tab">Questions</Link></p>
+      {ctx.query.view === 'questions' ? <QuestionsTab ctx={ctx} courses={coursePicks} /> : (
+        <>
+          <SheetBringIn slug={ctx.portal.slug} next={next} />
+          <BringInBody
+            payload={ctx.payload}
+            user={ctx.user}
+            next={next}
+            courses={coursePicks}
+            query={ctx.query}
+            portal={{ id: ctx.portal.id, slug: ctx.portal.slug }}
+          />
+        </>
+      )}
     </AdminFrame>
   )
 }

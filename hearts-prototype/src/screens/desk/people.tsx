@@ -91,6 +91,10 @@ export async function TeachScreen(ctx: Ctx) {
   const focusId = Number(query.answer) || 0
   const picked = evidence.find((answer) => answer.id === Number(query.answer)) || evidence[0]
   const here = `${base}/admin/teach`
+  const teacherCodeId = user.role === 'teacher' ? ref(user.accessCode) : 0
+  const groupCodes = teacherCodeId
+    ? await rows(payload, 'access-codes', { and: [{ portal: { equals: portal.id } }, { role: { equals: 'learner' } }, { linkedTeacherCode: { equals: teacherCodeId } }] }, { sort: '-createdAt', limit: 20 })
+    : []
   const today = dateKey(now())
   const slotsFor = (learnerId: number): PlanSlot[] => {
     const slots: PlanSlot[] = []
@@ -105,6 +109,17 @@ export async function TeachScreen(ctx: Ctx) {
   }
   return (
     <AdminFrame ctx={ctx} active="teach" title="Learners" intro="See how each learner is getting on, reply to what they have shared, and leave notes on their recordings." testId="admin-teach" showOnPhone>
+      {user.role === 'teacher' ? (
+        <section className="panel" data-testid="teacher-group" style={{ marginBottom: 18 }}>
+          <header><div><h2>A code for your group</h2><p>People who use it see the same courses as you.</p></div></header>
+          <form className="body form" action="/api/hearts" method="post">
+            <Hidden fields={{ action: 'teacher-group-code', portalSlug: portal.slug, next: here }} />
+            <label className="stack">Code<input type="text" name="code" data-testid="group-code" placeholder="Leave empty for a random code" /></label>
+            <div className="actions"><button className="btn ink" type="submit" data-testid="group-code-save">Make a group code</button></div>
+          </form>
+          {groupCodes.map((row) => <p key={row.id} data-testid="group-code-row">{str(row.code)}</p>)}
+        </section>
+      ) : null}
       <section className="panel" style={{ marginBottom: 18 }} data-testid="give-course-panel">
         <header><div><h2>Give a course <HelpTip topic="give-course" label="What is Give a course?" place="end">{TOOL.giveCourse}</HelpTip></h2><p>Search by name or door, then tick everyone who should have it.</p></div></header>
         <div className="body"><GiveCourse learners={learners.map((learner) => ({ id: learner.id, name: str(learner.name) || 'Learner' }))} courses={giveCourses} next={here} /></div>

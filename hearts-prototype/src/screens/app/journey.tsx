@@ -5,6 +5,13 @@ import { JourneyErrorBoundary } from '@/components/app/error-boundary'
 import { Journey } from '@/components/journey/journey'
 import { resolveSlots, subjectFrom } from '@/server/experiments'
 import { OPENER } from '@/lib/opening-data'
+
+const OWN_OPENER = {
+  caption: 'A few questions, then the films.',
+  subline: 'Go with your first thought.',
+  handOff: 'Here is where we will start.',
+  justShow: 'Show me the films.',
+}
 import { now } from '@/lib/clock'
 import { idOf } from '@/lib/ids'
 import { portalTimeZone } from '@/lib/zone-time'
@@ -78,7 +85,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           <Journey
             base={base}
             opening={opening}
-            opener={OPENER}
+            opener={opening.ownQuestions ? OWN_OPENER : OPENER}
             initial={initial}
             signedIn={Boolean(user)}
             learner={user?.role === 'learner'}

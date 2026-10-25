@@ -6,6 +6,7 @@ import { Flash, Hidden } from '@/components/app/shell'
 import { PageHelp } from '@/components/app/page-help'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { portalLogo } from '@/lib/learner-brand'
 import { isDemoStageLogin } from '@/lib/demo-stage-gate'
 import { DemoStageLogin } from '../demo-stage/entry'
 
@@ -15,29 +16,30 @@ function safeNext(value: string | undefined) {
 
 async function brandForNext(next: string) {
   const slug = next.match(/^\/p\/([^/?#]+)/)?.[1]
-  if (!slug) return ''
+  if (!slug) return { name: '', logo: '' }
   try {
     const payload = await getPayload({ config })
     const found = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 1, where: { slug: { equals: slug } } })
-    const portal = found.docs[0] as { shape?: string | null; brandName?: string | null } | undefined
-    if (portal?.shape === 'sequence') return String(portal.brandName || '').trim()
+    const portal = found.docs[0] as { brandName?: string | null; logoUrl?: string | null } | undefined
+    const name = String(portal?.brandName || '').trim()
+    if (name) return { name, logo: portalLogo(portal?.logoUrl) }
   } catch {
     // Sign-in still works when the portal lookup misses.
   }
-  return ''
+  return { name: '', logo: '' }
 }
 
-function hadyIcons(name: string): Metadata {
+function brandIcons(name: string, logo: string): Metadata {
+  const hady = logo === '/icons/hady-home.svg'
   return {
     title: name,
     description: `${name}. Watch the films in order.`,
     applicationName: name,
-    manifest: '/hady-home.webmanifest',
+    ...(hady ? { manifest: '/hady-home.webmanifest' } : {}),
     appleWebApp: { capable: true, title: name, statusBarStyle: 'black-translucent' },
-    icons: {
-      icon: [{ url: '/icons/hady-home.svg', type: 'image/svg+xml' }],
-      apple: [{ url: '/icons/hady-home.svg' }],
-    },
+    ...(logo
+      ? { icons: { icon: [{ url: logo, ...(logo.endsWith('.svg') ? { type: 'image/svg+xml' } : {}) }], apple: [{ url: logo }] } }
+      : {}),
   }
 }
 
@@ -50,7 +52,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
     }
   }
   const brand = await brandForNext(safeNext(query.next))
-  if (brand) return hadyIcons(brand)
+  if (brand.name) return brandIcons(brand.name, brand.logo)
   return {
     title: 'HEARTS',
     description: 'Short clips from real talks, full courses, and a circle that meets in person.',
@@ -63,10 +65,10 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const next = safeNext(query.next)
   const brand = await brandForNext(next)
   return (
-    <main className={brand ? 'door hady-door' : 'door garden-door'} data-testid="login">
+    <main className={brand.name ? 'door hady-door' : 'door garden-door'} data-testid="login">
       <PageHelp page="login" />
       <div className="door-card">
-        {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : <BrandLockup size={72} />}
+        {brand.name ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand.name}</p> : <BrandLockup size={72} />}
         <h1>Welcome back</h1>
         <p className="lede">Sign in and we will take you to where you left off.</p>
         <Flash error={query.error} notice={query.notice} />
