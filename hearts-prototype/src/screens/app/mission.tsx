@@ -7,12 +7,12 @@ import { joinCount, loadMission, missionView, openMissionsFor, shapedFor, suppor
 import { helpContactsFor } from '@/server/opening'
 import { type Ctx, shortDate, str, unreadCount } from '../common'
 
-export async function activeMissionCard(payload: Ctx['payload'], portalId: number, base: string) {
+export async function activeMissionCard(payload: Ctx['payload'], portalId: number, base: string, appName = 'HEARTS') {
   const open = await openMissionsFor(payload, portalId)
   const mission = open[0]
   if (!mission) return null
   const joined = await joinCount(payload, mission.id)
-  return <MissionCard mission={mission} base={base} joined={joined} compact />
+  return <MissionCard mission={mission} base={base} joined={joined} compact appName={appName} />
 }
 
 export async function MissionScreen({ payload, user, portal, base, query }: Ctx, id: number) {

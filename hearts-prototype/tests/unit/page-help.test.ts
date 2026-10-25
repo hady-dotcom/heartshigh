@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { helpFor, helpPageKey, learnerHelp } from '../../src/lib/page-help'
+import { hasHeartsWording } from '../../src/lib/portal-look'
+import { helpFor, helpPageKey, learnerHelp, learnerHelpKeys } from '../../src/lib/page-help'
 
 test('feed and course help name Ready for more? and hide-until-moment', () => {
   const feed = helpFor('feed')
@@ -51,6 +52,18 @@ test('each learner surface keeps its own ? copy', () => {
   assert.match(helpFor('circle').body.join(' '), /Live in person/)
   assert.match(helpFor('live-home').body.join(' '), /Live recordings/)
   assert.match(helpFor('settings').body.join(' '), /Live in person/)
+})
+
+test('a plain portal ? has no HEARTS wording, and the Garden title stays', () => {
+  for (const key of learnerHelpKeys()) {
+    const copy = helpFor(key, { plain: true })
+    const text = [copy.title, ...copy.body].join(' ')
+    assert.equal(hasHeartsWording(text), false, `${key}: ${text}`)
+  }
+  assert.equal(hasHeartsWording(learnerHelp('announce', { plain: true })), false)
+  assert.match(helpFor('garden').body.join(' '), /Islam/)
+  assert.equal(helpFor('garden', { plain: true }).title, 'How to use the Garden')
+  assert.doesNotMatch(helpFor('garden', { plain: true }).body.join(' '), /Islam|Iman|Ihsan/)
 })
 
 test('screen test ids alias to the matching page, never a stranger', () => {

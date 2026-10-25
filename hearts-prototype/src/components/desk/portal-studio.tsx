@@ -53,7 +53,7 @@ export function PortalStudio({
   next,
   name = '',
   slug = '',
-  kind = 'mosque',
+  kind = 'other',
   welcome = '',
   courses,
   selectedCourses = [],

@@ -70,6 +70,8 @@ export type JourneyProps = {
   /** Hors d'oeuvres stay on. When this is false the appetiser rung is not offered. */
   appetisers?: boolean
   brand?: string
+  /** Modern portals use plain help and do not inherit HEARTS opening scenes. */
+  plain?: boolean
   variants?: VariantMap
   features?: import('@/lib/features').FeatureMap
 }
@@ -2588,7 +2590,7 @@ export function Journey(props: JourneyProps) {
 
   return (
     <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={learnerFramingMode(item?.framingTrack, spokenAt)} data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
-      <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} />
+      <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} plain={props.plain} />
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />
@@ -2721,7 +2723,7 @@ export function Journey(props: JourneyProps) {
       {phase === 'opener' || phase === 'scene' || phase === 'handoff' ? (
         <div className="j-layer" data-testid="scene-layer">
           {phase === 'opener' ? (
-            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={letsPlay} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} brand={props.brand} />
+            <Opener caption={props.opener.caption} subline={props.opener.subline} onPlay={scenes.length ? letsPlay : justShow} onJustShow={justShow} loginHref={loginHref} signedIn={signedIn} sceneCount={scenes.length} brand={props.brand} />
           ) : null}
           {leaving !== null && scenes[leaving] && phase === 'scene' ? (
             <div ref={leavingRef} className="j-scene-wrap leaving" aria-hidden>
@@ -2747,7 +2749,7 @@ export function Journey(props: JourneyProps) {
         </div>
       ) : null}
 
-      {phase === 'help' ? <HelpScreen contacts={opening.helpContacts} onBack={backToHearts} /> : null}
+      {phase === 'help' ? <HelpScreen contacts={opening.helpContacts} onBack={backToHearts} backLabel={props.plain ? 'Back' : 'Back to HEARTS'} privateNote={props.plain ? 'This choice is not saved, and nobody here is told.' : undefined} /> : null}
 
       {sheet ? <KeepPlaceSheet reason={sheet} loginHref={loginHref} offline={offline} onClose={closeSheet} onSubmit={signUp} /> : null}
 

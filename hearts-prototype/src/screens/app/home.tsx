@@ -185,7 +185,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           ))}
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
-        {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base) : null}
+        {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null}
         <InstallCard strip appName={appNameOf(portal)} />
         {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>

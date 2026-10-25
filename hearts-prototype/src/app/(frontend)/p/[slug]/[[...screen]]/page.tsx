@@ -50,7 +50,7 @@ import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 import { learnerBrand, portalLogo } from '@/lib/learner-brand'
 import { isSequencePortal } from '@/lib/sequence'
-import { courseHomeOf } from '@/lib/portal-look'
+import { courseHomeOf, shellOf } from '@/lib/portal-look'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
 import type { DemoBag } from '@/screens/common'
@@ -336,6 +336,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
         if (area === 'garden') redirect(`${base}/courses`)
         return courseHomeOf(ctx.portal) === 'garden' ? GardenScreen(ctx) : CourseHomeScreen(ctx)
       }
+      if (shellOf(ctx.portal) === 'modern' && (a === 'general' || a === 'jibril' || a === 'ghunya' || a === 'harvest')) redirect(`${base}/courses`)
       if (a === 'general') return GardenGeneral(ctx)
       if (a === 'jibril') return b ? GardenDoor(ctx, b) : GardenJibril(ctx)
       if (a === 'ghunya') return GardenGhunya(ctx)

@@ -711,3 +711,18 @@ html[data-theme] .desk.desk-modern .example-body .hint {
 html[data-theme] .desk.desk-modern .sequence-num {
   color: var(--hh-accent);
 }
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row b,
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row small {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather-all"] {
+  color: var(--hh-accent);
+}

@@ -1,12 +1,16 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneUrlOf, shellOf, showHeartsMark, supportNoteOf } from '../../src/lib/portal-look'
+import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneUrlOf, shellOf, showHeartsMark, shownSupportNote, supportNoteOf } from '../../src/lib/portal-look'
 
 test('a portal with no look stored stays plain and white', () => {
   assert.equal(courseHomeOf(null), 'cards')
   assert.equal(courseHomeOf({}), 'cards')
   assert.equal(showHeartsMark({}), false)
   assert.equal(supportNoteOf({}), '')
+  assert.equal(shownSupportNote({}), '')
+  assert.equal(shownSupportNote(null), '')
+  assert.equal(shownSupportNote({ shell: 'hearts' }), 'This has been powered by donations.')
+  assert.equal(shownSupportNote({ shell: 'hearts', supportNote: '' }), '')
   assert.equal(sceneUrlOf({}), '')
   assert.equal(sceneUrlOf({ sceneKey: 'plain' }), '')
   assert.equal(shellOf({}), 'modern')

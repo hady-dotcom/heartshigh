@@ -2,7 +2,8 @@ import type { Payload, Where } from 'payload'
 import { buildFeed, type CutInfo, type FeedPlan, type FeedSlot, type LaneDef, type ScaleDef, type SceneDef, type SceneOption } from '@/lib/heart'
 import { DEFAULT_HELP_CONTACTS, DEFAULT_LANE, SCENES as DEFAULT_SCENES } from '@/lib/opening-data'
 import { cleanPortalScenes } from '@/lib/portal-scenes'
-import { numberOpeningScenes, scenesForPortal } from '@/lib/opening-questions'
+import { openingScenesForPortal } from '@/lib/opening-questions'
+import { shellOf } from '@/lib/portal-look'
 import { idOf } from '@/lib/ids'
 import { doorNumberOfClause, type Door } from '@/lib/doors'
 import { loadDoors } from './doors'
@@ -476,7 +477,7 @@ function laneTitleMap(data: Loaded) {
   return Object.fromEntries(data.lanes.filter((lane) => !lane.pseudo).map((lane) => [String(lane.key), String(lane.title)]))
 }
 
-function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row | null) {
+function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row | null, plain = false) {
   const hidden = new Set(((own?.hiddenScenes as unknown[]) || []).map((row) => idOf(row)))
   const wording = new Map(((own?.wording as { scene?: unknown; caption?: string; subline?: string; labels?: Record<string, string> }[]) || []).map((row) => [idOf(row.scene), row]))
   const published = scenes
@@ -508,8 +509,7 @@ function effectiveScenes(scenes: Row[], laneKey: Map<number, string>, own: Row |
     })
   const account = published.some((scene) => scene.key === 'account') ? null : DEFAULT_SCENES.find((scene) => scene.key === 'account') || null
   const extras = cleanPortalScenes(own?.extraScenes).scenes.map((scene) => ({ ...scene, version: 1 }) as SceneDef & { version: number })
-  if (extras.length) return numberOpeningScenes(extras)
-  return scenesForPortal(published, account ? ({ ...account, version: 1 } as SceneDef & { version: number }) : null, [])
+  return openingScenesForPortal(published, account ? ({ ...account, version: 1 } as SceneDef & { version: number }) : null, extras, plain)
 }
 
 export async function loadOpening(payload: Payload, portal: PortalDoc, user: SessionUser | null = null): Promise<OpeningData> {
@@ -517,12 +517,13 @@ export async function loadOpening(payload: Payload, portal: PortalDoc, user: Ses
   const data = await loadAll(payload, courseIds)
   const laneKey = new Map(data.lanes.map((row) => [row.id, String(row.key)]))
   const { own, master } = await openingConfig(payload, portal.id)
+  const plain = shellOf(portal) === 'modern'
   const sceneRows = await all(payload, 'opening-scenes')
-  const scenes = effectiveScenes(sceneRows, laneKey, own)
+  const scenes = effectiveScenes(sceneRows, laneKey, own, plain)
   const ownQuestions = cleanPortalScenes(own?.extraScenes).scenes.length > 0
   const contacts = ((own?.helpContacts as HelpContact[]) || []).length
     ? (own!.helpContacts as HelpContact[])
-    : ownQuestions
+    : ownQuestions || plain
       ? DEFAULT_HELP_CONTACTS
       : ((master?.helpContacts as HelpContact[]) || []).length
         ? (master!.helpContacts as HelpContact[])

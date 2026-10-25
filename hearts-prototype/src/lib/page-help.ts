@@ -368,9 +368,60 @@ export function helpPageKey(page: string | undefined | null) {
   return PAGES[key] ? key : 'default'
 }
 
-export function helpFor(page: string | undefined | null): HelpCopy {
+/** Bodies for a portal that is not HEARTS. Titles stay, so the page ? still matches the screen. */
+const PLAIN_BODIES: Record<string, string[]> = {
+  default: [
+    'This page is part of your learning app: short films, a few questions, and a place to come back to.',
+    'The bar at the bottom moves you around.',
+    'Nothing here is a test.',
+  ],
+  welcome: [
+    'Someone in your group opened this app for you. It is short films, a few minutes a day.',
+    'Begin when you are ready. You can sign in later if you already have an account.',
+  ],
+  lanes: [
+    'Each lane is one theme, such as Trust or Patience.',
+    'Tap a lane to see its films in order, then Continue plays the next one you have not watched, and Back returns you to that lane.',
+    'Courses already in those clips are open now, and the others open one a day.',
+  ],
+  garden: [
+    'Courses is where you see what you have watched.',
+    'Each course lists its films in order, with a tick when you finish one.',
+    'Finished counts a film once you watch it to the end or tap I have watched this part.',
+  ],
+  'garden-jibril': [
+    'This page is not used on a new portal.',
+    'Go back to Courses to see the films in this place.',
+  ],
+  'garden-ghunya': [
+    'This page is not used on a new portal.',
+    'Go back to Courses to see the films in this place.',
+  ],
+  'garden-harvest': [
+    'Lines you kept from films sit here.',
+    'Open one to read it again.',
+  ],
+  help: [
+    'These are people you can call now, and you do not have to give your name.',
+    'They answer. This choice is not saved, and nobody here is told.',
+    'Come back when you feel ready.',
+  ],
+  gather: [
+    'These are meetings for your group. Say if you are coming.',
+    'You can bring someone who is not in this app yet, or suggest a gathering.',
+  ],
+  'gather-detail': [
+    'Say if you are coming, not sure yet, or cannot this time.',
+    'Share the link so someone who is not in this app can still say they are coming.',
+  ],
+}
+
+export function helpFor(page: string | undefined | null, options?: { plain?: boolean }): HelpCopy {
   const key = helpPageKey(page)
-  return key === 'default' ? DEFAULT : PAGES[key]
+  const copy = key === 'default' ? DEFAULT : PAGES[key]
+  if (!options?.plain) return copy
+  const body = PLAIN_BODIES[key]
+  return body ? { ...copy, body } : copy
 }
 
 /** Learner-facing '?' copy for report and announce. Two to four short sentences. */
@@ -383,7 +434,12 @@ export const LEARNER_HELP: Record<string, string> = {
     'The list stays quiet until you reach a question, or tap its dot on the timeline to jump there. The course page never previews the questions.',
 }
 
-export function learnerHelp(topic: string) {
+const PLAIN_LEARNER_HELP: Record<string, string> = {
+  announce: 'A short note from your group. It stays at the top of Home until you dismiss it. You cannot reply here. Write to your teacher if you have a question.',
+}
+
+export function learnerHelp(topic: string, options?: { plain?: boolean }) {
+  if (options?.plain && PLAIN_LEARNER_HELP[topic]) return PLAIN_LEARNER_HELP[topic]
   return LEARNER_HELP[topic] || ''
 }
 
