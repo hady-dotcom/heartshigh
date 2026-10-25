@@ -55,6 +55,13 @@ export function scenesForPortal<T extends { key: string; order: number }>(publis
   return serveOpeningScenes(published, account, [])
 }
 
+/** A modern portal with no questions of its own does not inherit the HEARTS starter scenes. */
+export function openingScenesForPortal<T extends { key: string; order: number }>(published: T[], account: T | null, extras: T[], plain: boolean): T[] {
+  if (extras.length) return numberOpeningScenes(extras)
+  if (plain) return []
+  return scenesForPortal(published, account, [])
+}
+
 /** The first answer on each question, skipping the one that opens the help screen. */
 export function newcomerPicks(scenes: SceneDef[]): Record<string, string> {
   const picks: Record<string, string> = {}

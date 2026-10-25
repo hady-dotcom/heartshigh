@@ -3,6 +3,7 @@ import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf, shownSupportNote } from '@/lib/portal-look'
 import { Arch } from '@/components/arch'
 import { BrandLockup } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
@@ -18,16 +19,18 @@ export async function WelcomeScreen(ctx: Ctx) {
   const intro = staff ? portal.teacherIntroUrl : portal.learnerIntroUrl
   const step = query.step || (user.onboarded ? 'done' : 'start')
 
+  const plain = shellOf(portal) === 'modern'
+  const supportNote = shownSupportNote(portal)
   if (step === 'start') {
     const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/start`
     return (
       <AppFrame testId="welcome" brand={learnerBrand(portal)}>
         <div className="splash" data-testid="splash">
           <div>
-            {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : <BrandLockup size={88} />}
+            {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : plain ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{portalName(portal)}</p> : <BrandLockup size={88} />}
             <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
             <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
-            <p className="muted" data-testid="powered-by-donations">This has been powered by donations.</p>
+            {supportNote ? <p className="muted" data-testid="powered-by-donations">{supportNote}</p> : null}
             <Flash error={query.error} notice={query.notice} />
             <Link className="pill gold block" href={next} style={{ marginTop: 18 }} data-testid="welcome-begin">Begin</Link>
             <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>{portalName(portal)}</p>
@@ -56,7 +59,7 @@ export async function WelcomeScreen(ctx: Ctx) {
     )
   }
 
-  const ownLibrary = brand ? true : await portalOwnsLibrary(payload, portal.id)
+  const ownLibrary = plain || Boolean(brand) || await portalOwnsLibrary(payload, portal.id)
 
   if (step === 'placing') {
     const questions = await rows(payload, 'placing-questions', ownLibrary ? { portal: { equals: portal.id } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal.id } }] }, { sort: 'order', limit: 20 })

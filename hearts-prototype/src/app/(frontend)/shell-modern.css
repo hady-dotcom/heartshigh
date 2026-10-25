@@ -114,6 +114,8 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] {
   --glass-solid: var(--hh-paper);
   --scrim: var(--hh-paper);
   --scrim-deep: var(--hh-paper);
+  --scene: none;
+  --lattice: none;
   --focus: var(--portal-accent, var(--hh-accent));
   --serif: var(--heading-font);
   --sans: var(--body-font);
@@ -710,4 +712,30 @@ html[data-theme] .desk.desk-modern .example-body .hint {
 
 html[data-theme] .desk.desk-modern .sequence-num {
   color: var(--hh-accent);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row b,
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-row small {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid="home-gather-all"] {
+  color: var(--hh-accent);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.empty-state, .feed-empty) {
+  background-color: var(--hh-surface);
+  background-image: none;
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.empty-state, .feed-empty) p {
+  color: var(--hh-ink);
 }

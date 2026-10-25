@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
 import { appNameOf, learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
@@ -171,7 +172,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
             </article>
           )
         }) : (
-          <ExampleInUse title="Circle after Isha" action={{ href: `${base}/gather`, label: 'See gatherings' }}>
+          <ExampleInUse title={shellOf(portal) === 'hearts' ? 'Circle after Isha' : 'Thursday study group'} action={{ href: `${base}/gather`, label: 'See gatherings' }}>
             <p>Thursday · the hall · 8 coming</p>
             <p className="hint">Your place is held until you say you will come.</p>
           </ExampleInUse>

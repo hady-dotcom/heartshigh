@@ -85,7 +85,7 @@ export const Portals: CollectionConfig = {
     {
       name: 'kind',
       type: 'select',
-      defaultValue: 'mosque',
+      defaultValue: 'other',
       options: [
         { label: 'Mosque', value: 'mosque' },
         { label: 'Church', value: 'church' },
@@ -94,7 +94,7 @@ export const Portals: CollectionConfig = {
       ],
     },
     { name: 'welcome', type: 'textarea' },
-    { name: 'colour', type: 'text', defaultValue: '#1f4d3a' },
+    { name: 'colour', type: 'text', defaultValue: '#2563EB' },
     {
       name: 'watchHistoryOptIn',
       type: 'checkbox',

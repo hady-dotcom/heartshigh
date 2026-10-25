@@ -13,6 +13,8 @@ import { loadDoors } from '@/server/doors'
 import { bringLink, listGatherings, sharePack, taskMatches, type GatherCard } from '@/server/gather'
 import { type Ctx, portalPeople, ref, rows, str, unreadCount } from '../common'
 import { ExampleInUse } from '@/components/app/care'
+import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { ReportButton } from '@/components/app/report-sheet'
 import { hiddenIds } from '@/server/safety'
 
@@ -55,14 +57,14 @@ export async function GatherListScreen(ctx: Ctx) {
   const upcoming = grouped.upcoming
   const past = grouped.past
   return (
-    <AppFrame testId="gather" tone="gather">
+    <AppFrame testId="gather" tone="gather" brand={learnerBrand(portal)}>
       <div className="app-scroll gather">
         <div className="app-head"><h1>Gather</h1></div>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Meetings at {portal.name}. Your masjid comes first. Say if you’re coming, and bring someone who isn’t on HEARTS yet.</p>
+        <p className="lead">{shellOf(portal) === 'hearts' ? `Meetings at ${portal.name}. Your masjid comes first. Say if you’re coming, and bring someone who isn’t on HEARTS yet.` : `Meetings at ${portal.name}. Say if you’re coming, and bring someone who is not in this app yet.`}</p>
         {!cards.length ? (
           <div data-testid="gather-empty">
-            <ExampleInUse title="Sisters’ circle" action={{ href: `${base}/gather/propose`, label: 'Suggest a gathering' }}>
+            <ExampleInUse title={shellOf(portal) === 'hearts' ? 'Sisters’ circle' : 'Thursday study group'} action={{ href: `${base}/gather/propose`, label: 'Suggest a gathering' }}>
               <p>Thursday evening · the hall · Youth</p>
               <p className="hint">12 of 20 places · Say if you are coming.</p>
             </ExampleInUse>
@@ -115,11 +117,11 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
   const here = `${base}/gather/${id}`
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="gather-detail" tone="gather">
+    <AppFrame testId="gather-detail" tone="gather" brand={learnerBrand(portal)}>
       <div className="app-scroll gather">
         <Back href={`${base}/gather`} label="Gather" />
         <Flash error={query.error} notice={query.notice === 'You’re in. Welcome.' || query.notice === 'You were already checked in.' ? undefined : query.notice} />
-        <p className="eyebrow" data-testid="detail-door">{card.doorHeading || 'At your masjid'}</p>
+        <p className="eyebrow" data-testid="detail-door">{card.doorHeading || (shellOf(portal) === 'hearts' ? 'At your masjid' : 'At your gathering')}</p>
         <h1 style={{ fontSize: 36, margin: '4px 0 8px' }}>{card.title}</h1>
         {card.onLine ? <p data-testid="gather-on">{card.onLine}</p> : null}
         <div>
@@ -217,12 +219,12 @@ export async function GatherProposeScreen(ctx: Ctx) {
     unreadCount(payload, ctx.user),
   ])
   return (
-    <AppFrame testId="gather-propose" tone="gather">
+    <AppFrame testId="gather-propose" tone="gather" brand={learnerBrand(portal)}>
       <div className="app-scroll gather">
         <Back href={`${base}/gather`} label="Gather" />
         <h1>Suggest a gathering</h1>
         <Flash error={query.error} notice={query.notice} />
-        <p className="lead">Your imam looks at it before anyone else sees it. Sisters’ and brothers’ gatherings stay marked that way.</p>
+        <p className="lead">{shellOf(portal) === 'hearts' ? 'Your imam looks at it before anyone else sees it. Sisters’ and brothers’ gatherings stay marked that way.' : 'Your portal team looks at it before anyone else sees it.'}</p>
         <form className="gather-card" action="/api/gather" method="post" data-testid="propose-form">
           <Hidden fields={{ action: 'propose', portal: portal.slug, next: `${base}/gather` }} />
           <label>Name<input className="field" name="title" required data-testid="gather-title" /></label>
@@ -260,7 +262,7 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
   const url = `${origin}/gather/${card.slug}/in?k=${card.checkinToken}`
   const learners = (await portalPeople(payload, portal.id)).filter((person) => person.role === 'learner')
   return (
-    <AppFrame testId="gather-door" tone="gather">
+    <AppFrame testId="gather-door" tone="gather" brand={learnerBrand(portal)}>
       <div className="app-scroll gather">
         <Back href={`${base}/gather/${id}`} label={card.title} />
         <h1>At the door</h1>
@@ -308,13 +310,13 @@ export async function GatherReflectScreen(ctx: Ctx, id: number) {
   if (!card) notFound()
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="gather-reflect" tone="gather">
+    <AppFrame testId="gather-reflect" tone="gather" brand={learnerBrand(portal)}>
       <div className="app-scroll gather">
         <Back href={`${base}/gather/${id}`} label={card.title} />
         <h1>One thing you’ll carry</h1>
         <Flash error={query.error} notice={query.notice === 'You’re in. Welcome.' ? undefined : query.notice} />
         {query.notice === 'You’re in. Welcome.' ? <section className="gather-card welcome-card" data-testid="welcome-in"><h2>You’re in. Welcome.</h2></section> : null}
-        <p className="lead">A full sentence is enough. It goes into your harvest and your garden. It is not shown on the public page.</p>
+        <p className="lead">{shellOf(portal) === 'hearts' ? 'A full sentence is enough. It goes into your harvest and your garden. It is not shown on the public page.' : 'A full sentence is enough. It stays with you and your portal team. It is not shown on the public page.'}</p>
         <form className="gather-card" action="/api/gather" method="post">
           <Hidden fields={{ action: 'reflect', id, next: `${base}/gather/${id}` }} />
           <textarea className="field" name="body" rows={4} required data-testid="reflect-body" placeholder="I will carry the quiet of sitting with people I had not met." />

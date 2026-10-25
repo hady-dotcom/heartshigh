@@ -93,6 +93,15 @@ export function supportNoteOf(portal: LookSource) {
   return String(portal?.supportNote || '').trim()
 }
 
+/**
+ * The welcome line. A stored note wins. HEARTS with no note stored keeps the donations sentence.
+ * A modern portal with no note shows nothing.
+ */
+export function shownSupportNote(portal: LookSource) {
+  if (portal && Object.prototype.hasOwnProperty.call(portal, 'supportNote')) return supportNoteOf(portal)
+  return shellOf(portal) === 'hearts' ? HEARTS_LOOK.supportNote : ''
+}
+
 /** A site path or https image. Anything else is dropped. */
 export function safeSceneUrl(value: unknown) {
   const trimmed = String(value || '').trim()

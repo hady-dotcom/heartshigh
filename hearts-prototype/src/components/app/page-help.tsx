@@ -29,11 +29,11 @@ function HelpSheet({ title, body, titleId, helpKey, onClose }: { title: string; 
   )
 }
 
-export function PageHelp({ page }: { page?: string }) {
+export function PageHelp({ page, plain = false }: { page?: string; plain?: boolean }) {
   const [open, setOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const titleId = useId()
-  const copy = helpFor(page)
+  const copy = helpFor(page, { plain })
   useEffect(() => setMounted(true), [])
   return (
     <div className={`page-help${open ? ' is-open' : ''}`} data-testid="page-help" data-page={page || ''}>

@@ -125,14 +125,14 @@ export async function MasterPortals(ctx: MasterCtx) {
           <header><div><h2>Open a portal</h2><p><Link href="/master/create" data-testid="open-portal-studio">Choose courses and features</Link> when you want to pick which parts this place has.</p></div></header>
           <form className="body form" action="/api/hearts" method="post">
             <Hidden fields={{ action: 'create-portal' }} />
-            <label className="stack">Name<input type="text" data-testid="create-portal-name" name="name" placeholder="Harbour Mosque" required /></label>
-            <label className="stack">Short address<input type="text" data-testid="create-portal-slug" name="slug" placeholder="harbour" required /></label>
+            <label className="stack">Name<input type="text" data-testid="create-portal-name" name="name" placeholder="North House" required /></label>
+            <label className="stack">Short address<input type="text" data-testid="create-portal-slug" name="slug" placeholder="north-house" required /></label>
             <label className="stack">Kind
-              <select name="kind" defaultValue="mosque"><option value="mosque">Mosque</option><option value="church">Church</option><option value="synagogue">Synagogue</option><option value="other">Other</option></select>
+              <select name="kind" defaultValue="other"><option value="other">Other</option><option value="mosque">Mosque</option><option value="church">Church</option><option value="synagogue">Synagogue</option></select>
             </label>
-            <label className="stack">Name people see<input type="text" data-testid="create-portal-brand" name="brandName" placeholder="Hady Home" /></label>
-            <label className="stack">Colour<input type="text" data-testid="create-portal-colour" name="colour" placeholder="#1f3a5f" /></label>
-            <label className="stack">Accent<input type="text" data-testid="create-portal-accent" name="accent" placeholder="#e07a5f" /></label>
+            <label className="stack">Name people see<input type="text" data-testid="create-portal-brand" name="brandName" placeholder="North House" /></label>
+            <label className="stack">Colour<input type="text" data-testid="create-portal-colour" name="colour" placeholder="#2563EB" /></label>
+            <label className="stack">Accent<input type="text" data-testid="create-portal-accent" name="accent" placeholder="#2563EB" /></label>
             <label className="stack">Logo<input type="text" data-testid="create-portal-logo" name="logoUrl" placeholder="/icons/hady-home.svg" /></label>
             <label className="stack">Welcome line<textarea name="welcome" placeholder="A few words for people arriving" /></label>
             <div className="actions"><button className="btn ink" data-testid="create-portal-submit" type="submit">Open portal</button></div>

@@ -169,13 +169,13 @@ export function SceneCard({ scene, index, total, selected, reply, picked, onPick
 
 export type HelpContact = { label: string; phone?: string | null; url?: string | null; hours?: string | null }
 
-export function HelpScreen({ contacts, onBack }: { contacts: HelpContact[]; onBack: () => void }) {
+export function HelpScreen({ contacts, onBack, backLabel = 'Back to HEARTS', privateNote = CARE_HELP_PRIVATE }: { contacts: HelpContact[]; onBack: () => void; backLabel?: string; privateNote?: string }) {
   return (
     <section className="j-screen j-help" data-screen="help" data-testid="help">
       <div className="j-body">
         <h1 className="j-caption small">{CARE_HELP_TITLE}</h1>
         <p className="j-sub">{CARE_HELP_NOW}</p>
-        <p className="j-private">{CARE_HELP_PRIVATE}</p>
+        <p className="j-private">{privateNote}</p>
       </div>
       <ul className="j-contacts" data-testid="help-contacts">
         {contacts.map((contact) => {
@@ -193,7 +193,7 @@ export function HelpScreen({ contacts, onBack }: { contacts: HelpContact[]; onBa
       </ul>
       <div className="j-actions">
         <p className="j-private" style={{ textAlign: 'center' }}>{CARE_HELP_READY}</p>
-        <button type="button" className="pill outline-light block" onClick={onBack} data-testid="back-to-hearts">Back to HEARTS</button>
+        <button type="button" className="pill outline-light block" onClick={onBack} data-testid="back-to-hearts">{backLabel}</button>
       </div>
     </section>
   )

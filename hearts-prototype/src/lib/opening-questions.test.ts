@@ -12,6 +12,7 @@ import {
   newcomerPicks,
   pullWords,
   reviewOpeningQuestions,
+  openingScenesForPortal,
   scenesForPortal,
   serveOpeningScenes,
   type RouteSlice,
@@ -54,6 +55,19 @@ test('two questions stored as 6 become 6 and 7 once the account question is inse
     [1, 2, 3, 4, 5, 6, 7, 8],
   )
   assert.equal(new Set(served.map((scene) => scene.order)).size, served.length)
+})
+
+test('a plain portal with no questions of its own does not inherit the starter scenes', () => {
+  const published = [
+    { key: 'extra', order: 1 },
+    { key: 'doors', order: 6 },
+  ]
+  const plain = openingScenesForPortal(published, { key: 'account', order: 6 }, [], true)
+  assert.deepEqual(plain, [])
+  const hearts = openingScenesForPortal(published, { key: 'account', order: 6 }, [], false)
+  assert.equal(hearts.some((scene) => scene.key === 'doors'), true)
+  const own = openingScenesForPortal(published, null, [{ key: 'ages', order: 4 }], true)
+  assert.deepEqual(own.map((scene) => scene.key), ['ages'])
 })
 
 test('a portal with its own questions does not receive the starter set', () => {

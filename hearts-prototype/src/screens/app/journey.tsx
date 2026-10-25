@@ -29,6 +29,7 @@ import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
 import { featureOn, featuresOf } from '@/lib/features'
 import { feedBackHref } from '@/lib/lane-progress'
+import { appNameOf } from '@/lib/learner-brand'
 import { fontPairOf, shellOf } from '@/lib/portal-look'
 
 export async function masterFlags(payload: Payload) {
@@ -75,7 +76,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
     title: opening.clips[String(cut.id)]?.lessonTitle || opening.clips[String(cut.id)]?.courseTitle || '',
   }))
   opening.route.cuts = nudgeTalks(titled, context, popular, true)
-  const mission = user ? await activeMissionCard(payload, portal.id, base) : null
+  const mission = user ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null
   const modern = shellOf(portal) === 'modern'
   return (
     <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined}>
@@ -87,7 +88,8 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
           <Journey
             base={base}
             opening={opening}
-            opener={opening.ownQuestions ? OWN_OPENER : OPENER}
+            opener={modern || opening.ownQuestions ? OWN_OPENER : OPENER}
+            plain={modern}
             initial={initial}
             signedIn={Boolean(user)}
             learner={user?.role === 'learner'}

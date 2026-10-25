@@ -23,6 +23,7 @@ import { gateAuth, tooManyAnswers } from '@/lib/auth-gate'
 import { loginFailurePath } from '@/lib/demo-stage-gate'
 import { clientIp, hit, hitAnswer, joinFailKeys, peek, resetLimits } from '@/lib/rate-limit'
 import { slugProblem } from '@/lib/text-safety'
+import { MODERN_ACCENT, shellOf } from '@/lib/portal-look'
 import { JOIN_FAILS_PER_CODE, JOIN_FAILS_PER_IP, JOIN_WINDOW_MS, codeRefusal, randomCode } from '@/lib/access-codes'
 import { deskScreenName, escapeHtml } from '@/lib/action-error'
 import { humanDayMonth } from '@/lib/human-date'
@@ -803,16 +804,16 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const logo = portalLogo(logoRaw)
     if (logoRaw && !logo) return redirectTo(req, '/master', 'The logo needs to be a path like /icons/hady-home.svg or an https link.')
     const brandName = text(form, 'brandName').slice(0, 80)
-    const accent = accentRaw || (shape === 'sequence' ? '#e07a5f' : '')
+    const accent = accentRaw
     const created = await payload.create({
       collection: 'portals',
       overrideAccess: true,
       data: {
         name,
         slug,
-        kind: (shape === 'sequence' ? 'other' : ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
+        kind: (shape === 'sequence' ? 'other' : ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'other') as 'mosque',
         welcome: text(form, 'welcome') || (shape === 'sequence' ? `${name}. Watch the films in order.` : `${name} keeps a gentle room for whoever is sent.`),
-        colour: colourRaw || (shape === 'sequence' ? '#1f3a5f' : '#1f4d3a'),
+        colour: colourRaw || MODERN_ACCENT,
         watchHistoryOptIn: false,
         wizardDone: true,
         shape,
@@ -1991,12 +1992,13 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     const portal = portalIdOf(user)
     const portalRow = portal ? await payload.findByID({ collection: 'portals', id: portal, overrideAccess: true, depth: 0 }) : null
     const sequence = isSequencePortal(portalRow)
+    const plain = Boolean(portalRow) && shellOf(portalRow) === 'modern'
     const questions = await payload.find({
       collection: 'placing-questions',
       overrideAccess: true,
       limit: 20,
       sort: 'order',
-      where: sequence ? { portal: { equals: portal } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal } }] },
+      where: sequence || plain ? { portal: { equals: portal } } : { or: [{ portal: { exists: false } }, { portal: { equals: portal } }] },
     })
     const answers: { options: unknown; choice: string }[] = []
     for (const question of questions.docs as { id: number; options?: unknown }[]) {
@@ -2010,18 +2012,18 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       await payload.create({ collection: 'placing-answers', overrideAccess: true, data: { user: user.id, question: question.id, choice: answers[index].choice, portal: portal || undefined } })
     }
     const doors = await loadDoors(payload)
-    const starting = sequence ? null : startingClause(answers, doors)
+    const starting = sequence || plain ? null : startingClause(answers, doors)
     const startDoor = starting ? doorOfClause(starting, doors) : null
     const learner = user.role === 'learner'
     await payload.update({
       collection: 'users',
       id: user.id,
       overrideAccess: true,
-      data: sequence
+      data: sequence || plain
         ? { onboarded: true, seenWelcome: true }
         : learner ? { startingClause: starting } : { onboarded: true, startingClause: starting },
     })
-    if (sequence) return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. Your first film is ready.')
+    if (sequence || plain) return redirectTo(req, text(form, 'next') || '/', undefined, sequence ? 'Thank you. Your first film is ready.' : 'Thank you. You can start.')
     return redirectTo(req, text(form, 'next') || '/', undefined, startDoor ? `Thank you. We have chosen a first sitting for you, starting from door ${startDoor.number}: ${startDoor.title}.` : 'Thank you. We have chosen a first sitting for you.')
   }
 

@@ -7,6 +7,8 @@ import { LiveWatchClient } from '@/components/app/live-watch'
 import { canGoLive, canSeeLive } from '@/lib/live'
 import { idOf, portalIdOf } from '@/lib/ids'
 import { homeLive, listQuestions, listSessions, publicCard, sessionById } from '@/server/live'
+import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { unreadCount, type Ctx } from '../common'
 
 export async function liveHomeBits(ctx: Pick<Ctx, 'payload' | 'portal' | 'user'>) {
@@ -43,7 +45,7 @@ export async function LiveIndexScreen(ctx: Ctx) {
   const unread = await unreadCount(payload, user)
   const slug = String(portal.slug)
   return (
-    <AppFrame testId="live-home">
+    <AppFrame testId="live-home" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head">
           <Link className="back" href={base}>Home</Link>
@@ -66,7 +68,7 @@ export async function LiveIndexScreen(ctx: Ctx) {
         ) : null}
         {!live && !upcoming.length && !ended.length ? (
           <div data-testid="live-empty">
-            <ExampleInUse title="Circle after Isha" action={{ href: base, label: 'Back home' }}>
+            <ExampleInUse title={shellOf(portal) === 'hearts' ? 'Circle after Isha' : 'Thursday study group'} action={{ href: base, label: 'Back home' }}>
               <p>Live now · with your teacher</p>
               <p className="hint">When a talk is on, you can watch it and send a question from here.</p>
             </ExampleInUse>
@@ -88,7 +90,7 @@ export async function LiveWatchScreen(ctx: Ctx, id: number) {
   const questions = await listQuestions(payload, id, user, staff)
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="live-screen">
+    <AppFrame testId="live-screen" brand={learnerBrand(portal)}>
       <div className="app-scroll live-shell">
         <div className="app-head">
           <Link className="back" href={`${base}/live`}>Live recordings</Link>

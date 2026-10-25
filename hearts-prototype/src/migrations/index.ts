@@ -44,6 +44,7 @@ import * as migration_20261025_160000_hady_home from './20261025_160000_hady_hom
 import * as migration_20261025_170000_vimeo_public from './20261025_170000_vimeo_public';
 import * as migration_20261025_190000_course_answers from './20261025_190000_course_answers';
 import * as migration_20261025_230000_shell_font from './20261025_230000_shell_font';
+import * as migration_20261025_234000_plain_defaults from './20261025_234000_plain_defaults';
 
 export const migrations = [
   {
@@ -275,5 +276,10 @@ export const migrations = [
     up: migration_20261025_230000_shell_font.up,
     down: migration_20261025_230000_shell_font.down,
     name: '20261025_230000_shell_font',
+  },
+  {
+    up: migration_20261025_234000_plain_defaults.up,
+    down: migration_20261025_234000_plain_defaults.down,
+    name: '20261025_234000_plain_defaults',
   },
 ];

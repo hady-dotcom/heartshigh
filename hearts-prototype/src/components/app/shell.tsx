@@ -32,7 +32,7 @@ export function AppFrame({ children, dark = false, evening = false, testId, tone
   return (
     <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={branded}>
       <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
-        <PageHelp page={help || testId} />
+        <PageHelp page={help || testId} plain={modern} />
         <InsightTracker trendsOptIn={trendsOptIn} />
         {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : null}
         <RouteFade>{children}</RouteFade>
