@@ -37,6 +37,7 @@ import { type Ctx, type Query, type Row, clock, one, ref, rows, str, unreadCount
 import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-labels'
 import { nextPartLabel } from '@/lib/study-plan'
 import { filmsLabel, talksLabel } from '@/lib/week'
+import { FilmFallback } from '@/components/app/film-fallback'
 import { FilmChips } from './course-home'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
@@ -183,7 +184,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
             <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 {still.src ? <img src={still.src} alt="" /> : null}
-                {still.fallback ? <span className="thumb-title">{name}</span> : null}
+                {still.fallback ? <FilmFallback place={index + 1} title={name} /> : null}
               </span>
               <span className="t">
                 <small>{sequence ? `Film ${index + 1}` : `Part ${index + 1}`}</small>
@@ -409,7 +410,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const courseHref = withCurrentQuery(`${base}/course/${courseId}`, query)
   const nextAt = sequence ? lessons.findIndex((row, index) => index > partIndex && lessonCanPlay(row)) : (partIndex + 1 < lessons.length ? partIndex + 1 : -1)
   const nextLesson = nextAt >= 0 ? lessons[nextAt] : null
-  const following = nextLesson ? { label: nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
+  const following = nextLesson ? { label: sequence ? `Film ${nextAt + 1} · Next` : nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
   const sequenceLabel = (index: number, row: Row) => filmLabel(index, str(row.title))
   const upNext = nextLesson && following
     ? { href: following.href, label: sequence ? sequenceLabel(nextAt, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
@@ -552,7 +553,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
             <Link key={row.id} className={`part-row${sequence ? ' film-row' : ''}`} href={withCurrentQuery(`${base}/course/${courseId}?part=${row.id}`, query)} data-testid="part-link" aria-current={row.id === lessonId ? 'page' : undefined}>
               {sequence ? (
                 <span className={`thumb${poster ? '' : ' is-fallback'}`} data-testid="talk-thumb">
-                  {poster ? <img src={poster} alt="" /> : null}
+                  {poster ? <img src={poster} alt="" /> : <FilmFallback place={index + 1} title={partTitle(row, str(course.title))} />}
                 </span>
               ) : null}
               <span className="grow">

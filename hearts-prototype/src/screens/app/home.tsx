@@ -32,6 +32,8 @@ import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
 import { shellOf } from '@/lib/portal-look'
+import { FilmFallback } from '@/components/app/film-fallback'
+import { sortParts } from '@/lib/part-order'
 import { FilmChips, nextCourseFilms } from './course-home'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
@@ -76,6 +78,15 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   const openLessons = (openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
   const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
   const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
+  const modernHome = shellOf(portal) === 'modern'
+  const siblingRows = modernHome && courseIds.length
+    ? await rows(payload, 'lessons', { course: { in: courseIds } }, { sort: 'order', limit: 500 })
+    : []
+  const placeOf = new Map<number, number>()
+  for (const courseId of courseIds) {
+    const own = sortParts(siblingRows.filter((lesson) => ref(lesson.course) === courseId && learnerLessonVisible(asLessonVisibility(lesson))), () => 0)
+    own.forEach((lesson, index) => placeOf.set(lesson.id, index + 1))
+  }
   const carryOn = openIds
     .map((id) => openLessons.find((row) => row.id === id))
     .filter((row): row is NonNullable<typeof row> => Boolean(row))
@@ -99,10 +110,10 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         sub: minutesLeft(seconds, percent) || tidyTalkTitle(str(course?.title)),
         thumb: shownPoster(filmPoster(lesson)),
         percent: Math.round(percent),
+        place: placeOf.get(lesson.id) || part,
       }
     })
   const fallback = carryOn.length ? [] : courses.filter((course) => course.open).slice(0, 2)
-  const modernHome = shellOf(portal) === 'modern'
   const fallbackLessons = fallback.length
     ? await rows(payload, 'lessons', { course: { in: fallback.map((course) => course.id) } }, { limit: 400 })
     : []
@@ -180,7 +191,9 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         <div data-testid="continue">
           {carryOn.map((row) => (
             <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
-              <span className={`thumb${row.thumb ? '' : ' is-fallback'}`} style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined} />
+              <span className={`thumb${row.thumb ? '' : ' is-fallback'}`} style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined}>
+                {!row.thumb && modernHome ? <FilmFallback place={row.place} title={row.title} /> : null}
+              </span>
               <span className="t">
                 <b>{row.title}</b>
                 <span className="sr-only">. </span>
@@ -190,15 +203,18 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
             </Link>
           ))}
           {fallback.map((course) => {
-            const own = fallbackLessons.filter((lesson) => ref(lesson.course) === course.id)
+            const own = sortParts(fallbackLessons.filter((lesson) => ref(lesson.course) === course.id && learnerLessonVisible(asLessonVisibility(lesson))), () => 0)
             const watched = own.filter((lesson) => done.has(lesson.id)).length
             const poster = shownPoster(course.poster) || shownPoster(own.map((lesson) => filmPoster(lesson)).find(Boolean) || null)
+            const first = own[0]
             const meta = modernHome
               ? `${watched} of ${course.parts} film${course.parts === 1 ? '' : 's'}`
               : [course.speaker, plural(course.parts, 'part')].filter(Boolean).join(' · ')
             return (
               <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
-                <span className={`thumb${poster ? '' : ' is-fallback'}`} style={poster ? { backgroundImage: `url(${poster})` } : undefined} />
+                <span className={`thumb${poster ? '' : ' is-fallback'}`} style={poster ? { backgroundImage: `url(${poster})` } : undefined}>
+                  {!poster && modernHome && first ? <FilmFallback place={1} title={str(first.title)} /> : null}
+                </span>
                 <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{meta}</small><DoorChips doors={course.doors} max={1} /></span>
               </Link>
             )
@@ -213,7 +229,9 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           <div data-testid="feed-films">
             {nextFilms.map((film) => (
               <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
-                <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
+                <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined}>
+                  {!film.poster && modernHome ? <FilmFallback place={film.place} title={film.title} /> : null}
+                </span>
                 <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small>{modernHome ? <FilmChips seconds={film.seconds} done={film.done} /> : null}</span>
               </Link>
             ))}
