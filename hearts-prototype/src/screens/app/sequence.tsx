@@ -84,7 +84,7 @@ export async function SequenceGate({ payload, portal, base }: { payload: Payload
         </div>
         {!lessons.length ? <p>Films will show here once they are added.</p> : null}
         <div className="sequence-actions">
-          <Link className="pill outline block" href={`${base}/garden`} data-testid="gate-garden">Garden</Link>
+          <Link className="pill outline block" href={`${base}/courses`} data-testid="gate-garden">Courses</Link>
           <Link className="pill gold block" href={`/login?next=${encodeURIComponent(base)}`} data-testid="sequence-sign-in">{SEQUENCE_COPY.signIn}</Link>
           <Link className="pill outline block" href={`/join?next=${encodeURIComponent(base)}`} data-testid="sequence-join">{SEQUENCE_COPY.join}</Link>
         </div>
@@ -197,7 +197,7 @@ export async function SequenceGarden(ctx: Omit<Ctx, 'user'> & { user: Ctx['user'
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />
         <p className="brand-word" data-testid="portal-brand">{brand}</p>
-        <h1>Garden</h1>
+        <h1>Courses</h1>
         <p>The course and its parts. Open any part to start there.</p>
         <article className="garden-course" data-testid="garden-course">
           <h2>{courseTitle}</h2>

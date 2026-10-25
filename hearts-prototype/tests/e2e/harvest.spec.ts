@@ -82,8 +82,8 @@ test.describe('harvest', () => {
   })
 
   test('the Garden counts the new harvest; the cards are verbatim, Arabic above the translation, and the new marker clears once seen', async ({ page }) => {
-    await signIn(page, LEARNER.email, LEARNER.password, `${BASE}/garden`)
-    await page.goto(`${BASE}/garden`)
+    await signIn(page, LEARNER.email, LEARNER.password, BASE)
+    await page.goto(BASE)
     await expect(page.getByTestId('ring-harvest')).toContainText('5')
     await expect(page.getByTestId('ring-harvest-new')).toHaveText('5 new')
     await page.getByTestId('ring-harvest').click()
@@ -118,7 +118,7 @@ test.describe('harvest', () => {
 
     await page.reload()
     await expect(page.getByTestId('harvest-new')).toHaveCount(0)
-    await page.goto(`${BASE}/garden`)
+    await page.goto(BASE)
     await expect(page.getByTestId('ring-harvest-new')).toHaveCount(0)
   })
 

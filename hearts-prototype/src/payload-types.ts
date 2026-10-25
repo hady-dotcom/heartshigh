@@ -366,6 +366,12 @@ export interface Portal {
    * Learner-facing name. Empty keeps HEARTS. Parenting uses Hady Home.
    */
   brandName?: string | null;
+  /** Modern is the white learner shell. HEARTS keeps the evening theme. */
+  shell?: ('modern' | 'hearts') | null;
+  /** Heading and body type on the modern shell. */
+  fontPair?: ('jakarta' | 'bricolage' | 'outfit' | 'inter') | null;
+  /** Course cards is the usual course home. Garden is the older picture. */
+  courseHome?: ('cards' | 'garden') | null;
   /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
    */
@@ -3525,6 +3531,9 @@ export interface PortalsSelect<T extends boolean = true> {
   teacherCap?: T;
   kineticOn?: T;
   brandName?: T;
+  shell?: T;
+  fontPair?: T;
+  courseHome?: T;
   demoRooms?: T;
   features?: T;
   aiConnection?: T;

@@ -463,7 +463,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           courseTitle={sequence ? str(course.title) : tidyTalkTitle(str(course.title))}
           backHref={withCurrentQuery(sequence ? base : `${base}/lanes`, query)}
           lessonId={lessonId}
-          partLabel={sequence ? sequenceLabel(partIndex + 1, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
+          partLabel={sequence ? sequenceLabel(partIndex, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
           poster={shownPoster(posterFor(youtubeId)) || portraitFor(slugify(str(lesson.speaker || course.speaker)))}

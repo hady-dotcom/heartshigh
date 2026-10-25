@@ -46,13 +46,29 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
 
   await page.getByTestId('tab-garden').click()
   await expect(page.getByTestId('garden')).toBeVisible()
-  await shot(page, 'hady-garden-phone')
-  await page.goto('/p/parenting')
+  await expect(page.getByTestId('course-home')).toBeVisible()
+  await expect(page).toHaveURL(/\/courses$/)
+  const coursesLook = await page.locator('.app-stage').evaluate((el) => {
+    const stage = el as HTMLElement
+    const heading = stage.querySelector('h1')
+    return {
+      shell: stage.getAttribute('data-shell'),
+      font: stage.getAttribute('data-font'),
+      bg: getComputedStyle(stage.querySelector('.app') || stage).backgroundColor,
+      heading: heading ? getComputedStyle(heading).fontFamily : '',
+    }
+  })
+  expect(coursesLook.shell).toBe('modern')
+  expect(coursesLook.font).toBe('jakarta')
+  expect(coursesLook.bg).toBe('rgb(255, 255, 255)')
+  expect(coursesLook.heading.toLowerCase()).toContain('jakarta')
+  await shot(page, 'hady-courses-phone')
 
-  await page.getByText('Guiding Home Learning').first().click()
+  await page.getByTestId('course-card').filter({ hasText: 'Guiding Home Learning' }).click()
   await expect(page.getByTestId('course-overview')).toBeVisible()
   const overview = page.url()
   await expect(page.getByTestId('start-part')).toContainText('Start part 1')
+  await shot(page, 'hady-course-phone')
   await page.locator('[data-testid="buffet-talk"][data-coming="yes"]').first().click()
   await expect(page.getByTestId('video-coming')).toContainText('This film is coming soon')
   await expect(page.getByTestId('vimeo-player')).toHaveCount(0)
@@ -62,7 +78,11 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('course')).toBeVisible()
   await expect(page.getByTestId('vimeo-player')).toBeVisible()
   await expect(page.getByTestId('vimeo-player')).toHaveAttribute('src', /player\.vimeo\.com\/video\/1239173361\?.*playsinline=1/)
+  await expect(page.getByTestId('part-label')).toHaveText(/^1\. /)
+  await expect(page.getByTestId('part-link').first()).toContainText(/^1\. /)
   await expect(page.getByTestId('sequence-question')).toContainText('home learning so far')
+  await page.getByTestId('sequence-question').scrollIntoViewIfNeeded()
+  await shot(page, 'hady-question-phone')
   await expect(page.getByTestId('kinetic-clip')).toHaveCount(0)
   await expect(page.getByTestId('video-coming')).toHaveCount(0)
   await expect(page.getByTestId('up-next')).toBeVisible()
@@ -94,7 +114,14 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
 
 test('admin can paste, retitle, reorder and export', async ({ page }) => {
   await page.setViewportSize(PHONE)
-  await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/sequence')
+  await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/settings')
+  await expect(page.getByTestId('shell-look')).toHaveValue('modern')
+  await expect(page.getByTestId('font-pair')).toHaveValue('jakarta')
+  await expect(page.getByTestId('course-home')).toHaveValue('cards')
+  await expect(page.getByTestId('accent-colour')).toHaveValue(/#2563eb/i)
+  await page.getByTestId('save-settings').click()
+  await expect(page.getByTestId('notice')).toContainText('Portal settings saved')
+  await page.goto('/p/parenting/admin/sequence')
   await expect(page.getByTestId('sequence-desk')).toBeVisible()
   await expect(page.getByTestId('film-title').first()).toBeVisible()
   const before = await page.getByTestId('film-title').first().inputValue()

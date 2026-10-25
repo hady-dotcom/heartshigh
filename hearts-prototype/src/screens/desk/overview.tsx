@@ -19,6 +19,7 @@ import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { humanDate } from '@/lib/human-date'
 import { ConfirmDeactivate } from '@/components/desk/confirm-deactivate'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
+import { FONT_PAIRS, courseHomeOf, fontPairOf, shellOf } from '@/lib/portal-look'
 
 function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null): NavGroup[] {
   if (count <= 0) return groups
@@ -237,7 +238,24 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
             {field('Notification emails', 'notificationEmails')}
             <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} data-testid="portal-colour" /></label>
-            <label className="row"><span>Accent</span><input type="text" name="accent" defaultValue={str(portal.accent)} data-testid="accent-colour" placeholder="#e07a5f" /></label>
+            <label className="row"><span>Accent</span><input type="text" name="accent" defaultValue={str(portal.accent)} data-testid="accent-colour" placeholder="#2563EB" /></label>
+            <label className="row"><span>Look</span>
+              <select name="shell" defaultValue={shellOf(portal)} data-testid="shell-look">
+                <option value="modern">Modern</option>
+                <option value="hearts">HEARTS</option>
+              </select>
+            </label>
+            <label className="row"><span>Type</span>
+              <select name="fontPair" defaultValue={fontPairOf(portal)} data-testid="font-pair">
+                {FONT_PAIRS.map((pair) => <option key={pair.key} value={pair.key}>{pair.label} — {pair.heading}{pair.body === pair.heading ? '' : ` and ${pair.body}`}</option>)}
+              </select>
+            </label>
+            <label className="row"><span>Course home</span>
+              <select name="courseHome" defaultValue={courseHomeOf(portal)} data-testid="course-home">
+                <option value="cards">Course cards</option>
+                <option value="garden">Garden</option>
+              </select>
+            </label>
             <label className="row"><span>Time zone <HelpTip topic="time-zone">{TOOL.timeZone}</HelpTip></span>
               <select name="timeZone" defaultValue={portalTimeZone(portal)} data-testid="time-zone">
                 {[...new Set([portalTimeZone(portal), ...PORTAL_TIME_ZONES])].map((zone) => <option key={zone} value={zone}>{zoneCity(zone)} ({zone})</option>)}

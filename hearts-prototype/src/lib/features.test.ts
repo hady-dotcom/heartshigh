@@ -167,15 +167,15 @@ test('presets are Standard and Everything', () => {
   assert.equal('community' in PRESETS, false)
 })
 
-test('the bottom bar is always Home · Lanes · My week · Garden · Me', () => {
+test('the bottom bar is always Home · Lanes · My week · Courses · Me', () => {
   const on = learnerBar(null)
   assert.deepEqual(on.map((item) => item.key), ['home', 'lanes', 'week', 'garden', 'me'])
-  assert.deepEqual(on.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Garden', 'Me'])
+  assert.deepEqual(on.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Courses', 'Me'])
   const gatherOn = learnerBar({ features: { ...defaultFeatures(), gather: true } })
-  assert.deepEqual(gatherOn.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Garden', 'Me'])
+  assert.deepEqual(gatherOn.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Courses', 'Me'])
   assert.ok(!on.some((item) => item.key === 'gather'))
   const bare = learnerBar({ features: { ...defaultFeatures(), gather: false, planner: false, garden: false } })
-  assert.deepEqual(bare.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Garden', 'Me'])
+  assert.deepEqual(bare.map((item) => item.label), ['Home', 'Lanes', 'My week', 'Courses', 'Me'])
 })
 
 test('desk nav hides a feature’s tools when that switch is off', () => {
