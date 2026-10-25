@@ -26,11 +26,12 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
 export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string; name?: string; shell?: 'modern' | 'hearts'; font?: string; scene?: boolean } | null }) {
   const gather = tone === 'gather'
   const modern = brand?.shell === 'modern'
+  const night = Boolean(evening) && !modern
   const branded = brand ? ({ '--portal-colour': brand.colour, '--portal-accent': brand.accent } as CSSProperties) : undefined
   const showWord = Boolean(brand?.name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (
-    <div className={`app-stage${evening ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={branded}>
-      <main className={`app${dark ? ' dark' : ''}${evening ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
+    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={branded}>
+      <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <PageHelp page={help || testId} />
         <InsightTracker trendsOptIn={trendsOptIn} />
         {showWord ? <p className="brand-word shell-brand" data-testid="portal-brand">{brand?.name}</p> : null}

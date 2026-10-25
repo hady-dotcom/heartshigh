@@ -336,9 +336,24 @@ html[data-theme] .app-stage.shell-modern .q-list li.open { color: #111827; borde
 html[data-theme] .app-stage.shell-modern .q-list li.done { color: var(--portal-accent, #2563eb); border-color: var(--portal-accent, #2563eb); }
 html[data-theme] .app-stage.shell-modern .q-list li.coming { color: #6b7280; }
 
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='course']),
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='garden-workbook']),
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='plan']),
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .app-scroll,
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'] .app-scroll,
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'] .app-scroll {
+  background: #ffffff;
+  background-image: none;
+  color: #111827;
+}
+
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] :is(.card, .card p, .card h2, .card h3, .list-link, .back, .app-head h1, .app-scroll) {
   color: #111827;
-  background-color: transparent;
+  background-color: #ffffff;
+  background-image: none;
 }
 
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .card {
