@@ -132,3 +132,10 @@ body:has(.viewas-bar) { --viewas-h: 46px; }
 .viewas-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
 .viewas-ended { background: #1f1d36; color: #f4efe5; padding: 10px 16px; font: 600 14px/1.4 var(--sans, system-ui), sans-serif; text-align: center; }
 [data-viewas-disabled] { opacity: 0.5; cursor: not-allowed; }
+
+.demo-role-switch { background: #1f3a5f; color: #fff; padding: 10px 12px; border-radius: 12px; margin: 0 0 12px; }
+.demo-role-switch p { margin: 0 0 8px; }
+.demo-role-switch-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.demo-role-switch button { border: 0; border-radius: 999px; padding: 6px 10px; background: #e07a5f; color: #fff; font: inherit; cursor: pointer; }
+.demo-role-switch button[aria-pressed="true"] { background: #fff; color: #1f3a5f; }
+.demo-role-now { font-size: 13px; opacity: 0.9; }

@@ -1,6 +1,7 @@
 import type { CollectionSlug, Payload, Where } from 'payload'
 import { idOf } from '@/lib/ids'
 import { learnerEmbedSrc } from '@/lib/yt'
+import type { DemoRole, DemoState, ParentingCast } from '@/lib/parenting-demo'
 import type { PortalDoc, SessionUser } from '@/server/context'
 
 export type Query = {
@@ -73,6 +74,20 @@ export type Query = {
   added?: string
   /** Library talks page. */
   tp?: string
+  /** Sequenced join: open the first film. */
+  open?: string
+  /** Parenting practice room. */
+  demo?: string
+  as?: string
+  who?: string
+  room?: string
+}
+
+export type DemoBag = {
+  token: string
+  role: DemoRole
+  cast: ParentingCast
+  state: DemoState
 }
 
 export type Ctx = {
@@ -83,6 +98,8 @@ export type Ctx = {
   base: string
   origin: string
   query: Query
+  /** Set only inside the Parenting practice room. Real portals leave this empty. */
+  demo?: DemoBag
 }
 
 export type Row = Record<string, unknown> & { id: number; createdAt?: string }

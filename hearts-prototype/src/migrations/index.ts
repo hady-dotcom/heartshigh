@@ -39,6 +39,7 @@ import * as migration_20261015_130000_code_courses from './20261015_130000_code_
 import * as migration_20261022_140000_vimeo_hash from './20261022_140000_vimeo_hash';
 import * as migration_20261024_160000_lesson_bin from './20261024_160000_lesson_bin';
 import * as migration_20261024_190000_sequence_portal from './20261024_190000_sequence_portal';
+import * as migration_20261025_120000_parenting_demo from './20261025_120000_parenting_demo';
 
 export const migrations = [
   {
@@ -245,5 +246,10 @@ export const migrations = [
     up: migration_20261024_190000_sequence_portal.up,
     down: migration_20261024_190000_sequence_portal.down,
     name: '20261024_190000_sequence_portal',
+  },
+  {
+    up: migration_20261025_120000_parenting_demo.up,
+    down: migration_20261025_120000_parenting_demo.down,
+    name: '20261025_120000_parenting_demo',
   },
 ];

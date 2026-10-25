@@ -480,7 +480,7 @@ export async function exportSequenceApp(payload: Payload, portal: {
   shape?: string | null
   minTalkSeconds?: number | null
   teacherCap?: number | null
-}) {
+}, opts?: { joinCode?: string }) {
   if (!isSequencePortal(shapeOf(asDoc(portal)))) return { error: 'This portal does not use a sequenced course.' as const }
   const course = await sequenceCourseFor(payload, portal.id)
   const lessons = course
@@ -534,6 +534,7 @@ export async function exportSequenceApp(payload: Payload, portal: {
     logoUrl: httpsLogo(String(portal.logoUrl || '')),
     lockOrder: portal.lockOrder !== false,
     note: String(portal.welcome || SEQUENCE_COPY.examples),
+    joinCode: opts?.joinCode || '',
   }
   return { zip: buildExportZip(packed, videos), filename: `${packed.slug}-app.zip` }
 }

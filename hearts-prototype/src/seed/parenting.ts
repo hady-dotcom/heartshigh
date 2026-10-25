@@ -128,6 +128,9 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     data: { title: 'Parenting course', summary: 'The films in this course.', owner: 'portal', portal: portal.id, courses: [course.id] },
   }))
 
+  const { ensureParentingDemoCode } = await import('@/server/parenting-demo')
+  await ensureParentingDemoCode(payload, Number(portal.id), Number(course.id), Number(pack.id))
+
   return { portal, course, pack }
 }
 

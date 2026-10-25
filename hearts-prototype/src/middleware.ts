@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from 'next/server'
+import { demoWriteBlocked } from '@/lib/parenting-demo'
 import { helperTokenFlash } from '@/lib/helper-token-flash'
 import { stageFlagRedirect, stageWriteBlocked } from '@/lib/stage-readonly'
 
@@ -12,6 +13,9 @@ export function middleware(request: NextRequest) {
   const referer = request.headers.get('referer')
   if (stageWriteBlocked(request.method, here, referer)) {
     return NextResponse.json({ error: 'The demo stage only looks. Nothing here is saved.' }, { status: 403 })
+  }
+  if (demoWriteBlocked(request.method, here, referer)) {
+    return NextResponse.json({ error: 'This practice view cannot change the real course.' }, { status: 403 })
   }
   if (stageFlagRedirect({ method: request.method, url: here, referer, dest: request.headers.get('sec-fetch-dest') })) {
     const next = request.nextUrl.clone()
@@ -54,4 +58,4 @@ export function middleware(request: NextRequest) {
   return response
 }
 
-export const config = { matcher: ['/', '/change-password', '/p/:path*', '/master', '/master/:path*', '/api/:path*', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
+export const config = { matcher: ['/', '/demo', '/change-password', '/p/:path*', '/master', '/master/:path*', '/api/:path*', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }

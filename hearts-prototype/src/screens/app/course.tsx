@@ -10,6 +10,8 @@ import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
 import { brandColours, isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
+import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { kineticClipFor } from '@/server/sequence-desk'
 import { lessonDoor } from '@/lib/course-doors'
 import { loadDoors } from '@/server/doors'
@@ -198,11 +200,13 @@ function canSeePoint(point: Record<string, unknown>, userId: number) {
 export async function CourseScreen(ctx: Ctx, courseId: number) {
   const { payload, user, portal, base, query } = ctx
   const sequence = isSequencePortal(portal)
-  const showKinetic = kineticMomentsOn(portal)
+  const showKinetic = kineticMomentsOn(portal) && (!ctx.demo || ctx.demo.state.features.kinetic)
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
-  const visible = await visibleCourseIds(payload, user)
-  if (!visible.includes(courseId)) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'That film is not in this course.' : 'That course is not on your code. Ask your teacher if you would like it.')}`)
+  if (!ctx.demo) {
+    const visible = await visibleCourseIds(payload, user)
+    if (!visible.includes(courseId)) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'That film is not in this course.' : 'That course is not on your code. Ask your teacher if you would like it.')}`)
+  }
   const [lessonRows, units, flags] = await Promise.all([
     rows(payload, 'lessons', { course: { equals: courseId } }, { sort: 'order' }),
     rows(payload, 'units', { course: { equals: courseId } }, { sort: 'order' }),
@@ -223,17 +227,31 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const partIndex = resolvePartIndex(lessons, query.part)
   const lesson = lessons[partIndex]
   const lessonId = lesson.id
+  const demoDoneLesson = (row: Row) => Boolean(ctx.demo && ctx.demo.state.watches.some((watch) => watch.learner === ctx.demo!.cast.learner && watch.done && (watch.lessonId === row.id || watch.film === str(row.title))))
   if (sequence) {
-    const locked = lockMessage(portal.lockOrder === true, partIndex === 0, partIndex)
-    if (locked) {
+    const previousDone = partIndex === 0 || (ctx.demo ? demoDoneLesson(lessons[partIndex - 1]) : false)
+    const locked = lockMessage(portal.lockOrder === true, ctx.demo ? previousDone : partIndex === 0, partIndex)
+    if (locked && !ctx.demo) {
       const previous = lessons[partIndex - 1]
       const finished = await rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { equals: previous.id } }] }, { limit: 1 })
       if (!finished.length) redirect(`${base}?error=${encodeURIComponent(locked)}`)
     }
+    if (locked && ctx.demo) {
+      const back = withDemoQuery(base, ctx.demo.token, ctx.demo.role)
+      redirect(`${back}${back.includes('?') ? '&' : '?'}error=${encodeURIComponent(locked)}`)
+    }
   }
 
-  const visits = await rows(payload, 'lesson-visits', { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, { limit: 1, sort: 'createdAt' })
-  if (!visits.length) await payload.create({ collection: 'lesson-visits', overrideAccess: true, data: { user: user.id, lesson: lessonId, portal: portal.id } })
+  const visits = ctx.demo ? [] : await rows(payload, 'lesson-visits', { and: [{ user: { equals: user.id } }, { lesson: { equals: lessonId } }] }, { limit: 1, sort: 'createdAt' })
+  if (!ctx.demo && !visits.length) await payload.create({ collection: 'lesson-visits', overrideAccess: true, data: { user: user.id, lesson: lessonId, portal: portal.id } })
+  if (ctx.demo && sequence) {
+    const watched = reduceParentingDemo(ctx.demo.state, { type: 'watch', film: str(lesson.title), lessonId }, ctx.demo.cast)
+    if (watched !== ctx.demo.state) {
+      const { saveDemoRoom } = await import('@/server/parenting-demo')
+      await saveDemoRoom(payload, { token: ctx.demo.token, cast: ctx.demo.cast, state: watched })
+      ctx.demo.state = watched
+    }
+  }
   if (query.from === 'lanes') {
     const deviceId = (await cookies()).get('hearts_device')?.value
     void import('@/server/experiments').then(({ recordLearnerEvent }) =>
@@ -251,7 +269,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
     })
     .filter((point) => user.role !== 'learner' || canSeePoint(point, user.id))
   const points = allPoints.filter((point) => ref(point.lesson) === lessonId)
-  const mine = await rows(payload, 'answers', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
+  const mine = ctx.demo ? [] : await rows(payload, 'answers', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
   const at = now()
   const views: PointView[] = points.filter((point) => str(point.family) !== 'workbook').map((point, index) => {
     const contingentId = ref(point.contingent)
@@ -342,7 +360,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   }
 
   const [completions, partCuts, doors] = await Promise.all([
-    rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
+    ctx.demo
+      ? Promise.resolve(lessons.filter((row) => demoDoneLesson(row)).map((row) => ({ lesson: row.id, sourceLevel: 'talk' })))
+      : rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
     lessonIds.length ? rows(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }, { limit: 300 }) : Promise.resolve([] as Row[]),
     sequence ? Promise.resolve([] as Door[]) : loadDoors(payload),
   ])
@@ -406,7 +426,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   return (
     <AppFrame testId={sequence ? 'sequence-course' : 'course'} evening={!sequence} help={sequence ? 'sequence-course' : undefined} brand={sequence ? brandColours(portal) : undefined}>
       <div className="app-scroll">
+        {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />
+        {ctx.demo && ctx.demo.state.features.notes && ctx.demo.state.notes[0] ? <p className="card" data-testid="demo-note">{ctx.demo.state.notes[0].from}: {ctx.demo.state.notes[0].body}</p> : null}
+        {ctx.demo && ctx.demo.state.features.plan ? <p className="card" data-testid="demo-plan">This week: watch one film.</p> : null}
         {contextOn && !sequence ? (
           <section className="context-block" data-testid="context-transcript">
             <p className="eyebrow">Around this moment</p>
@@ -443,7 +466,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
           sentences={showKinetic ? parseTrack(lesson.framingTrack)?.sentences || [] : []}
-          progressCard={sequence ? { eyebrow: progress.eyebrow, line: progress.line, backLabel: progress.back, backHref: base } : null}
+          progressCard={sequence && (!ctx.demo || ctx.demo.state.features.progress) ? { eyebrow: progress.eyebrow, line: ctx.demo ? `${watchedCount(ctx.demo.state, ctx.demo.cast.learner)} of ${lessons.length} videos` : progress.line, backLabel: progress.back, backHref: ctx.demo ? withDemoQuery(base, ctx.demo.token, ctx.demo.role) : base } : null}
           saveOnEnd={sequence}
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
@@ -468,6 +491,24 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           </section>
         ) : null}
         {sequence && views[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {views[0].prompt}</p> : null}
+        {sequence && ctx.demo ? (
+          <form className="form-stack card" action="/api/hearts/demo" method="post" data-testid="demo-answer-form">
+            <Hidden fields={{
+              action: 'answer',
+              demo: ctx.demo.token,
+              demoAs: 'learner',
+              film: str(lesson.title),
+              lessonId,
+              prompt: views[0]?.prompt || 'What will you try from this film?',
+              next: withDemoQuery(`${base}/course/${courseId}?part=${lessonId}`, ctx.demo.token, ctx.demo.role),
+            }} />
+            {ctx.demo.state.answers.filter((row) => row.learner === ctx.demo!.cast.learner && (row.lessonId === lessonId || row.film === str(lesson.title))).map((row) => (
+              <p key={row.id} data-testid="demo-saved-answer"><b>Your answer.</b> {row.body}{row.reply ? ` Reply: ${row.reply}` : ''}</p>
+            ))}
+            <label className="row top"><span>Your answer</span><textarea name="body" required rows={3} data-testid="demo-answer-text" placeholder="Write what you will try" /></label>
+            <button className="pill ink" type="submit" data-testid="demo-answer-send">Send answer</button>
+          </form>
+        ) : null}
         {!sequence && related[0] ? <TalkGatherNotice startsAt={related[0].startsAt} href={`${base}/gather/${related[0].id}`} title={related[0].title} /> : null}
         {marks.length && featureOn(portal, 'feedback') ? (
           <section className="card" data-testid="in-video-feedback" style={{ marginTop: 14 }}>

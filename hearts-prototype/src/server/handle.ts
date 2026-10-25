@@ -693,7 +693,8 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     const after = text(form, 'after')
     const gatherNext = after.startsWith(`/p/${slug}/`) ? after : ''
-    const next = gatherNext || afterJoinPath(slug, codeRole)
+    const shape = (portalDoc as { shape?: string }).shape === 'sequence' ? 'sequence' : 'hearts'
+    const next = gatherNext || afterJoinPath(slug, codeRole, shape)
     return loginResponse(req, email, password, next)
   }
 
