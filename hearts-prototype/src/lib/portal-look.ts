@@ -23,7 +23,7 @@ export type ScenePreset = {
 }
 
 export const SCENE_PRESETS: readonly ScenePreset[] = [
-  { key: 'courtyard', label: 'Mosque courtyard', kind: 'Religious', url: '/theme/evening-courtyard.jpg' },
+  { key: 'courtyard', label: 'Courtyard', kind: 'Religious', url: '/theme/evening-courtyard.jpg' },
   { key: 'office', label: 'Calm office', kind: 'Workplace', url: '/theme/scenes/office.jpg' },
   { key: 'staff-room', label: 'Staff room', kind: 'Workplace', url: '/theme/scenes/staff-room.jpg' },
   { key: 'kitchen', label: 'Kitchen table', kind: 'Home', url: '/theme/scenes/kitchen.jpg' },
@@ -115,12 +115,35 @@ export function safeSceneUrl(value: unknown) {
   }
 }
 
-export function sceneUrlOf(portal: LookSource) {
+export const SCENE_KEYS = ['plain', 'courtyard', 'office', 'staff-room', 'kitchen', 'living-room', 'upload'] as const
+
+export function sceneKeyOf(portal: LookSource) {
   const key = String(portal?.sceneKey || '').trim()
-  if (!key || key === 'plain') return ''
+  if ((SCENE_KEYS as readonly string[]).includes(key)) return key
+  return shellOf(portal) === 'hearts' ? 'courtyard' : 'plain'
+}
+
+export function sceneUrlOf(portal: LookSource) {
+  const key = sceneKeyOf(portal)
+  if (key === 'plain') return ''
   if (key === 'upload') return safeSceneUrl(portal?.sceneUrl)
   const preset = SCENE_PRESETS.find((scene) => scene.key === key)
   return preset?.url || ''
+}
+
+/**
+ * Inline `--scene` for a chosen picture.
+ * HEARTS with the courtyard (or nothing stored) keeps the evening theme's own image.
+ * A modern portal with nothing chosen stays `none` via the white shell.
+ */
+export function sceneCssOf(portal: LookSource) {
+  const key = String(portal?.sceneKey || '').trim()
+  const hearts = shellOf(portal) === 'hearts'
+  if (hearts && (!key || key === 'courtyard')) return null
+  const url = sceneUrlOf(portal).replace(/["\\]/g, '')
+  if (url) return `url("${url}")`
+  if (hearts && key === 'plain') return 'none'
+  return null
 }
 
 /** CSS custom properties. An empty scene is `none`, so the courtyard does not leak through. */

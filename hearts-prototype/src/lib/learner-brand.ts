@@ -1,11 +1,12 @@
-import { accentOf, fontPairOf, sceneUrlOf, shellOf } from '@/lib/portal-look'
+import { accentOf, fontPairOf, sceneCssOf, sceneUrlOf, shellOf } from '@/lib/portal-look'
 
-/** Colours, type, and the white shell. An empty name still keeps the HEARTS wordmark off. A HEARTS shell with no brand name stays on the evening theme. */
+/** Colours, type, and the white shell. An empty name still keeps the HEARTS wordmark off. A HEARTS shell with no brand name stays on the evening theme, unless its admin picked a different background. */
 export function learnerBrand(portal: { brandName?: string | null; colour?: string | null; accent?: string | null; shell?: string | null; fontPair?: string | null; sceneKey?: string | null; sceneUrl?: string | null } | null | undefined) {
   if (!portal) return undefined
   const shell = shellOf(portal)
   const name = String(portal.brandName || '').trim()
-  if (shell === 'hearts' && !name) return undefined
+  const sceneCss = sceneCssOf(portal)
+  if (shell === 'hearts' && !name && !sceneCss) return undefined
   return {
     colour: String(portal.colour || '#2563EB'),
     accent: accentOf(portal),
@@ -13,6 +14,7 @@ export function learnerBrand(portal: { brandName?: string | null; colour?: strin
     shell,
     font: fontPairOf(portal),
     scene: shell === 'modern' && Boolean(sceneUrlOf(portal)),
+    sceneCss,
   }
 }
 

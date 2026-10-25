@@ -45,6 +45,7 @@ import * as migration_20261025_170000_vimeo_public from './20261025_170000_vimeo
 import * as migration_20261025_190000_course_answers from './20261025_190000_course_answers';
 import * as migration_20261025_230000_shell_font from './20261025_230000_shell_font';
 import * as migration_20261025_234000_plain_defaults from './20261025_234000_plain_defaults';
+import * as migration_20261025_235500_scene_key from './20261025_235500_scene_key';
 
 export const migrations = [
   {
@@ -281,5 +282,10 @@ export const migrations = [
     up: migration_20261025_234000_plain_defaults.up,
     down: migration_20261025_234000_plain_defaults.down,
     name: '20261025_234000_plain_defaults',
+  },
+  {
+    up: migration_20261025_235500_scene_key.up,
+    down: migration_20261025_235500_scene_key.down,
+    name: '20261025_235500_scene_key',
   },
 ];

@@ -23,14 +23,18 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string; name?: string; shell?: 'modern' | 'hearts'; font?: string; scene?: boolean } | null }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; brand?: { colour: string; accent: string; name?: string; shell?: 'modern' | 'hearts'; font?: string; scene?: boolean; sceneCss?: string | null } | null }) {
   const gather = tone === 'gather'
   const modern = brand?.shell === 'modern'
   const night = Boolean(evening) && !modern
-  const branded = brand ? ({ '--portal-colour': brand.colour, '--portal-accent': brand.accent } as CSSProperties) : undefined
+  const paint = Boolean(brand) && !(brand?.shell === 'hearts' && !brand?.name)
+  const branded = {
+    ...(paint && brand ? { '--portal-colour': brand.colour, '--portal-accent': brand.accent } : {}),
+    ...(brand?.sceneCss ? { '--scene': brand.sceneCss } : {}),
+  } as CSSProperties
   const showWord = Boolean(brand?.name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (
-    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={branded}>
+    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'jakarta' : undefined} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
       <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         <PageHelp page={help || testId} plain={modern} />
         <InsightTracker trendsOptIn={trendsOptIn} />

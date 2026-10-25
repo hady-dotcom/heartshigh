@@ -168,6 +168,22 @@ export const Portals: CollectionConfig = {
       admin: { description: 'Course cards is the usual course home. Garden is the older picture.' },
     },
     {
+      name: 'sceneKey',
+      type: 'select',
+      defaultValue: 'plain',
+      options: [
+        { label: 'None', value: 'plain' },
+        { label: 'Courtyard', value: 'courtyard' },
+        { label: 'Calm office', value: 'office' },
+        { label: 'Staff room', value: 'staff-room' },
+        { label: 'Kitchen table', value: 'kitchen' },
+        { label: 'Living room', value: 'living-room' },
+        { label: 'Upload', value: 'upload' },
+      ],
+      admin: { description: 'Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard.' },
+    },
+    { name: 'sceneUrl', type: 'text', admin: { description: 'Picture uploaded by the portal admin, when the background is Upload.' } },
+    {
       name: 'demoRooms',
       type: 'json',
       access: { read: () => false, create: () => false, update: () => false },

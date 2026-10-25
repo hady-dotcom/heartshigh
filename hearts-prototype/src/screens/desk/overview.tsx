@@ -19,7 +19,7 @@ import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { humanDate } from '@/lib/human-date'
 import { ConfirmDeactivate } from '@/components/desk/confirm-deactivate'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
-import { FONT_PAIRS, courseHomeOf, fontPairOf, shellOf } from '@/lib/portal-look'
+import { FONT_PAIRS, SCENE_PRESETS, courseHomeOf, fontPairOf, sceneKeyOf, shellOf } from '@/lib/portal-look'
 
 function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null): NavGroup[] {
   if (count <= 0) return groups
@@ -231,10 +231,31 @@ export async function PortalSettingsScreen(ctx: Ctx) {
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)' }}>
         <section className="panel">
           <header className="light"><h2>Portal details</h2></header>
-          <form className="body form" action="/api/hearts" method="post">
+          <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
             <Hidden fields={{ action: 'settings', settingsForm: 'yes', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
             {field('Organisation name', 'organisationName', { 'data-testid': 'org-name-input' })}
             <label className="row"><span>Name people see</span><input type="text" name="brandName" defaultValue={str(portal.brandName)} data-testid="brand-name" placeholder="Hady Home" /></label>
+            <fieldset className="scene-picker" data-testid="scene-picker">
+              <legend>Background</legend>
+              <p className="hint">Optional. Off until you choose a place. Learners still see this portal’s colours and type.</p>
+              <div className="scene-choices">
+                {SCENE_PRESETS.map((preset) => {
+                  const thumb = preset.url && !(preset.key === 'courtyard' && shellOf(portal) !== 'hearts')
+                  return (
+                    <label className="scene-choice" key={preset.key}>
+                      <input type="radio" name="sceneKey" value={preset.key} defaultChecked={sceneKeyOf(portal) === preset.key} data-testid={`scene-${preset.key}`} />
+                      {thumb ? <img src={preset.url} alt="" /> : null}
+                      <span>{preset.label}</span>
+                    </label>
+                  )
+                })}
+                <label className="scene-choice">
+                  <input type="radio" name="sceneKey" value="upload" defaultChecked={sceneKeyOf(portal) === 'upload'} data-testid="scene-upload-choice" />
+                  <span>My picture</span>
+                </label>
+              </div>
+              <label className="row"><span>Upload my own</span><input type="file" name="sceneFile" accept="image/jpeg,image/png,image/webp" data-testid="scene-upload" /></label>
+            </fieldset>
             <label className="row top"><span>Welcome line</span><textarea name="welcome" defaultValue={str(portal.welcome)} /></label>
             {field('Logo', 'logoUrl', { placeholder: '/icons/hady-home.svg or https://', 'data-testid': 'logo-url' })}
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}

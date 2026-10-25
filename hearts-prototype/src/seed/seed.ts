@@ -199,6 +199,7 @@ async function main() {
       wizardDone: true,
       colour: '#1f4d3a',
       shell: 'hearts',
+      sceneKey: 'courtyard',
     },
     {
       name: 'Leeds Chapter',
@@ -210,17 +211,19 @@ async function main() {
       wizardDone: true,
       colour: '#6b3a2f',
       shell: 'hearts',
+      sceneKey: 'courtyard',
     },
   ]
   const portalIds = new Map<string, number>()
   for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
     const current = found.docs[0]
+    const scene = String((current as { sceneKey?: string | null } | undefined)?.sceneKey || '')
     const doc = !current
       ? await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
-      : String((current as { shell?: string | null }).shell || '') === 'hearts'
+      : String((current as { shell?: string | null }).shell || '') === 'hearts' && scene
         ? current
-        : await payload.update({ collection: 'portals', id: current.id, overrideAccess: true, data: { shell: 'hearts' } })
+        : await payload.update({ collection: 'portals', id: current.id, overrideAccess: true, data: { shell: 'hearts', ...(!scene ? { sceneKey: 'courtyard' } : {}) } })
     portalIds.set(portal.slug, doc.id)
   }
 
