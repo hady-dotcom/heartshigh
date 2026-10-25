@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation'
 import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash } from '@/components/app/shell'
+import { filmCanPlay } from '@/lib/film-availability'
 import { learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekStrip } from '@/components/app/week-strip'
@@ -112,7 +113,8 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   let demoContinue = ''
   if (demo) {
     const local = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { hidden: { not_equals: true } }] }, { limit: 1 })
-    const firstLesson = local[0] ? (await rows(payload, 'lessons', { course: { equals: local[0].id } }, { sort: 'order', limit: 1 }))[0] : null
+    const ordered = local[0] ? await rows(payload, 'lessons', { course: { equals: local[0].id } }, { sort: 'order', limit: 30 }) : []
+    const firstLesson = ordered.find((row) => filmCanPlay({ vimeoId: str(row.vimeoId), youtubeId: str(row.youtubeId), videoProvider: str(row.videoProvider) })) || ordered[0] || null
     if (local[0] && firstLesson) demoContinue = `${base}/course/${local[0].id}?part=${firstLesson.id}`
   }
   return (

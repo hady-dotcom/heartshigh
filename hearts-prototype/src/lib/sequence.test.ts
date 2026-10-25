@@ -229,6 +229,8 @@ test('a parenting export opens in Hady Home with the demo code and parent answer
   assert.match(opened['index.html'], /id="join-code">Join code PARENT-DEMO/)
   assert.match(opened['index.html'], /id="welcome"/)
   assert.match(opened['index.html'], /id="open-app"/)
+  assert.match(opened['index.html'], /This film is coming soon/)
+  assert.match(opened['index.html'], /"playable":false/)
   assert.match(opened['index.html'], /playsinline=1/)
   assert.match(opened['index.html'], /player\.vimeo\.com\/video\/' \+ film\.id \+ '\?api=1&playsinline=1/)
   assert.match(opened['index.html'], /How old are your children\?/)
