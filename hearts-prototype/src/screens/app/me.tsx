@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
-import { learnerBrand } from '@/lib/learner-brand'
+import { appNameOf, learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
@@ -54,7 +54,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
             <button className="pill ink small" type="submit" data-testid="name-save">Save name</button>
           </form>
         </details>
-        <KeepHearts />
+        <KeepHearts appName={appNameOf(portal)} />
         {links.map(([key, title, sub, href]) => (
           <Link key={key} className="list-link" href={`${base}/${href}`} data-testid={`me-${key}`}>
             <span className="grow">{title}<small>{sub}</small></span>›
@@ -226,7 +226,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <h3>Privacy and this phone</h3>
           <p>The speakers you follow, and the clips you save, are kept on this phone only.</p>
         </section>
-        <KeepHearts />
+        <KeepHearts appName={appNameOf(portal)} />
         <StartAgain base={base} />
         <form action="/api/hearts" method="post" style={{ marginTop: 14 }}>
           <Hidden fields={{ action: 'logout' }} />

@@ -16,6 +16,13 @@ export function learnerBrand(portal: { brandName?: string | null; colour?: strin
   }
 }
 
+/** The name in install copy. HEARTS keeps its name. A modern portal uses its brand, or plain words when the name is still empty. */
+export function appNameOf(portal: Parameters<typeof learnerBrand>[0]) {
+  const brand = learnerBrand(portal)
+  if (!brand || brand.shell === 'hearts') return 'HEARTS'
+  return brand.name || 'this app'
+}
+
 /** A logo saved on the portal: a site path such as /icons/hady-home.svg, or an https link. */
 export function portalLogo(value: unknown) {
   const trimmed = String(value || '').trim()

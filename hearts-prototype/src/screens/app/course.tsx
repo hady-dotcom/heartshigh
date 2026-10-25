@@ -43,6 +43,7 @@ import { emptySwarmFill, mixSwarm } from '@/lib/circle'
 import { circleCoverage, circleForPoints, circleSettings } from '@/server/circle'
 import { initialsOf } from '@/lib/swarm-sort'
 import { featureOn } from '@/lib/features'
+import { shellOf } from '@/lib/portal-look'
 import { hiddenIds } from '@/server/safety'
 import { ReportButton } from '@/components/app/report-sheet'
 import { parseTrack } from '@/lib/framing/validate'
@@ -487,8 +488,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           videoComing={coming}
-          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') ? `${base}/garden` : base, query), nextPart: following, links: [
-            ...(featureOn(portal, 'garden') ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
+          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : base, query), nextPart: following, links: [
+            ...(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
             ...(featureOn(portal, 'workbook') ? [{ label: 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />

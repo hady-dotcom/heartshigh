@@ -29,6 +29,7 @@ import { FeedLiveBanner } from '@/components/app/live-banner'
 import { homeLive } from '@/server/live'
 import { featureOn, featuresOf } from '@/lib/features'
 import { feedBackHref } from '@/lib/lane-progress'
+import { fontPairOf, shellOf } from '@/lib/portal-look'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -75,10 +76,11 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   }))
   opening.route.cuts = nudgeTalks(titled, context, popular, true)
   const mission = user ? await activeMissionCard(payload, portal.id, base) : null
+  const modern = shellOf(portal) === 'modern'
   return (
-    <div className="app-stage dusk">
+    <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined}>
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
-      <main className="app dark journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
+      <main className={`app journey-frame${modern ? '' : ' dark'}`} data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
         {mission && initial === 'feed' && featureOn(portal, 'missions') ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <JourneyErrorBoundary homeHref={base}>

@@ -1,0 +1,44 @@
+/* Shared floor for type and tap size. Values come from tokens.css.
+   The floor wins over older one-off sizes. Screen-reader controls stay clipped. */
+
+html[data-theme] :is(p, li, label, td) {
+  font-size: var(--hh-font-size-body) !important;
+}
+
+html[data-theme] h1 { font-size: var(--hh-font-size-h1) !important; }
+html[data-theme] h2 { font-size: var(--hh-font-size-h2) !important; }
+html[data-theme] h3 { font-size: var(--hh-font-size-h3) !important; }
+
+html[data-theme] :is(a, button, input, select, textarea, summary, [role='button']):not(
+    .sr-only,
+    [type='checkbox'],
+    [type='radio'],
+    [type='hidden'],
+    [type='file']
+  ) {
+  min-height: var(--hh-tap-min) !important;
+  min-width: var(--hh-tap-min) !important;
+}
+
+html[data-theme] .sr-only :is(a, button, input, select, textarea, summary, [role='button']) {
+  min-height: 0 !important;
+  min-width: 0 !important;
+  width: 1px !important;
+  height: 1px !important;
+}
+
+html[data-theme] input[type='file'] {
+  min-height: var(--hh-tap-min) !important;
+  max-width: 100%;
+}
+
+html[data-theme] :is(label, td, th):has(input[type='checkbox'], input[type='radio']) {
+  min-height: var(--hh-tap-min) !important;
+  min-width: var(--hh-tap-min) !important;
+}
+
+/* Inline links ignore min-height. Make the ones in copy and tables a real tap target. */
+html[data-theme] :is(p, li, td, th, .hint, .flash, .notice) a {
+  display: inline-flex;
+  align-items: center;
+}

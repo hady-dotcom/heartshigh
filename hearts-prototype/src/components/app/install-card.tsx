@@ -45,13 +45,23 @@ function readState(): InstallState {
 }
 
 function readSurface(kind: InstallState['kind']) {
+  if (typeof window === 'undefined') return kind === 'desktop' ? 'computer' : 'phone'
   const narrow = typeof window.matchMedia === 'function' && window.matchMedia('(max-width: 720px)').matches
   const coarse = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches
   return installSurface(kind, { narrow, coarse })
 }
 
+const serverInstallState: InstallState = {
+  kind: 'android-chrome',
+  standalone: false,
+  dismissed: false,
+  installed: false,
+  prompt: false,
+}
+
 function useInstallState() {
-  const [state, setState] = useState<InstallState | null>(null)
+  // Paint the row with the HTML so it does not pop in after hydration and shift the page.
+  const [state, setState] = useState<InstallState>(serverInstallState)
   useEffect(() => {
     const sync = () => setState(readState())
     sync()
@@ -69,14 +79,13 @@ function useInstallState() {
  * First-open guidance. Home uses a slim strip below Continue. Me can open the full card again.
  * Dismissing the Home strip hides it for 14 days.
  */
-export function InstallCard({ forced = false, onDismiss, sheet = false, strip = false }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean; strip?: boolean }) {
+export function InstallCard({ forced = false, onDismiss, sheet = false, strip = false, appName = 'HEARTS' }: { forced?: boolean; onDismiss?: () => void; sheet?: boolean; strip?: boolean; appName?: string }) {
   const [state, setState] = useInstallState()
   const [busy, setBusy] = useState(false)
-  if (!state) return null
   const prompt = state.prompt && offersInstallButton(state.kind)
   if (!shouldShowInstall({ standalone: state.standalone, dismissed: state.dismissed, installed: state.installed, forced })) return null
   const surface = readSurface(state.kind)
-  const copy = installCopy(state.kind, prompt, surface)
+  const copy = installCopy(state.kind, prompt, surface, appName)
   const variant = strip ? 'strip' : sheet ? 'sheet' : 'card'
 
   const dismiss = () => {
@@ -155,13 +164,12 @@ export function InstallCard({ forced = false, onDismiss, sheet = false, strip = 
 }
 
 /** Me can open the card again. An installed app shows a short confirmation instead. */
-export function KeepHearts() {
+export function KeepHearts({ appName = 'HEARTS' }: { appName?: string }) {
   const [state] = useInstallState()
   const [open, setOpen] = useState(false)
   const [run, setRun] = useState(0)
-  if (!state) return null
   const installed = state.installed || state.standalone
-  const entry = installEntry(state.kind, installed, readSurface(state.kind))
+  const entry = installEntry(state.kind, installed, readSurface(state.kind), appName)
   const show = () => {
     setRun((n) => n + 1)
     setOpen(true)
@@ -181,7 +189,7 @@ export function KeepHearts() {
       {!installed ? (
         <button type="button" className="install-again" data-testid="show-again" onClick={show}>{INSTALL_AGAIN}</button>
       ) : null}
-      {open && !installed ? <InstallCard key={run} forced onDismiss={() => setOpen(false)} /> : null}
+      {open && !installed ? <InstallCard key={run} forced appName={appName} onDismiss={() => setOpen(false)} /> : null}
     </>
   )
 }

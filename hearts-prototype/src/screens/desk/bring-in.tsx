@@ -14,6 +14,7 @@ import { skipLabel, type BringInRow } from '@/lib/bring-in-plan'
 import { listDraftTalks, type PreviewBody } from '@/server/bring-in'
 import type { SessionUser } from '@/server/context'
 import { clock, ref, rows, str, type Ctx, type Row } from '../common'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { CourseOnCodes } from './course-offer'
 
@@ -285,13 +286,13 @@ export async function BringInBody({
   )
 }
 
-function SheetBringIn({ slug, next }: { slug: string; next: string }) {
+function SheetBringIn({ slug, next, plain }: { slug: string; next: string; plain: boolean }) {
   return (
     <section className="panel" id="portal-sheet" data-testid="portal-sheet-panel" style={{ marginBottom: 18 }}>
       <header>
         <div>
           <h2>Master sheet</h2>
-          <p>A spreadsheet saved as CSV, with a public title column and a Vimeo id column. The films and their questions stay in this portal. They are not added to the HEARTS library.</p>
+          <p>A spreadsheet saved as CSV, with a public title column and a Vimeo id column. The films and their questions stay in this portal. {plain ? 'They stay in this portal’s own library.' : 'They are not added to the HEARTS library.'}</p>
         </div>
       </header>
       <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
@@ -368,13 +369,14 @@ async function QuestionsTab({ ctx, courses }: { ctx: Ctx; courses: { id: number;
 export async function PortalBringInScreen(ctx: Ctx) {
   const courses = await rows(ctx.payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: ctx.portal.id } }] }, { sort: 'title', limit: 500 })
   const coursePicks = courses.map((course) => ({ id: course.id, title: str(course.title), speaker: str(course.speaker) }))
+  const plain = shellOf(ctx.portal) === 'modern'
   const next = `${ctx.base}/admin/bring-in`
   return (
-    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro="Bring a master sheet into this portal, or paste a Vimeo or YouTube link. Films made here stay out of the HEARTS library." testId="admin-bring-in" showOnPhone>
+    <AdminFrame ctx={ctx} active="bring-in" title="Bring in" intro={plain ? 'Bring a master sheet into this portal, or paste a Vimeo or YouTube link. Films made here stay in this portal.' : 'Bring a master sheet into this portal, or paste a Vimeo or YouTube link. Films made here stay out of the HEARTS library.'} testId="admin-bring-in" showOnPhone>
       <p data-testid="bring-in-tabs"><Link href={next}>Sheet</Link> · <Link href={`${next}?view=questions`} data-testid="questions-tab">Questions</Link></p>
       {ctx.query.view === 'questions' ? <QuestionsTab ctx={ctx} courses={coursePicks} /> : (
         <>
-          <SheetBringIn slug={ctx.portal.slug} next={next} />
+          <SheetBringIn slug={ctx.portal.slug} next={next} plain={plain} />
           <BringInBody
             payload={ctx.payload}
             user={ctx.user}

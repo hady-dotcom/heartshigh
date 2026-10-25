@@ -20,4 +20,16 @@ const nextConfig = {
   },
 }
 
-export default withPayload(nextConfig)
+const payloadConfig = withPayload(nextConfig)
+const payloadHeaders = payloadConfig.headers
+payloadConfig.headers = async () => {
+  const rows = (await payloadHeaders()) || []
+  // Payload marks the colour-scheme hint as critical, so a fresh browser downloads
+  // the document twice. The evening and white shells do not vary on that hint.
+  return rows.map((row) => ({
+    ...row,
+    headers: (row.headers || []).filter((header) => header.key !== 'Critical-CH' && header.key !== 'Accept-CH'),
+  }))
+}
+
+export default payloadConfig

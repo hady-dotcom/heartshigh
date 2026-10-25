@@ -6,7 +6,7 @@ import { Avatar } from '@/components/app/feed'
 import { SavedCount, SavedToast } from '@/components/app/saved-list'
 import { AppFrame, Flash } from '@/components/app/shell'
 import { filmCanPlay } from '@/lib/film-availability'
-import { learnerBrand } from '@/lib/learner-brand'
+import { appNameOf, learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekStrip } from '@/components/app/week-strip'
 import { weekView } from '@/server/week-plan'
@@ -31,6 +31,7 @@ import { HomeGather, homeGatherings } from './gather'
 import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
+import { shellOf } from '@/lib/portal-look'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -141,7 +142,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         {notes.map((note) => (
           <AnnounceCard key={note.id} id={note.id} body={str(note.body)} next={base} />
         ))}
-        {featureOn(portal, 'garden') ? (
+        {featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>
@@ -185,14 +186,17 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           {!carryOn.length && !fallback.length ? <p className="muted">Start a course from Lanes and it will wait for you here.</p> : null}
         </div>
         {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base) : null}
-        <InstallCard strip />
+        <InstallCard strip appName={appNameOf(portal)} />
         {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
-            {clips.map((clip) => (
-              <span key={clip.id} className="mini" style={shownPoster(clip.poster) || shownPoster(clip.portrait) ? { backgroundImage: `url(${shownPoster(clip.poster) || shownPoster(clip.portrait)})` } : undefined} />
-            ))}
+            {clips.map((clip) => {
+              const poster = shownPoster(clip.poster) || shownPoster(clip.portrait)
+              // Slide backdrops are full-bleed files. A 64px tile must not download them.
+              const thumb = poster && !poster.includes('/slides/') ? poster : null
+              return <span key={clip.id} className="mini" style={thumb ? { backgroundImage: `url(${thumb})` } : undefined} />
+            })}
           </span>
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>

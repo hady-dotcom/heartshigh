@@ -1,6 +1,7 @@
 /*
  * White learner shell. Self-hosted faces (OFL) so a font host is not required.
  * HEARTS keeps the evening theme unless its look setting is Modern.
+ * Colours, type, spacing, radii, and shadows come from tokens.css.
  */
 
 @font-face {
@@ -93,35 +94,35 @@ html[data-theme] .app-stage.shell-modern[data-font='inter'] {
 
 html[data-theme] .app-stage.shell-modern,
 html[data-theme] .app-stage.shell-modern[data-portal-brand] {
-  --paper: #ffffff;
-  --card: #ffffff;
-  --cream: #ffffff;
-  --bg-solid: #ffffff;
-  --ink: #111827;
-  --ink-2: #374151;
-  --muted: #6b7280;
-  --line: #e5e7eb;
-  --gold: var(--portal-accent, #2563eb);
-  --gold-deep: var(--portal-accent, #2563eb);
-  --gold-ink: #ffffff;
-  --teal: var(--portal-accent, #2563eb);
-  --teal-deep: #1d4ed8;
-  --teal-fill: #eff6ff;
-  --mint: #f3f4f6;
-  --field: #ffffff;
-  --glass: #ffffff;
-  --glass-solid: #ffffff;
-  --scrim: #ffffff;
-  --scrim-deep: #ffffff;
-  --focus: var(--portal-accent, #2563eb);
+  --paper: var(--hh-paper);
+  --card: var(--hh-paper);
+  --cream: var(--hh-paper);
+  --bg-solid: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-ink-2);
+  --muted: var(--hh-muted);
+  --line: var(--hh-line);
+  --gold: var(--portal-accent, var(--hh-accent));
+  --gold-deep: var(--portal-accent, var(--hh-accent));
+  --gold-ink: var(--hh-on-accent);
+  --teal: var(--portal-accent, var(--hh-accent));
+  --teal-deep: var(--hh-accent-deep);
+  --teal-fill: var(--hh-accent-fill);
+  --mint: var(--hh-surface);
+  --field: var(--hh-paper);
+  --glass: var(--hh-paper);
+  --glass-solid: var(--hh-paper);
+  --scrim: var(--hh-paper);
+  --scrim-deep: var(--hh-paper);
+  --focus: var(--portal-accent, var(--hh-accent));
   --serif: var(--heading-font);
   --sans: var(--body-font);
-  background: #ffffff;
+  background: var(--hh-paper);
   background-image: none;
-  color: #111827;
+  color: var(--hh-ink);
   color-scheme: light;
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
-  font-size: 16px;
+  font-size: var(--hh-font-size-body);
   font-weight: 400;
   line-height: 1.6;
 }
@@ -130,21 +131,21 @@ html[data-theme] .app-stage.shell-modern .app,
 html[data-theme] .app-stage.shell-modern main.app.evening,
 html[data-theme] .app-stage.shell-modern main.app.dark,
 html[data-theme] .app-stage.shell-modern[data-portal-brand] .app {
-  background-color: #ffffff;
+  background-color: var(--hh-paper);
   background-image: none;
-  color: #111827;
+  color: var(--hh-ink);
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
 }
 
 html[data-theme] .app-stage.shell-modern.has-scene .app {
-  background-color: #ffffff;
-  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.97)), var(--scene);
+  background-color: var(--hh-paper);
+  background-image: linear-gradient(180deg, var(--hh-scene-wash), var(--hh-scene-wash-deep)), var(--scene);
   background-size: cover;
   background-position: center;
 }
 
 html[data-theme] .app-stage.shell-modern .app-scroll {
-  padding: 8px 20px 32px;
+  padding: var(--hh-space-2) var(--hh-space-4) var(--hh-space-5);
 }
 
 html[data-theme] .app-stage.shell-modern .app-head,
@@ -160,82 +161,108 @@ html[data-theme] .app-stage.shell-modern .brand-word,
 html[data-theme] .app-stage.shell-modern .shell-brand,
 html[data-theme] .app-stage.shell-modern[data-portal-brand] .brand-word,
 html[data-theme] .app-stage.shell-modern[data-portal-brand] .shell-brand {
-  color: #6b7280;
+  color: var(--hh-muted);
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: var(--hh-font-size-small);
   font-weight: 500;
   letter-spacing: 0;
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1, .splash h1, .q-card h2, .sheet h2, .grow-banner h2, .carry-on h2) {
   font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
-  color: #111827;
+  color: var(--hh-ink);
   letter-spacing: -0.03em;
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1) {
-  font-size: 28px;
+  font-size: var(--hh-font-size-h1);
   font-weight: 800;
   line-height: 1.15;
-  margin: 0 0 8px;
+  margin: 0 0 var(--hh-space-2);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.app h2, .q-card h2, .sheet h2, .grow-banner h2, .carry-on h2, .part-chip.off-film) {
   font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 20px;
+  font-size: var(--hh-font-size-h2);
   font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.02em;
-  color: #111827;
+  color: var(--hh-ink);
 }
 
-html[data-theme] .app-stage.shell-modern :is(.app h3, .card h3) {
+html[data-theme] .app-stage.shell-modern :is(.app h3, .card h3, .lane-card h3) {
   font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
-  font-size: 16px;
+  font-size: var(--hh-font-size-h3);
   font-weight: 700;
   letter-spacing: -0.015em;
   line-height: 1.35;
-  color: #111827;
+  color: var(--hh-ink);
 }
 
-html[data-theme] .app-stage.shell-modern :is(.lead, .card p, .q-card p, .note p, p) {
+html[data-theme] .app-stage.shell-modern :is(p, li, label, td, .lead, .card p, .q-card p, .note p) {
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-size: var(--hh-font-size-body);
   font-weight: 400;
   line-height: 1.6;
 }
 
 html[data-theme] .app-stage.shell-modern :is(small, .muted, .eyebrow, .page-sub) {
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
-  font-size: 14px;
+  font-size: var(--hh-font-size-small);
   font-weight: 500;
   letter-spacing: 0;
   text-transform: none;
-  color: #6b7280;
+  color: var(--hh-muted);
 }
 
 html[data-theme] .app-stage.shell-modern .tree-art { display: none; }
 
 html[data-theme] .app-stage.shell-modern :is(.card, .q-card, .carry-on, .course-card, .continue-row, .part-row, .note, .grow-banner, .grow-tile, .list-link) {
-  background: #ffffff;
+  background: var(--hh-paper);
   background-image: none;
-  color: #111827;
-  border: 1px solid #e5e7eb;
-  border-radius: 16px;
-  box-shadow: none;
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-none);
 }
 
 html[data-theme] .app-stage.shell-modern .carry-on,
 html[data-theme] .app-stage.shell-modern .course-card,
 html[data-theme] .app-stage.shell-modern .q-card {
-  padding: 16px;
-  margin-bottom: 16px;
+  padding: var(--hh-space-3);
+  margin-bottom: var(--hh-space-3);
 }
 
 html[data-theme] .app-stage.shell-modern .carry-on .thumb,
-html[data-theme] .app-stage.shell-modern .course-card .thumb {
-  background-color: #f3f4f6;
-  border-radius: 12px;
+html[data-theme] .app-stage.shell-modern .course-card .thumb,
+html[data-theme] .app-stage.shell-modern .continue-row .thumb,
+html[data-theme] .app-stage.shell-modern .course-row .thumb {
+  background-color: var(--hh-surface);
+  background-image: none;
+  border-radius: var(--hh-radius-control);
 }
+
+html[data-theme] .app-stage.shell-modern :is(.lane-card, .feed-door .mini, .course-tree, .clip-bg, .bio-cover, .player-card .poster.scenic, .grow-banner .tree-art) {
+  background-color: var(--hh-surface);
+  background-image: none;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .lane-card {
+  background-color: var(--hh-paper);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .lane-card::after { display: none; }
+
+html[data-theme] .app-stage.shell-modern .lane-card :is(.lane-grows, .lane-progress .bar > i) {
+  color: var(--portal-accent, var(--hh-accent));
+  background: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .lane-card .lane-grows { background: transparent; }
 
 html[data-theme] .app-stage.shell-modern .list-link {
   border-radius: 0;
@@ -247,94 +274,274 @@ html[data-theme] .app-stage.shell-modern .list-link {
 }
 
 html[data-theme] .app-stage.shell-modern :is(.bar, .lane-progress .bar, .garden-card .bar) {
-  height: 4px;
-  border-radius: 99px;
-  background: #f3f4f6;
+  height: var(--hh-bar);
+  border-radius: var(--hh-radius-pill);
+  background: var(--hh-surface);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.bar > i, .lane-progress .bar > i, .garden-card .bar > i, .ticks i.on) {
-  background: var(--portal-accent, #2563eb);
+  background: var(--portal-accent, var(--hh-accent));
 }
 
-html[data-theme] .app-stage.shell-modern .ticks i { background: #e5e7eb; }
+html[data-theme] .app-stage.shell-modern .ticks i { background: var(--hh-line); }
+
+html[data-theme] .app-stage.shell-modern :is(.pill, .btn, .tab, .field, select.field, textarea.field, .page-help-btn, .choice, .mini-btn) {
+  min-height: var(--hh-tap-min);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.mini-btn, a[data-testid='home-avatar']) {
+  min-width: var(--hh-tap-min);
+  min-height: var(--hh-tap-min);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .start {
+  min-height: var(--hh-tap-min);
+  min-width: var(--hh-tap-min);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  font-size: var(--hh-font-size-small);
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  border-radius: var(--hh-radius-pill);
+}
+
+html[data-theme] .app-stage.shell-modern .week-strip {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .week-day small,
+html[data-theme] .app-stage.shell-modern .week-day.today small {
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.week-day.today, .week-day.scheduled) {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .week-day.today small {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .week-day .dot {
+  background: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb .thumb-title {
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .buffet-row small {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .door-chip {
+  color: var(--hh-ink-2);
+  background: var(--hh-surface);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .example-in-use {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .example-kicker {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .feed-door {
+  background: var(--hh-paper);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .feed-door .go {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  min-height: var(--hh-tap-min);
+  border-radius: var(--hh-radius-control);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.week-today, .week-today.empty) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .q-list li {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  font-size: var(--hh-font-size-body);
+  min-height: var(--hh-tap-min);
+}
+
+html[data-theme] .app-stage.shell-modern .chip {
+  min-height: var(--hh-tap-min);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-link {
+  display: flex;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-theme] .app-stage.shell-modern .thumb .thumb-title { display: none; }
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback img { display: none; }
+
+html[data-theme] .app-stage.shell-modern .example-sample {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .example-note,
+html[data-theme] .app-stage.shell-modern .example-body,
+html[data-theme] .app-stage.shell-modern .example-body p {
+  color: var(--hh-ink-2);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card :is(.eyebrow, h3, small, .garden-link, .muted, p) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-card .eyebrow {
+  color: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern :is(.journey, .j-slot, .j-clip, .j-peek, .j-poster, .j-film-band, .phase-feed .j-clip) {
+  background-color: var(--hh-video);
+  background-image: none;
+}
+
+html[data-theme] .app-stage.shell-modern .feed-card-bg { display: none; }
+
+html[data-theme] .app-stage.shell-modern .j-coach-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .j-coach-card :is(h2, p, li, b) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .page-help-btn {
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+}
+
+html[data-theme] .app-stage.shell-modern .tab { min-width: var(--hh-tap-min); }
 
 html[data-theme] .app-stage.shell-modern :is(.pill, .btn) {
-  border-radius: 12px;
+  border-radius: var(--hh-radius-control);
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
   font-weight: 600;
 }
 
 html[data-theme] .app-stage.shell-modern :is(.pill.gold, .pill.ink, .pill.teal),
 html[data-theme] .app-stage.shell-modern[data-portal-brand] .pill.gold {
-  background: var(--portal-accent, #2563eb);
-  color: #ffffff;
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
   border-color: transparent;
 }
 
 html[data-theme] .app-stage.shell-modern .pill.outline {
-  background: #ffffff;
-  color: #111827;
-  border-color: #e5e7eb;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.tabbar, .tabbar.dark, .tabbar.evening) {
-  background: #ffffff;
-  border-top: 1px solid #e5e7eb;
+  background: var(--hh-paper);
+  border-top: var(--hh-line-width) solid var(--hh-line);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.tab, .tabbar.dark .tab, .tabbar.evening .tab) {
-  color: #6b7280;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
 }
 
 html[data-theme] .app-stage.shell-modern :is(.tab.on, .tabbar.dark .tab.on, .tabbar.evening .tab.on) {
-  color: var(--portal-accent, #2563eb);
+  color: var(--portal-accent, var(--hh-accent));
 }
 
-html[data-theme] .app-stage.shell-modern .tab.on .tab-icon { color: var(--portal-accent, #2563eb); }
+html[data-theme] .app-stage.shell-modern .tab.on .tab-icon { color: var(--portal-accent, var(--hh-accent)); }
 
 html[data-theme] .app-stage.shell-modern .part-chip.off-film {
   position: static;
   background: transparent;
-  padding: 4px 0 8px;
+  padding: var(--hh-space-1) 0 var(--hh-space-2);
   border-radius: 0;
   white-space: normal;
 }
 
 html[data-theme] .app-stage.shell-modern :is(.field, textarea.field, select.field, .compose) {
-  background: #ffffff;
-  color: #111827;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-control);
 }
 
 html[data-theme] .app-stage.shell-modern .choice {
-  background: #f3f4f6;
-  color: #111827;
-  border-radius: 12px;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-radius: var(--hh-radius-control);
 }
 
 html[data-theme] .app-stage.shell-modern .choice:has(input:checked) {
-  background: #eff6ff;
-  border-color: var(--portal-accent, #2563eb);
-  color: #111827;
+  background: var(--hh-accent-fill);
+  border-color: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern .sheet,
 html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] {
-  background: #ffffff;
-  color: #111827;
-  border-radius: 16px 16px 0 0;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-radius: var(--hh-radius-card) var(--hh-radius-card) 0 0;
 }
 
 html[data-theme] .app-stage.shell-modern .sheet :is(h2, p, label, .eyebrow) {
-  color: #111827;
+  color: var(--hh-ink);
 }
 
-html[data-theme] .app-stage.shell-modern .sheet .handle { background: #e5e7eb; }
+html[data-theme] .app-stage.shell-modern .sheet .handle { background: var(--hh-line); }
 
-html[data-theme] .app-stage.shell-modern .q-list li.open { color: #111827; border-color: #e5e7eb; }
-html[data-theme] .app-stage.shell-modern .q-list li.done { color: var(--portal-accent, #2563eb); border-color: var(--portal-accent, #2563eb); }
-html[data-theme] .app-stage.shell-modern .q-list li.coming { color: #6b7280; }
+html[data-theme] .app-stage.shell-modern .q-list li.open { color: var(--hh-ink); border-color: var(--hh-line); }
+html[data-theme] .app-stage.shell-modern .q-list li.done { color: var(--portal-accent, var(--hh-accent)); border-color: var(--portal-accent, var(--hh-accent)); }
+html[data-theme] .app-stage.shell-modern .q-list li.coming { color: var(--hh-muted); }
 
 html[data-theme] .app-stage.shell-modern.evening:has([data-testid='course']),
 html[data-theme] .app-stage.shell-modern.evening:has([data-testid='garden-workbook']),
@@ -345,49 +552,162 @@ html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'],
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .app-scroll,
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'] .app-scroll,
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'] .app-scroll {
-  background: #ffffff;
+  background: var(--hh-paper);
   background-image: none;
-  color: #111827;
+  color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] :is(.card, .card p, .card h2, .card h3, .list-link, .back, .app-head h1, .app-scroll) {
-  color: #111827;
-  background-color: #ffffff;
+  color: var(--hh-ink);
+  background-color: var(--hh-paper);
   background-image: none;
 }
 
 html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .card {
-  background: #ffffff;
+  background: var(--hh-paper);
 }
 
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film,
 html[data-theme] .app-stage.shell-modern [data-testid='player'] .fr-words {
-  background: #ffffff;
-  color: #111827;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
 }
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline {
-  background: #e5e7eb;
+  background: var(--hh-line);
 }
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline > i {
-  background: var(--portal-accent, #2563eb);
+  background: var(--portal-accent, var(--hh-accent));
 }
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .chip.white {
-  background: #f3f4f6;
-  color: #111827;
-  border: 1px solid #e5e7eb;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  min-height: var(--hh-tap-min);
 }
 html[data-theme] .app-stage.shell-modern .player-card,
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card.course-film-band {
-  background: #111827;
+  background: var(--hh-video);
 }
 
 html[data-theme] .app-stage.shell-modern .rings .r {
-  border-color: var(--portal-accent, #2563eb) !important;
-  color: #111827;
-  background: #f3f4f6;
+  border-color: var(--portal-accent, var(--hh-accent)) !important;
+  color: var(--hh-ink);
+  background: var(--hh-surface);
 }
 
 html[data-theme] .app-stage.shell-modern .flash.notice {
-  background: #f3f4f6;
-  color: #111827;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern {
+  color-scheme: light;
+  background-color: var(--hh-paper);
+  background-image: none;
+  color: var(--hh-ink);
+  --desk-page: var(--hh-paper);
+  --desk-card: var(--hh-paper);
+  --desk-ink: var(--hh-ink);
+  --desk-heading: var(--hh-ink);
+  --desk-muted: var(--hh-muted);
+  --desk-line: var(--hh-line);
+  --desk-gold: var(--hh-accent);
+  --desk-gold-ink: var(--hh-on-accent);
+  --desk-header: var(--hh-surface);
+  --desk-sidebar: var(--hh-surface);
+  --desk-teal: var(--hh-accent);
+  --desk-on-dark: var(--hh-on-accent);
+  --desk-field: var(--hh-paper);
+  --paper: var(--hh-paper);
+  --card: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-ink-2);
+  --muted: var(--hh-muted);
+  --line: var(--hh-line);
+  --gold: var(--hh-accent);
+  --gold-ink: var(--hh-on-accent);
+  --teal: var(--hh-accent);
+  --teal-deep: var(--hh-surface);
+  --cream: var(--hh-paper);
+  --glass: var(--hh-paper);
+  --glass-solid: var(--hh-paper);
+  --field: var(--hh-paper);
+  --mint: var(--hh-surface);
+}
+
+html[data-theme] .desk.desk-modern :is(.side, .side-brand, .side a.nav, header, .app-head, .main-head, .empty, .empty-state) {
+  background-image: none;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .side { background: var(--hh-surface); }
+
+html[data-theme] .desk.desk-modern .side a.nav.on {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint) {
+  color: var(--hh-ink);
+}
+
+/* Sidebar copy was cream for a dark bar. The modern bar is a light surface. */
+html[data-theme] .desk.desk-modern :is(
+  .side,
+  .side-brand,
+  .side-brand b,
+  .side-brand small,
+  .side .group,
+  .side-nav-more,
+  .side-foot,
+  .side-foot .who,
+  .side-foot .who b,
+  .side a.nav,
+  .side-foot button
+) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .side a.nav.on,
+html[data-theme] .desk.desk-modern .side a.nav.on * {
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .desk.desk-modern .panel > header,
+html[data-theme] .desk.desk-modern .panel > header :is(h2, p) {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-in-use {
+  background: var(--hh-surface);
+  border: var(--hh-line-width) solid var(--hh-line);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-kicker {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-sample {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .desk.desk-modern .example-sample h3,
+html[data-theme] .desk.desk-modern .example-note,
+html[data-theme] .desk.desk-modern .example-body,
+html[data-theme] .desk.desk-modern .example-body p {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk.desk-modern .example-sample .hint,
+html[data-theme] .desk.desk-modern .example-body .hint {
+  color: var(--hh-muted);
+}
+
+html[data-theme] .desk.desk-modern .sequence-num {
+  color: var(--hh-accent);
 }

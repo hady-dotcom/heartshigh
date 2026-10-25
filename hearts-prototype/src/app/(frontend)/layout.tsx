@@ -1,3 +1,5 @@
+import './tokens.css'
+import './a11y.css'
 import './globals.css'
 import './app.css'
 import './desk.css'
@@ -53,10 +55,26 @@ export default function Layout({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-400-normal.woff2" crossOrigin="" />
+        <link rel="preload" as="font" type="font/woff2" href="/fonts/plus-jakarta-sans-latin-700-normal.woff2" crossOrigin="" />
+        {/* Printed first so the sheet does not block the first paint, then applied on load. */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Libre+Caslon+Text:wght@400;700&family=Noto+Naskh+Arabic:wght@500;600&display=swap"
+          id="hh-google-fonts"
           rel="stylesheet"
+          media="print"
+          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Libre+Caslon+Text:wght@400;700&family=Noto+Naskh+Arabic:wght@500;600&display=swap"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var l=document.getElementById('hh-google-fonts');if(!l)return;l.onload=function(){this.media='all'}})();`,
+          }}
+        />
+        <noscript>
+          <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700;800&family=Libre+Caslon+Text:wght@400;700&family=Noto+Naskh+Arabic:wght@500;600&display=swap"
+          />
+        </noscript>
       </head>
       <body suppressHydrationWarning>
         <StageFrameGuard />
