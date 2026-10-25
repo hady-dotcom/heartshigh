@@ -92,6 +92,7 @@ export function CoursePlayer({
   showResume = false,
   clipEnd = null,
   videoComing = false,
+  films = false,
 }: {
   courseTitle: string
   backHref: string
@@ -1011,6 +1012,7 @@ export function CoursePlayer({
           onClose={close}
           onThink={() => thinkAbout(open.id)}
           next={next}
+          films={films}
         />
       ) : null}
     </div>
@@ -1050,6 +1052,7 @@ function Sheet({
   onClose,
   onThink,
   next,
+  films = false,
 }: {
   point: PointView
   lessonId: number
@@ -1066,6 +1069,7 @@ function Sheet({
   onClose: (saved?: Saved) => void
   onThink: () => void
   next: string
+  films?: boolean
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
   const [error, setError] = useState('')
