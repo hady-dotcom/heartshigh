@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { WeekScreen } from '@/screens/app/week'
 import { Avatar } from '@/components/app/feed'
@@ -34,7 +35,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   ]
   if (user.role !== 'learner') links.unshift(['desk', 'Portal desk', 'Courses, codes and learners', 'admin'])
   return (
-    <AppFrame testId="me">
+    <AppFrame testId="me" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head"><h1>Me</h1></div>
         <Flash error={query.error} notice={query.notice} />
@@ -132,7 +133,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
   ])
   const here = `${base}/me/circle`
   return (
-    <AppFrame testId="circle">
+    <AppFrame testId="circle" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Circle</h1></div>
@@ -197,7 +198,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
   const unread = await unreadCount(payload, user)
   const here = `${base}/me/settings`
   return (
-    <AppFrame testId="settings">
+    <AppFrame testId="settings" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Settings</h1></div>
@@ -237,10 +238,10 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
   )
 }
 
-export async function SavedScreen({ payload, user, base }: Ctx) {
+export async function SavedScreen({ payload, user, portal, base }: Ctx) {
   const unread = await unreadCount(payload, user)
   return (
-    <AppFrame testId="saved">
+    <AppFrame testId="saved" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Saved</h1></div>

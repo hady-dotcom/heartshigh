@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { MonthLook } from '@/components/app/month-look'
 import { AppFrame, Back, Flash } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { LeafIcon, PlayIcon } from '@/components/icons'
 import { LIFE_EVENTS } from '@/lib/compass-bank'
@@ -11,7 +12,7 @@ import { type Ctx } from '../common'
 export async function LearnerPathScreen({ payload, user, portal, base, query }: Ctx) {
   const summary = await learnerPath(payload, user.id, String(portal.slug || ''))
   return (
-    <AppFrame testId="learner-path">
+    <AppFrame testId="learner-path" brand={learnerBrand(portal)}>
       <div className="app-scroll compass-learner">
         <div className="app-head"><Back href={`${base}/me`} label="Me" /><h1>Focusing on</h1></div>
         <Flash error={query.error} notice={query.notice} />
@@ -52,7 +53,7 @@ export async function LearnerPathScreen({ payload, user, portal, base, query }: 
 export async function RecalibrateScreen({ payload, user, portal, base, query }: Ctx) {
   const [{ copy, formId, scenes }, due] = await Promise.all([monthMoments(payload, user.id), recalibrationDueFor(payload, user.id)])
   return (
-    <AppFrame testId="recalibrate">
+    <AppFrame testId="recalibrate" brand={learnerBrand(portal)}>
       <div className="app-scroll compass-learner">
         <div className="app-head"><Back href={base} label="Home" /><h1>A fresh look</h1></div>
         <Flash error={query.error} notice={query.notice} />

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import type { Payload } from 'payload'
 import { AppFrame, Back, Flash, Hidden } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { EmptyState } from '@/components/app/empty'
 import { GardenPath } from '@/components/app/garden-path'
@@ -273,7 +274,7 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
   const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g), gardenBranches(base)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
   return (
-    <AppFrame testId="garden">
+    <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll garden-home">
         <GardenScene areas={areas} branches={branches} theme={query.theme === 'dawn' || query.theme === 'evening' ? (query.theme satisfies GardenTheme) : undefined} />
         <div className="garden-rest">
@@ -314,9 +315,9 @@ export async function GardenScreen({ payload, user, portal, base, query }: Ctx) 
   )
 }
 
-export function Frame({ base, title, testId, children, unread, dark, evening, portal }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean; evening?: boolean; portal?: import('@/lib/features').FeatureSource }) {
+export function Frame({ base, title, testId, children, unread, dark, evening, portal }: { base: string; title: string; testId: string; children: React.ReactNode; unread: number; dark?: boolean; evening?: boolean; portal?: import('@/lib/features').FeatureSource & { brandName?: string | null; colour?: string | null; accent?: string | null } }) {
   return (
-    <AppFrame testId={testId} dark={dark} evening={evening}>
+    <AppFrame testId={testId} dark={dark} evening={evening} brand={learnerBrand(portal)}>
       <div className="app-scroll">
         {dark ? children : (
           <>

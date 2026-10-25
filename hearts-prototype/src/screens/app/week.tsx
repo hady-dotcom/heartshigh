@@ -3,6 +3,7 @@ import { PlanForm } from '@/components/app/plan-form'
 import { PlanCalendar } from '@/components/app/plan-calendar'
 import { WeekStrip } from '@/components/app/week-strip'
 import { AppFrame, Back, Flash, TabBar } from '@/components/app/shell'
+import { learnerBrand } from '@/lib/learner-brand'
 import { formatLearnerDate, parseWeekdays } from '@/lib/week'
 import { libraryStartNote } from '@/lib/first-course'
 import { minutesADay } from '@/lib/study-plan'
@@ -31,7 +32,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
       ? { href: `${base}/me`, label: 'Me' }
       : { href: `${base}/lanes`, label: 'Lanes' }
   return (
-    <AppFrame testId="plan">
+    <AppFrame testId="plan" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={back.href} label={back.label} />
         <div className="app-head"><h1>My week</h1></div>

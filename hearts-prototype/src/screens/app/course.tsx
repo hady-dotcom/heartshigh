@@ -10,7 +10,8 @@ import { PlayIcon } from '@/components/icons'
 import { clockEnabled, now } from '@/lib/clock'
 import { doorLabel, type Door } from '@/lib/doors'
 import { answersForFilm, phaseLabel } from '@/lib/parent-feedback'
-import { brandColours, isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { learnerBrand } from '@/lib/learner-brand'
+import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { kineticClipFor } from '@/server/sequence-desk'
@@ -71,7 +72,7 @@ export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx,
   const intro = clips.find((clip) => clip.youtubeId && !clip.style) || clips[0]
   const lanes = [...new Set(clips.map((clip) => clip.laneLabel))]
   return (
-    <AppFrame testId="speaker">
+    <AppFrame testId="speaker" brand={learnerBrand(portal)}>
       <div className="app-scroll" style={{ paddingTop: 0 }}>
         <div className="bio-cover" style={cover ? { backgroundImage: `url(${cover})` } : undefined}>
           <span className="handle" />
@@ -144,7 +145,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
   const title = tidyTalkTitle(str(course.title))
   return (
-    <AppFrame testId="course-overview">
+    <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <Back href={`${base}/lanes`} label="Lanes" />
         <Flash error={query.error} notice={query.notice} />
@@ -422,7 +423,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   }))
 
   return (
-    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={sequence ? brandColours(portal) : undefined}>
+    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)}>
       <div className="app-scroll">
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />
