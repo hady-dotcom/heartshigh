@@ -728,3 +728,14 @@ html[data-theme] .app-stage.shell-modern [data-testid="home-gather"] .continue-r
 html[data-theme] .app-stage.shell-modern [data-testid="home-gather-all"] {
   color: var(--hh-accent);
 }
+
+html[data-theme] .app-stage.shell-modern :is(.empty-state, .feed-empty) {
+  background-color: var(--hh-surface);
+  background-image: none;
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern :is(.empty-state, .feed-empty) p {
+  color: var(--hh-ink);
+}
