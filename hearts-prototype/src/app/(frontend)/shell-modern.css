@@ -360,6 +360,27 @@ html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] 
   background: #ffffff;
 }
 
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film,
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .fr-words {
+  background: #ffffff;
+  color: #111827;
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline {
+  background: #e5e7eb;
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline > i {
+  background: var(--portal-accent, #2563eb);
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .chip.white {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+html[data-theme] .app-stage.shell-modern .player-card,
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card.course-film-band {
+  background: #111827;
+}
+
 html[data-theme] .app-stage.shell-modern .rings .r {
   border-color: var(--portal-accent, #2563eb) !important;
   color: #111827;
