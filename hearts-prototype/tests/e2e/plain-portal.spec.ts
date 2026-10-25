@@ -5,6 +5,8 @@ const suffix = Date.now().toString().slice(-7)
 const slug = `plain-room-${suffix}`
 const portalName = `Plain Room ${suffix}`
 const brand = 'Plain Room'
+const adminCode = `P${suffix}A`
+const teacherCode = `P${suffix}T`
 const learnerCode = `P${suffix}L`
 const password = 'plain-room'
 const learnerEmail = `plain-learner-${suffix}@hearts.test`
@@ -59,8 +61,21 @@ test('a brand-new portal shows no HEARTS strings or images on learner pages', as
   await expect(page.getByTestId('notice')).toContainText('is open')
 
   await page.getByTestId('code-portal').selectOption(slug)
+  await page.getByTestId('code-value').fill(adminCode)
+  await page.getByTestId('code-role').selectOption('admin')
+  await page.getByTestId('create-code').click()
+  await expect(page.getByTestId('notice')).toContainText(adminCode)
+
+  await page.getByTestId('code-portal').selectOption(slug)
+  await page.getByTestId('code-value').fill(teacherCode)
+  await page.getByTestId('code-role').selectOption('teacher')
+  await page.getByTestId('create-code').click()
+  await expect(page.getByTestId('notice')).toContainText(teacherCode)
+
+  await page.getByTestId('code-portal').selectOption(slug)
   await page.getByTestId('code-value').fill(learnerCode)
   await page.getByTestId('code-role').selectOption('learner')
+  await page.getByTestId('code-teacher').selectOption({ label: teacherCode })
   await page.getByTestId('create-code').click()
   await expect(page.getByTestId('notice')).toContainText(learnerCode)
 
@@ -74,7 +89,7 @@ test('a brand-new portal shows no HEARTS strings or images on learner pages', as
   await expect(page.getByTestId('opener-caption')).not.toContainText(/shine|dust|Alhamdulillah/i)
   await assertClean(page, 'opening')
   await page.getByTestId('just-show').click()
-  await expect(page.getByTestId('feed-screen')).toBeVisible({ timeout: 30_000 })
+  await expect(page.locator('[data-phase="feed"]')).toBeVisible({ timeout: 30_000 })
   await assertClean(page, 'feed')
 
   const pages: [string, string][] = [

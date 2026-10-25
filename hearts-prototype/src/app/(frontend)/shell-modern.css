@@ -114,6 +114,8 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] {
   --glass-solid: var(--hh-paper);
   --scrim: var(--hh-paper);
   --scrim-deep: var(--hh-paper);
+  --scene: none;
+  --lattice: none;
   --focus: var(--portal-accent, var(--hh-accent));
   --serif: var(--heading-font);
   --sans: var(--body-font);
