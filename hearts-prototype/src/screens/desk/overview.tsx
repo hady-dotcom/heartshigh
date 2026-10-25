@@ -257,6 +257,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
               <label className="row"><span>Upload my own</span><input type="file" name="sceneFile" accept="image/jpeg,image/png,image/webp" data-testid="scene-upload" /></label>
             </fieldset>
             <label className="row top"><span>Welcome line</span><textarea name="welcome" defaultValue={str(portal.welcome)} /></label>
+            <label className="row top"><span>Support line</span><textarea name="supportNote" defaultValue={str(portal.supportNote)} data-testid="support-note" placeholder="Leave blank to hide" /></label>
             {field('Logo', 'logoUrl', { placeholder: '/icons/hady-home.svg or https://', 'data-testid': 'logo-url' })}
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
             {field('Notification emails', 'notificationEmails')}

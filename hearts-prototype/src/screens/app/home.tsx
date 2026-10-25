@@ -32,6 +32,7 @@ import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
 import { shellOf } from '@/lib/portal-look'
+import { nextCourseFilms } from './course-home'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -112,6 +113,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   const days = dayNumber(user)
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const clips = items.slice(0, 3)
+  const nextFilms = clips.length ? [] : await nextCourseFilms(payload, user, base, 4)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
   let demoContinue = ''
   if (demo) {
@@ -189,6 +191,17 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         <InstallCard strip appName={appNameOf(portal)} />
         {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
         <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
+        {!clips.length && nextFilms.length ? (
+          <div data-testid="feed-films">
+            {nextFilms.map((film) => (
+              <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
+                {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
+                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+              </Link>
+            ))}
+          </div>
+        ) : null}
+        {clips.length ? (
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
             {clips.map((clip) => {
@@ -200,6 +213,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           </span>
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>
+        ) : null}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
@@ -226,6 +240,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   ])
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const lanes = ownLibrary ? [] : lanesWithClips(opening.route, opening.clips, opening.laneTitles)
+  const nextFilms = lanes.length ? [] : await nextCourseFilms(payload, user, base, 4)
   const today = dayNumber(user)
   return (
     <AppFrame testId="lanes" brand={learnerBrand(portal)}>
@@ -275,7 +290,16 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             </article>
           )
         })}
-        {!lanes.length ? <p className="card" data-testid="lanes-empty"><span>No clips have been approved yet. The courses below are ready to watch.</span></p> : null}
+        {!lanes.length ? (
+          <div data-testid="lanes-empty">
+            {nextFilms.length ? nextFilms.map((film) => (
+              <Link key={film.href} className="continue-row" href={film.href} data-testid="lane-film">
+                {film.poster ? <span className="thumb" style={{ backgroundImage: `url(${film.poster})` }} /> : null}
+                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+              </Link>
+            )) : <p className="card"><span>No clips have been approved yet. The courses below are ready to watch.</span></p>}
+          </div>
+        ) : null}
         <p className="eyebrow">Your courses</p>
         {courses.map((course, index) => {
           const href = `${base}/course/${course.id}`

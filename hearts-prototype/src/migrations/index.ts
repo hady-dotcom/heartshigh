@@ -46,6 +46,7 @@ import * as migration_20261025_190000_course_answers from './20261025_190000_cou
 import * as migration_20261025_230000_shell_font from './20261025_230000_shell_font';
 import * as migration_20261025_234000_plain_defaults from './20261025_234000_plain_defaults';
 import * as migration_20261025_235500_scene_key from './20261025_235500_scene_key';
+import * as migration_20261025_236500_support_note from './20261025_236500_support_note';
 
 export const migrations = [
   {
@@ -287,5 +288,10 @@ export const migrations = [
     up: migration_20261025_235500_scene_key.up,
     down: migration_20261025_235500_scene_key.down,
     name: '20261025_235500_scene_key',
+  },
+  {
+    up: migration_20261025_236500_support_note.up,
+    down: migration_20261025_236500_support_note.down,
+    name: '20261025_236500_support_note',
   },
 ];

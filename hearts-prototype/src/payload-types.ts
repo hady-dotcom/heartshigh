@@ -376,6 +376,8 @@ export interface Portal {
   sceneKey?: ('plain' | 'courtyard' | 'office' | 'staff-room' | 'kitchen' | 'living-room' | 'upload') | null;
   /** Picture uploaded by the portal admin, when the background is Upload. */
   sceneUrl?: string | null;
+  /** A line on the welcome page. Blank hides it. HEARTS keeps the donations sentence until an admin clears it. */
+  supportNote?: string | null;
   /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
    */
@@ -3540,6 +3542,7 @@ export interface PortalsSelect<T extends boolean = true> {
   courseHome?: T;
   sceneKey?: T;
   sceneUrl?: T;
+  supportNote?: T;
   demoRooms?: T;
   features?: T;
   aiConnection?: T;
