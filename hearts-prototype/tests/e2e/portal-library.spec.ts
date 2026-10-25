@@ -105,7 +105,12 @@ test('a new portal keeps its own films and questions, and HEARTS stays separate'
   await page.getByTestId('portal-sheet-title').fill(courseTitle)
   await page.getByTestId('portal-sheet').setInputFiles(sheetPath)
   await page.getByTestId('portal-sheet-save').click()
-  await expect(page.getByTestId('notice')).toContainText('Updated the course')
+  await expect(page.getByTestId('notice')).toContainText(`Made a new course: ${courseTitle}, 1 films.`)
+
+  await page.getByTestId('portal-sheet-title').fill(courseTitle)
+  await page.getByTestId('portal-sheet').setInputFiles(sheetPath)
+  await page.getByTestId('portal-sheet-save').click()
+  await expect(page.getByTestId('notice')).toContainText(`Updated ${courseTitle}. 1 films.`)
   await shot(page, 'portal-sheet-brought-in')
 
   await page.getByTestId('questions-tab').click()

@@ -438,6 +438,7 @@ export const SEQUENCE_COPY = {
   captions: 'Captions were not available from here.',
   examples: 'Watch the films in order.',
   sheetUpdated: 'Updated the course.',
+  sheetMade: 'Made a new course:',
   continue: 'Continue',
   signIn: 'Sign in',
   join: 'Join with a code',

@@ -201,20 +201,26 @@ function rowKey(row: Doc) {
   return title ? `title:${title}` : ''
 }
 
+function sameCourseTitle(left: string, right: string) {
+  return left.trim().toLowerCase() === right.trim().toLowerCase()
+}
+
 async function courseNamed(payload: Payload, portal: Doc, title: string) {
+  const name = title.trim().slice(0, 200)
   const found = await payload.find({
     collection: 'courses',
     overrideAccess: true,
     depth: 0,
-    limit: 1,
-    where: { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { title: { equals: title } }] },
+    limit: 200,
+    where: { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] },
   })
-  if (found.docs[0]) return asDoc(found.docs[0])
+  const match = found.docs.map((row) => asDoc(row)).find((row) => sameCourseTitle(String(row.title || ''), name))
+  if (match) return { course: match, created: false }
   const course = (await payload.create({
     collection: 'courses',
     overrideAccess: true,
     data: {
-      title: title.slice(0, 200),
+      title: name,
       summary: 'Watch the films in order.',
       origin: 'local',
       portal: portal.id,
@@ -223,7 +229,26 @@ async function courseNamed(payload: Payload, portal: Doc, title: string) {
       hidden: false,
     },
   })) as unknown as Doc
-  return course
+  await offerCourse(payload, portal.id, course.id)
+  return { course, created: true }
+}
+
+/** A new course is on this portal's codes and on the accounts that already joined. */
+async function offerCourse(payload: Payload, portalId: number, courseId: number) {
+  const codes = await payload.find({
+    collection: 'access-codes',
+    overrideAccess: true,
+    depth: 0,
+    limit: 200,
+    where: { portal: { equals: portalId } },
+  })
+  for (const code of codes.docs) {
+    const current = ((code.courses as unknown[]) || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    if (current.includes(courseId)) continue
+    await payload.update({ collection: 'access-codes', id: code.id, overrideAccess: true, data: { courses: [...current, courseId] } })
+  }
+  const { giveCourseToJoinedLearners } = await import('./course-offer')
+  await giveCourseToJoinedLearners(payload, portalId, courseId)
 }
 
 /**
@@ -243,7 +268,8 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
   const parsed = parseCourseSheet(raw)
   if (parsed.error) return { error: parsed.error }
   if (!parsed.films.length) return { error: 'That sheet has no films.' }
-  const course = opts?.title ? await courseNamed(payload, portal, opts.title) : await ensureCourse(payload, portal)
+  const named = opts?.title ? await courseNamed(payload, portal, opts.title) : { course: await ensureCourse(payload, portal), created: false }
+  const course = named.course
   const unitRows = await payload.find({
     collection: 'units',
     overrideAccess: true,
@@ -367,7 +393,11 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     if (!left.docs.length) await payload.delete({ collection: 'units', id: row.id, overrideAccess: true })
   }
   const extra = parsed.skipped.length ? ` ${parsed.skipped.slice(0, 2).join(' ')}` : ''
-  return { notice: `${SEQUENCE_COPY.sheetUpdated} ${parsed.films.length} films.${extra}` }
+  const title = String(course.title || opts?.title || 'the course')
+  const notice = named.created
+    ? `${SEQUENCE_COPY.sheetMade} ${title}, ${parsed.films.length} films.${extra}`
+    : `Updated ${title}. ${parsed.films.length} films.${extra}`
+  return { notice }
 }
 
 export async function saveSequenceImport(payload: Payload, portalId: number, raw: string, lookup: VideoLookup = lookupVideo) {
