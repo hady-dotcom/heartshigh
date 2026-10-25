@@ -78,6 +78,10 @@ export type PortalDoc = {
   shell?: 'modern' | 'hearts' | null
   fontPair?: 'jakarta' | 'bricolage' | 'outfit' | 'inter' | null
   courseHome?: 'cards' | 'garden' | null
+  sceneKey?: 'plain' | 'courtyard' | 'office' | 'staff-room' | 'kitchen' | 'living-room' | 'upload' | null
+  sceneUrl?: string | null
+  /** Blank hides the welcome line. Missing keeps the HEARTS sentence on a HEARTS shell. */
+  supportNote?: string | null
   /** Encrypted portal AI account. Absent means the desk uses the built-in path. */
   aiConnection?: unknown
 }
