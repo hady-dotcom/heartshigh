@@ -785,7 +785,7 @@ export function CoursePlayer({
           {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
-              <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { api: '1', playsinline: '1', autopause: '0' })} allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-testid="vimeo-player" />
+              <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { playsinline: '1', autopause: '0' })} allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-testid="vimeo-player" />
             </div>
           ) : null}
           {fileSrc ? (
@@ -930,7 +930,7 @@ export function CoursePlayer({
           {upNext.label}{upNext.minutes ? ` (${upNext.minutes} min)` : ''}
         </Link>
       ) : (
-        <p className="up-next-row last" data-testid="up-next">{upNext?.label || 'This is the last part of this course.'}</p>
+        <p className="up-next-row last" data-testid="up-next">{upNext?.label || (films ? 'This is the last film in this course.' : 'This is the last part of this course.')}</p>
       )}
       {endCard ? (
         <section className="up-next-card" data-testid="up-next-card">
@@ -954,7 +954,7 @@ export function CoursePlayer({
       ) : null}
       <div className="answer-row" data-testid="answer-row">
         <button type="button" className="answer-btn" disabled={!nextPoint} onClick={() => nextPoint && show(nextPoint.id, true)} data-testid="answer-point">
-          {nextPoint ? `Answer question ${nextPoint.number} →` : waitingOnFilm ? comingAnswerLabel() : views.length ? 'All questions answered' : 'No questions on this part yet'}
+          {nextPoint ? `Answer question ${nextPoint.number} →` : waitingOnFilm ? comingAnswerLabel() : views.length ? 'All questions answered' : films ? 'No questions on this film yet' : 'No questions on this part yet'}
         </button>
         {waitingOnFilm && !nextPoint ? <TopicHelp topic="hide-until-moment" label="When do questions appear?" /> : null}
       </div>
@@ -990,7 +990,7 @@ export function CoursePlayer({
         {length ? <input type="hidden" name="media" value={Math.floor(length)} /> : null}
         {ended ? <input type="hidden" name="ended" value="yes" /> : null}
         <input type="hidden" name="next" value={next} />
-        <button className="link-btn" type="submit" data-testid="mark-watched">I have watched this part</button>
+        <button className="link-btn" type="submit" data-testid="mark-watched">{films ? 'I have watched this film' : 'I have watched this part'}</button>
       </form>
       )}
       </div>

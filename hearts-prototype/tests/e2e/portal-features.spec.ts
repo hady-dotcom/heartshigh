@@ -160,7 +160,7 @@ test('the master creator can switch Gather off, and a learner sees no Gather unt
   await expect(phone.getByTestId('home')).toBeVisible()
   await expect(phone.getByTestId('tabbar')).toBeVisible()
   await expect(phone.getByTestId('tab-home')).toBeVisible()
-  await expect(phone.getByTestId('tab-lanes')).toBeVisible()
+  await expect(phone.getByTestId('tab-lanes')).toHaveCount(0)
   await expect(phone.getByTestId('tab-week')).toBeVisible()
   await expect(phone.getByTestId('tab-garden')).toBeVisible()
   await expect(phone.getByTestId('tab-me')).toBeVisible()

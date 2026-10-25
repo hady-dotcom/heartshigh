@@ -150,9 +150,20 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
             <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager />
-            <p className="eyebrow">Carry on</p>
-            <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
-            <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
+            {modern ? (
+              <div className="carry-copy">
+                <p className="eyebrow">Carry on</p>
+                <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
+                <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
+                <span className="progress-ring" style={ringStyle(carryPct)} aria-hidden="true"><span>{carryPct}%</span></span>
+              </div>
+            ) : (
+              <>
+                <p className="eyebrow">Carry on</p>
+                <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
+                <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
+              </>
+            )}
             <div className="bar" data-testid="carry-bar"><i style={{ width: `${carryPct}%` }} /></div>
             <Link className="pill gold block play-btn" href={`${base}/course/${carry.course.id}?part=${carry.next.id}`} data-testid="carry-continue">
               {modern ? <><PlayIcon size={22} /> Play</> : 'Continue'}

@@ -375,6 +375,45 @@ const PLAIN_BODIES: Record<string, string[]> = {
     'The bar at the bottom moves you around.',
     'Nothing here is a test.',
   ],
+  start: [
+    'A few short questions, then the films. There is no right answer.',
+    'Let’s play starts with the first question. You can skip any question you would rather not sit with.',
+    'Only you see these answers, unless you later share them with a teacher.',
+  ],
+  home: [
+    'Home is the place you come back to.',
+    'Continue picks up the film you were in.',
+    'The rings are plain counts of time you have spent, not a score.',
+  ],
+  me: [
+    'This is your name, your week, your saved films and your settings.',
+    'Keep this app on this phone opens the install card again. Settings holds sound, privacy and the account.',
+  ],
+  course: [
+    'The film sits at the top.',
+    'Tap the picture to pause or play.',
+    'The clock, the speed and the question dots sit under the film.',
+  ],
+  'course-overview': [
+    'This is the whole course: every film, the count and the time. Schedule all of these puts them on My week.',
+    'Questions only appear once you open a film and reach their moment. Nothing here previews them.',
+  ],
+  placing: [
+    'A few short questions help us pick a gentle first film. There is no right answer.',
+    'Skip this and play the scenes instead if you would rather.',
+  ],
+  'placing-result': [
+    'This is a good first film, chosen from what you just said.',
+  ],
+  plan: [
+    'Pick a course and the days that suit you.',
+    'Daily spreads the films out, and chosen weekdays land on the first sittings.',
+    'Days with a sitting get a mark. It is a guide, and you can still watch at your own pace.',
+  ],
+  speaker: [
+    'This is one teacher, and the films they gave.',
+    'Start a course from the list, or watch a short clip first.',
+  ],
   welcome: [
     'Someone in your group opened this app for you. It is short films, a few minutes a day.',
     'Begin when you are ready. You can sign in later if you already have an account.',

@@ -300,6 +300,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case undefined:
       return HomeScreen(ctx)
     case 'lanes':
+      if (shellOf(ctx.portal) === 'modern') redirect(`${base}/courses`)
       if (a) return LaneScreen(ctx, a)
       return LanesScreen(ctx)
     case 'live': {

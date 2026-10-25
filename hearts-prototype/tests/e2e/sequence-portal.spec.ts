@@ -37,11 +37,11 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await signIn(page, 'parenting-learner@hearts.test', 'portal-learner', '/p/parenting')
   await expect(page.getByTestId('home')).toBeVisible()
   await expect(page.getByTestId('tab-home')).toBeVisible()
-  await expect(page.getByTestId('tab-lanes')).toBeVisible()
+  await expect(page.getByTestId('tab-lanes')).toHaveCount(0)
   await expect(page.getByTestId('tab-week')).toBeVisible()
   await expect(page.getByTestId('tab-garden')).toBeVisible()
   await expect(page.getByTestId('tab-me')).toBeVisible()
-  await expect(page.getByText('Guiding Home Learning')).toBeVisible()
+  await expect(page.getByText('Guiding Home Learning').first()).toBeVisible()
   await shot(page, 'sequence-home')
 
   await page.getByTestId('tab-garden').click()
@@ -60,14 +60,26 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   })
   expect(coursesLook.shell).toBe('modern')
   expect(coursesLook.font).toBe('system')
-  expect(coursesLook.bg).toBe('rgb(255, 255, 255)')
+  expect(coursesLook.bg).toBe('rgb(242, 242, 247)')
   expect(coursesLook.heading.toLowerCase()).toMatch(/inter|sf pro|system/)
+  await expect(page.getByTestId('carry-on').locator('.progress-ring')).toBeVisible()
   await shot(page, 'hady-courses-phone')
 
   await page.getByTestId('course-card').filter({ hasText: 'Guiding Home Learning' }).click()
   await expect(page.getByTestId('course-overview')).toBeVisible()
   const overview = page.url()
-  await expect(page.getByTestId('start-part')).toContainText('Start part 1')
+  await expect(page.getByTestId('start-part')).toContainText('Start film 1')
+  await expect(page.getByTestId('buffet-talk').first()).toContainText('Film 1')
+  await page.evaluate(() => window.scrollTo(0, 900))
+  await expect.poll(async () => page.locator('.app-stage').evaluate((el) => {
+    const bar = el.querySelector('.glass-bar') as HTMLElement | null
+    return {
+      collapsed: el.classList.contains('title-collapsed'),
+      top: bar ? Math.round(bar.getBoundingClientRect().top) : -1,
+      title: (bar?.querySelector('.bar-title')?.textContent || '').trim(),
+    }
+  })).toMatchObject({ collapsed: true, top: 0 })
+  await page.evaluate(() => window.scrollTo(0, 0))
   await shot(page, 'hady-course-phone')
   await page.locator('[data-testid="buffet-talk"][data-coming="yes"]').first().click()
   await expect(page.getByTestId('video-coming')).toContainText('This film is coming soon')
@@ -78,6 +90,16 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('course')).toBeVisible()
   await expect(page.getByTestId('vimeo-player')).toBeVisible()
   await expect(page.getByTestId('vimeo-player')).toHaveAttribute('src', /player\.vimeo\.com\/video\/1239173361\?.*playsinline=1/)
+  await expect(page.getByTestId('vimeo-player')).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
+  const transport = await page.locator('[data-testid="player"] .j-board.course-board').evaluate((el) => {
+    const cs = getComputedStyle(el)
+    const time = el.querySelector('.time-read')
+    const timeCs = time ? getComputedStyle(time) : null
+    return { board: cs.backgroundColor, time: timeCs?.color || '', label: (time?.textContent || '').trim() }
+  })
+  expect(transport.board).toBe('rgb(243, 244, 246)')
+  expect(transport.time).not.toBe('rgb(255, 255, 255)')
+  expect(transport.label.length).toBeGreaterThan(0)
   await expect(page.getByTestId('part-label')).toHaveText(/^1\. /)
   await expect(page.getByTestId('part-link').first()).toContainText(/^1\. /)
   await expect(page.getByTestId('sequence-question')).toContainText('home learning so far')
@@ -88,7 +110,7 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('up-next')).toBeVisible()
   await expect(page.getByTestId('course-garden')).toBeVisible()
   await expect(page.getByTestId('tab-home')).toBeVisible()
-  await expect(page.getByTestId('tab-lanes')).toBeVisible()
+  await expect(page.getByTestId('tab-lanes')).toHaveCount(0)
   await expect(page.getByTestId('tab-week')).toBeVisible()
   await expect(page.getByTestId('tab-garden')).toBeVisible()
   await expect(page.getByTestId('tab-me')).toBeVisible()

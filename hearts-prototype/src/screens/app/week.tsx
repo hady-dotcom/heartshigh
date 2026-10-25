@@ -2,8 +2,10 @@ import Link from 'next/link'
 import { PlanForm } from '@/components/app/plan-form'
 import { PlanCalendar } from '@/components/app/plan-calendar'
 import { WeekStrip } from '@/components/app/week-strip'
-import { AppFrame, Back, Flash, TabBar } from '@/components/app/shell'
+import { AppFrame, Back, Flash } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { formatLearnerDate, parseWeekdays } from '@/lib/week'
 import { libraryStartNote } from '@/lib/first-course'
 import { minutesADay } from '@/lib/study-plan'
@@ -30,7 +32,9 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
     ? { href: `${base}/course/${selected}`, label: 'Course' }
     : from === 'me'
       ? { href: `${base}/me`, label: 'Me' }
-      : { href: `${base}/lanes`, label: 'Lanes' }
+      : shellOf(portal) === 'modern'
+        ? { href: `${base}/courses`, label: 'Courses' }
+        : { href: `${base}/lanes`, label: 'Lanes' }
   return (
     <AppFrame testId="plan" brand={learnerBrand(portal)}>
       <div className="app-scroll">
@@ -49,7 +53,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
             <section key={plan.id} data-testid="schedule-plan" style={{ marginTop: 18 }}>
               <h2 style={{ fontSize: 19, margin: '0 0 4px' }}>{plan.name}</h2>
               <p className="muted" style={{ margin: 0, fontSize: 13 }} data-testid="plan-counts">
-                {plan.slots.length} talk{plan.slots.length === 1 ? '' : 's'}
+                {plan.slots.length} {shellOf(portal) === 'modern' ? 'film' : 'talk'}{plan.slots.length === 1 ? '' : 's'}
                 {plan.dayCounts.length > 1 ? ` · ${plan.dayCounts.join(', ')}` : ''}
                 {' · '}
                 {formatLearnerDate(plan.start, 'week')} to {formatLearnerDate(plan.end, 'week')}
@@ -62,7 +66,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
                     map.set(slot.date, own)
                     return map
                   }, new Map<string, typeof plan.slots>()).entries()].map(([date, own]) => (
-                    <li key={date} data-testid="plan-day">{formatLearnerDate(date, 'week')} · {own.length} talk{own.length === 1 ? '' : 's'}</li>
+                    <li key={date} data-testid="plan-day">{formatLearnerDate(date, 'week')} · {own.length} {shellOf(portal) === 'modern' ? 'film' : 'talk'}{own.length === 1 ? '' : 's'}</li>
                   ))}
                 </ol>
               ) : null}
@@ -111,7 +115,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
           open={showForm}
         />
       </div>
-      <TabBar base={base} active="week" unread={unread} />
+      <LearnerTabBar base={base} active="week" portal={portal} unread={unread} />
     </AppFrame>
   )
 }

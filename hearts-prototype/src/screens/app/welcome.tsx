@@ -69,7 +69,7 @@ export async function WelcomeScreen(ctx: Ctx) {
           <Journey at={1} />
           <div className="app-head"><h1>Where to begin</h1></div>
           <Flash error={query.error} notice={query.notice} />
-          <p className="lead">A few short questions so your first talk is a gentle place to start. There are no wrong answers. Skip this and play the scenes instead if you would rather.</p>
+          <p className="lead">{plain ? 'A few short questions so your first film is a gentle place to start. There are no wrong answers. Skip this and play the scenes instead if you would rather.' : 'A few short questions so your first talk is a gentle place to start. There are no wrong answers. Skip this and play the scenes instead if you would rather.'}</p>
           <p><Link href={`${base}/start`}>Play the scenes instead</Link></p>
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'placing', next: user.role === 'learner' ? `${base}/start?after=placing` : `${base}/welcome?step=done` }} />
@@ -84,7 +84,7 @@ export async function WelcomeScreen(ctx: Ctx) {
                 ))}
               </fieldset>
             ))}
-            <button className="pill gold block" data-testid="placing-submit" type="submit">Find my first talk</button>
+            <button className="pill gold block" data-testid="placing-submit" type="submit">{plain ? 'Find my first film' : 'Find my first talk'}</button>
           </form>
         </div>
       </AppFrame>
@@ -112,7 +112,7 @@ export async function WelcomeScreen(ctx: Ctx) {
           <section className="card" data-testid="first-course">
             <p className="eyebrow" style={{ margin: '0 0 6px' }}>Your first course</p>
             <h3>{first.title}</h3>
-            <p>{first.summary || `${first.parts} parts with ${first.speaker}.`}</p>
+            <p>{first.summary || `${first.parts} ${plain ? 'films' : 'parts'} with ${first.speaker}.`}</p>
             <Link className="pill gold block" href={`${base}/course/${first.id}`} style={{ marginTop: 12 }} data-testid="start-first">Start this course</Link>
           </section>
         ) : null}

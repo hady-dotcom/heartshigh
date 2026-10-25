@@ -652,7 +652,7 @@ export async function exportSequenceApp(payload: Payload, portal: {
       speaker: String(row.speaker || ''),
       provider,
       id: provider === 'vimeo' ? String(row.vimeoId || '') : String(row.youtubeId || ''),
-      hash: String(row.vimeoHash || ''),
+      hash: /^[0-9a-f]{6,20}$/i.test(String(row.vimeoHash || '')) ? String(row.vimeoHash) : '',
       durationSeconds: Number(row.durationSeconds || 0),
       hook: String(cut?.hook || ''),
       turn: String(cut?.turn || ''),

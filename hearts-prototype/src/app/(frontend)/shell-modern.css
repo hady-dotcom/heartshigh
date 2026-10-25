@@ -142,6 +142,8 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] .app {
   background-image: none;
   color: var(--hh-ink);
   font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  overflow-x: clip;
+  overflow-y: visible;
 }
 
 html[data-theme] .app-stage.shell-modern.has-scene,
@@ -501,6 +503,7 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] .pill.gold {
   background: var(--portal-accent, var(--hh-accent));
   color: var(--hh-on-accent);
   border-color: transparent;
+  box-shadow: none;
 }
 
 html[data-theme] .app-stage.shell-modern .pill.outline {
@@ -915,22 +918,48 @@ html[data-theme] .app-stage.shell-modern .journey > .page-help .page-help-btn {
 }
 
 html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board {
-  background: var(--portal-accent, var(--hh-accent));
-  color: var(--hh-on-accent);
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-radius: var(--hh-radius-card);
 }
 
-html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board :is(.j-board-title, .time-read, .j-board-handle) {
-  color: var(--hh-on-accent);
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board :is(.j-board-title, .j-board-handle) {
+  color: var(--hh-muted);
 }
 
 html[data-theme] .app-stage.shell-modern [data-testid='player'] .j-board.course-board .j-board-handle {
   background: var(--hh-on-accent);
 }
 
-html[data-theme] .app-stage.shell-modern [data-testid='player'] .course-board .time-read,
-html[data-theme] .app-stage.shell-modern .lecture-speed {
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .course-board .time-read {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .timeline .track {
+  background: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .timeline .fill {
+  background: var(--portal-accent, var(--hh-accent));
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .timeline .dot i {
+  border-color: var(--hh-line);
   background: var(--hh-paper);
-  color: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .timeline .dot.done i {
+  background: var(--portal-accent, var(--hh-accent));
+  border-color: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .lecture-speed {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
 }
 
 html[data-theme] .app-stage.shell-modern .answer-btn,
@@ -1102,19 +1131,20 @@ html[data-theme] .app-stage.shell-modern .tab.on[data-testid='tab-garden'] .tab-
 
 html[data-theme] .app-stage.shell-modern .course-hero {
   position: relative;
-  min-height: var(--hh-hero);
+  min-height: 0;
   margin: 0 0 var(--hh-space-4);
   border-radius: var(--hh-radius-card);
   overflow: hidden;
-  background: var(--portal-accent, var(--hh-accent));
-  box-shadow: var(--hh-shadow-lift);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
 }
 
 html[data-theme] .app-stage.shell-modern .course-hero-still {
-  position: absolute;
-  inset: 0;
+  position: relative;
+  inset: auto;
   width: 100%;
-  height: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
   object-fit: cover;
   display: block;
 }
@@ -1125,18 +1155,22 @@ html[data-theme] .app-stage.shell-modern .course-hero-scrim {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  min-height: var(--hh-hero);
-  background: var(--hh-hero-scrim);
+  min-height: 0;
+  background: transparent;
 }
 
 html[data-theme] .app-stage.shell-modern .course-hero-copy {
-  background: var(--hh-video);
-  color: var(--hh-on-accent);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
   padding: var(--hh-space-4);
 }
 
-html[data-theme] .app-stage.shell-modern .course-hero-copy :is(h1, p, .eyebrow, .hero-line) {
-  color: var(--hh-on-accent);
+html[data-theme] .app-stage.shell-modern .course-hero-copy :is(h1, p, .hero-line) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .course-hero-copy .eyebrow {
+  color: var(--portal-accent, var(--hh-accent));
 }
 
 html[data-theme] .app-stage.shell-modern .course-hero-copy h1 {
@@ -1149,7 +1183,7 @@ html[data-theme] .app-stage.shell-modern .course-hero-copy .bar {
 }
 
 html[data-theme] .app-stage.shell-modern .course-hero-copy .bar > i {
-  background: var(--hh-on-accent);
+  background: var(--portal-accent, var(--hh-accent));
 }
 
 html[data-theme] .app-stage.shell-modern .course-cards {
@@ -1369,14 +1403,16 @@ html[data-theme] .app-stage.shell-modern .search-panel {
   right: 0;
   top: calc(100% + var(--hh-space-2));
   display: grid;
+  gap: var(--hh-space-1);
   max-height: 60vh;
   overflow: auto;
   padding: var(--hh-space-2);
+  border: var(--hh-line-width) solid var(--hh-line);
   border-radius: var(--hh-radius-card);
-  background: var(--hh-glass);
-  box-shadow: inset 0 1px 0 var(--hh-glass-edge), var(--hh-shadow-lift);
-  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
-  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-lift);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
 }
 
 html[data-theme] .app-stage.shell-modern .search-hit {
@@ -1472,10 +1508,9 @@ html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene
   border-radius: var(--hh-radius-card);
 }
 
-/* The player film used to pin over the glass search, so Back and the course links sat on the field. */
 html[data-theme] .app-stage.shell-modern:has([data-testid='player']) .glass-bar {
-  position: relative;
-  top: auto;
+  position: sticky;
+  top: 0;
 }
 
 html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film {
@@ -1497,6 +1532,102 @@ html[data-theme] .app-stage.shell-modern .journey .j-top {
   background: var(--hh-glass);
   backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
   -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-theme] .app-stage.shell-modern .tabbar[data-tabs='4'] {
+  grid-template-columns: repeat(4, 1fr);
+}
+
+html[data-theme] .app-stage.shell-modern .tab.on .tab-icon,
+html[data-theme] .app-stage.shell-modern .tab.on[data-testid='tab-garden'] .tab-icon {
+  filter: none !important;
+  background: transparent;
+  box-shadow: none;
+}
+
+html[data-theme] .app-stage.shell-modern .tab.on::before {
+  content: none;
+  display: none;
+  border: 0;
+  box-shadow: none;
+  animation: none;
+}
+
+html[data-theme] .app-stage.shell-modern :is(input, textarea)::placeholder {
+  color: var(--hh-muted);
+  opacity: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .profile .avatar,
+html[data-theme] .app-stage.shell-modern a[data-testid='home-avatar'] .avatar {
+  background: var(--hh-ink);
+  color: var(--hh-on-accent);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .part-chip.off-film {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-control);
+  padding: var(--hh-space-3);
+}
+
+html[data-theme] .app-stage.shell-modern .carry-copy,
+html[data-theme] .app-stage.shell-modern .continue-row .t {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: var(--hh-space-1) var(--hh-space-3);
+  align-items: center;
+}
+
+html[data-theme] .app-stage.shell-modern .carry-copy > :not(.progress-ring),
+html[data-theme] .app-stage.shell-modern .continue-row .t > :not(.progress-ring) {
+  grid-column: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .carry-copy .progress-ring,
+html[data-theme] .app-stage.shell-modern .continue-row .progress-ring {
+  grid-column: 2;
+  grid-row: 1 / span 3;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) :is(.j-actions, .j-choices) {
+  margin-top: var(--hh-space-4);
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-body {
+  margin: var(--hh-space-4) var(--hh-space-4) 0;
+  padding: var(--hh-space-4);
+  background: var(--hh-surface);
+  border-radius: var(--hh-radius-card);
+}
+
+html[data-theme] .app-stage.shell-modern .name-edit summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-3);
+  min-height: var(--hh-tap-min);
+  list-style: none;
+}
+
+html[data-theme] .app-stage.shell-modern .name-edit summary::-webkit-details-marker {
+  display: none;
+}
+
+html[data-theme] .app-stage.shell-modern .name-edit summary::after {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--hh-ink);
+  border-bottom: 2px solid var(--hh-ink);
+  transform: rotate(-45deg);
+  flex: none;
+}
+
+html[data-theme] .app-stage.shell-modern .name-edit[open] summary::after {
+  transform: rotate(45deg);
 }
 
 @media (prefers-reduced-motion: reduce) {

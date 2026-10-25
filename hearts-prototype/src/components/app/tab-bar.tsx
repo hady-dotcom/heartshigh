@@ -6,17 +6,18 @@ import { useVariant } from '@/lib/use-variant'
 
 export type Tab = 'home' | 'lanes' | 'week' | 'garden' | 'me' | 'gather'
 
-export function TabBar({ base, active = null, portal, dark = false, evening = false, unread = 0 }: { base: string; active?: Tab | null; portal?: { features?: unknown; shape?: string | null } | null; dark?: boolean; evening?: boolean; unread?: number }) {
+export function TabBar({ base, active = null, portal, dark = false, evening = false, unread = 0, showLanes = true }: { base: string; active?: Tab | null; portal?: { features?: unknown; shape?: string | null; shell?: string | null } | null; dark?: boolean; evening?: boolean; unread?: number; showLanes?: boolean }) {
   const lanes = useVariant('lanes-tab-label', { payload: { label: 'Lanes' } })
+  const lanesOn = showLanes && portal?.shell !== 'modern'
   const tabs: [Tab, string, string][] = [
     ['home', 'Home', base],
-    ['lanes', lanes.label || 'Lanes', `${base}/lanes`],
+    ...(lanesOn ? [['lanes', lanes.label || 'Lanes', `${base}/lanes`] as [Tab, string, string]] : []),
     ['week', 'My week', `${base}/week`],
     ['garden', 'Courses', `${base}/courses`],
     ['me', 'Me', `${base}/me`],
   ]
   return (
-    <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar" data-shape={portal?.shape || 'hearts'}>
+    <nav className={`tabbar${dark ? ' dark' : ''}${evening ? ' evening' : ''}`} aria-label="Main" data-testid="tabbar" data-shape={portal?.shape || 'hearts'} data-tabs={tabs.length}>
       {tabs.map(([key, label, href]) => (
         <Link
           key={key}

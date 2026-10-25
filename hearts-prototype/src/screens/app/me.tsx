@@ -35,9 +35,9 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
     ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
-    ['saved', 'Saved', 'Clips you kept from the feed', 'me/saved'],
-    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
-    ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
+    ['saved', 'Saved', modern ? 'Films you kept' : 'Clips you kept from the feed', 'me/saved'],
+    ...(featureOn(portal, 'workbook') ? [['workbook', modern ? 'Saved answers' : 'Workbook', modern ? 'Answers you saved, and your teacher’s replies' : 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', modern ? 'Plain words, only when a film or an answer backs them' : 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
     ['settings', 'Settings', 'Live in person alerts, watch history and logging out', 'me/settings'],
@@ -114,8 +114,8 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         )) : (
           <EmptyState
             testId="notes-empty"
-            action={featureOn(portal, 'garden') ? { href: `${base}/garden`, label: 'Open the garden' } : { href: base, label: 'Back home' }}
-            example={{ title: 'Your teacher replied', body: <p>Amina wrote back on the answer you shared. Open your workbook to read it.</p> }}
+            action={featureOn(portal, 'garden') ? (modern ? { href: `${base}/courses`, label: 'Open courses' } : { href: `${base}/garden`, label: 'Open the garden' }) : { href: base, label: 'Back home' }}
+            example={{ title: 'Your teacher replied', body: <p>{modern ? 'Amina wrote back on the answer you shared. Open your saved answers to read it.' : 'Amina wrote back on the answer you shared. Open your workbook to read it.'}</p> }}
           >
             Nothing new. Replies from your teacher and Live in person evenings will show here.
           </EmptyState>
@@ -206,6 +206,7 @@ export async function CircleScreen({ payload, user, portal, base, query }: Ctx) 
 export async function SettingsScreen({ payload, user, portal, base, query }: Ctx) {
   const unread = await unreadCount(payload, user)
   const here = `${base}/me/settings`
+  const modern = shellOf(portal) === 'modern'
   return (
     <AppFrame testId="settings" brand={learnerBrand(portal)}>
       <div className="app-scroll">
@@ -222,9 +223,9 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
           <PrefToggle name="keepPlace" label="Start where I left off" hint="Open the feed on the last clip you watched, including on another phone." checked={Boolean(user.keepPlace)} next={here} />
           <PrefToggle name="shareOpening" label="Share my opening answers with my mentor" hint="Private answers stay with you either way." checked={Boolean(user.shareOpening)} next={here} />
           <PrefToggle name="trendsOptIn" label="Help my circle see what is popular" hint="Only counts across ten or more people, never your name." checked={Boolean(user.trendsOptIn)} next={here} />
-          <PrefToggle name="shareWatch" label="Share my detailed watch history with my teachers" hint={portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'} checked={Boolean(user.shareWatch)} next={here} />
+          <PrefToggle name="shareWatch" label="Share my detailed watch history with my teachers" hint={portal.watchHistoryOptIn ? 'Your portal has asked for this. It is off unless you turn it on.' : modern ? 'Off unless you turn it on. Your teachers only see which films you finished.' : 'Off unless you turn it on. Your teachers only see which parts you finished.'} checked={Boolean(user.shareWatch)} next={here} />
           <OptInLane lane="guarding-gaze" label="Private lanes: Guarding the gaze" hint="Clips on this appear only if you turn this on. It is kept on this phone and never shown to anyone." portal={portal.slug || ''} />
-          <p className="muted" style={{ fontSize: 13, margin: '8px 0 0' }}>Answers in a talk show to other learners as initials only. There is no rating. Your teacher still sees what you offer them.</p>
+          <p className="muted" style={{ fontSize: 13, margin: '8px 0 0' }}>{modern ? 'Answers in a film show to other learners as initials only. There is no rating. Your teacher still sees what you offer them.' : 'Answers in a talk show to other learners as initials only. There is no rating. Your teacher still sees what you offer them.'}</p>
         </section>
         <p className="eyebrow">Notifications</p>
         <section className="card prefs">
@@ -260,10 +261,10 @@ export async function SavedScreen({ payload, user, portal, base }: Ctx) {
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Saved</h1></div>
-        <p className="lead">Clips you kept from the feed. They stay on this phone.</p>
+        <p className="lead">{shellOf(portal) === 'modern' ? 'Films you kept. They stay on this phone.' : 'Clips you kept from the feed. They stay on this phone.'}</p>
         <SavedList base={base} example={savedExample} />
       </div>
-      <LearnerTabBar base={base} active="me" unread={unread} />
+      <LearnerTabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
   )
 }
