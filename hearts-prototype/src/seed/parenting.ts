@@ -86,6 +86,20 @@ async function ensureSaidAnswers(payload: Payload, courseId: number) {
   await payload.update({ collection: 'courses', id: courseId, overrideAccess: true, data: { sampleAnswers: rows } as never })
 }
 
+function hadyLook(existing?: { accent?: string | null; colour?: string | null; fontPair?: string | null; logoUrl?: string | null }) {
+  const accent = String(existing?.accent || '').trim().toLowerCase()
+  const colour = String(existing?.colour || '').trim().toLowerCase()
+  const font = String(existing?.fontPair || '').trim()
+  return {
+    shell: 'modern' as const,
+    courseHome: 'cards' as const,
+    ...(!font ? { fontPair: 'jakarta' as const } : {}),
+    ...(!accent || accent === '#e07a5f' ? { accent: '#2563EB' } : {}),
+    ...(!colour || colour === '#1f3a5f' ? { colour: '#2563EB' } : {}),
+    ...(String(existing?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }),
+  }
+}
+
 async function lessonCount(payload: Payload, courseId: number) {
   const found = await payload.find({
     collection: 'lessons',
@@ -124,7 +138,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
         collection: 'portals',
         id: found.docs[0].id,
         overrideAccess: true,
-        data: refresh || switchesOff ? look : { brandName: BRAND, ...(String(found.docs[0]?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }) },
+        data: refresh || switchesOff ? { ...look, ...hadyLook(found.docs[0]) } : { brandName: BRAND, ...hadyLook(found.docs[0]) },
       })
     : await payload.create({
         collection: 'portals',
@@ -134,11 +148,10 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
           organisationName: 'Parenting',
           slug: 'parenting',
           kind: 'other',
-          colour: '#1f3a5f',
-          accent: '#e07a5f',
           lockOrder: true,
           wizardDone: true,
           ...look,
+          ...hadyLook(),
         },
       })
   await ensureOpeningQuestions(payload, Number(portal.id))

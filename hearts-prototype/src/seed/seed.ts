@@ -198,6 +198,7 @@ async function main() {
       teacherLabel: 'Teacher',
       wizardDone: true,
       colour: '#1f4d3a',
+      shell: 'hearts',
     },
     {
       name: 'Leeds Chapter',
@@ -208,12 +209,18 @@ async function main() {
       organisationName: 'Leeds Chapter',
       wizardDone: true,
       colour: '#6b3a2f',
+      shell: 'hearts',
     },
   ]
   const portalIds = new Map<string, number>()
   for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
-    const doc = found.docs[0] || (await payload.create({ collection: 'portals', overrideAccess: true, data: portal }))
+    const current = found.docs[0]
+    const doc = !current
+      ? await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
+      : String((current as { shell?: string | null }).shell || '') === 'hearts'
+        ? current
+        : await payload.update({ collection: 'portals', id: current.id, overrideAccess: true, data: { shell: 'hearts' } })
     portalIds.set(portal.slug, doc.id)
   }
 

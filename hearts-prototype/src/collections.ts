@@ -136,6 +136,38 @@ export const Portals: CollectionConfig = {
     { name: 'kineticOn', type: 'checkbox', admin: { description: 'Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.' } },
     { name: 'brandName', type: 'text', admin: { description: 'Learner-facing name. Empty keeps HEARTS. Parenting uses Hady Home.' } },
     {
+      name: 'shell',
+      type: 'select',
+      defaultValue: 'modern',
+      options: [
+        { label: 'Modern', value: 'modern' },
+        { label: 'HEARTS', value: 'hearts' },
+      ],
+      admin: { description: 'Modern is the white learner shell. HEARTS keeps the evening theme.' },
+    },
+    {
+      name: 'fontPair',
+      type: 'select',
+      defaultValue: 'jakarta',
+      options: [
+        { label: 'Jakarta', value: 'jakarta' },
+        { label: 'Bricolage', value: 'bricolage' },
+        { label: 'Outfit', value: 'outfit' },
+        { label: 'Inter', value: 'inter' },
+      ],
+      admin: { description: 'Heading and body type on the modern shell.' },
+    },
+    {
+      name: 'courseHome',
+      type: 'select',
+      defaultValue: 'cards',
+      options: [
+        { label: 'Course cards', value: 'cards' },
+        { label: 'Garden', value: 'garden' },
+      ],
+      admin: { description: 'Course cards is the usual course home. Garden is the older picture.' },
+    },
+    {
       name: 'demoRooms',
       type: 'json',
       access: { read: () => false, create: () => false, update: () => false },

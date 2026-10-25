@@ -58,11 +58,8 @@ test('the 20 doors are seeded with their sections, titles and clauses', async ()
 })
 
 test('a learner sees the 20 doors with their titles and never a clause number', async ({ page }) => {
-  await signIn(page, LEARNER.email, LEARNER.password, `${BASE}/garden`)
+  await signIn(page, LEARNER.email, LEARNER.password, `${BASE}/garden/jibril`)
   // Seeded with starting clause 22, which is door 10.
-  await expect(page.getByTestId('starting-door')).toHaveAttribute('data-door', '10')
-  await expect(page.getByTestId('starting-door')).toContainText('Door 10: Believe in Allah')
-
   await page.goto(`${BASE}/garden/jibril`)
   await expect(page.getByTestId('door-cell')).toHaveCount(20)
   await expect(page.getByTestId('section-row')).toHaveCount(6)

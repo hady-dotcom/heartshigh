@@ -1,8 +1,19 @@
-/** Colours and name when a portal has set the name people see. An empty name keeps HEARTS. */
-export function learnerBrand(portal: { brandName?: string | null; colour?: string | null; accent?: string | null } | null | undefined) {
-  const name = String(portal?.brandName || '').trim()
-  if (!portal || !name) return undefined
-  return { colour: String(portal.colour || '#1f3a5f'), accent: String(portal.accent || '#e07a5f'), name }
+import { accentOf, fontPairOf, sceneUrlOf, shellOf } from '@/lib/portal-look'
+
+/** Colours, type, and the white shell. An empty name still keeps the HEARTS wordmark off. A HEARTS shell with no brand name stays on the evening theme. */
+export function learnerBrand(portal: { brandName?: string | null; colour?: string | null; accent?: string | null; shell?: string | null; fontPair?: string | null; sceneKey?: string | null; sceneUrl?: string | null } | null | undefined) {
+  if (!portal) return undefined
+  const shell = shellOf(portal)
+  const name = String(portal.brandName || '').trim()
+  if (shell === 'hearts' && !name) return undefined
+  return {
+    colour: String(portal.colour || '#2563EB'),
+    accent: accentOf(portal),
+    name: name || undefined,
+    shell,
+    font: fontPairOf(portal),
+    scene: shell === 'modern' && Boolean(sceneUrlOf(portal)),
+  }
 }
 
 /** A logo saved on the portal: a site path such as /icons/hady-home.svg, or an https link. */

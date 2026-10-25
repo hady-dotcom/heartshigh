@@ -296,26 +296,14 @@ test.describe('round 4 screens', () => {
     expect(film.bottom, 'YouTube’s control bar sits below the screen').toBeGreaterThanOrEqual(844 + 60)
   })
 
-  test('G1: the Garden rings are readable and Your path is styled with one number per lesson', async ({ page }) => {
+  test('G1: Courses is the course home, with no garden picture', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 })
-    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/garden`)
+    await signIn(page, 'elm-learner@hearts.test', 'portal-learner', `/p/${PORTAL}/courses`)
     await page.goto(`/p/${PORTAL}/garden`)
-    const card = page.getByTestId('garden-rings')
-    const look = await card.evaluate((el) => {
-      const ring = el.querySelector('.ring-stat .r') as HTMLElement
-      const label = el.querySelector('.ring-stat') as HTMLElement
-      return { background: getComputedStyle(el).backgroundImage + getComputedStyle(el).backgroundColor, ring: getComputedStyle(ring).color, label: getComputedStyle(label).color }
-    })
-    expect(look.background).toContain('gradient')
-    expect(look.ring).toBe('rgb(255, 255, 255)')
-    const path = page.getByTestId('garden-path')
-    await expect(path).toBeVisible()
-    const list = await path.locator('ol').evaluate((el) => ({ style: getComputedStyle(el).listStyleType, padding: getComputedStyle(el).paddingLeft }))
-    expect(list.style).toBe('none')
-    const node = page.getByTestId('garden-node').first()
-    const dot = await node.locator('.gp-dot').boundingBox()
-    expect(dot!.width).toBeGreaterThanOrEqual(44)
-    expect((await node.innerText()).trim()).not.toMatch(/^1\.\s*1/)
+    await expect(page).toHaveURL(/\/courses$/)
+    await expect(page.getByTestId('course-home')).toBeVisible()
+    await expect(page.getByTestId('garden-scene')).toHaveCount(0)
+    await expect(page.getByTestId('tab-garden')).toContainText('Courses')
   })
 
   test('LOW: each Still open row in the workbook keeps the question and the talk on separate lines', async ({ page }) => {

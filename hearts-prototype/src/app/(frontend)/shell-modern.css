@@ -1,0 +1,393 @@
+/*
+ * White learner shell. Self-hosted faces (OFL) so a font host is not required.
+ * HEARTS keeps the evening theme unless its look setting is Modern.
+ */
+
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Bricolage Grotesque';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/bricolage-grotesque-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/outfit-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Outfit';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/outfit-latin-800-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/inter-latin-400-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/inter-latin-500-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/inter-latin-700-normal.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/inter-latin-800-normal.woff2') format('woff2');
+}
+
+html[data-theme] .app-stage.shell-modern[data-font='jakarta'] {
+  --heading-font: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
+  --body-font: 'Inter', system-ui, sans-serif;
+}
+html[data-theme] .app-stage.shell-modern[data-font='bricolage'] {
+  --heading-font: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  --body-font: 'Inter', system-ui, sans-serif;
+}
+html[data-theme] .app-stage.shell-modern[data-font='outfit'] {
+  --heading-font: 'Outfit', 'Inter', system-ui, sans-serif;
+  --body-font: 'Inter', system-ui, sans-serif;
+}
+html[data-theme] .app-stage.shell-modern[data-font='inter'] {
+  --heading-font: 'Inter', system-ui, sans-serif;
+  --body-font: 'Inter', system-ui, sans-serif;
+}
+
+html[data-theme] .app-stage.shell-modern,
+html[data-theme] .app-stage.shell-modern[data-portal-brand] {
+  --paper: #ffffff;
+  --card: #ffffff;
+  --cream: #ffffff;
+  --bg-solid: #ffffff;
+  --ink: #111827;
+  --ink-2: #374151;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --gold: var(--portal-accent, #2563eb);
+  --gold-deep: var(--portal-accent, #2563eb);
+  --gold-ink: #ffffff;
+  --teal: var(--portal-accent, #2563eb);
+  --teal-deep: #1d4ed8;
+  --teal-fill: #eff6ff;
+  --mint: #f3f4f6;
+  --field: #ffffff;
+  --glass: #ffffff;
+  --glass-solid: #ffffff;
+  --scrim: #ffffff;
+  --scrim-deep: #ffffff;
+  --focus: var(--portal-accent, #2563eb);
+  --serif: var(--heading-font);
+  --sans: var(--body-font);
+  background: #ffffff;
+  background-image: none;
+  color: #111827;
+  color-scheme: light;
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+html[data-theme] .app-stage.shell-modern .app,
+html[data-theme] .app-stage.shell-modern main.app.evening,
+html[data-theme] .app-stage.shell-modern main.app.dark,
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .app {
+  background-color: #ffffff;
+  background-image: none;
+  color: #111827;
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+}
+
+html[data-theme] .app-stage.shell-modern.has-scene .app {
+  background-color: #ffffff;
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.94), rgba(255, 255, 255, 0.97)), var(--scene);
+  background-size: cover;
+  background-position: center;
+}
+
+html[data-theme] .app-stage.shell-modern .app-scroll {
+  padding: 8px 20px 32px;
+}
+
+html[data-theme] .app-stage.shell-modern .app-head,
+html[data-theme] .app-stage.shell-modern .main-head {
+  background: transparent;
+  background-image: none;
+  border-radius: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .brand-word,
+html[data-theme] .app-stage.shell-modern .shell-brand,
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .brand-word,
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .shell-brand {
+  color: #6b7280;
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1, .splash h1, .q-card h2, .sheet h2, .grow-banner h2, .carry-on h2) {
+  font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
+  color: #111827;
+  letter-spacing: -0.03em;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.app h1, .app-head h1) {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1.15;
+  margin: 0 0 8px;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.app h2, .q-card h2, .sheet h2, .grow-banner h2, .carry-on h2, .part-chip.off-film) {
+  font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.app h3, .card h3) {
+  font-family: var(--heading-font), 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
+  color: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.lead, .card p, .q-card p, .note p, p) {
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+html[data-theme] .app-stage.shell-modern :is(small, .muted, .eyebrow, .page-sub) {
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: #6b7280;
+}
+
+html[data-theme] .app-stage.shell-modern .tree-art { display: none; }
+
+html[data-theme] .app-stage.shell-modern :is(.card, .q-card, .carry-on, .course-card, .continue-row, .part-row, .note, .grow-banner, .grow-tile, .list-link) {
+  background: #ffffff;
+  background-image: none;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+html[data-theme] .app-stage.shell-modern .carry-on,
+html[data-theme] .app-stage.shell-modern .course-card,
+html[data-theme] .app-stage.shell-modern .q-card {
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+html[data-theme] .app-stage.shell-modern .carry-on .thumb,
+html[data-theme] .app-stage.shell-modern .course-card .thumb {
+  background-color: #f3f4f6;
+  border-radius: 12px;
+}
+
+html[data-theme] .app-stage.shell-modern .list-link {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-top: 0;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.bar, .lane-progress .bar, .garden-card .bar) {
+  height: 4px;
+  border-radius: 99px;
+  background: #f3f4f6;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.bar > i, .lane-progress .bar > i, .garden-card .bar > i, .ticks i.on) {
+  background: var(--portal-accent, #2563eb);
+}
+
+html[data-theme] .app-stage.shell-modern .ticks i { background: #e5e7eb; }
+
+html[data-theme] .app-stage.shell-modern :is(.pill, .btn) {
+  border-radius: 12px;
+  font-family: var(--body-font), 'Inter', system-ui, sans-serif;
+  font-weight: 600;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.pill.gold, .pill.ink, .pill.teal),
+html[data-theme] .app-stage.shell-modern[data-portal-brand] .pill.gold {
+  background: var(--portal-accent, #2563eb);
+  color: #ffffff;
+  border-color: transparent;
+}
+
+html[data-theme] .app-stage.shell-modern .pill.outline {
+  background: #ffffff;
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.tabbar, .tabbar.dark, .tabbar.evening) {
+  background: #ffffff;
+  border-top: 1px solid #e5e7eb;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.tab, .tabbar.dark .tab, .tabbar.evening .tab) {
+  color: #6b7280;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.tab.on, .tabbar.dark .tab.on, .tabbar.evening .tab.on) {
+  color: var(--portal-accent, #2563eb);
+}
+
+html[data-theme] .app-stage.shell-modern .tab.on .tab-icon { color: var(--portal-accent, #2563eb); }
+
+html[data-theme] .app-stage.shell-modern .part-chip.off-film {
+  position: static;
+  background: transparent;
+  padding: 4px 0 8px;
+  border-radius: 0;
+  white-space: normal;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.field, textarea.field, select.field, .compose) {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+}
+
+html[data-theme] .app-stage.shell-modern .choice {
+  background: #f3f4f6;
+  color: #111827;
+  border-radius: 12px;
+}
+
+html[data-theme] .app-stage.shell-modern .choice:has(input:checked) {
+  background: #eff6ff;
+  border-color: var(--portal-accent, #2563eb);
+  color: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern .sheet,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 16px 16px 0 0;
+}
+
+html[data-theme] .app-stage.shell-modern .sheet :is(h2, p, label, .eyebrow) {
+  color: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern .sheet .handle { background: #e5e7eb; }
+
+html[data-theme] .app-stage.shell-modern .q-list li.open { color: #111827; border-color: #e5e7eb; }
+html[data-theme] .app-stage.shell-modern .q-list li.done { color: var(--portal-accent, #2563eb); border-color: var(--portal-accent, #2563eb); }
+html[data-theme] .app-stage.shell-modern .q-list li.coming { color: #6b7280; }
+
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='course']),
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='garden-workbook']),
+html[data-theme] .app-stage.shell-modern.evening:has([data-testid='plan']),
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'],
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .app-scroll,
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='garden-workbook'] .app-scroll,
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='plan'] .app-scroll {
+  background: #ffffff;
+  background-image: none;
+  color: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] :is(.card, .card p, .card h2, .card h3, .list-link, .back, .app-head h1, .app-scroll) {
+  color: #111827;
+  background-color: #ffffff;
+  background-image: none;
+}
+
+html[data-theme] .app-stage.shell-modern main.app.evening[data-testid='course'] .card {
+  background: #ffffff;
+}
+
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film,
+html[data-theme] .app-stage.shell-modern [data-testid='player'] .fr-words {
+  background: #ffffff;
+  color: #111827;
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline {
+  background: #e5e7eb;
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .j-hairline > i {
+  background: var(--portal-accent, #2563eb);
+}
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .course-film .chip.white {
+  background: #f3f4f6;
+  color: #111827;
+  border: 1px solid #e5e7eb;
+}
+html[data-theme] .app-stage.shell-modern .player-card,
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card.course-film-band {
+  background: #111827;
+}
+
+html[data-theme] .app-stage.shell-modern .rings .r {
+  border-color: var(--portal-accent, #2563eb) !important;
+  color: #111827;
+  background: #f3f4f6;
+}
+
+html[data-theme] .app-stage.shell-modern .flash.notice {
+  background: #f3f4f6;
+  color: #111827;
+}

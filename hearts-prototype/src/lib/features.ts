@@ -66,7 +66,7 @@ export const FEATURE_UNAVAILABLE = 'This is not available in this portal.'
 export const FEATURES: readonly FeatureRecord[] = [
   {
     key: 'garden',
-    name: 'Garden',
+    name: 'Courses',
     what: 'A living picture of what they have watched, sown and harvested.',
     defaultOn: true,
     depth: 'beginner',
@@ -79,7 +79,7 @@ export const FEATURES: readonly FeatureRecord[] = [
       'TabBar garden item via learnerBar()',
     ],
     deskNav: [],
-    bar: { key: 'garden', label: 'Garden', path: '/garden', slot: 'garden' },
+    bar: { key: 'garden', label: 'Courses', path: '/courses', slot: 'garden' },
   },
   {
     key: 'workbook',
@@ -453,7 +453,7 @@ export function featuresFromForm(form: FormData, field = 'feature'): FeatureMap 
 }
 
 /**
- * Bottom bar. Always Home · Lanes · My week · Garden · Me.
+ * Bottom bar. Always Home · Lanes · My week · Courses · Me.
  * Gather must never replace My week on the learner bar.
  */
 export function learnerBar(_portal: FeatureSource): BarItem[] {
@@ -461,7 +461,7 @@ export function learnerBar(_portal: FeatureSource): BarItem[] {
     { key: 'home', label: 'Home', path: '' },
     { key: 'lanes', label: 'Lanes', path: '/lanes' },
     { key: 'week', label: 'My week', path: '/week' },
-    { key: 'garden', label: 'Garden', path: '/garden' },
+    { key: 'garden', label: 'Courses', path: '/courses' },
     { key: 'me', label: 'Me', path: '/me' },
   ]
 }

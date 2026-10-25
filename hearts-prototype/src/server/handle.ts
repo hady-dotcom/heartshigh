@@ -818,6 +818,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         shape,
         ...(brandName ? { brandName } : {}),
         ...(accent ? { accent } : {}),
+        shell: 'modern',
+        fontPair: 'jakarta',
+        courseHome: 'cards',
         ...(logo ? { logoUrl: logo } : {}),
         ...(shape === 'sequence' ? {
           lockOrder: true,
@@ -2580,6 +2583,12 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       if (typeof value === 'string' && value && !/^https:\/\//i.test(value)) return redirectTo(req, text(form, 'next') || '/', 'Links need to start with https://')
     }
     if (form.has('theme')) data.theme = text(form, 'theme') === 'dark' ? 'dark' : 'light'
+    if (form.has('shell')) data.shell = text(form, 'shell') === 'hearts' ? 'hearts' : 'modern'
+    if (form.has('fontPair')) {
+      const font = text(form, 'fontPair')
+      data.fontPair = font === 'bricolage' || font === 'outfit' || font === 'inter' ? font : 'jakarta'
+    }
+    if (form.has('courseHome')) data.courseHome = text(form, 'courseHome') === 'garden' ? 'garden' : 'cards'
     if (form.has('timeZone')) {
       if (!isTimeZone(text(form, 'timeZone'))) return redirectTo(req, text(form, 'next') || '/', 'Choose a time zone such as Europe/London.')
       data.timeZone = text(form, 'timeZone')

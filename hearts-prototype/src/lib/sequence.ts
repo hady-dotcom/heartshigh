@@ -380,7 +380,7 @@ export function resumeChoice(position: number | null | undefined, duration: numb
 export function sequenceBar() {
   return [
     { key: 'home' as const, label: 'Home', path: '' },
-    { key: 'garden' as const, label: 'Garden', path: '/garden' },
+    { key: 'garden' as const, label: 'Courses', path: '/courses' },
     { key: 'me' as const, label: 'Me', path: '/me' },
   ]
 }

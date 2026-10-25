@@ -75,6 +75,9 @@ export type PortalDoc = {
   kineticOn?: boolean | null
   /** Empty keeps HEARTS. Parenting is Hady Home. */
   brandName?: string | null
+  shell?: 'modern' | 'hearts' | null
+  fontPair?: 'jakarta' | 'bricolage' | 'outfit' | 'inter' | null
+  courseHome?: 'cards' | 'garden' | null
   /** Encrypted portal AI account. Absent means the desk uses the built-in path. */
   aiConnection?: unknown
 }
