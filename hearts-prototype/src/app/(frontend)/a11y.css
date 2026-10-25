@@ -36,3 +36,9 @@ html[data-theme] :is(label, td, th):has(input[type='checkbox'], input[type='radi
   min-height: var(--hh-tap-min) !important;
   min-width: var(--hh-tap-min) !important;
 }
+
+/* Inline links ignore min-height. Make the ones in copy and tables a real tap target. */
+html[data-theme] :is(p, li, td, th, .hint) a {
+  display: inline-flex;
+  align-items: center;
+}

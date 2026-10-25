@@ -241,9 +241,11 @@ async function audit(page: Page, screen: string, portal: 'hady' | 'hearts'): Pro
         const width = Math.min(a.r, b.r) - Math.max(a.x, b.x)
         const height = Math.min(a.b, b.b) - Math.max(a.y, b.y)
         if (width > 4 && height > 4) {
-          const an = (a.el.getAttribute('aria-label') || a.el.textContent || '').trim().slice(0, 40)
-          const bn = (b.el.getAttribute('aria-label') || b.el.textContent || '').trim().slice(0, 40)
-          push('overlap', `${an} overlaps ${bn}`)
+          const label = (el: Element) => {
+            const name = (el.getAttribute('aria-label') || el.textContent || el.tagName).trim().replace(/\s+/g, ' ').slice(0, 32)
+            return `${el.tagName.toLowerCase()}.${String(el.className).slice(0, 24)} “${name}”`
+          }
+          push('overlap', `${label(a.el)} overlaps ${label(b.el)}`)
         }
       }
     }
