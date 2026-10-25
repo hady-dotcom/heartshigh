@@ -135,6 +135,29 @@ export const Portals: CollectionConfig = {
     { name: 'teacherCap', type: 'number', admin: { description: 'Most teacher codes this portal can have. Empty uses 19 for a hearts portal and no limit for a sequenced course.' } },
     { name: 'kineticOn', type: 'checkbox', admin: { description: 'Short kinetic clips on a sequenced course. On unless this is switched off. HEARTS portals ignore it.' } },
     { name: 'brandName', type: 'text', admin: { description: 'Learner-facing name. Empty keeps HEARTS. Parenting uses Hady Home.' } },
+    { name: 'sceneKey', type: 'text', defaultValue: 'plain', admin: { description: 'Learner background. plain, a preset key, or upload. Empty stays plain.' } },
+    { name: 'sceneUrl', type: 'text', admin: { description: 'Image for an uploaded scene. A site path or an https link.' } },
+    {
+      name: 'courseHome',
+      type: 'select',
+      defaultValue: 'cards',
+      options: [
+        { label: 'Course cards', value: 'cards' },
+        { label: 'Garden', value: 'garden' },
+      ],
+      admin: { description: 'Course cards is the usual course home. Garden is the older picture.' },
+    },
+    { name: 'supportNote', type: 'textarea', admin: { description: 'A short line on the welcome screen, such as a donations note. Empty hides it.' } },
+    {
+      name: 'markKind',
+      type: 'select',
+      defaultValue: 'plain',
+      options: [
+        { label: 'Plain', value: 'plain' },
+        { label: 'HEARTS arch', value: 'hearts' },
+      ],
+      admin: { description: 'The mark on the welcome screen. Plain shows the portal name.' },
+    },
     {
       name: 'demoRooms',
       type: 'json',

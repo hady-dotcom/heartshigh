@@ -66,20 +66,20 @@ export const FEATURE_UNAVAILABLE = 'This is not available in this portal.'
 export const FEATURES: readonly FeatureRecord[] = [
   {
     key: 'garden',
-    name: 'Garden',
-    what: 'A living picture of what they have watched, sown and harvested.',
+    name: 'Courses',
+    what: 'The courses in this portal, and what someone has watched.',
     defaultOn: true,
     depth: 'beginner',
     shipped: true,
     dependsOn: [],
-    help: 'The Garden shows time someone has given: five trees from the hadith of Jibril (Islam, Iman, Ihsan, the Hour and the Sitting), rings, this course, harvest and the twenty doors. Every portal includes it. Learners can see what they have watched, sown and harvested.',
+    help: 'Courses lists this portal’s courses. Course cards is the usual layout. Garden is an optional layout a portal admin can turn on. Every portal includes it.',
     plugIn: [
       'Learner /p/:slug/garden and garden/* (except workbook, which is its own switch)',
       'Home grow banner, rings and “See what you have sown”',
       'TabBar garden item via learnerBar()',
     ],
     deskNav: [],
-    bar: { key: 'garden', label: 'Garden', path: '/garden', slot: 'garden' },
+    bar: { key: 'garden', label: 'Courses', path: '/courses', slot: 'garden' },
   },
   {
     key: 'workbook',
@@ -453,7 +453,7 @@ export function featuresFromForm(form: FormData, field = 'feature'): FeatureMap 
 }
 
 /**
- * Bottom bar. Always Home · Lanes · My week · Garden · Me.
+ * Bottom bar. Always Home · Lanes · My week · Courses · Me.
  * Gather must never replace My week on the learner bar.
  */
 export function learnerBar(_portal: FeatureSource): BarItem[] {
@@ -461,7 +461,7 @@ export function learnerBar(_portal: FeatureSource): BarItem[] {
     { key: 'home', label: 'Home', path: '' },
     { key: 'lanes', label: 'Lanes', path: '/lanes' },
     { key: 'week', label: 'My week', path: '/week' },
-    { key: 'garden', label: 'Garden', path: '/garden' },
+    { key: 'garden', label: 'Courses', path: '/courses' },
     { key: 'me', label: 'Me', path: '/me' },
   ]
 }

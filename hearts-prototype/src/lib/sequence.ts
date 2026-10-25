@@ -380,7 +380,7 @@ export function resumeChoice(position: number | null | undefined, duration: numb
 export function sequenceBar() {
   return [
     { key: 'home' as const, label: 'Home', path: '' },
-    { key: 'garden' as const, label: 'Garden', path: '/garden' },
+    { key: 'garden' as const, label: 'Courses', path: '/courses' },
     { key: 'me' as const, label: 'Me', path: '/me' },
   ]
 }
@@ -438,6 +438,7 @@ export const SEQUENCE_COPY = {
   captions: 'Captions were not available from here.',
   examples: 'Watch the films in order.',
   sheetUpdated: 'Updated the course.',
+  sheetMade: 'Made a new course:',
   continue: 'Continue',
   signIn: 'Sign in',
   join: 'Join with a code',

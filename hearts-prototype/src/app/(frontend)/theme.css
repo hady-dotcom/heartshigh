@@ -518,7 +518,7 @@ html[data-theme='dawn'] .player-card .poster.scenic,
 html[data-theme='dawn'] .clip-bg,
 html[data-theme='dawn'] .bio-cover,
 html[data-theme='dawn'] .lane-card {
-  background-image: url('/theme/dawn-courtyard.jpg');
+  background-image: var(--scene);
 }
 html[data-theme] .grow-banner .eyebrow,
 html[data-theme] .time-card .eyebrow,
@@ -838,6 +838,7 @@ html[data-theme] .desk input[type='password'] {
   justify-content: flex-start;
   min-height: 100dvh;
   padding: 24px 16px;
+  background: #1f3a5f var(--scene) center / cover no-repeat;
 }
 .hady-door .door-card { width: min(420px, 100%); text-align: center; }
 :is(html, html[data-theme]) .hady-door .pill.gold { background: #e07a5f; color: #1a1408; }
@@ -902,7 +903,7 @@ html[data-theme] .desk input[type='password'] {
 :is(html, html[data-theme]) .garden-door::before {
   inset: -48px;
   z-index: -2;
-  background: url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+  background: var(--scene) center / cover no-repeat;
   filter: blur(14px) saturate(1.1);
 }
 :is(html, html[data-theme]) .garden-door::after {

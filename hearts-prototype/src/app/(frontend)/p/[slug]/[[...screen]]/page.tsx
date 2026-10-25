@@ -18,6 +18,7 @@ import { HomeScreen, LanesScreen } from '@/screens/app/home'
 import { LaneScreen } from '@/screens/app/lane'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook, GardenWorkbookEntry } from '@/screens/app/garden'
+import { CourseHomeScreen } from '@/screens/app/course-home'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SavedScreen, SettingsScreen } from '@/screens/app/me'
 import { WeekScreen } from '@/screens/app/week'
@@ -49,6 +50,7 @@ import { FeatureUnavailable } from '@/components/app/feature-unavailable'
 import { featureOn, type FeatureKey } from '@/lib/features'
 import { learnerBrand, portalLogo } from '@/lib/learner-brand'
 import { isSequencePortal } from '@/lib/sequence'
+import { courseHomeOf } from '@/lib/portal-look'
 import { isDemoRole, withDemoQuery, type DemoRole } from '@/lib/parenting-demo'
 import { demoUser, loadDemoRoom, portalWithDemoFeatures } from '@/server/parenting-demo'
 import type { DemoBag } from '@/screens/common'
@@ -152,7 +154,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
           <div>
             {brand ? <p className="brand-word" data-testid="portal-brand">{brand.name}</p> : <span className="splash-arch" aria-hidden><Arch size={72} /></span>}
             <h1>{brand?.name || portalName(portal)} is closed for now</h1>
-            <p data-testid="portal-closed">{brand ? 'This portal is paused. Your progress is kept, and will be here when it opens again.' : 'This portal has been paused. Your answers and your garden are kept safe, and will be here when it opens again.'}</p>
+            <p data-testid="portal-closed">{brand ? 'This portal is paused. Your progress is kept, and will be here when it opens again.' : 'This portal has been paused. Your answers and your courses are kept safe, and will be here when it opens again.'}</p>
             <form action="/api/hearts" method="post" style={{ marginTop: 18 }}>
               <Hidden fields={{ action: 'logout' }} />
               <button className="pill outline block" type="submit" data-testid="logout">Log out</button>
@@ -323,13 +325,17 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'course':
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
+    case 'courses':
     case 'garden':
       if (a === 'workbook') return gated(ctx, 'workbook') || (b && /^\d+$/.test(b) ? GardenWorkbookEntry(ctx, Number(b)) : GardenWorkbook(ctx))
       {
         const closed = gated(ctx, 'garden')
         if (closed) return closed
       }
-      if (!a) return GardenScreen(ctx)
+      if (!a) {
+        if (area === 'garden') redirect(`${base}/courses`)
+        return courseHomeOf(ctx.portal) === 'garden' ? GardenScreen(ctx) : CourseHomeScreen(ctx)
+      }
       if (a === 'general') return GardenGeneral(ctx)
       if (a === 'jibril') return b ? GardenDoor(ctx, b) : GardenJibril(ctx)
       if (a === 'ghunya') return GardenGhunya(ctx)
@@ -359,7 +365,7 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'path':
       redirect(`${base}/lanes`)
     case 'grow':
-      redirect(featureOn(ctx.portal, 'garden') ? `${base}/garden` : base)
+      redirect(featureOn(ctx.portal, 'garden') ? `${base}/courses` : base)
     case 'chapter':
     case 'night':
       redirect(`${base}/me/circle`)

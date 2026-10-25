@@ -18,6 +18,7 @@ import { seedDoors } from '../server/doors'
 import type { User } from '../payload-types'
 import { databaseKind, seedRefusal } from '../lib/env'
 import { clearDevPushMarker } from '../lib/prepare-db'
+import { HEARTS_LOOK } from '../lib/portal-look'
 import { FILMS } from './films'
 import { seedOpening, seedPeople, timingCheck } from './opening'
 import { seedSpeakers } from './speakers'
@@ -198,6 +199,7 @@ async function main() {
       teacherLabel: 'Teacher',
       wizardDone: true,
       colour: '#1f4d3a',
+      ...HEARTS_LOOK,
     },
     {
       name: 'Leeds Chapter',
@@ -208,12 +210,16 @@ async function main() {
       organisationName: 'Leeds Chapter',
       wizardDone: true,
       colour: '#6b3a2f',
+      ...HEARTS_LOOK,
     },
   ]
   const portalIds = new Map<string, number>()
   for (const portal of startersOnly ? [] : portals) {
     const found = await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: portal.slug } } })
-    const doc = found.docs[0] || (await payload.create({ collection: 'portals', overrideAccess: true, data: portal }))
+    const current = found.docs[0]
+    const doc = current
+      ? (current.markKind === 'hearts' ? current : await payload.update({ collection: 'portals', id: current.id, overrideAccess: true, data: HEARTS_LOOK }))
+      : await payload.create({ collection: 'portals', overrideAccess: true, data: portal })
     portalIds.set(portal.slug, doc.id)
   }
 

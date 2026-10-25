@@ -343,17 +343,14 @@ export const SEE_HOW_PAGES: SeeHowPageSpec[] = [
   }),
   clip({
     id: 'garden',
-    title: 'Garden',
+    title: 'Courses',
     keys: ['garden'],
-    path: '/p/east-london/garden',
+    path: '/p/east-london/courses',
     role: 'learner',
     viewport: phone,
-    ready: '[data-testid=garden]',
+    ready: '[data-testid=course-home]',
     steps: [
-      hold('The garden is a quiet picture of time you have given. It is not a score.'),
-      click('Tap Keep this to write one small thing you did today.', '[data-testid=ritual-open]'),
-      fill('Type a sample line. Only you see it.', '[data-testid=ritual-note]', 'I held back a harsh word at lunch.'),
-      click('Tap Keep this again to save it.', '[data-testid=ritual-submit]'),
+      hold('Courses lists what this portal has. Open one to watch the films in order.'),
     ],
   }),
   clip({

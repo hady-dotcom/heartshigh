@@ -9,6 +9,7 @@ import { parentOpeningScenes } from '@/lib/parent-opening'
 import { cleanPortalScenes } from '@/lib/portal-scenes'
 import { fillSampleGaps, readSaidAnswers } from '@/lib/said-answers'
 import { defaultFeatures } from '@/lib/features'
+import { PLAIN_LOOK } from '@/lib/portal-look'
 import { syncCourseSheet } from '@/server/sequence-desk'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -116,6 +117,8 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     description: 'A course you watch in order.',
     brandName: BRAND,
     logoUrl: '/icons/hady-home.svg',
+    ...PLAIN_LOOK,
+    sceneKey: 'kitchen',
   }
   const saved = found.docs[0]?.features
   const switchesOff = !saved || typeof saved !== 'object' || Object.values(saved as Record<string, unknown>).every((value) => value !== true)
@@ -124,7 +127,14 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
         collection: 'portals',
         id: found.docs[0].id,
         overrideAccess: true,
-        data: refresh || switchesOff ? look : { brandName: BRAND, ...(String(found.docs[0]?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }) },
+        data: refresh || switchesOff ? look : {
+          brandName: BRAND,
+          sceneKey: 'kitchen',
+          courseHome: 'cards',
+          supportNote: '',
+          markKind: 'plain',
+          ...(String(found.docs[0]?.logoUrl || '').trim() ? {} : { logoUrl: '/icons/hady-home.svg' }),
+        },
       })
     : await payload.create({
         collection: 'portals',

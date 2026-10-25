@@ -324,7 +324,7 @@ export function Frame({ base, title, testId, children, unread, dark, evening, po
       <div className="app-scroll">
         {dark ? children : (
           <>
-            <Back href={`${base}/garden`} label="Garden" />
+            <Back href={`${base}/garden`} label="Courses" />
             <div className="app-head"><h1>{title}</h1></div>
             {children}
           </>
@@ -562,7 +562,7 @@ export async function GardenGhunya({ payload, user, portal, base }: Ctx) {
   return (
     <Frame base={base} title="Seats from al-Ghuniyya" testId="garden-ghunya" unread={unread} dark portal={portal}>
       <div className="forest">
-        <Back href={`${base}/garden`} label="Garden" />
+        <Back href={`${base}/garden`} label="Courses" />
         <p className="eyebrow" style={{ color: 'var(--gold)', marginTop: 10 }}>Seats from al-Ghuniyya</p>
         <h1 style={{ margin: 0, fontSize: 26 }}>The seats you have read</h1>
         <p className="big" data-testid="seat-count">{read.size} <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>of {g.seats.length}</span></p>

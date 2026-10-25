@@ -3,6 +3,7 @@ import { loadDoors } from '@/server/doors'
 import { capitalAfterColon, doorOfClause } from '@/lib/doors'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { learnerBrand } from '@/lib/learner-brand'
+import { showHeartsMark, supportNoteOf } from '@/lib/portal-look'
 import { Arch } from '@/components/arch'
 import { BrandLockup } from '@/components/brand'
 import { optionLabels } from '@/lib/placing'
@@ -13,6 +14,8 @@ import { type Ctx, embedUrl, rows, str } from '../common'
 export async function WelcomeScreen(ctx: Ctx) {
   const { payload, user, portal, base, query } = ctx
   const brand = String(portal.brandName || '').trim()
+  const hearts = showHeartsMark(portal)
+  const note = supportNoteOf(portal)
   const staff = user.role !== 'learner'
   const welcome = staff ? portal.teacherWelcomeUrl : portal.learnerWelcomeUrl
   const intro = staff ? portal.teacherIntroUrl : portal.learnerIntroUrl
@@ -24,10 +27,10 @@ export async function WelcomeScreen(ctx: Ctx) {
       <AppFrame testId="welcome" brand={learnerBrand(portal)}>
         <div className="splash" data-testid="splash">
           <div>
-            {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : <BrandLockup size={88} />}
-            <h1>{portal.welcome ? 'Welcome' : 'Someone wanted good for you'}</h1>
-            <p>{portal.welcome || `${portalName(portal)} has opened a door for you: short films from real lectures, a few questions to think about, and a circle to sit with.`}</p>
-            <p className="muted" data-testid="powered-by-donations">This has been powered by donations.</p>
+            {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : hearts ? <BrandLockup size={88} /> : <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{portalName(portal)}</p>}
+            <h1>Welcome</h1>
+            <p>{portal.welcome || `Welcome to ${portalName(portal)}.`}</p>
+            {note ? <p className="muted" data-testid="powered-by-donations">{note}</p> : null}
             <Flash error={query.error} notice={query.notice} />
             <Link className="pill gold block" href={next} style={{ marginTop: 18 }} data-testid="welcome-begin">Begin</Link>
             <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>{portalName(portal)}</p>
@@ -95,7 +98,7 @@ export async function WelcomeScreen(ctx: Ctx) {
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />
-        {ownLibrary ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36, textAlign: 'center' }}>{brand || portalName(portal)}</p> : <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>}
+        {ownLibrary || !hearts ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36, textAlign: 'center' }}>{brand || portalName(portal)}</p> : <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>}
         <h1 style={{ fontFamily: 'var(--serif)', fontSize: 34, textAlign: 'center', margin: '6px 0 14px', fontWeight: 600 }}>A good place to start</h1>
         {door && !ownLibrary ? (
           <article className="clause-card" data-testid="starting-door" data-door={door.number}>

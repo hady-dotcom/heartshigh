@@ -64,6 +64,7 @@ import { isTimeZone } from '@/lib/zone-time'
 import { parseLengthInput } from '@/lib/length'
 import { refusalForTalk, sourceTalkSeconds } from '@/lib/talk-length'
 import { portalLogo } from '@/lib/learner-brand'
+import { PLAIN_LOOK, SCENE_PRESETS, safeSceneUrl } from '@/lib/portal-look'
 import { fillSampleGaps, parseSaidSheet } from '@/lib/said-answers'
 import { isSequencePortal, minTalkRefusal, minTalkSecondsOf, teacherCapOf, teacherCapRefusal } from '@/lib/sequence'
 import { sequenceFeatureDefaults, sequenceFeaturesFromForm } from '@/lib/sequence-features'
@@ -811,8 +812,9 @@ async function handleForm(req: Request, form: FormData, session: Session) {
         name,
         slug,
         kind: (shape === 'sequence' ? 'other' : ['mosque', 'church', 'synagogue', 'other'].includes(text(form, 'kind')) ? text(form, 'kind') : 'mosque') as 'mosque',
-        welcome: text(form, 'welcome') || (shape === 'sequence' ? `${name}. Watch the films in order.` : `${name} keeps a gentle room for whoever is sent.`),
+        welcome: text(form, 'welcome') || `${name}. Watch the films here.`,
         colour: colourRaw || (shape === 'sequence' ? '#1f3a5f' : '#1f4d3a'),
+        ...PLAIN_LOOK,
         watchHistoryOptIn: false,
         wizardDone: true,
         shape,
@@ -2365,7 +2367,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     }
     void recordExperimentQuietly(payload, user, 'full_talk_complete', { lesson: lessonId, seconds })
     if (asJson) return NextResponse.json({ ok: true, counted: true })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your Garden.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Marked as watched. You will see it in your courses.')
   }
 
   if (action === 'seat') {
@@ -2383,7 +2385,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
     } else if (text(form, 'returned') === 'yes') {
       await payload.update({ collection: 'seat-visits', id: existing.docs[0].id, overrideAccess: true, data: { returned: true } })
     }
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Noted in your Garden.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Noted in your courses.')
   }
 
   if (action === 'ritual') {
@@ -2394,7 +2396,7 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       overrideAccess: true,
       data: { user: user.id, note, portal: portalIdOf(user) || undefined },
     })
-    return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your Garden.')
+    return redirectTo(req, text(form, 'next') || '/', undefined, 'Thank you. That is noted in your courses.')
   }
 
   if (action === 'ai-connect') {
@@ -2589,6 +2591,35 @@ async function handleForm(req: Request, form: FormData, session: Session) {
       data.watchHistoryOptIn = form.get('watchHistoryOptIn') === 'on'
     }
     if (form.get('wizardDone') === 'on') data.wizardDone = true
+    if (form.has('sceneKey')) {
+      const key = text(form, 'sceneKey')
+      const allowed = new Set([...SCENE_PRESETS.map((scene) => scene.key), 'upload'])
+      if (!allowed.has(key)) return redirectTo(req, text(form, 'next') || '/', 'Choose a scene from the list.')
+      data.sceneKey = key
+    }
+    if (form.has('sceneUrl')) {
+      const sceneUrl = safeSceneUrl(text(form, 'sceneUrl'))
+      if (text(form, 'sceneUrl') && !sceneUrl) return redirectTo(req, text(form, 'next') || '/', 'A scene link needs to start with https:// or be a path on this site.')
+      data.sceneUrl = sceneUrl
+    }
+    const sceneFile = form.get('sceneFile')
+    if (sceneFile instanceof File && sceneFile.size > 0) {
+      if (sceneFile.size > 4_000_000) return redirectTo(req, text(form, 'next') || '/', 'That picture is too big. Use one under 4 MB.')
+      const kind = sceneFile.type
+      const ext = kind === 'image/png' ? 'png' : kind === 'image/webp' ? 'webp' : kind === 'image/jpeg' ? 'jpg' : ''
+      if (!ext) return redirectTo(req, text(form, 'next') || '/', 'Use a JPG, PNG or WebP picture.')
+      const { mkdir, writeFile } = await import('node:fs/promises')
+      const path = await import('node:path')
+      const dir = path.join(process.cwd(), 'public/uploads/scenes')
+      await mkdir(dir, { recursive: true })
+      const filename = `${portal}-${Date.now()}.${ext}`
+      await writeFile(path.join(dir, filename), Buffer.from(await sceneFile.arrayBuffer()))
+      data.sceneKey = 'upload'
+      data.sceneUrl = `/uploads/scenes/${filename}`
+    }
+    if (form.has('courseHome')) data.courseHome = text(form, 'courseHome') === 'garden' ? 'garden' : 'cards'
+    if (form.has('supportNote')) data.supportNote = text(form, 'supportNote').slice(0, 240)
+    if (form.has('markKind')) data.markKind = text(form, 'markKind') === 'hearts' ? 'hearts' : 'plain'
     await payload.update({
       collection: 'portals',
       id: portal,

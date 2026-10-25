@@ -19,6 +19,7 @@ import { PORTAL_TIME_ZONES, portalTimeZone, zoneCity } from '@/lib/zone-time'
 import { humanDate } from '@/lib/human-date'
 import { ConfirmDeactivate } from '@/components/desk/confirm-deactivate'
 import { mcpConnectorStatus, publicAi } from '@/lib/portal-ai'
+import { SCENE_PRESETS, courseHomeOf, sceneUrlOf } from '@/lib/portal-look'
 
 function withAnswerBadge(groups: NavGroup[], count: number, href?: string | null): NavGroup[] {
   if (count <= 0) return groups
@@ -228,7 +229,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.6fr) minmax(0, 1fr)' }}>
         <section className="panel">
           <header className="light"><h2>Portal details</h2></header>
-          <form className="body form" action="/api/hearts" method="post">
+          <form className="body form" action="/api/hearts" method="post" encType="multipart/form-data">
             <Hidden fields={{ action: 'settings', settingsForm: 'yes', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
             {field('Organisation name', 'organisationName', { 'data-testid': 'org-name-input' })}
             <label className="row"><span>Name people see</span><input type="text" name="brandName" defaultValue={str(portal.brandName)} data-testid="brand-name" placeholder="Hady Home" /></label>
@@ -259,6 +260,39 @@ export async function PortalSettingsScreen(ctx: Ctx) {
                 <HelpTip topic="watch-history">{TOOL.watchHistory}</HelpTip>
               </div>
             </div>
+            <label className="row"><span>Course home layout</span>
+              <select name="courseHome" defaultValue={courseHomeOf(portal)} data-testid="course-home">
+                <option value="cards">Course cards</option>
+                <option value="garden">Garden</option>
+              </select>
+            </label>
+            <div className="row top"><span>Background scene</span>
+              <div className="scene-pick" data-testid="scene-picker">
+                {SCENE_PRESETS.map((scene) => (
+                  <label key={scene.key} data-testid={`scene-${scene.key}`}>
+                    <input type="radio" name="sceneKey" value={scene.key} defaultChecked={(portal.sceneKey || 'plain') === scene.key} />
+                    {scene.url ? <img src={scene.url} alt="" /> : <span className="scene-swatch" />}
+                    <small>{scene.kind}</small>
+                    <b>{scene.label}</b>
+                  </label>
+                ))}
+                <label data-testid="scene-upload">
+                  <input type="radio" name="sceneKey" value="upload" defaultChecked={portal.sceneKey === 'upload'} />
+                  <span className="scene-swatch" />
+                  <small>Your picture</small>
+                  <b>Upload my own</b>
+                </label>
+              </div>
+            </div>
+            <label className="row"><span>Scene picture</span><input type="file" name="sceneFile" accept="image/jpeg,image/png,image/webp" data-testid="scene-file" /></label>
+            <label className="row"><span>Or a picture link</span><input type="url" name="sceneUrl" defaultValue={portal.sceneKey === 'upload' ? sceneUrlOf(portal) : ''} placeholder="https://" data-testid="scene-url" /></label>
+            <label className="row top"><span>Welcome note</span><textarea name="supportNote" defaultValue={str(portal.supportNote)} data-testid="support-note" placeholder="Leave blank to hide" /></label>
+            <label className="row"><span>Welcome mark</span>
+              <select name="markKind" defaultValue={portal.markKind === 'hearts' ? 'hearts' : 'plain'} data-testid="mark-kind">
+                <option value="plain">Plain</option>
+                <option value="hearts">HEARTS arch</option>
+              </select>
+            </label>
             <div className="actions"><button className="btn ink" data-testid="save-settings" type="submit">Save settings</button></div>
           </form>
         </section>

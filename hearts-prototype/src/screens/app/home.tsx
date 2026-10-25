@@ -35,6 +35,8 @@ import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { portalOwnsLibrary } from '@/server/portal-scope'
+import { courseHomeOf } from '@/lib/portal-look'
+import { nextCourseFilms } from './course-home'
 import { type Ctx, ref, rows, str, unreadCount } from '../common'
 
 function minutesLeft(seconds: number, percent: number) {
@@ -111,6 +113,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   const days = dayNumber(user)
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const clips = items.slice(0, 3)
+  const films = clips.length ? [] : await nextCourseFilms(payload, user, base, 3)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
   let demoContinue = ''
   if (demo) {
@@ -146,9 +149,9 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>
           <span className="tree-art" aria-hidden />
-          <p className="grow-sub">Five ways to see it</p>
+          <p className="grow-sub">{courseHomeOf(portal) === 'garden' ? 'Five ways to see it' : 'Your courses'}</p>
           <Rings g={g} base={base} portal={portal} own={ownLibrary} />
-          <Link className="pill gold block" href={`${base}/garden`} data-testid="see-sown">See what you&apos;ve sown</Link>
+          <Link className="pill gold block" href={`${base}/courses`} data-testid="see-sown">{courseHomeOf(portal) === 'garden' ? 'See what you have finished' : 'Your courses'}</Link>
         </section>
         ) : null}
         {due && featureOn(portal, 'compass') ? (
@@ -187,7 +190,8 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         {featureOn(portal, 'missions') ? await activeMissionCard(payload, portal.id, base) : null}
         <InstallCard strip />
         {featureOn(portal, 'gather') ? <HomeGather cards={gatherings} base={base} masjid={portalName(portal)} /> : null}
-        <p className="eyebrow">Today&apos;s clips <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
+        <p className="eyebrow">{clips.length ? 'Today\'s clips' : 'Next film'} <span className="muted" style={{ textTransform: 'none', letterSpacing: 0, fontWeight: 600 }} data-testid="day-number">· Day {dayNumber(user)} with us</span></p>
+        {clips.length ? (
         <Link className="feed-door" href={`${base}/feed`} data-testid="open-feed">
           <span className="strip">
             {clips.map((clip) => (
@@ -196,6 +200,17 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
           </span>
           <span className="go"><PlayIcon size={22} /> Watch today&apos;s clips</span>
         </Link>
+        ) : (
+          <div data-testid="next-films">
+            {films.map((film) => (
+              <Link key={film.href} className="continue-row" href={film.href} data-testid="next-film">
+                <span className="thumb" style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
+                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+              </Link>
+            ))}
+            {!films.length ? <p className="muted">Films will show here once a course is added.</p> : null}
+          </div>
+        )}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} unread={unread} />
     </AppFrame>
@@ -271,7 +286,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
             </article>
           )
         })}
-        {!lanes.length ? <p className="card" data-testid="lanes-empty"><span>No clips have been approved yet. The courses below are ready to watch.</span></p> : null}
+        {!lanes.length ? <LanesFilms payload={payload} user={user} base={base} /> : null}
         <p className="eyebrow">Your courses</p>
         {courses.map((course, index) => {
           const href = `${base}/course/${course.id}`
@@ -301,5 +316,20 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
       </div>
       <LearnerTabBar base={base} active="lanes" portal={portal} unread={unread} />
     </AppFrame>
+  )
+}
+
+async function LanesFilms({ payload, user, base }: Pick<Ctx, 'payload' | 'user' | 'base'>) {
+  const films = await nextCourseFilms(payload, user, base, 6)
+  if (!films.length) return <p className="card" data-testid="lanes-empty">Films will show here once a course is added.</p>
+  return (
+    <div data-testid="lanes-empty">
+      {films.map((film) => (
+        <Link key={film.href} className="continue-row" href={film.href} data-testid="next-film">
+          <span className="thumb" style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined} />
+          <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small></span>
+        </Link>
+      ))}
+    </div>
   )
 }
