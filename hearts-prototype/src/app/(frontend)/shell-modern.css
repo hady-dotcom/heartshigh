@@ -1358,6 +1358,10 @@ html[data-theme] .app-stage.shell-modern .app-search:focus-within {
   box-shadow: 0 0 0 var(--hh-line-width) var(--portal-accent, var(--hh-accent));
 }
 
+html[data-theme] .app-stage.shell-modern .search-panel[hidden] {
+  display: none;
+}
+
 html[data-theme] .app-stage.shell-modern .search-panel {
   position: absolute;
   z-index: 60;

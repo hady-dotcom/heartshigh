@@ -74,9 +74,11 @@ export function AppleSearch() {
       </svg>
       <input
         type="search"
+        role="combobox"
         value={query}
         placeholder="Search"
         aria-label="Search courses and films"
+        aria-autocomplete="list"
         aria-controls={listId}
         aria-expanded={open}
         data-testid="app-search"
@@ -96,8 +98,7 @@ export function AppleSearch() {
           }
         }}
       />
-      {open ? (
-        <div className="search-panel" id={listId} role="listbox" data-testid="search-panel">
+      <div className="search-panel" id={listId} role="listbox" data-testid="search-panel" hidden={!open}>
           {query.trim() ? (
             matches.length ? matches.map((item) => (
               <a key={item.href} className="search-hit" role="option" href={item.href} data-testid="search-result" onClick={() => remember(query)}>
@@ -112,8 +113,7 @@ export function AppleSearch() {
               ))}
             </>
           ) : <p className="search-label">Courses and films</p>}
-        </div>
-      ) : null}
+      </div>
     </div>
   )
 }
