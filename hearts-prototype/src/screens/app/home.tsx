@@ -31,6 +31,7 @@ import { HomeGather, homeGatherings } from './gather'
 import { HomeLive, liveHomeBits } from './live'
 import { activeMissionCard } from './mission'
 import { featureOn } from '@/lib/features'
+import { shellOf } from '@/lib/portal-look'
 import { openAnnouncements } from '@/server/safety'
 import { AnnounceCard } from '@/components/app/announce-card'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
@@ -141,7 +142,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         {notes.map((note) => (
           <AnnounceCard key={note.id} id={note.id} body={str(note.body)} next={base} />
         ))}
-        {featureOn(portal, 'garden') ? (
+        {featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? (
         <section className="grow-banner" data-testid="grow-banner">
           <p className="eyebrow">Your growth</p>
           <h2 data-testid="days-count">{daysWithUsLabel(days)}</h2>

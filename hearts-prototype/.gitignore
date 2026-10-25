@@ -13,6 +13,7 @@ test-results
 tsconfig.tsbuildinfo
 artifacts/
 .next-e2e
+.next-lighthouse
 .next-bring-in
 .next-turnstile
 .next-see-how
