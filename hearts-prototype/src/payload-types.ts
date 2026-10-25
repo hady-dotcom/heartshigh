@@ -789,6 +789,8 @@ export interface Lesson {
    * The extra code at the end of a private Vimeo link. Unlisted films need it to play.
    */
   vimeoHash?: string | null;
+  /** Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square. */
+  posterUrl?: string | null;
   film?: (number | null) | Media;
   /**
    * Mux-ready. Unused until a Mux asset is attached.
@@ -3770,6 +3772,7 @@ export interface LessonsSelect<T extends boolean = true> {
   videoProvider?: T;
   vimeoId?: T;
   vimeoHash?: T;
+  posterUrl?: T;
   film?: T;
   muxAssetId?: T;
   muxPlaybackId?: T;

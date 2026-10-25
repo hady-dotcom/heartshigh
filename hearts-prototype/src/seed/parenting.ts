@@ -187,6 +187,9 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     if (synced.error) throw new Error(synced.error)
   }
   await ensureSaidAnswers(payload, Number(course.id))
+  const { backfillVimeoFilms, clearMisplacedHomeAnswers } = await import('@/server/vimeo-backfill')
+  await clearMisplacedHomeAnswers(payload)
+  await backfillVimeoFilms(payload)
 
   const packFound = await payload.find({
     collection: 'packs',

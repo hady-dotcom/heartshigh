@@ -563,6 +563,7 @@ export const Lessons: CollectionConfig = {
     },
     { name: 'vimeoId', type: 'text' },
     { name: 'vimeoHash', type: 'text', admin: { description: 'The extra code at the end of a private Vimeo link. Unlisted films need it to play.' } },
+    { name: 'posterUrl', type: 'text', admin: { description: 'Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square.' } },
     { name: 'film', type: 'upload', relationTo: 'media' },
     { name: 'muxAssetId', type: 'text', admin: { description: 'Mux-ready. Unused until a Mux asset is attached.' } },
     { name: 'muxPlaybackId', type: 'text' },

@@ -137,6 +137,15 @@ export function posterFor(youtubeId: string | null | undefined) {
   return publicFile(`clips/${youtubeId}.jpg`) || `https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg`
 }
 
+/** A stored Vimeo oEmbed thumbnail, else the YouTube frame. Never a blank or a courtyard. */
+export function filmPoster(lesson: object | null | undefined) {
+  const row = lesson as { posterUrl?: unknown; youtubeId?: unknown } | null | undefined
+  const stored = String(row?.posterUrl || '').trim()
+  if (/^https:\/\//i.test(stored)) return stored
+  const youtubeId = typeof row?.youtubeId === 'string' ? row.youtubeId : null
+  return posterFor(youtubeId)
+}
+
 /** A still we can paint as a thumbnail, including YouTube frames and the copies under /clips/. */
 export function shownPoster(url: string | null | undefined) {
   if (!url) return null
@@ -242,7 +251,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
       speaker,
       speakerSlug: slugify(speaker),
       parts: own.length,
-      poster: posterFor((own.find((lesson) => lesson.youtubeId)?.youtubeId as string) || null),
+      poster: own.map((lesson) => filmPoster(lesson as { posterUrl?: string | null; youtubeId?: string | null })).find(Boolean) || null,
       firstLessonId: own[0]?.id ?? null,
       opensOnDay: opensOnDay({ index, inFeed: feedCourseIds.has(course.id) }),
       open: courseIsOpen({ index, today, inFeed: feedCourseIds.has(course.id) }),

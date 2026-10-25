@@ -19,6 +19,8 @@ import { readSaidAnswers } from '@/lib/said-answers'
 import { buildExportZip, type ExportAnswer, type ExportPortal, type ExportVideo } from '@/lib/sequence-export'
 import { transcriptFor } from '@/lib/youtube'
 import { sortParts } from '@/lib/part-order'
+import { matchQuestions } from '@/lib/question-keep'
+import { fetchVimeoMetas, shouldFetchVimeo, type VimeoMeta } from '@/lib/vimeo-meta'
 
 type Doc = Record<string, unknown> & { id: number }
 
@@ -26,6 +28,7 @@ export type LookupResult = {
   title?: string
   speaker?: string
   durationSeconds?: number
+  posterUrl?: string
   transcript?: string
   note?: string
 }
@@ -38,7 +41,7 @@ const LOOKUP_EACH_MS = 1500
 async function readJson(url: string) {
   const response = await fetch(url, { signal: AbortSignal.timeout(LOOKUP_EACH_MS) })
   if (!response.ok) return null
-  return (await response.json()) as { title?: string; author_name?: string; duration?: number }
+  return (await response.json()) as { title?: string; author_name?: string; duration?: number; thumbnail_url?: string }
 }
 
 /** Titles from the public oEmbed page, and captions when YouTube will give them. */
@@ -46,6 +49,7 @@ export async function lookupVideo(video: ParsedVideo): Promise<LookupResult> {
   let title = ''
   let speaker = ''
   let durationSeconds = 0
+  let posterUrl = ''
   try {
     const endpoint = video.provider === 'youtube'
       ? `https://www.youtube.com/oembed?url=${encodeURIComponent(video.url)}&format=json`
@@ -54,17 +58,18 @@ export async function lookupVideo(video: ParsedVideo): Promise<LookupResult> {
     title = String(meta?.title || '').trim()
     speaker = String(meta?.author_name || '').trim()
     durationSeconds = Number(meta?.duration || 0)
+    posterUrl = /^https:\/\//i.test(String(meta?.thumbnail_url || '')) ? String(meta?.thumbnail_url) : ''
   } catch {
     title = ''
   }
   if (video.provider !== 'youtube') {
-    return { title, speaker, durationSeconds: durationSeconds || undefined, note: SEQUENCE_COPY.captions }
+    return { title, speaker, durationSeconds: durationSeconds || undefined, posterUrl: posterUrl || undefined, note: SEQUENCE_COPY.captions }
   }
   const got = await transcriptFor(video.id)
   if (got.transcript) {
-    return { title, speaker, durationSeconds: durationSeconds || got.duration || undefined, transcript: got.transcript }
+    return { title, speaker, durationSeconds: durationSeconds || got.duration || undefined, posterUrl: posterUrl || undefined, transcript: got.transcript }
   }
-  return { title, speaker, durationSeconds: durationSeconds || undefined, note: SEQUENCE_COPY.captions }
+  return { title, speaker, durationSeconds: durationSeconds || undefined, posterUrl: posterUrl || undefined, note: SEQUENCE_COPY.captions }
 }
 
 async function lookupAll(videos: ParsedVideo[], lookup: VideoLookup) {
@@ -190,6 +195,73 @@ async function deleteLesson(payload: Payload, lessonId: number) {
   await payload.delete({ collection: 'lessons', id: lessonId, overrideAccess: true })
 }
 
+function calloutFields(lessonId: number, callout: CourseFilm['callouts'][number]) {
+  return {
+    lesson: lessonId,
+    triggerType: 'timestamp' as const,
+    second: callout.second,
+    kind: callout.kind,
+    prompt: callout.prompt,
+    options: callout.options.length ? callout.options : undefined,
+    correctOption: callout.correct || undefined,
+    timing: 'immediate' as const,
+    audience: 'everyone' as const,
+    status: 'published' as const,
+  }
+}
+
+async function deleteAnswersForPoints(payload: Payload, pointIds: number[]) {
+  if (!pointIds.length) return
+  for (;;) {
+    const found = await payload.find({
+      collection: 'answers',
+      overrideAccess: true,
+      depth: 0,
+      limit: 100,
+      where: { point: { in: pointIds } },
+    })
+    if (!found.docs.length) return
+    for (const doc of found.docs) await payload.delete({ collection: 'answers', id: doc.id, overrideAccess: true })
+    if (found.docs.length < 100) return
+  }
+}
+
+/** Keeps learner answers when the question text is the same. A changed question drops only its own answers. */
+async function syncFilmQuestions(payload: Payload, lessonId: number, callouts: CourseFilm['callouts']) {
+  const existing = await payload.find({
+    collection: 'engagement-points',
+    overrideAccess: true,
+    depth: 0,
+    limit: 50,
+    where: { lesson: { equals: lessonId } },
+  })
+  const points = existing.docs.map((row) => asDoc(row)).map((row) => ({ id: row.id, prompt: String(row.prompt || '') }))
+  const plan = matchQuestions(points, callouts.map((callout) => callout.prompt))
+  for (const kept of plan.kept) {
+    const callout = callouts.find((row) => row.prompt === kept.prompt)
+    if (!callout) continue
+    await payload.update({
+      collection: 'engagement-points',
+      id: kept.id,
+      overrideAccess: true,
+      context: { sequenceCallout: true },
+      data: calloutFields(lessonId, callout),
+    })
+  }
+  await deleteAnswersForPoints(payload, plan.dropped)
+  for (const id of plan.dropped) await payload.delete({ collection: 'engagement-points', id, overrideAccess: true })
+  for (const prompt of plan.fresh) {
+    const callout = callouts.find((row) => row.prompt === prompt)
+    if (!callout) continue
+    await payload.create({
+      collection: 'engagement-points',
+      overrideAccess: true,
+      context: { sequenceCallout: true },
+      data: calloutFields(lessonId, callout),
+    })
+  }
+}
+
 function filmKey(film: CourseFilm) {
   return film.vimeoId ? `vimeo:${film.vimeoId}` : `title:${film.title.trim().toLowerCase()}`
 }
@@ -262,12 +334,13 @@ export async function importPortalSheet(payload: Payload, portalId: number, raw:
 }
 
 /** Replace this course with the sheet: same films update in place, missing ids stay, callouts become questions. */
-export async function syncCourseSheet(payload: Payload, portalId: number, raw: string, opts?: { anyPortal?: boolean; title?: string }) {
+export async function syncCourseSheet(payload: Payload, portalId: number, raw: string, opts?: { anyPortal?: boolean; title?: string; vimeoMetas?: Map<string, VimeoMeta> }) {
   const portal = await portalDoc(payload, portalId)
   if (!opts?.anyPortal && !isSequencePortal(shapeOf(portal))) return { error: 'This portal does not use a sequenced course.' }
   const parsed = parseCourseSheet(raw)
   if (parsed.error) return { error: parsed.error }
   if (!parsed.films.length) return { error: 'That sheet has no films.' }
+  const vimeoMetas = opts?.vimeoMetas || (shouldFetchVimeo() ? await fetchVimeoMetas(parsed.films.map((film) => film.vimeoId)) : new Map<string, VimeoMeta>())
   const named = opts?.title ? await courseNamed(payload, portal, opts.title) : { course: await ensureCourse(payload, portal), created: false }
   const course = named.course
   const unitRows = await payload.find({
@@ -326,6 +399,7 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     const current = byFilm || byOrder
     const unit = unitId.get(film.module)
     if (!unit) return { error: 'A film is missing its section.' }
+    const meta = film.vimeoId ? vimeoMetas.get(film.vimeoId) : undefined
     const data = {
       title: film.publicTitle.slice(0, 240),
       sourceTitle: film.title.slice(0, 240),
@@ -349,33 +423,15 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
       publishState: 'published' as const,
       jibrilSection: null,
       ghunyaHeading: null,
+      ...(meta?.durationSeconds ? { durationSeconds: meta.durationSeconds } : {}),
+      ...(meta?.posterUrl ? { posterUrl: meta.posterUrl } : {}),
     }
     const lesson = current
       ? await payload.update({ collection: 'lessons', id: current.id, overrideAccess: true, data })
       : await payload.create({ collection: 'lessons', overrideAccess: true, data })
     const lessonId = lesson.id
     kept.add(lessonId)
-    await deleteWhere(payload, 'answers', lessonId)
-    await deleteWhere(payload, 'engagement-points', lessonId)
-    for (const callout of film.callouts) {
-      await payload.create({
-        collection: 'engagement-points',
-        overrideAccess: true,
-        context: { sequenceCallout: true },
-        data: {
-          lesson: lessonId,
-          triggerType: 'timestamp',
-          second: callout.second,
-          kind: callout.kind,
-          prompt: callout.prompt,
-          options: callout.options.length ? callout.options : undefined,
-          correctOption: callout.correct || undefined,
-          timing: 'immediate',
-          audience: 'everyone',
-          status: 'published',
-        },
-      })
-    }
+    await syncFilmQuestions(payload, lessonId, film.callouts)
   }
   for (const row of existing.docs.map((item) => asDoc(item))) {
     if (!kept.has(row.id)) await deleteLesson(payload, row.id)
@@ -457,6 +513,7 @@ export async function saveSequenceImport(payload: Payload, portalId: number, raw
         vimeoHash: video.hash || undefined,
         videoProvider: video.provider,
         durationSeconds: duration || undefined,
+        ...(meta.posterUrl ? { posterUrl: meta.posterUrl } : {}),
         transcript: meta.transcript || undefined,
         transcriptSource: meta.transcript ? video.provider : 'none',
         transcriptNote: meta.transcript ? undefined : meta.note || SEQUENCE_COPY.captions,
