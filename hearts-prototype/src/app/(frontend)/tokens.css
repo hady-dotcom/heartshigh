@@ -11,6 +11,7 @@
 
 :root {
   --hh-paper: #ffffff;
+  --hh-canvas: #f2f2f7;
   --hh-ink: #111827;
   --hh-ink-2: #374151;
   --hh-muted: #4b5563;
@@ -67,6 +68,7 @@
   --hh-press: 0.97;
   --hh-hero: 248px;
   --hh-header: 60px;
+  --hh-chrome: 112px;
   --hh-wash-size: 220px;
   --hh-thumb-w: 120px;
   --hh-ring: 48px;
