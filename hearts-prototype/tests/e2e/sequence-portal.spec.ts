@@ -161,7 +161,7 @@ test('uploading the course sheet again updates films in place', async ({ page })
   await page.getByTestId('sequence-sheet').setInputFiles({ name: 'videos.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
   await page.getByTestId('sequence-paste').fill('')
   await page.getByTestId('sequence-import').click()
-  await expect(page.getByTestId('notice')).toContainText('Updated the course. 2 films.')
+  await expect(page.getByTestId('notice')).toContainText('Updated Guiding Home Learning. 2 films.')
   await expect(page.getByTestId('film-title')).toHaveCount(2)
   await expect(page.getByTestId('film-title').first()).toHaveValue('Public one')
 
