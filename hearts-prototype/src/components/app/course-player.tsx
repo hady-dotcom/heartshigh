@@ -1006,6 +1006,22 @@ export function CoursePlayer({
           })}
         </ul>
       ) : null}
+      {films && swarmOn && views.some((point) => (swarm[point.id] || []).length) ? (
+        <div data-testid="film-swarm">
+          {views.map((point) => {
+            const items = swarm[point.id] || []
+            if (!items.length) return null
+            return (
+              <section key={point.id} data-testid="film-swarm-question" data-point={point.id}>
+                <SwarmList
+                  showName
+                  items={items.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
+                />
+              </section>
+            )
+          })}
+        </div>
+      ) : null}
       {mode === 'practice' && !videoComing ? (
         <p className="muted" style={{ fontSize: 13, margin: '8px 2px 0' }} data-testid="practice-note">
           {youtubeId ? 'The film could not load here, so the timeline runs on its own.' : films ? 'This film has no link yet, so the timeline runs on its own.' : 'This talk has no film link yet, so the timeline runs on its own.'} Press play and it will stop at each question.
@@ -1404,6 +1420,7 @@ function Sheet({
         {swarmOn ? (
           <>
             <SwarmList
+              showName={films}
               items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
               mine={point.myAnswer}
               circleLabel={circleLabel}
