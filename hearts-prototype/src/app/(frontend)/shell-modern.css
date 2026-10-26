@@ -1353,11 +1353,26 @@ html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-t
   width: 100%;
   min-height: 100%;
   padding: var(--hh-space-2);
-  color: var(--portal-accent, var(--hh-accent));
+  background-color: var(--hh-accent-fill);
+  color: var(--hh-ink);
   font-size: var(--hh-font-size-small);
   font-weight: 700;
   line-height: 1.25;
   text-align: start;
+}
+
+html[data-theme] .app-stage.shell-modern .course-card .thumb.is-fallback,
+html[data-theme] .app-stage.shell-modern .buffet-row .thumb.is-fallback {
+  background-color: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title,
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title small,
+html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title b,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title small,
+html[data-theme] .app-stage.shell-modern .course-hero-still.is-fallback .thumb-title b {
+  color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern .thumb.is-fallback .thumb-title small,

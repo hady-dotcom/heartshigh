@@ -611,7 +611,7 @@ test('signed-out first visit', async ({ page }, info) => {
     await page.getByTestId('progress').waitFor({ timeout: 15_000 })
   }
   for (let step = 1; step <= 8; step += 1) {
-    await expect(page.getByTestId('progress')).toHaveText(`${step} of 8`)
+    await expect.poll(async () => page.getByTestId('progress').allTextContents()).toEqual([`${step} of 8`])
     await settle(page)
     const chips = await chipProblems(page)
     expect(chips, chips.join('\n')).toEqual([])
