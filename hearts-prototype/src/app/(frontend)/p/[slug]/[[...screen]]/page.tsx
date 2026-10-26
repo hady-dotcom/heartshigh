@@ -20,6 +20,7 @@ import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook, GardenWorkbookEntry } from '@/screens/app/garden'
 import { CourseHomeScreen } from '@/screens/app/course-home'
 import { GuestCourseScreen, GuestCoursesScreen, GuestMeScreen, GuestWeekScreen } from '@/screens/app/guest-courses'
+import { ParentWorkbookScreen } from '@/screens/app/parent-workbook'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SavedScreen, SettingsScreen } from '@/screens/app/me'
 import { WeekScreen } from '@/screens/app/week'
@@ -133,7 +134,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
-  if (area === 'courses' || area === 'course' || area === 'garden' || area === 'week' || area === 'me') {
+  if (area === 'courses' || area === 'course' || area === 'garden' || area === 'week' || area === 'me' || area === 'workbook') {
     const guest = await getSession()
     if (!guest.user) {
       const portal = await loadPortal(guest.payload, slug)
@@ -151,6 +152,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         }
         if (area === 'week' && !a) return GuestWeekScreen({ portal, base })
         if (area === 'me' && !a) return GuestMeScreen({ portal, base })
+        if (area === 'workbook' && !a) return ParentWorkbookScreen({ payload: guest.payload, portal, base, userId: null })
       }
     }
   }
@@ -349,6 +351,9 @@ async function learnerArea(area: string | undefined, a: string | undefined, b: s
     case 'course':
       if (!a || !Number(a)) notFound()
       return CourseScreen(ctx, Number(a))
+    case 'workbook':
+      if (a || shellOf(ctx.portal) !== 'modern') notFound()
+      return ParentWorkbookScreen({ payload, portal: ctx.portal, base, userId: ctx.user.id })
     case 'courses':
     case 'garden':
       if (a === 'workbook') return gated(ctx, 'workbook') || (b && /^\d+$/.test(b) ? GardenWorkbookEntry(ctx, Number(b)) : GardenWorkbook(ctx))

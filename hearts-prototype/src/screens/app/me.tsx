@@ -39,7 +39,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const links: [string, string, string, string][] = [
     ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
     ['saved', 'Saved', modern ? 'Films you kept' : 'Clips you kept from the feed', 'me/saved'],
-    ...(featureOn(portal, 'workbook') ? [['workbook', modern ? 'Saved answers' : 'Workbook', modern ? 'Answers you saved, and your teacher’s replies' : 'Your answers and your teacher’s replies', modern ? 'me#answers' : 'garden/workbook'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'workbook') ? [['workbook', 'Workbook', modern ? 'The first ten films, your answer, and a few from other parents' : 'Your answers and your teacher’s replies', modern ? 'workbook' : 'garden/workbook'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', modern ? 'Plain words, only when a film or an answer backs them' : 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],

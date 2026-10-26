@@ -142,6 +142,11 @@ export function GuestMeBody({ base, portal }: { base: string; portal: string }) 
         <button type="submit" className="pill gold" data-testid="name-save">Save on this phone</button>
         {state?.name ? <p data-testid="me-name">{state.name}</p> : null}
       </form>
+      <p className="eyebrow">Workbook</p>
+      <a className="list-link" href={`${base}/workbook`} data-testid="me-workbook">
+        <span className="grow">Workbook<small>The first ten films, your answer, and a few from other parents</small></span>
+        <span aria-hidden>›</span>
+      </a>
       <p className="eyebrow">On this phone</p>
       <p data-testid="guest-opening">{opening} opening answer{opening === 1 ? '' : 's'} saved</p>
       {state?.progress.length ? state.progress.slice(0, 8).map((row) => (

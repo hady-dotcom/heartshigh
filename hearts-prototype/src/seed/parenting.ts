@@ -172,6 +172,18 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
           ...hadyLook(),
         },
       })
+  const { removeGeneratedSwarm } = await import('@/server/parent-swarm')
+  void removeGeneratedSwarm(payload, Number(portal.id)).then((result) => {
+    if (result.removed) payload.logger.info(`Removed ${result.removed} generated parent answers. Kept ${result.kept} real ones.`)
+  }).catch((error) => {
+    payload.logger.error({ err: error, msg: 'Could not remove the generated parent answers.' })
+  })
+  const { seedWorkbookAnswers } = await import('@/server/workbook-seed')
+  void seedWorkbookAnswers(payload, Number(portal.id)).then((result) => {
+    if (result.created) payload.logger.info(`Shared ${result.created} handwritten answers on the first ten films.`)
+  }).catch((error) => {
+    payload.logger.error({ err: error, msg: 'Could not share the workbook answers.' })
+  })
   await ensureOpeningQuestions(payload, Number(portal.id))
   await ensureParentScenes(payload, Number(portal.id))
 
@@ -241,13 +253,6 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   ]
   const questions = await syncPortalFilmQuestions(payload, Number(portal.id), sheetFilms)
   if (questions.updated) payload.logger.info(`Updated the sheet questions on ${questions.updated} films.`)
-  const { seedParentSwarm } = await import('@/server/parent-swarm')
-  void seedParentSwarm(payload, Number(portal.id)).then((swarm) => {
-    if (swarm.created) payload.logger.info(`Shared ${swarm.created} parent answers on ${swarm.questions} questions.`)
-  }).catch((error) => {
-    payload.logger.error({ err: error, msg: 'Could not share the parent answers.' })
-  })
-
   const packFound = await payload.find({
     collection: 'packs',
     overrideAccess: true,
