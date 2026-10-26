@@ -22,6 +22,7 @@ import { FILMS } from './films'
 import { seedOpening, seedPeople, timingCheck } from './opening'
 import { seedSpeakers } from './speakers'
 import { legacyPortalFeatures } from '../lib/features'
+import { now } from '../lib/clock'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
@@ -517,7 +518,7 @@ async function main() {
 
   }
 
-  const opening = await seedOpening(payload, { clauseIds, portalIds, now: new Date(), showUnchecked: !startersOnly })
+  const opening = await seedOpening(payload, { clauseIds, portalIds, now: now(), showUnchecked: !startersOnly })
   const circleFill = await fillMissingCircleAnswers(payload)
   if (circleFill.added) console.log(`Filled ${circleFill.added} HEARTS circle answers on questions that were short.`)
   const demoPortal = (await payload.find({ collection: 'portals', overrideAccess: true, limit: 1, where: { slug: { equals: 'hearts-demo' } } })).docs[0]
@@ -531,8 +532,8 @@ async function main() {
     groupedIds.push(...grouped.courseIds)
   }
   await seedSpeakers(payload)
-  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: new Date(), courseList: [...new Set([...groupedIds, ...opening.starterCourseIds, ...courseIds])] })
-  await seedHarvest(payload, { now: new Date(), demo: !startersOnly })
+  if (!startersOnly) await seedPeople(payload, { portalIds, sceneIds: opening.sceneIds, now: now(), courseList: [...new Set([...groupedIds, ...opening.starterCourseIds, ...courseIds])] })
+  await seedHarvest(payload, { now: now(), demo: !startersOnly })
   if (!startersOnly) {
     const { seedDemoHarvest } = await import('./harvest-seed')
     await seedDemoHarvest(payload)
