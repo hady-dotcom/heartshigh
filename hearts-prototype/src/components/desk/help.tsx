@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from 'react'
 import { SeeHowLink } from '@/components/see-how'
-import { EXPERIMENT_HELP } from '@/lib/desk-help'
+import { EXPERIMENT_HELP, PLAIN_EXPERIMENT_HELP } from '@/lib/desk-help'
 import styles from './help.module.css'
 
 export { HelpTip, type HelpTipProps } from '@/components/help-tip'
@@ -37,10 +37,11 @@ export function DeskHelp({
   )
 }
 
-export function ExperimentHelp() {
+export function ExperimentHelp({ plain = false }: { plain?: boolean }) {
+  const lines = plain ? PLAIN_EXPERIMENT_HELP : EXPERIMENT_HELP
   return (
     <DeskHelp seeHowKey="experiments-desk">
-      {EXPERIMENT_HELP.map((line) => (
+      {lines.map((line) => (
         <p key={line.body}>
           {line.title ? <b>{line.title}</b> : null}
           {line.title ? ' ' : null}

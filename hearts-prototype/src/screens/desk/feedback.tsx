@@ -28,6 +28,7 @@ import { AdminFrame } from './overview'
 import { exportAudit, includedSummaries, loadRawFeedback, questionChecksPending, summariesFor, weakQuestions } from '@/server/feedback'
 import styles from './feedback.module.css'
 import { localeFromAcceptLanguage, portalTimeZone, zonedTime, zoneCity } from '@/lib/zone-time'
+import { shellOf } from '@/lib/portal-look'
 
 const FAMILIES: Family[] = ['popup', 'reflection', 'task', 'circle', 'live']
 
@@ -37,6 +38,7 @@ export async function FeedbackScreen(ctx: Ctx) {
     return <AdminFrame ctx={ctx} active="feedback" title="Feedback" testId="feedback-denied"><p>Feedback is for teachers and portal admins.</p></AdminFrame>
   }
   const filters = parseFilters(query)
+  const modern = shellOf(portal) === 'modern'
   const ai = publicAi(portal.aiConnection)
   const anonymised = anonymiseFromQuery(query) || !canNameExport(user.role)
   const here = `${base}/admin/feedback`
@@ -122,7 +124,7 @@ export async function FeedbackScreen(ctx: Ctx) {
                   {DOORS.map((door) => <option key={door.number} value={`W${door.number}`}>{doorLabel(door)}</option>)}
                 </select>
               </label>
-              <label>Ghunya seat
+              <label>{modern ? 'Group' : 'Ghunya seat'}
                 <select name="seat" defaultValue={filters.seatId || ''}>
                   <option value="">All seats</option>
                   {options.seats.map((seat) => <option key={seat.id} value={seat.id}>{seat.label}</option>)}
@@ -274,7 +276,7 @@ export async function FeedbackScreen(ctx: Ctx) {
             </form>
           </header>
           <div className={`body ${styles.weak}`}>
-            <p className="hint">The check flags questions whose answers would be yes or no, generic, or unhelpful to a sheikh. Rewrites are drafts only. Nothing is published over the live question.</p>
+            <p className="hint">{modern ? 'The check flags questions whose answers would be yes or no, generic, or of little use to a teacher. Rewrites are drafts only. Nothing is published over the live question.' : 'The check flags questions whose answers would be yes or no, generic, or unhelpful to a sheikh. Rewrites are drafts only. Nothing is published over the live question.'}</p>
             {rewrites.map((row) => (
               <article key={row.id} data-testid="weak-question">
                 <div className={styles.meta}><span className="badge ink">Draft</span>{row.family ? <span className="badge teal">{row.family}</span> : null}<span className="hint">{row.talk}</span></div>

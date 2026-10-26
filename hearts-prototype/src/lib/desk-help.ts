@@ -288,11 +288,68 @@ export const TEST_IDS: Record<string, string> = {
   'transcript-editor-page': 'transcripts',
 }
 
-/** Page copy for a desk frame, from the nav key or the screen test id. */
-export function pageHelp(active?: string, testId?: string) {
-  if (testId && PAGE[TEST_IDS[testId] || testId]) return PAGE[TEST_IDS[testId] || testId]
-  if (active && PAGE[active]) return PAGE[active]
+/**
+ * The same pages, without HEARTS words, for a modern portal desk.
+ * HEARTS and the master desk keep PAGE.
+ */
+export const PLAIN_PAGE: Partial<Record<string, string>> = {
+  opening:
+    'These are the questions a newcomer sees before the clips. Keep the starter set, change the words, leave a scene out, or add your own. Your own questions belong to this portal. They can be for any kind of work.',
+  portals:
+    'Each portal is one community, with its own admin, codes and people. You open them here, and each portal admin runs their own. View as lets you see a desk as that admin does. Open with courses and features when you want to switch parts on in stages.',
+  questions:
+    'Joining questions are asked once, when someone joins. Each answer helps choose a first course. The default set is already on every portal. You can attach more, or add your own.',
+  insights:
+    'Insights shows how people move through the app: taps, scrolls and clips they watch. The counts stay in our database. We never store what someone typed, or an answer.',
+  gather:
+    'Gather is for meetings in person: classes, circles and open evenings. Put a date up, share the link, and take the register from Attendance. Ideas from learners wait here until you open them.',
+  experiments:
+    'A test shows some learners one wording and others another, then counts what they do. Learners are never told they are in a test. A speaker’s words stay as they are. The kill switch stops every running test at once.',
+  calendar:
+    'Event Calendar knows the special days and seasons you add. A suggested line never reaches a learner until you approve it. You choose which dates this group cares about.',
+}
+
+/** Tool tips that name HEARTS, a masjid, or a door of Hadith Jibril. Modern desks use these. */
+export const PLAIN_TOOL: Partial<Record<keyof typeof TOOL, string>> = {
+  timeZone:
+    'The time zone is how dates and nights appear for this portal. Pick the city this group uses. It does not change the clocks on people’s phones.',
+  contentSearch:
+    'Search looks at subject titles. Mine is what you made here, and Library is what you linked. The list is grouped by course, then by the films inside it.',
+  bringInJibril:
+    'An optional group for this film. Leave it blank if you are not placing it yet. You can set a different group on each row after the lookup.',
+  portalAi:
+    'This box sends the run to your portal’s own AI account, the address and key saved in Settings. The line beside it says how many calls that is and a rough cost, and you confirm before anything is sent. Only a portal admin can start a run. This app does not pay for it.',
+  addOpeningScene:
+    'Add a question writes one of your own scenes for this portal. Learners see it after the starter set you kept. Use it for home, work, or any training this group needs.',
+  hideScene:
+    'Leave this scene out hides it for your community only. The scene that opens the help screen cannot be hidden. The starter choices stay as they are.',
+}
+
+export const PLAIN_EXPERIMENT_HELP: { title?: string; body: string }[] = [
+  { body: 'A test shows some learners one wording and others another, then counts what they do. Learners are never told they are in a test.' },
+  { title: 'Start', body: 'turns a draft on. From then on, learners see one of the versions.' },
+  { title: 'Hold back', body: 'keeps a version from running. Use it when a suggested line is not ready.' },
+  { title: 'Make the winner the default', body: 'puts the winning words in place for everyone, once you are sure.' },
+  { title: 'Kill switch', body: 'stops every running test at once. Everyone sees the usual words again.' },
+  { body: 'A speaker’s words are never tested. The talk and the meaning of a question stay as they are.' },
+]
+
+function pageKey(active?: string, testId?: string) {
+  if (testId && PAGE[TEST_IDS[testId] || testId]) return TEST_IDS[testId] || testId
+  if (active && PAGE[active]) return active
   return ''
+}
+
+/** Page copy for a desk frame, from the nav key or the screen test id. */
+export function pageHelp(active?: string, testId?: string, opts?: { plain?: boolean }) {
+  const key = pageKey(active, testId)
+  if (opts?.plain && key && PLAIN_PAGE[key]) return PLAIN_PAGE[key]
+  return key ? PAGE[key] : ''
+}
+
+export function toolHelp<K extends keyof typeof TOOL>(key: K, plain = false) {
+  if (plain && PLAIN_TOOL[key]) return PLAIN_TOOL[key] as (typeof TOOL)[K]
+  return TOOL[key]
 }
 
 export function deskPageCopyKeys() {

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { PAGE, TOOL, helpSentenceCount, pageHelp } from './desk-help'
+import { PAGE, PLAIN_PAGE, PLAIN_TOOL, TOOL, helpSentenceCount, pageHelp, toolHelp } from './desk-help'
+import { hasHeartsWording } from './portal-look'
 
 const PAGES = [
   'overview',
@@ -75,6 +76,23 @@ describe('desk help', () => {
     assert.equal(pageHelp('framing', 'master-framing'), PAGE.framing)
     assert.equal(pageHelp('framing', 'framing-clip'), PAGE.framing)
     assert.equal(pageHelp('nights', 'master-nights'), PAGE.nights)
+    assert.equal(pageHelp('opening', 'admin-opening'), PAGE.opening)
+    assert.match(pageHelp('opening', 'admin-opening', { plain: true }) || '', /any kind of work/)
+    assert.equal(pageHelp('teach', undefined, { plain: true }), PAGE.teach)
+    assert.equal(toolHelp('timeZone'), TOOL.timeZone)
+    assert.doesNotMatch(toolHelp('timeZone', true), /masjid/)
+    for (const text of Object.values(PLAIN_PAGE)) {
+      if (!text) continue
+      assert.equal(hasHeartsWording(text), false)
+      const count = helpSentenceCount(text)
+      assert.ok(count >= 2 && count <= 4, text)
+    }
+    for (const text of Object.values(PLAIN_TOOL)) {
+      if (!text) continue
+      assert.equal(hasHeartsWording(text), false)
+      const count = helpSentenceCount(text)
+      assert.ok(count >= 2 && count <= 4, text)
+    }
     assert.ok(Object.keys(TOOL).length > 10)
   })
 })

@@ -13,6 +13,7 @@ import { HelpTip } from '@/components/desk/help'
 import { PortalAiConfirm } from '@/components/desk/paid-ai'
 import { aiSpendIsOff, rerunScopes, tryOutputLabel } from '@/lib/ai-honesty'
 import { TOOL } from '@/lib/desk-help'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
 import { DeskFrame, masterNav } from './shell'
@@ -197,6 +198,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
   const does = stepDoes(slug)
   const canEdit = desk.canEdit
   const here = `${base}/${slug}`
+  const plain = Boolean(ctx && shellOf(ctx.portal) === 'modern')
   return (
     <Frame ctx={ctx} master={master} title={str(step.name)} intro={stepPlainLine(slug) || str(step.description)} testId="ai-step-page">
       <Banner desk={desk} />
@@ -217,7 +219,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
         <section className="panel">
           <header className="light"><h2>{STEP_PAGE_COPY.instructions} <HelpTip topic="ai-prompt">{TOOL.aiPrompt}</HelpTip></h2>{portalLive ? <span className={styles.mark}>{`Your portal’s version ${str(portalLive.number)}`}</span> : null}</header>
           <div className="body">
-            {!desk.master && canEdit ? <p className={styles.quiet}>Saving this only changes the step for your portal. Other portals, and the HEARTS wording, stay as they are.</p> : null}
+            {!desk.master && canEdit ? <p className={styles.quiet}>{plain ? 'Saving this only changes the step for your portal. Other portals stay as they are.' : 'Saving this only changes the step for your portal. Other portals, and the HEARTS wording, stay as they are.'}</p> : null}
             {canEdit ? (
               <form action="/api/ai-steps" method="post" className="form" data-testid="ai-prompt-form">
                 <Hidden fields={{ action: 'save-version', slug, next: here }} />
@@ -245,7 +247,7 @@ async function StepPage({ ctx, master, base, slug, desk }: { ctx: Ctx | null; ma
             {!desk.master && portalLive && canEdit ? (
               <form action="/api/ai-steps" method="post" style={{ marginTop: 10 }}>
                 <Hidden fields={{ action: 'use-hearts', slug, next: here }} />
-                <button className="btn ghost small" type="submit" data-testid="ai-use-hearts">Use the HEARTS version</button>
+                <button className="btn ghost small" type="submit" data-testid="ai-use-hearts">{plain ? 'Use the shared version' : 'Use the HEARTS version'}</button>
               </form>
             ) : null}
           </div>

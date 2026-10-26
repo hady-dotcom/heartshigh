@@ -16,7 +16,8 @@ import type { ScaleKey } from '@/lib/heart'
 import { partTitle } from '@/lib/talk-title'
 import { portalDisplayName, showPortalName } from '@/lib/portal-name'
 import { HelpTip } from '@/components/desk/help'
-import { TOOL } from '@/lib/desk-help'
+import { TOOL, toolHelp } from '@/lib/desk-help'
+import { shellOf } from '@/lib/portal-look'
 import { type Ctx, ref, rows, str } from '../common'
 import { masterFlags } from '../app/journey'
 import { AdminFrame } from './overview'
@@ -309,6 +310,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
   const hidden = new Set(((config?.hiddenScenes as unknown[]) || []).map((row) => idOf(row)))
   const contacts = (config?.helpContacts as { label?: string; phone?: string; url?: string; hours?: string }[]) || []
   const extras = cleanPortalScenes(config?.extraScenes).scenes
+  const modern = shellOf(portal) === 'modern'
   return (
     <AdminFrame ctx={ctx} active="opening" title="Opening questions" intro="Questions you add here are the only ones a newcomer sees. A portal with none of its own keeps the starter set." testId="admin-opening">
       {extras.length ? <p data-testid="portal-own-replaces">Learners in this portal see only the questions below. The starter set stays off.</p> : scenes.map((scene) => {
@@ -329,7 +331,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
               {crisis ? <p className="hint" style={{ margin: 0 }}>This scene holds the option that opens the help screen, so it is always shown.</p> : (
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <label className="check"><input type="checkbox" name="hidden" defaultChecked={hidden.has(scene.id)} data-testid="portal-hide" /> Leave this scene out for {showPortalName(portal.name)}</label>
-                  <HelpTip topic="hide-scene">{TOOL.hideScene}</HelpTip>
+                  <HelpTip topic="hide-scene">{toolHelp('hideScene', modern)}</HelpTip>
                 </span>
               )}
               <div className="actions"><button className="btn ink small" type="submit" data-testid="portal-scene-save">Save</button></div>
@@ -339,7 +341,7 @@ export async function PortalOpeningScreen(ctx: Ctx) {
       })}
       <section className="panel" style={{ marginBottom: 18 }} data-testid="portal-own-scenes">
         <header className="light">
-          <h2>Your questions <HelpTip topic="add-opening-scene">{TOOL.addOpeningScene}</HelpTip></h2>
+          <h2>Your questions <HelpTip topic="add-opening-scene">{toolHelp('addOpeningScene', modern)}</HelpTip></h2>
           <span className="hint">These replace the starter set</span>
         </header>
         <div className="body" style={{ display: 'grid', gap: 12 }}>

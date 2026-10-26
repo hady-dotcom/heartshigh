@@ -37,6 +37,7 @@ import {
 } from '@/server/experiments'
 import { rows, str } from '../common'
 import type { Ctx } from '../common'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './experiments.module.css'
@@ -91,7 +92,7 @@ async function Frame({
 }) {
   const withHelp = (
     <>
-      <ExperimentHelp />
+      <ExperimentHelp plain={Boolean(ctx && shellOf(ctx.portal) === 'modern')} />
       {tools}
     </>
   )

@@ -22,6 +22,7 @@ import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/con
 import { partTitle } from '@/lib/talk-title'
 import { learnerEmbedSrc } from '@/lib/yt'
 import { counted, editorLink, youtubeThumb, youtubeWatch, type CourseUse } from '@/lib/library-catalogue'
+import { shellOf } from '@/lib/portal-look'
 import { Pager } from '@/components/desk/pager'
 import { courseFilms, whoUsesCourse } from '@/server/library-catalogue'
 import { type Ctx, type Row, allDocs, clock, one, portalPeople, ref, rows, str } from '../common'
@@ -31,7 +32,7 @@ import { fallbackTrack } from '@/lib/framing/validate'
 import { HelpTip } from '@/components/desk/help'
 import { PortalAiChoice } from '@/components/desk/paid-ai'
 import { publicAi } from '@/lib/portal-ai'
-import { TOOL } from '@/lib/desk-help'
+import { TOOL, toolHelp } from '@/lib/desk-help'
 import { BusyForm } from '@/components/desk/busy-form'
 import { listShortTalks } from '@/server/short-talks'
 import { TooShortFilter, TooShortTable } from './short-talks'
@@ -50,6 +51,7 @@ export function guardAdmin(ctx: Ctx) {
 export async function ContentScreen(ctx: Ctx) {
   const teacher = ctx.user.role === 'teacher'
   const { payload, portal, base, query } = ctx
+  const modern = shellOf(portal) === 'modern'
   const gone = (course: unknown) => courseRemovedFromDesk(course as { hidden?: boolean | null; hiddenNote?: unknown })
   const local = (await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] }, { sort: 'title' })).filter((course) => !gone(course))
   const adoptedIds = await adoptedCourseIds(payload, portal.id)
@@ -126,7 +128,7 @@ export async function ContentScreen(ctx: Ctx) {
       </div>
       <div className="grid" style={{ gridTemplateColumns: teacher ? 'minmax(0, 1fr)' : 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
-          <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{TOOL.contentSearch}</HelpTip></h2>{teacher ? null : <Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link>}</header>
+          <header className="light"><h2>Courses in this portal <HelpTip topic="content-search">{toolHelp('contentSearch', modern)}</HelpTip></h2>{teacher ? null : <Link className="btn ghost small" href={`${base}/admin/library`}>Add from the library</Link>}</header>
           {teacher ? null : <DeleteMany kind="course" next={here} portalSlug={portal.slug} formId="bulk-course" />}
           <form className="content-tools" action={here} method="get" data-testid="content-filter">
             <label className="stack">Search<input className="field" name="q" defaultValue={query.q || ''} placeholder="Subject or speaker" /></label>
@@ -912,7 +914,7 @@ export async function AccessScreen(ctx: Ctx) {
                 </select>
               </label>
             </div>
-            <p className="hint" data-testid="own-course-hint">Tick this portal’s own course. Leave “All library courses” unticked when learners should not see HEARTS.</p>
+            <p className="hint" data-testid="own-course-hint">{shellOf(portal) === 'modern' ? 'Tick this portal’s own course. Leave “All library courses” unticked when learners should only see courses for this group.' : 'Tick this portal’s own course. Leave “All library courses” unticked when learners should not see HEARTS.'}</p>
             <LibraryCoursePicker courses={coursePicks} testId="new-code-courses" />
             <CodeLimits />
             {requiredGroups.length ? (

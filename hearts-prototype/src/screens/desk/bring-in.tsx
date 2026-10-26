@@ -32,6 +32,7 @@ export async function BringInBody({
   courses,
   query,
   portal = null,
+  plain = false,
 }: {
   payload: Payload
   user: SessionUser
@@ -39,6 +40,7 @@ export async function BringInBody({
   courses: { id: number; title: string; speaker: string }[]
   query: { preview?: string; lessons?: string; token?: string; notice?: string }
   portal?: { id: number; slug: string } | null
+  plain?: boolean
 }) {
   const previewId = Number(query.preview || 0)
   const preview = previewId
@@ -111,6 +113,7 @@ export async function BringInBody({
               </select>
             </label>
           </div>
+          {plain ? null : (
           <div className="cols">
             <label className="stack">Jibril section <HelpTip topic="bring-in-jibril">{TOOL.bringInJibril}</HelpTip>
               <select name="jibril" data-testid="bring-in-jibril" defaultValue="">
@@ -122,6 +125,7 @@ export async function BringInBody({
               <input name="ghunya" data-testid="bring-in-ghunya" placeholder="Optional" />
             </label>
           </div>
+          )}
           </details>
           <div className="actions">
             <button className="btn teal" type="submit" name="action" value="bring-in-ready" data-testid="bring-in-publish-ready">Bring in and publish when captions are ready</button>
@@ -151,9 +155,9 @@ export async function BringInBody({
             )}
             <div className="table-wrap">
               <table className="data">
-                <thead><tr><th>Bring in</th><th>Film</th><th>Length</th><th>Captions</th><th>Speaker <HelpTip topic="row-speaker">{TOOL.bringInSpeaker}</HelpTip></th><th>Jibril</th><th>Ghunya</th></tr></thead>
+                <thead><tr><th>Bring in</th><th>Film</th><th>Length</th><th>Captions</th><th>Speaker <HelpTip topic="row-speaker">{TOOL.bringInSpeaker}</HelpTip></th>{plain ? null : <><th>Jibril</th><th>Ghunya</th></>}</tr></thead>
                 <tbody>
-                  {body.rows.map((row) => <PreviewRow key={`${row.id}-${row.index}`} row={row} />)}
+                  {body.rows.map((row) => <PreviewRow key={`${row.id}-${row.index}`} row={row} plain={plain} />)}
                 </tbody>
               </table>
             </div>
@@ -291,7 +295,7 @@ function SheetBringIn({ slug, next, plain }: { slug: string; next: string; plain
     <section className="panel" id="portal-sheet" data-testid="portal-sheet-panel" style={{ marginBottom: 18 }}>
       <header>
         <div>
-          <h2>Master sheet</h2>
+          <h2>{plain ? 'Course sheet' : 'Master sheet'}</h2>
           <p>A spreadsheet saved as CSV, with a public title column and a Vimeo id column. The films and their questions stay in this portal. {plain ? 'They stay in this portal’s own library.' : 'They are not added to the HEARTS library.'}</p>
         </div>
       </header>
@@ -384,6 +388,7 @@ export async function PortalBringInScreen(ctx: Ctx) {
             courses={coursePicks}
             query={ctx.query}
             portal={{ id: ctx.portal.id, slug: ctx.portal.slug }}
+            plain={plain}
           />
         </>
       )}
@@ -391,7 +396,7 @@ export async function PortalBringInScreen(ctx: Ctx) {
   )
 }
 
-function PreviewRow({ row }: { row: BringInRow }) {
+function PreviewRow({ row, plain = false }: { row: BringInRow; plain?: boolean }) {
   const locked = row.skipReason === 'library' || row.skipReason === 'duplicate' || row.skipReason === 'short' || row.skipReason === 'unavailable'
   return (
     <tr data-testid="bring-in-row" data-id={row.id} data-skip={row.skipReason || 'no'}>
@@ -401,11 +406,13 @@ function PreviewRow({ row }: { row: BringInRow }) {
       <td>
         {row.title}
         {row.skipReason ? <div className="hint">{skipLabel(row.skipReason, row.durationSeconds)}</div> : null}
-        <PlaceNotes row={row} />
+        {plain ? null : <PlaceNotes row={row} />}
       </td>
       <td>{row.durationSeconds ? clock(row.durationSeconds) : 'Length unknown'}</td>
       <td data-testid="bring-in-captions">{captionsLabel(row.captions)}</td>
       <td><input name={`speaker-${row.index}`} defaultValue={row.speaker} data-testid="bring-in-row-speaker" /></td>
+      {plain ? null : (
+        <>
       <td>
         <select name={`jibril-${row.index}`} defaultValue={row.jibril} data-testid="bring-in-row-jibril">
           <option value="">None</option>
@@ -413,6 +420,8 @@ function PreviewRow({ row }: { row: BringInRow }) {
         </select>
       </td>
       <td><input name={`ghunya-${row.index}`} defaultValue={row.ghunya} data-testid="bring-in-row-ghunya" /></td>
+        </>
+      )}
     </tr>
   )
 }

@@ -8,6 +8,7 @@ import type { SessionUser } from '@/server/context'
 import { canEditMissions, canViewMissions, deskThreads, joinCount, listMissions, loadMission, missionView } from '@/server/missions'
 import { rows, str } from '../common'
 import type { Ctx } from '../common'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './desk-extra.module.css'
@@ -69,7 +70,7 @@ async function ListPage({ ctx, master, base }: { ctx: Ctx | null; master: { payl
     <Frame
       ctx={ctx}
       master={master}
-      title="Help shape HEARTS"
+      title={ctx && shellOf(ctx.portal) === 'modern' ? 'Help shape what comes next' : 'Help shape HEARTS'}
       intro="Ask learners, warmly, to help us try something. Never a scolding. Thank them when you decide."
       testId="missions-desk"
       tools={canEditMissions(user) ? <Link className="btn" href={`${base}/new`} data-testid="mission-new">New mission</Link> : null}
@@ -176,8 +177,8 @@ async function EditPage({ ctx, master, base, id }: { ctx: Ctx | null; master: { 
         <header><h2>{current ? 'Details' : 'Write the ask'}</h2></header>
         <div className="body">
           <Hidden fields={{ action: current ? 'update' : 'create', id: current ? String(current.id) : '', next: current ? `${base}/${current.id}` : `${base}/new` }} />
-          <label className="stack">Title<input type="text" name="title" required defaultValue={current?.title || 'Give HEARTS an hour this week'} data-testid="mission-title" placeholder="Give HEARTS an hour this week" /></label>
-          <label className="stack">Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder="If you have an hour this week, would you sit with HEARTS and tell us how it felt?" /></label>
+          <label className="stack">Title<input type="text" name="title" required defaultValue={current?.title || (ctx && shellOf(ctx.portal) === 'modern' ? 'Give this an hour this week' : 'Give HEARTS an hour this week')} data-testid="mission-title" placeholder={ctx && shellOf(ctx.portal) === 'modern' ? 'Give this an hour this week' : 'Give HEARTS an hour this week'} /></label>
+          <label className="stack">Plain ask<textarea name="ask" required rows={3} defaultValue={current?.ask || ''} data-testid="mission-ask" placeholder={ctx && shellOf(ctx.portal) === 'modern' ? 'If you have an hour this week, would you try one film and say how it felt?' : 'If you have an hour this week, would you sit with HEARTS and tell us how it felt?'} /></label>
           <label className="stack">Why it matters<textarea name="why" rows={3} defaultValue={current?.why || 'Your hour helps us choose the words on a button.'} data-testid="mission-why" placeholder="Your hour helps us choose the words on a button." /></label>
           <label className="stack">Minutes asked<input type="number" name="minutesAsked" min={5} max={600} defaultValue={current?.minutesAsked || 60} data-testid="mission-minutes" /></label>
           <label className="stack">Start<input type="text" name="startsAt" lang="en-GB" autoComplete="off" spellCheck={false} placeholder="4 October 2026" defaultValue={ukDate(current?.startsAt || today)} data-testid="mission-start" /></label>

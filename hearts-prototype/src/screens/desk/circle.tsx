@@ -13,6 +13,7 @@ import { HelpTip } from '@/components/desk/help'
 import { PortalAiChoice } from '@/components/desk/paid-ai'
 import { publicAi } from '@/lib/portal-ai'
 import { TOOL } from '@/lib/desk-help'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 
@@ -21,6 +22,8 @@ type CircleCtx = { payload: Payload; user: SessionUser; query: Record<string, st
 const KIND: Record<string, string> = { reflection: 'Reflection', question: 'Question', multiple_choice: 'Multiple choice', task: 'Task' }
 const INTRO =
   'Answers from the HEARTS circle sit in a question’s “What others said” beside real learners’ shared answers, so nobody meets an empty list. They carry a light label, show less often as real answers arrive, and are never counted in analytics, trends, profiles or progress.'
+const PLAIN_INTRO =
+  'Example answers sit in a question’s “What others said” beside real learners’ shared answers, so nobody meets an empty list. They carry a light label, show less often as real answers arrive, and are never counted in analytics, trends, profiles or progress.'
 
 async function talksInScope(ctx: CircleCtx) {
   const { payload, user } = ctx
@@ -259,7 +262,7 @@ export async function PortalCircle(ctx: Ctx) {
   const query = ctx.query as Record<string, string | undefined>
   const circle: CircleCtx = { payload: ctx.payload, user: ctx.user, query, here: `${ctx.base}/admin/circle`, portalId: ctx.portal.id }
   return (
-    <AdminFrame ctx={ctx} active="circle" title="Circle answers" intro={INTRO} testId="portal-circle">
+    <AdminFrame ctx={ctx} active="circle" title="Circle answers" intro={shellOf(ctx.portal) === 'modern' ? PLAIN_INTRO : INTRO} testId="portal-circle">
       {await Body(circle)}
     </AdminFrame>
   )

@@ -215,8 +215,8 @@ export async function DeskFrame({
 }) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 12 })).filter((note) => note.channel !== 'email-stub')
   const unread = notes.filter((note) => !note.read).length
-  const tip = help ?? pageHelp(active, testId)
-  const lead = deskLead(active, brandHref)
+  const tip = help ?? pageHelp(active, testId, { plain: modern })
+  const lead = deskLead(active, brandHref, { plain: modern })
   const action = primary || lead?.primary
   const purpose = lead?.line
   const headerLine = purpose || (typeof intro === 'string' ? intro : null)

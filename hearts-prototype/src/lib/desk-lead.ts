@@ -295,7 +295,13 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
 
 const SKIP = new Set(['ai', 'codes'])
 
-export function deskLead(active: string, brandHref: string): { line: string; primary: DeskPrimary } | null {
+/** Header lines for a modern portal desk. The master desk and HEARTS keep PORTAL. */
+const PLAIN_LEAD: Partial<Record<string, string>> = {
+  gather: 'Gatherings for this group. Learners see a date once you publish it.',
+  calendar: 'Dates this group wants people to see. Learners see a line only after you approve it.',
+}
+
+export function deskLead(active: string, brandHref: string, opts?: { plain?: boolean }): { line: string; primary: DeskPrimary } | null {
   if (SKIP.has(active)) return null
   const master = brandHref === '/master'
   if (master) {
@@ -305,7 +311,8 @@ export function deskLead(active: string, brandHref: string): { line: string; pri
   }
   const row = PORTAL[active]
   if (!row) return null
-  return { line: row.line, primary: { label: row.label, href: portalHref(brandHref, row.path) } }
+  const line = opts?.plain && PLAIN_LEAD[active] ? PLAIN_LEAD[active] : row.line
+  return { line, primary: { label: row.label, href: portalHref(brandHref, row.path) } }
 }
 
 function portalHref(brandHref: string, path: string) {

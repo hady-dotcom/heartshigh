@@ -9,6 +9,7 @@ import { attendanceReport, listGatherings, sharePack } from '@/server/gather'
 import { type Ctx, rows, str } from '../common'
 import { HelpTip } from '@/components/desk/help'
 import { PAGE } from '@/lib/desk-help'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 
@@ -29,10 +30,11 @@ export async function GatherDeskScreen(ctx: Ctx) {
     loadDoors(payload),
   ])
   const here = `${base}/admin/gather`
+  const modern = shellOf(portal) === 'modern'
   const proposed = cards.filter((card) => card.status === 'proposed')
   const preview = cards.filter((card) => card.status === 'published' && !card.past).sort((a, b) => a.startsAt.localeCompare(b.startsAt))[0]
   return (
-    <AdminFrame ctx={ctx} active="gather" tone="evening" title="Gatherings" intro="Upcoming and past gatherings at this masjid." testId="desk-gather">
+    <AdminFrame ctx={ctx} active="gather" tone={modern ? undefined : 'evening'} title="Gatherings" intro={modern ? 'Upcoming and past gatherings for this group.' : 'Upcoming and past gatherings at this masjid.'} testId="desk-gather">
       <div className="stats-strip" data-testid="gather-summary">
         <div className="stat-chip"><b>{cards.filter((card) => !card.past && card.status === 'published').length}</b><span>Upcoming</span></div>
         <div className="stat-chip"><b>{cards.reduce((sum, card) => sum + card.going, 0)}</b><span>Places said yes</span></div>

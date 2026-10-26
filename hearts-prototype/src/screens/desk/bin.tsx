@@ -4,6 +4,7 @@ import { ExampleInUse } from '@/components/app/care'
 import { Hidden } from '@/components/app/shell'
 import type { SessionUser } from '@/server/context'
 import type { Ctx } from '../common'
+import { shellOf } from '@/lib/portal-look'
 import { rows } from '../common'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
@@ -17,7 +18,7 @@ async function openRows(payload: Payload, portalId: number | null) {
   return rows(payload, 'desk-bin', where as never, { sort: '-createdAt', limit: 100 }) as Promise<BinRow[]>
 }
 
-function BinList({ items, next, libraryHref }: { items: BinRow[]; next: string; libraryHref: string }) {
+function BinList({ items, next, libraryHref, plain = false }: { items: BinRow[]; next: string; libraryHref: string; plain?: boolean }) {
   const talks = items.filter((item) => String(item.kind || '') === 'lesson')
   return (
     <section className="panel" data-testid="bin-list">
@@ -51,9 +52,9 @@ function BinList({ items, next, libraryHref }: { items: BinRow[]; next: string; 
           )
         })}
         {!items.length ? (
-          <ExampleInUse desk testId="bin-empty" title="The Names, class 20" action={{ href: libraryHref, label: 'Open the library' }}>
-            <p>Shaykh Mikaeel Smith · HJ10 · YouTube · 47 minutes</p>
-            <p className="hint">Move a talk to the bin when you want it hidden. Put it back and the same talk opens again.</p>
+          <ExampleInUse desk testId="bin-empty" title={plain ? 'A film you set aside' : 'The Names, class 20'} action={{ href: libraryHref, label: plain ? 'Open films' : 'Open the library' }}>
+            <p>{plain ? 'A short film · 12 minutes' : 'Shaykh Mikaeel Smith · HJ10 · YouTube · 47 minutes'}</p>
+            <p className="hint">{plain ? 'Move a film to the bin when you want it hidden. Put it back and the same film opens again.' : 'Move a talk to the bin when you want it hidden. Put it back and the same talk opens again.'}</p>
           </ExampleInUse>
         ) : null}
       </div>
@@ -74,7 +75,7 @@ export async function PortalBin(ctx: Ctx) {
   const items = await openRows(ctx.payload, ctx.portal.id)
   return (
     <AdminFrame ctx={ctx} active="bin" title="Bin" intro="Talks you moved here are hidden. Put back brings the same talk out. Empty bin removes talks for good." testId="portal-bin" showOnPhone>
-      <BinList items={items} next={`${ctx.base}/admin/bin`} libraryHref={`${ctx.base}/admin/library`} />
+      <BinList items={items} next={`${ctx.base}/admin/bin`} libraryHref={`${ctx.base}/admin/library`} plain={shellOf(ctx.portal) === 'modern'} />
     </AdminFrame>
   )
 }

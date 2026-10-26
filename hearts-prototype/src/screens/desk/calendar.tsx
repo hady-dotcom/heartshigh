@@ -10,6 +10,7 @@ import { canEditCalendar, canViewCalendar, contextAt, hijriOffsetOf, loadCopy, l
 import { SEASONAL_APPROVAL } from '@/lib/ai-honesty'
 import { flagsOfSafe } from './calendar-flags'
 import type { Ctx } from '../common'
+import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import { DeskFrame, masterNav } from './shell'
 import styles from './desk-extra.module.css'
@@ -76,7 +77,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
       ctx={ctx || null}
       master={master || null}
       title="Event Calendar"
-      intro="Seasonal lines for buttons and the order of talks. A sheikh’s words are never touched."
+      intro={ctx && shellOf(ctx.portal) === 'modern' ? 'Seasonal lines for buttons and the order of films. A speaker’s words are never touched.' : 'Seasonal lines for buttons and the order of talks. A sheikh’s words are never touched.'}
       testId="calendar-desk"
     >
       <div className={styles.page}>

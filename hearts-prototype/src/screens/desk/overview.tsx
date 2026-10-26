@@ -5,7 +5,7 @@ import { Hidden } from '@/components/app/shell'
 import { Qr } from '@/components/qr'
 import { HelpTip } from '@/components/desk/help'
 import { ShareLinks } from '@/components/desk/share-links'
-import { TOOL } from '@/lib/desk-help'
+import { TOOL, toolHelp } from '@/lib/desk-help'
 import { now } from '@/lib/clock'
 import { adoptedCourseIds } from '@/server/context'
 import { portalName } from '@/server/learner'
@@ -222,6 +222,7 @@ export async function OverviewScreen(ctx: Ctx) {
 
 export async function PortalSettingsScreen(ctx: Ctx) {
   const { portal, base, user } = ctx
+  const modern = shellOf(portal) === 'modern'
   const ai = publicAi(portal.aiConnection)
   const field = (label: string, name: keyof typeof portal, extra: Record<string, string> = {}) => (
     <label className="row"><span>{label}</span><input type="text" name={name} defaultValue={str(portal[name])} {...extra} /></label>
@@ -266,7 +267,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <label className="row"><span>Look</span>
               <select name="shell" defaultValue={shellOf(portal)} data-testid="shell-look">
                 <option value="modern">Modern</option>
-                <option value="hearts">HEARTS</option>
+                <option value="hearts">{modern ? 'Evening' : 'HEARTS'}</option>
               </select>
             </label>
             <label className="row"><span>Type</span>
@@ -277,10 +278,10 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             <label className="row"><span>Course home</span>
               <select name="courseHome" defaultValue={courseHomeOf(portal)} data-testid="course-home">
                 <option value="cards">Course cards</option>
-                <option value="garden">Garden</option>
+                <option value="garden">{modern ? 'Progress picture' : 'Garden'}</option>
               </select>
             </label>
-            <label className="row"><span>Time zone <HelpTip topic="time-zone">{TOOL.timeZone}</HelpTip></span>
+            <label className="row"><span>Time zone <HelpTip topic="time-zone">{toolHelp('timeZone', modern)}</HelpTip></span>
               <select name="timeZone" defaultValue={portalTimeZone(portal)} data-testid="time-zone">
                 {[...new Set([portalTimeZone(portal), ...PORTAL_TIME_ZONES])].map((zone) => <option key={zone} value={zone}>{zoneCity(zone)} ({zone})</option>)}
               </select>
@@ -325,7 +326,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
         ) : null}
         {user.role === 'portal-admin' ? (
           <section className="panel" data-testid="portal-ai-settings" style={{ gridColumn: '1 / -1' }}>
-            <header className="light"><h2>This portal’s AI account <HelpTip topic="portal-ai">{TOOL.portalAi}</HelpTip></h2></header>
+            <header className="light"><h2>This portal’s AI account <HelpTip topic="portal-ai">{toolHelp('portalAi', modern)}</HelpTip></h2></header>
             <form className="body form" action="/api/hearts" method="post">
               <Hidden fields={{ action: 'ai-connect', portalSlug: portal.slug, next: `${base}/admin/settings` }} />
               <p className="hint">Connect your own provider. {shellOf(portal) === 'modern' ? 'A run is never paid for by this app' : 'HEARTS never pays for a run'}, and a key in the server environment is ignored. Only a portal admin can start a run. The master desk has no spend path.</p>

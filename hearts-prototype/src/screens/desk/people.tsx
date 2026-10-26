@@ -21,6 +21,7 @@ import { type Ctx, clock, longDate, portalPeople, ref, rows, shortDate, str } fr
 import { AdminFrame } from './overview'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
 import { featureOn } from '@/lib/features'
+import { shellOf } from '@/lib/portal-look'
 import { ExampleInUse } from '@/components/app/care'
 import { AnswerFocus } from '@/components/desk/answer-focus'
 import { sharedAnswersNewestFirst } from '@/lib/shared-answers'
@@ -224,7 +225,7 @@ export async function TeachScreen(ctx: Ctx) {
                 </article>
               )
             })}
-            {!shared.length ? <ExampleInUse desk title="A shared workbook note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>Hamza · I sat with the Names class and wrote one line I want to keep.</p></ExampleInUse> : null}
+            {!shared.length ? <ExampleInUse desk title="A shared workbook note" action={{ href: `${base}/admin/content`, label: 'Open courses' }}><p>{shellOf(portal) === 'modern' ? 'Amina · I watched the first film and wrote one line I want to keep.' : 'Hamza · I sat with the Names class and wrote one line I want to keep.'}</p></ExampleInUse> : null}
           </div>
         </section>
         ) : null}
