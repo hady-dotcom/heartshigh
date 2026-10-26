@@ -7,7 +7,7 @@ import { FilmFallback } from '@/components/app/film-fallback'
 import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
 import { shellOf } from '@/lib/portal-look'
-import { librarySections } from '@/lib/sequence'
+import { isSequencePortal, librarySections, sectionAnchor } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
@@ -113,7 +113,7 @@ function Thumb({ src, eager, place, title }: { src: string | null; eager?: boole
 export async function CourseHomeScreen({ payload, user, portal, base, query }: Ctx) {
   const courseIds = await visibleCourseIds(payload, user, portal.id)
   const [courses, lessonRows, unitRows] = await Promise.all([
-    courseIds.length ? rows(payload, 'courses', { id: { in: courseIds } }, { limit: 80 }) : Promise.resolve([]),
+    courseIds.length ? rows(payload, 'courses', { id: { in: courseIds } }, { limit: isSequencePortal(portal) ? 80 : 40 }) : Promise.resolve([]),
     courseIds.length ? rows(payload, 'lessons', { course: { in: courseIds } }, { sort: 'order', limit: 500 }) : Promise.resolve([]),
     courseIds.length ? rows(payload, 'units', { course: { in: courseIds } }, { sort: 'order', limit: 80 }) : Promise.resolve([]),
   ])
@@ -135,6 +135,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
   }).filter((card) => card.own.length)
   const carry = cards.find((card) => card.finished < card.own.length) || cards[0]
   const modern = shellOf(portal) === 'modern'
+  const sequence = isSequencePortal(portal)
   const carryPct = carry ? percent(carry.finished, carry.own.length) : 0
   const sections = librarySections(cards.map((card) => ({
     ...card,
@@ -170,44 +171,79 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             </Link>
           </article>
         ) : <p className="card">Films will show here once a course is added.</p>}
-        {sections.map((section) => (
+        {sequence ? sections.map((section) => (
           <section className="library-section" key={section.title} data-testid="library-collection">
             <h2>{section.title}</h2>
             <div className="course-cards">
-          {section.cards.map((card, index) => {
-            const groups: { title: string; count: number }[] = []
-            for (const lesson of card.own) {
-              const title = unitTitle.get(ref(lesson.unit) || 0) || 'Films'
-              const last = groups[groups.length - 1]
-              if (!last || last.title !== title) groups.push({ title, count: 0 })
-              groups[groups.length - 1].count += 1
-            }
-            const pct = percent(card.finished, card.own.length)
-            const length = card.own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
-            return (
-              <div key={card.course.id}>
-              <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
-                <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
-                <span className="t">
-                  <b>{str(card.course.title)}</b>
-                  <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
-                  <span className="bar"><i style={{ width: `${pct}%` }} /></span>
-                  {modern ? (
-                    <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>
-                  ) : (
-                    <span className="ticks" data-testid="course-ticks">
-                      {card.own.slice(0, 24).map((lesson) => <Tick key={lesson.id} on={done.has(lesson.id)} />)}
+              {section.cards.map((card, index) => {
+                const groups: { title: string; count: number }[] = []
+                for (const lesson of card.own) {
+                  const title = unitTitle.get(ref(lesson.unit) || 0) || 'Films'
+                  const last = groups[groups.length - 1]
+                  if (!last || last.title !== title) groups.push({ title, count: 0 })
+                  groups[groups.length - 1].count += 1
+                }
+                const pct = percent(card.finished, card.own.length)
+                const length = card.own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
+                return (
+                  <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
+                    <Thumb src={card.poster} eager={index < 2} place={card.next ? card.nextAt + 1 : undefined} title={card.next ? str(card.next.title) : undefined} />
+                    <span className="t">
+                      <b>{str(card.course.title)}</b>
+                      <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
+                      <span className="bar"><i style={{ width: `${pct}%` }} /></span>
+                      <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>
+                      {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
                     </span>
-                  )}
-                  {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
-                </span>
-              </Link>
-              </div>
-            )
-          })}
+                  </Link>
+                )
+              })}
             </div>
           </section>
-        ))}
+        )) : (
+          <div className="course-cards">
+            {cards.map((card, index) => {
+              const groups: { title: string; count: number }[] = []
+              for (const lesson of card.own) {
+                const title = unitTitle.get(ref(lesson.unit) || 0) || 'Films'
+                const last = groups[groups.length - 1]
+                if (!last || last.title !== title) groups.push({ title, count: 0 })
+                groups[groups.length - 1].count += 1
+              }
+              const pct = percent(card.finished, card.own.length)
+              return (
+                <div key={card.course.id}>
+                  <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
+                    <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
+                    <span className="t">
+                      <b>{str(card.course.title)}</b>
+                      <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>
+                      <span className="bar"><i style={{ width: `${pct}%` }} /></span>
+                      {modern ? (
+                        <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>
+                      ) : (
+                        <span className="ticks" data-testid="course-ticks">
+                          {card.own.slice(0, 24).map((lesson) => <Tick key={lesson.id} on={done.has(lesson.id)} />)}
+                        </span>
+                      )}
+                      {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
+                    </span>
+                  </Link>
+                  {modern && groups.length ? (
+                    <div data-testid="course-sections">
+                      {groups.map((group) => (
+                        <Link className="garden-area" href={`${base}/course/${card.course.id}#${sectionAnchor(group.title)}`} data-testid="garden-area" key={group.title}>
+                          <strong>{group.title}</strong>
+                          <small>{group.count} films</small>
+                        </Link>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              )
+            })}
+          </div>
+        )}
       </div>
       <LearnerTabBar base={base} active="garden" portal={portal} />
     </AppFrame>
