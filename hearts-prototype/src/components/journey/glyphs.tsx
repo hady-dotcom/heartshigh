@@ -20,6 +20,15 @@ const paths: Record<string, string[]> = {
   heavy: ['M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.5-7 10-7 10z'],
 }
 
+export function hasGlyph(name: string) {
+  return Boolean(paths[name])
+}
+
+/** Draw icons only when every chip in the row has one. A single book on one answer sits the words at the bottom. */
+export function everyTileHasGlyph(options: { key: string; crisis?: boolean }[]) {
+  return options.length > 0 && options.every((option) => Boolean(option.crisis) || hasGlyph(option.key))
+}
+
 export function Glyph({ name, size = 30 }: { name: string; size?: number }) {
   const lines = paths[name]
   if (!lines) return null
