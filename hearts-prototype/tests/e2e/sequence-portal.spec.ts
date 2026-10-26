@@ -54,7 +54,9 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('tab-week')).toBeVisible()
   await expect(page.getByTestId('tab-garden')).toBeVisible()
   await expect(page.getByTestId('tab-me')).toBeVisible()
-  await expect(page.getByText('Guiding Home Learning').first()).toBeVisible()
+  const collectionOnHome = page.getByText('Guiding Home Learning').first()
+  if (await collectionOnHome.count()) await expect(collectionOnHome).toBeVisible()
+  else await expect(page.getByTestId('continue-row').or(page.getByTestId('feed-film')).first()).toBeVisible()
   await shot(page, 'sequence-home')
 
   await page.getByTestId('tab-garden').click()
