@@ -13,10 +13,17 @@ import { minutesADay } from '@/lib/study-plan'
 import { now } from '@/lib/clock'
 import { dateKeyInZone } from '@/lib/week'
 import { weekView } from '@/server/week-plan'
+import { learnerWeekSections } from '@/server/week-library'
+import { WeekLibrary } from '@/components/app/week-library'
 import { type Ctx, unreadCount } from '../common'
 
 export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
-  const [view, unread] = await Promise.all([weekView(payload, user, portal, base), unreadCount(payload, user)])
+  const modern = shellOf(portal) === 'modern'
+  const [view, unread, sections] = await Promise.all([
+    weekView(payload, user, portal, base),
+    unreadCount(payload, user),
+    modern ? learnerWeekSections(payload, user, portal, base) : Promise.resolve([]),
+  ])
   const today = dateKeyInZone(now(), view.zone)
   const later = dateKeyInZone(new Date(now().getTime() + 27 * 86_400_000), view.zone)
   const latest = view.plans[0]
@@ -42,6 +49,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
         <Back href={back.href} label={back.label} />
         <div className="app-head"><h1>My week</h1></div>
         <Flash error={query.error} notice={query.notice} />
+        {modern ? <WeekLibrary sections={sections} guest={false} /> : null}
         <WeekStrip days={view.days} today={view.today} scheduledKeys={view.scheduledKeys} href={`${base}/week`} emptyHref={`${base}/week?view=new`} compact={view.plans.length > 0} />
         {view.plans.length ? (
           <p style={{ margin: '0 0 12px' }}>

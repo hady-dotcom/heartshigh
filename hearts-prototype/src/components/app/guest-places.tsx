@@ -74,7 +74,7 @@ export function GuestCourseResume({ base, courseId, total, firstId, firstPlace }
   )
 }
 
-export function GuestWeekBody({ base, portal }: { base: string; portal: string }) {
+export function GuestWeekBody() {
   const [state, setState] = useState<GuestDeviceState | null>(null)
   const [days, setDays] = useState<number[]>([])
   useEffect(() => {
@@ -82,24 +82,9 @@ export function GuestWeekBody({ base, portal }: { base: string; portal: string }
     setState(saved)
     setDays(saved.weekdays)
   }, [])
-  const latest = state?.progress[0]
   const toggle = (day: number) => setDays((current) => current.includes(day) ? current.filter((item) => item !== day) : [...current, day].sort())
   return (
-    <div className="app-scroll">
-      <div className="app-head"><h1>My week</h1></div>
-      <p className="guest-blurb">Your week stays on this phone. Nothing here asks you to sign in.</p>
-      {latest ? (
-        <a className="guest-catalog" href={latest.courseId ? `${base}/course/${latest.courseId}?part=${latest.lessonId}` : `${base}/courses`} data-testid="week-continue">
-          <span>
-            <b>{latest.done ? 'Watch again' : 'Continue'}</b>
-            <small>{latest.place}. {latest.title}</small>
-          </span>
-          <span aria-hidden>›</span>
-        </a>
-      ) : (
-        <p className="card" data-testid="week-empty">Films you start show up here. <a href={`${base}/courses`}>Browse courses</a></p>
-      )}
-      <form className="card guest-week-form" onSubmit={(event) => { event.preventDefault(); setState(rememberGuestWeekdays(days)) }}>
+    <form className="card guest-week-form" onSubmit={(event) => { event.preventDefault(); setState(rememberGuestWeekdays(days)) }}>
         <p className="eyebrow">Days that suit you</p>
         <div className="guest-days" role="group" aria-label="Days">
           {DAYS.map((label, day) => (
@@ -111,8 +96,7 @@ export function GuestWeekBody({ base, portal }: { base: string; portal: string }
         </div>
         <button type="submit" className="pill gold" data-testid="week-save">Save on this phone</button>
         {state?.weekdays.length ? <p data-testid="week-saved">Saved for {state.weekdays.map((day) => DAYS[day]).join(', ')}.</p> : null}
-      </form>
-    </div>
+    </form>
   )
 }
 

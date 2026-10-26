@@ -15,6 +15,8 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
+import { WeekLibrary } from '@/components/app/week-library'
+import { guestWeekSections } from '@/server/week-library'
 import { shareOrigin } from '@/lib/site-origin'
 import { guestLibrary } from '@/server/guest-films'
 import { FilmChips } from './course-home'
@@ -216,10 +218,15 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   )
 }
 
-export async function GuestWeekScreen({ portal, base }: { portal: PortalDoc; base: string }) {
+export async function GuestWeekScreen({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
+  const sections = await guestWeekSections(payload, portal.id, base)
   return (
     <AppFrame testId="plan" brand={learnerBrand(portal)}>
-      <GuestWeekBody base={base} portal={portal.slug} />
+      <div className="app-scroll">
+        <div className="app-head"><h1>My week</h1></div>
+        <WeekLibrary sections={sections} guest />
+        <GuestWeekBody />
+      </div>
       <LearnerTabBar base={base} active="week" portal={portal} />
     </AppFrame>
   )

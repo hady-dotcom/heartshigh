@@ -150,7 +150,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
           if (!screen) notFound()
           return screen
         }
-        if (area === 'week' && !a) return GuestWeekScreen({ portal, base })
+        if (area === 'week' && !a) return GuestWeekScreen({ payload: guest.payload, portal, base })
         if (area === 'me' && !a) return GuestMeScreen({ portal, base })
         if (area === 'workbook' && !a) return ParentWorkbookScreen({ payload: guest.payload, portal, base, userId: null })
       }
