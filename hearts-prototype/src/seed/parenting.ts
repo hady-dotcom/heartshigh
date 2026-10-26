@@ -242,8 +242,11 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   const questions = await syncPortalFilmQuestions(payload, Number(portal.id), sheetFilms)
   if (questions.updated) payload.logger.info(`Updated the sheet questions on ${questions.updated} films.`)
   const { seedParentSwarm } = await import('@/server/parent-swarm')
-  const swarm = await seedParentSwarm(payload, Number(portal.id))
-  if (swarm.created) payload.logger.info(`Shared ${swarm.created} parent answers on ${swarm.questions} questions.`)
+  void seedParentSwarm(payload, Number(portal.id)).then((swarm) => {
+    if (swarm.created) payload.logger.info(`Shared ${swarm.created} parent answers on ${swarm.questions} questions.`)
+  }).catch((error) => {
+    payload.logger.error({ err: error, msg: 'Could not share the parent answers.' })
+  })
 
   const packFound = await payload.find({
     collection: 'packs',

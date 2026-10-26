@@ -10,14 +10,18 @@ const STORE = '/cursor/stores/self/swarm-parents.json'
 type SavedParent = { name: string; email: string; password: string }
 
 function passwordFor(parent: { name: string; email: string }) {
-  const dir = '/cursor/stores/self'
-  const current: { parents: SavedParent[] } = existsSync(STORE) ? JSON.parse(readFileSync(STORE, 'utf8')) : { parents: [] }
-  const found = current.parents.find((row) => row.email === parent.email)
-  if (found?.password) return found.password
   const password = randomBytes(18).toString('base64url')
-  current.parents.push({ name: parent.name, email: parent.email, password })
-  if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
-  writeFileSync(STORE, `${JSON.stringify(current, null, 2)}\n`)
+  try {
+    const dir = '/cursor/stores/self'
+    const current: { parents: SavedParent[] } = existsSync(STORE) ? JSON.parse(readFileSync(STORE, 'utf8')) : { parents: [] }
+    const found = current.parents.find((row) => row.email === parent.email)
+    if (found?.password) return found.password
+    current.parents.push({ name: parent.name, email: parent.email, password })
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true })
+    writeFileSync(STORE, `${JSON.stringify(current, null, 2)}\n`)
+  } catch {
+    // Production has no agent store. The account is still created.
+  }
   return password
 }
 
