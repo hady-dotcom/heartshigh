@@ -996,8 +996,11 @@ export function CoursePlayer({
               data-testid="strip-dot"
               data-answered={point.answered ? 'yes' : 'no'}
               data-revealed={seen ? 'yes' : 'no'}
+              data-prompt={point.prompt}
+              data-second={point.second}
+              data-kind={point.kind}
             >
-              {seen ? point.prompt : comingQuestionLabel(point.number, point.second)}
+              {films || seen ? point.prompt : comingQuestionLabel(point.number, point.second)}
             </li>
             )
           })}
@@ -1308,7 +1311,7 @@ function Sheet({
         <button type="button" className="sheet-close" aria-label="Close" onClick={() => leave()} data-testid="popup-close">×</button>
         {left !== null ? <p className="time-left" data-testid="time-left">{left}s left to answer</p> : null}
         <div className="kind-tabs">
-          {(Object.keys(KIND_LABEL) as PointView['kind'][]).map((kind) => <span key={kind} className={kind === point.kind ? 'on' : ''}>{KIND_LABEL[kind]}</span>)}
+          <span className="on" data-testid="kind-chip">{KIND_LABEL[point.kind]}</span>
         </div>
         <h2 data-testid="popup-prompt">{point.prompt}</h2>
         {point.state === 'waiting' ? (
@@ -1375,13 +1378,13 @@ function Sheet({
             {point.showImam ? <p data-testid="task-imam">Your imam and the portal admin can see this.</p> : <label className="toggle"><input type="checkbox" name="shareWithTeacher" checked={shareTeacher} onChange={(event) => {
               const on = event.target.checked
               setShareTeacher(on)
-              if (on && films) setKeepPrivate(false)
+              if (on) setKeepPrivate(false)
             }} data-testid="answer-share" /> Let my teacher read it</label>}
             {shareChoice ? (
-              <label className="toggle"><input type="checkbox" name="shareWithLearners" checked={shareLearners} disabled={!films && keepPrivate} onChange={(event) => {
+              <label className="toggle"><input type="checkbox" name="shareWithLearners" checked={shareLearners} onChange={(event) => {
                 const on = event.target.checked
                 setShareLearners(on)
-                if (on && films) setKeepPrivate(false)
+                if (on) setKeepPrivate(false)
               }} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
             ) : null}
             <button className="share-btn" type="submit" disabled={sending} data-testid="answer-submit">

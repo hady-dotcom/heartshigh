@@ -22,7 +22,7 @@ import { readSaidAnswers } from '@/lib/said-answers'
 import { buildExportZip, type ExportAnswer, type ExportPortal, type ExportVideo } from '@/lib/sequence-export'
 import { transcriptFor } from '@/lib/youtube'
 import { sortParts } from '@/lib/part-order'
-import { matchQuestions } from '@/lib/question-keep'
+import { calloutsDiffer, matchQuestions, questionKey } from '@/lib/question-keep'
 import { fetchVimeoMetas, shouldFetchVimeo, type VimeoMeta } from '@/lib/vimeo-meta'
 
 type Doc = Record<string, unknown> & { id: number }
@@ -263,6 +263,67 @@ async function syncFilmQuestions(payload: Payload, lessonId: number, callouts: C
       data: calloutFields(lessonId, callout),
     })
   }
+}
+
+/** Writes the sheet's questions onto the films that already exist, matched by Vimeo id. */
+export async function syncPortalFilmQuestions(payload: Payload, portalId: number, films: Pick<CourseFilm, 'vimeoId' | 'callouts'>[]) {
+  const courses = await everyDoc(payload, 'courses', { and: [{ portal: { equals: portalId } }, { hidden: { not_equals: true } }] })
+  if (!courses.length || !films.length) return { updated: 0, missing: 0 }
+  const lessons = await everyDoc(payload, 'lessons', { course: { in: courses.map((row) => row.id) } })
+  const open = lessons.filter((row) => row.binned !== true && String(row.vimeoId || '').trim())
+  const byVimeo = new Map<string, Doc[]>()
+  for (const row of open) {
+    const id = String(row.vimeoId || '').trim()
+    const list = byVimeo.get(id) || []
+    list.push(row)
+    byVimeo.set(id, list)
+  }
+  const wanted = new Map<number, CourseFilm['callouts']>()
+  let missing = 0
+  for (const film of films) {
+    const rows = byVimeo.get(film.vimeoId)
+    if (!rows?.length) {
+      if (film.vimeoId) missing += 1
+      continue
+    }
+    for (const row of rows) wanted.set(row.id, film.callouts)
+  }
+  const lessonIds = [...wanted.keys()]
+  const stored = new Map<number, { prompt: string; second: number; kind: string }[]>()
+  for (let index = 0; index < lessonIds.length; index += 40) {
+    const slice = lessonIds.slice(index, index + 40)
+    let page = 1
+    for (;;) {
+      const found = await payload.find({
+        collection: 'engagement-points',
+        overrideAccess: true,
+        depth: 0,
+        limit: 100,
+        page,
+        where: { lesson: { in: slice } },
+      })
+      for (const doc of found.docs) {
+        const row = asDoc(doc)
+        const lessonId = idOf(row.lesson)
+        if (!lessonId) continue
+        const list = stored.get(lessonId) || []
+        list.push({ prompt: questionKey(String(row.prompt || '')), second: Number(row.second || 0), kind: String(row.kind || '') })
+        stored.set(lessonId, list)
+      }
+      if (!found.hasNextPage || !found.docs.length) break
+      page += 1
+      if (page > 40) break
+    }
+  }
+  let updated = 0
+  for (const [lessonId, callouts] of wanted) {
+    const have = stored.get(lessonId) || []
+    const need = callouts.map((callout) => ({ prompt: callout.prompt, second: callout.second, kind: callout.kind }))
+    if (!calloutsDiffer(have, need)) continue
+    await syncFilmQuestions(payload, lessonId, callouts)
+    updated += 1
+  }
+  return { updated, missing }
 }
 
 function filmKey(film: CourseFilm) {

@@ -27,3 +27,13 @@ function looksLikeQuestion(text: string) {
 export function usableQuestionPrompt(text: string) {
   return Boolean(tidyQuestionPrompt(text))
 }
+
+/**
+ * A sheet-imported question is the author's words, including the lead-in.
+ * HEARTS still keeps only the question inside a transcript line, and names a blank one Question N.
+ */
+export function shownQuestionPrompt(text: string, opts: { sheet: boolean; index?: number }) {
+  const raw = String(text || '').replace(/\s+/g, ' ').trim()
+  if (opts.sheet) return raw
+  return tidyQuestionPrompt(raw) || `Question ${(opts.index ?? 0) + 1}`
+}
