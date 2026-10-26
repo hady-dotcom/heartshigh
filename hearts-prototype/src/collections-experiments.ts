@@ -90,7 +90,7 @@ export const Experiments: CollectionConfig = {
 export const ExperimentAssignments: CollectionConfig = {
   slug: 'experiment-assignments',
   labels: { singular: 'Experiment assignment', plural: 'Experiment assignments' },
-  admin: { group: 'Experiments', hidden: true },
+  admin: { group: 'Experiments', hidden: false },
   access: eventsAccess,
   fields: [
     { name: 'experiment', type: 'relationship', relationTo: relation('experiments'), required: true, index: true },
@@ -116,7 +116,7 @@ export const ExperimentAssignments: CollectionConfig = {
 export const ExperimentEvents: CollectionConfig = {
   slug: 'experiment-events',
   labels: { singular: 'Experiment event', plural: 'Experiment events' },
-  admin: { group: 'Experiments', hidden: true },
+  admin: { group: 'Experiments', hidden: false },
   access: eventsAccess,
   fields: [
     { name: 'experiment', type: 'relationship', relationTo: relation('experiments'), required: true, index: true },

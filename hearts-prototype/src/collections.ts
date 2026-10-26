@@ -661,8 +661,8 @@ export const Packs: CollectionConfig = {
   labels: { singular: 'Course pack', plural: 'Course packs' },
   admin: {
     useAsTitle: 'title',
-    hidden: true,
-    description: 'Hidden. The desk picks courses on each code. This list stays so older codes can still be read.',
+    hidden: false,
+    description: 'Older codes still point here. The desk picks courses on each code. The rows stay.',
   },
   access: masterOnly,
   hooks: { afterChange: [carryPackCourses] },

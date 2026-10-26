@@ -9,7 +9,7 @@ const nobody: Access = () => false
 export const InsightEvents: CollectionConfig = {
   slug: 'insight-events',
   labels: { singular: 'Insight event', plural: 'Insight events' },
-  admin: { group: 'Insights', hidden: true },
+  admin: { group: 'Insights', hidden: false },
   access: { read: staffRead, create: nobody, update: nobody, delete: masterWrite },
   fields: [
     { name: 'kind', type: 'text', required: true, index: true },
@@ -35,7 +35,7 @@ export const InsightEvents: CollectionConfig = {
 export const InsightSessions: CollectionConfig = {
   slug: 'insight-sessions',
   labels: { singular: 'Insight session', plural: 'Insight sessions' },
-  admin: { group: 'Insights', hidden: true },
+  admin: { group: 'Insights', hidden: false },
   access: { read: staffRead, create: nobody, update: nobody, delete: masterWrite },
   fields: [
     { name: 'sessionId', type: 'text', required: true, unique: true, index: true },

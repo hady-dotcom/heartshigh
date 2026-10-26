@@ -3,14 +3,9 @@
   display: grid;
   place-items: center;
   padding: calc(32px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
-  background-color: #121018;
-  background-image:
-    radial-gradient(1000px 420px at 12% -8%, rgba(37, 33, 74, 0.95), transparent 58%),
-    radial-gradient(820px 360px at 100% 0%, rgba(122, 79, 168, 0.38), transparent 52%),
-    radial-gradient(720px 320px at 78% 110%, rgba(31, 138, 120, 0.28), transparent 50%),
-    radial-gradient(640px 260px at 0% 100%, rgba(196, 143, 44, 0.18), transparent 48%);
+  background: var(--hh-canvas);
   color: var(--hh-ink);
-  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--hh-font-system);
 }
 
 .demo-stage-entry-card {
@@ -32,7 +27,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px rgba(246, 240, 228, 0.34);
+  box-shadow: 0 0 0 3px var(--hh-accent-fill);
 }
 
 .demo-stage-kicker {
@@ -56,7 +51,7 @@
 .demo-stage-entry-line {
   margin: 0;
   max-width: 38rem;
-  color: rgba(246, 240, 228, 0.86);
+  color: var(--hh-ink-2);
   font-size: 17px;
   line-height: 1.5;
 }
@@ -79,7 +74,7 @@
   cursor: pointer;
 }
 
-.demo-stage-entry-go:hover { background: #e0b65d; }
+.demo-stage-entry-go:hover { background: var(--hh-accent-deep); }
 .demo-stage-entry-go:focus-visible { outline: 3px solid var(--hh-ink); outline-offset: 3px; }
 
 .demo-stage-entry-form {
@@ -98,10 +93,10 @@
 
 html[data-theme] .demo-stage-entry .demo-stage-entry-form .field,
 .demo-stage-entry .demo-stage-entry-form .field {
-  background: #1c1a26;
+  background: var(--hh-paper);
   color: var(--hh-ink);
-  border-color: rgba(246, 240, 228, 0.28);
+  border-color: var(--hh-line);
 }
 
 html[data-theme] .demo-stage-entry .demo-stage-entry-form .field::placeholder,
-.demo-stage-entry .demo-stage-entry-form .field::placeholder { color: rgba(246, 240, 228, 0.45); }
+.demo-stage-entry .demo-stage-entry-form .field::placeholder { color: var(--hh-muted); }

@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, redirect } from 'next/navigation'
 import { headers } from 'next/headers'
 import { CopyLink } from '@/components/app/copy-link'
 import { Flash, Hidden } from '@/components/app/shell'
@@ -9,7 +9,7 @@ import { FadeLink } from '@/components/gather/fade-link'
 import { KIND_LABEL } from '@/lib/gather'
 import { shareOrigin } from '@/lib/site-origin'
 import { getSession, loadPortal } from '@/server/context'
-import { publicView, sharePack } from '@/server/gather'
+import { publicView, publishedSampleSlug, sharePack } from '@/server/gather'
 import { featureOn } from '@/lib/features'
 
 export const dynamic = 'force-dynamic'
@@ -32,6 +32,14 @@ export default async function PublicGather({ params, searchParams }: { params: P
   const query = await searchParams
   const headerList = await headers()
   const { payload } = await getSession()
+  if (slug === 'sample') {
+    const real = await publishedSampleSlug(payload)
+    if (!real) notFound()
+    const extra = new URLSearchParams()
+    for (const [key, value] of Object.entries(query)) if (value) extra.set(key, value)
+    const tail = extra.toString()
+    redirect(`/gather/${real}${tail ? `?${tail}` : ''}`)
+  }
   const view = await publicView(payload, slug)
   if (!view) notFound()
   const portal = view.portalSlug ? await loadPortal(payload, view.portalSlug) : null

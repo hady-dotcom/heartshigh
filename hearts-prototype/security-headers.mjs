@@ -7,14 +7,14 @@ const contentSecurityPolicy = [
   "form-action 'self'",
   "frame-ancestors 'self'",
   "object-src 'none'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com https://cdn.jsdelivr.net",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
+  "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
   "frame-src 'self' https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://challenges.cloudflare.com",
   "connect-src 'self' https: blob:",
-  "worker-src 'self' blob:",
+  "worker-src 'self' blob: https://cdn.jsdelivr.net",
 ].join('; ')
 
 export const securityHeaders = [

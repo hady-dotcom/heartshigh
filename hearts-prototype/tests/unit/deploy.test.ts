@@ -112,6 +112,8 @@ test('security headers are set, and they do not trust a frame from another site'
   assert.match(headers['Content-Security-Policy'], /youtube-nocookie/)
   assert.match(headers['Content-Security-Policy'], /frame-src[^;]*https:\/\/player\.vimeo\.com/)
   assert.match(headers['Content-Security-Policy'], /challenges\.cloudflare\.com/)
+  assert.match(headers['Content-Security-Policy'], /script-src[^;]*https:\/\/cdn\.jsdelivr\.net/)
+  assert.match(headers['Content-Security-Policy'], /worker-src[^;]*https:\/\/cdn\.jsdelivr\.net/)
   assert.match(headers['Strict-Transport-Security'], /max-age=/)
   assert.match(readFileSync(path.join(root, 'next.config.mjs'), 'utf8'), /securityHeaders/)
 })

@@ -60,6 +60,7 @@ export function FramingPreview({
             speaker={speaker}
             autoplay={play}
             sound={play}
+            active={play}
             placeholder={placeholder}
             playerId={`desk-learner-${cutId || youtubeId}-${play ? 'on' : 'off'}`}
           />
@@ -136,6 +137,7 @@ export function FramingPreview({
               speaker={speaker}
               autoplay={false}
               sound={false}
+              active={play}
               placeholder={placeholder}
               labMode={labMode}
               clock={labClock}

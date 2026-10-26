@@ -180,6 +180,8 @@ export function CoursePlayer({
   const [failed, setFailed] = useState(false)
   const [vimeoReady, setVimeoReady] = useState(false)
   const [vimeoFailed, setVimeoFailed] = useState(false)
+  // Guests see the poster first. The player request waits for Play, so a signed-out visit does not fire it.
+  const [armFilm, setArmFilm] = useState(!guest)
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
   const [boardOpen, setBoardOpen] = useState(true)
@@ -327,7 +329,7 @@ export function CoursePlayer({
   }, [youtubeId, startAt, boot])
 
   useEffect(() => {
-    if (!vimeoId) return
+    if (!vimeoId || !armFilm) return
     setVimeoReady(false)
     setVimeoFailed(false)
     let ready = false
@@ -389,7 +391,7 @@ export function CoursePlayer({
       window.clearTimeout(stop)
       window.clearTimeout(giveUp)
     }
-  }, [guest, lessonId, vimeoId])
+  }, [armFilm, guest, lessonId, vimeoId])
 
   // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
   const placeSheet = useCallback(() => {
@@ -861,7 +863,7 @@ export function CoursePlayer({
             </div>
           ) : null}
           {youtubeId ? <div className="yt j-film-band" style={{ visibility: mode === 'youtube' ? 'visible' : 'hidden' }} ref={holder} /> : null}
-          {vimeoId ? (
+          {vimeoId && armFilm ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
               <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { playsinline: '1', autopause: '0' })} allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-testid="vimeo-player" />
             </div>
@@ -869,6 +871,7 @@ export function CoursePlayer({
           {films && vimeoId && !vimeoReady && !videoComing ? (
             <div className="film-hold" data-testid="film-hold" data-failed={vimeoFailed ? 'yes' : 'no'}>
               {coverUrl ? <img src={coverUrl} alt="" /> : <strong>{partLabel}</strong>}
+              {guest && !armFilm ? <button type="button" className="pill gold" onClick={() => setArmFilm(true)} data-testid="guest-play">Play</button> : null}
               {vimeoFailed ? <a className="pill gold" href={`https://vimeo.com/${vimeoId}`} target="_blank" rel="noreferrer" data-testid="open-film">Open film</a> : null}
             </div>
           ) : null}

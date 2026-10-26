@@ -42,6 +42,7 @@ test('parenting course is a sequenced list with no hearts doors', async ({ page 
   await expect(page.getByTestId('sequence-module').filter({ hasText: 'The Whole-Brain Child' })).toBeVisible()
   await expect(page.getByTestId('play-next')).toBeVisible()
   await page.getByTestId('buffet-talk').filter({ hasText: 'The Whole-Brain Child 2' }).click()
+  await page.getByTestId('guest-play').click()
   await expect(page.getByTestId('vimeo-player')).toBeVisible()
   await page.getByTestId('answer-point').click()
   await expect(page.getByTestId('popup-prompt')).toContainText('more knowledgeable')

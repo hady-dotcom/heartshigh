@@ -322,7 +322,9 @@ export const OpeningAnswers: CollectionConfig = {
 
 export const HeartContributions: CollectionConfig = {
   slug: 'heart-contributions',
-  access: { read: nobody, create: nobody, update: nobody, delete: nobody },
+  labels: { singular: 'Heart contribution', plural: 'Heart contributions' },
+  admin: { useAsTitle: 'isoWeek', description: 'Weekly trend rows. The account is not stored on the row.' },
+  access: { read: master, create: nobody, update: nobody, delete: nobody },
   fields: [
     { name: 'portal', type: 'relationship', relationTo: 'portals', required: true },
     { name: 'isoWeek', type: 'text', required: true },

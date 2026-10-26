@@ -136,6 +136,6 @@ body:has(.viewas-bar) { --viewas-h: 46px; }
 .demo-role-switch { background: #1f3a5f; color: #fff; padding: 10px 12px; border-radius: 12px; margin: 0 0 12px; }
 .demo-role-switch p { margin: 0 0 8px; }
 .demo-role-switch-row { display: flex; flex-wrap: wrap; gap: 6px; }
-.demo-role-switch button { border: 0; border-radius: 999px; padding: 6px 10px; background: #e07a5f; color: #fff; font: inherit; cursor: pointer; }
-.demo-role-switch button[aria-pressed="true"] { background: #fff; color: #1f3a5f; }
+.demo-role-switch button { border: 0; border-radius: 999px; padding: 6px 10px; background: var(--hh-accent); color: var(--hh-on-accent); font: inherit; cursor: pointer; }
+.demo-role-switch button[aria-pressed="true"] { background: var(--hh-paper); color: var(--hh-accent); }
 .demo-role-now { font-size: 13px; opacity: 0.9; }

@@ -37,6 +37,8 @@ type Props = {
    * Without it the player always draws F, whatever the stored segments say.
    */
   labMode?: FramingMode | null
+  /** When false, the frame stays but YouTube is not requested. */
+  active?: boolean
 }
 
 /**
@@ -68,6 +70,7 @@ export function FramingPlayer({
   title,
   placeholder = false,
   labMode = null,
+  active = true,
 }: Props) {
   const host = useRef<HTMLDivElement>(null)
   const video = useRef<HTMLVideoElement>(null)
@@ -87,6 +90,7 @@ export function FramingPlayer({
       : null
 
   useEffect(() => {
+    if (!active) return
     if (placeholder) {
       setReady(true)
       const node = video.current
@@ -142,7 +146,7 @@ export function FramingPlayer({
       gone = true
       destroyPlayer(playerId)
     }
-  }, [autoplay, placeholder, playerId, resolved.end, resolved.start, sound, youtubeId])
+  }, [active, autoplay, placeholder, playerId, resolved.end, resolved.start, sound, youtubeId])
 
   useEffect(() => {
     let frame = 0

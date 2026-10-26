@@ -40,6 +40,7 @@ test('a signed-out parent uses the course player and keeps the answer on the pho
   await shot(page, 'parent-02-sections')
   await page.getByTestId('start-part').click()
   await expect(page.getByTestId('course')).toBeVisible()
+  await page.getByTestId('guest-play').click()
   await expect(page.getByTestId('vimeo-player')).toBeVisible()
   await expect(page.getByTestId('question-strip')).toBeVisible()
   await expect(page.getByTestId('sequence-question')).toBeVisible()

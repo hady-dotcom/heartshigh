@@ -1,4 +1,11 @@
-/* Payload data console. White canvas, blue actions. Layout stays Payload's own. */
+/*
+ * Payload data console, in the house look.
+ * Payload's own CSS lives in @layer payload-default. These rules are unlayered,
+ * so they win, including when the console is pinned to dark.
+ * Primary actions use the elevation-800 token, which Payload paints near-black.
+ * That token stays dark for type. Buttons are set to the house blue directly.
+ */
+
 html,
 html[data-theme='light'],
 html[data-theme='dark'] {
@@ -11,12 +18,102 @@ html[data-theme='dark'] {
   --theme-elevation-100: #f3f4f6;
   --theme-elevation-150: #e5e7eb;
   --theme-elevation-200: #e5e7eb;
+  --theme-elevation-250: #e5e7eb;
+  --theme-elevation-300: #d1d5db;
   --theme-elevation-800: #111827;
   --theme-elevation-1000: #111827;
+  --theme-success-500: #2563eb;
   --color-success-400: #3b82f6;
   --color-success-500: #2563eb;
   --color-success-600: #1d4ed8;
+  --color-blue-500: #2563eb;
+  --style-radius-s: 10px;
+  --style-radius-m: 16px;
+  --style-radius-l: 20px;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
   color-scheme: light;
   background: #f2f2f7;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+html[data-theme='dark'] {
+  --theme-bg: #f2f2f7;
+  --theme-text: #111827;
+  --theme-input-bg: #ffffff;
+  color-scheme: light;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Primary actions (Login, Save, Create) are the house blue, not Payload's black elevation. */
+html .btn.btn--style-primary:not(.btn--disabled) {
+  --bg-color: #2563eb;
+  --color: #ffffff;
+  --hover-bg: #1d4ed8;
+  --hover-color: #ffffff;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 12px;
+}
+
+html .btn.btn--style-primary:not(.btn--disabled):hover,
+html .btn.btn--style-primary:not(.btn--disabled):focus-visible {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+html .btn.btn--style-secondary,
+html .btn.btn--style-pill {
+  border-radius: 12px;
+}
+
+html .card,
+html .collection-list__tables,
+html .table-wrap,
+html .list-controls,
+html .doc-controls,
+html .document-fields,
+html .render-fields,
+html .group-field,
+html .login__form {
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+html .nav {
+  background: #ffffff;
+}
+
+html .nav__link.active,
+html .nav a.nav__link:hover {
+  color: #2563eb;
+}
+
+html .nav__link-indicator {
+  background: #2563eb;
+}
+
+html a:not(.btn) {
+  color: #2563eb;
+}
+
+html input,
+html textarea,
+html select,
+html .rs__control {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 12px;
+}
+
+html ::selection {
+  background: #dbeafe;
   color: #111827;
 }

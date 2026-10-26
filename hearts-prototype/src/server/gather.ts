@@ -181,6 +181,19 @@ export async function gatheringBySlug(payload: Payload, slug: string) {
   return (found.docs[0] as Doc | undefined) || null
 }
 
+/** `/gather/sample` is a placeholder. Point it at a real published gathering. The rows stay. */
+export async function publishedSampleSlug(payload: Payload) {
+  const found = await payload.find({
+    collection: 'gatherings',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    sort: '-startsAt',
+    where: { status: { equals: 'published' } },
+  })
+  return text((found.docs[0] as Doc | undefined)?.slug)
+}
+
 export function slugifyTitle(title: string) {
   const base = title.toLowerCase().normalize('NFKD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 48)
   return base || 'gather'

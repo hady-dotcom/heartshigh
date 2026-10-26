@@ -5,12 +5,9 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background:
-    radial-gradient(1200px 280px at 10% -10%, rgba(31, 138, 120, 0.16), transparent 60%),
-    radial-gradient(900px 240px at 90% 0%, rgba(122, 79, 168, 0.12), transparent 55%),
-    var(--hh-canvas);
+  background: var(--hh-canvas);
   color: var(--hh-ink);
-  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+  font-family: var(--hh-font-system);
 }
 
 .demo-bar {
@@ -93,7 +90,7 @@
   gap: 14px;
   padding: 28px 32px 22px;
   border-radius: 22px;
-  background: #fffdf8;
+  background: var(--hh-paper);
   color: var(--hh-ink);
   box-shadow: 0 28px 80px rgba(23, 21, 31, 0.38);
 }
@@ -122,7 +119,7 @@
   font-size: 14px;
   cursor: pointer;
 }
-.demo-cast button.on, .demo-cast button:hover { background: #1f4d3a; color: var(--hh-ink); border-color: #1f4d3a; }
+.demo-cast button.on, .demo-cast button:hover { background: var(--hh-accent); color: var(--hh-on-accent); border-color: var(--hh-accent); }
 .demo-cast button.dice { background: transparent; }
 .demo-cast button.go {
   background: var(--hh-accent);
@@ -139,7 +136,7 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: #6b6578;
+  color: var(--hh-muted);
 }
 .demo-cast-field label { display: grid; gap: 4px; }
 .demo-cast-field input {
@@ -181,7 +178,7 @@
 .demo-name:hover { background: rgba(255, 255, 255, 0.28); }
 .demo-name-input {
   color: var(--hh-ink);
-  background: #fffdf8;
+  background: var(--hh-paper);
   padding: 2px 6px;
   outline: 2px solid var(--hh-accent);
   max-width: 16rem;
@@ -210,7 +207,7 @@
 .demo-cell { min-width: 0; min-height: 0; display: flex; position: relative; isolation: isolate; }
 
 .demo-panel {
-  --tint: #25214a;
+  --tint: var(--hh-accent);
   flex: 1;
   min-width: 0;
   min-height: 0;
@@ -221,7 +218,7 @@
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
 }
-.demo-panel[data-slot='master'] { --tint: #25214a; }
+.demo-panel[data-slot='master'] { --tint: var(--hh-accent); }
 .demo-panel[data-slot='portal'] { --tint: var(--hh-accent); }
 .demo-panel[data-slot='teacher'] { --tint: var(--hh-accent-deep); }
 .demo-panel[data-slot='learner'] { --tint: var(--hh-accent); }
@@ -252,7 +249,7 @@
   background: var(--hh-canvas);
 }
 .demo-panel.is-phone .demo-view {
-  background: #ece7dc;
+  background: var(--hh-surface);
   overflow: hidden;
 }
 .demo-phone-slot,
@@ -284,8 +281,8 @@
 .demo-frame-fit.is-phone .demo-frame-clip {
   border-radius: 28px;
   clip-path: inset(0 round 28px);
-  box-shadow: inset 0 0 0 2px #2a2836;
-  background: #111018;
+  box-shadow: inset 0 0 0 2px var(--hh-ink);
+  background: var(--hh-video);
 }
 .demo-frame-clip iframe {
   position: absolute;
@@ -328,12 +325,12 @@
   width: 100%;
   max-width: 390px;
   height: 100%;
-  background: #111018;
+  background: var(--hh-video);
   border-radius: 28px;
   padding: 12px 8px 10px;
   box-sizing: border-box;
   position: relative;
-  box-shadow: inset 0 0 0 2px #2a2836;
+  box-shadow: inset 0 0 0 2px var(--hh-ink);
   overflow: hidden;
 }
 .demo-notch {
@@ -343,7 +340,7 @@
   width: 92px;
   height: 14px;
   transform: translateX(-50%);
-  background: #111018;
+  background: var(--hh-video);
   border-radius: 0 0 10px 10px;
   z-index: 5;
 }
@@ -469,13 +466,13 @@
   border: 0;
   border-radius: 16px;
   padding: 0;
-  background: #fff;
+  background: var(--hh-paper);
   color: inherit;
   overflow: hidden;
   cursor: pointer;
 }
 .demo-course span { display: grid; gap: 2px; padding-right: 8px; }
-.demo-course small { color: #5c5848; }
+.demo-course small { color: var(--hh-muted); }
 .demo-live {
   margin: 0;
   background: var(--hh-accent);
@@ -495,14 +492,14 @@
 }
 @keyframes demo-pulse {
   0%, 100% { outline-color: var(--hh-accent); }
-  50% { outline-color: #fff4cc; }
+  50% { outline-color: var(--hh-accent-fill); }
 }
 
 .demo-steps {
   width: 280px;
   flex: none;
   margin: 10px 10px 10px 0;
-  background: #fffdf8;
+  background: var(--hh-paper);
   border-radius: 14px;
   padding: 16px 16px 12px;
   box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
@@ -519,9 +516,9 @@
 .demo-steps li { display: grid; gap: 4px; }
 .demo-steps button {
   justify-self: start;
-  background: #1f4d3a;
-  color: var(--hh-ink);
-  border-color: #1f4d3a;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
   text-align: left;
 }
 .demo-steps button.on, .demo-steps button.go { background: var(--hh-accent); color: var(--hh-on-accent); border-color: var(--hh-accent); }
@@ -599,7 +596,7 @@
 .demo-app .card,
 .demo-app .demo-phone-card {
   color: var(--hh-ink);
-  background: #fffdf8;
+  background: var(--hh-paper);
   border-radius: 16px;
   padding: 12px;
 }
@@ -609,11 +606,11 @@
 .demo-app .card input,
 .demo-app .demo-form textarea,
 .demo-app .demo-form input {
-  background: #fff;
+  background: var(--hh-paper);
   color: var(--hh-ink);
   border-color: rgba(31, 29, 54, 0.2);
 }
-.demo-app .eyebrow { color: #8a6a22; }
+.demo-app .eyebrow { color: var(--hh-accent); }
 .demo-app .demo-done { color: var(--hh-ink); }
 
 @media (max-width: 1400px) {

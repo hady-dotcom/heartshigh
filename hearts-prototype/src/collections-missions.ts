@@ -46,7 +46,7 @@ export const Missions: CollectionConfig = {
 export const MissionJoins: CollectionConfig = {
   slug: 'mission-joins',
   labels: { singular: 'Mission join', plural: 'Mission joins' },
-  admin: { group: 'Missions', hidden: true },
+  admin: { group: 'Missions', hidden: false },
   access: { read: staffRead, create: masterWrite, update: masterWrite, delete: masterWrite },
   fields: [
     { name: 'mission', type: 'relationship', relationTo: relation('missions'), required: true, index: true },
@@ -65,7 +65,7 @@ export const MissionJoins: CollectionConfig = {
 export const SupportThreads: CollectionConfig = {
   slug: 'support-threads',
   labels: { singular: 'Support thread', plural: 'Support threads' },
-  admin: { group: 'Missions', hidden: true },
+  admin: { group: 'Missions', hidden: false },
   access: { read: signedIn, create: masterWrite, update: masterWrite, delete: masterWrite },
   fields: [
     { name: 'user', type: 'relationship', relationTo: 'users', required: true, index: true },
@@ -77,7 +77,7 @@ export const SupportThreads: CollectionConfig = {
 export const SupportMessages: CollectionConfig = {
   slug: 'support-messages',
   labels: { singular: 'Support message', plural: 'Support messages' },
-  admin: { group: 'Missions', hidden: true },
+  admin: { group: 'Missions', hidden: false },
   access: { read: signedIn, create: masterWrite, update: masterWrite, delete: masterWrite },
   fields: [
     { name: 'thread', type: 'relationship', relationTo: relation('support-threads'), required: true, index: true },
