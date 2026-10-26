@@ -122,9 +122,10 @@ async function parentingFilmsNeedRepair(payload: Payload, portalId: number) {
     limit: 200,
     where: { course: { in: ids } },
   })
-  const stale = lessons.docs.some((row) => /^496/.test(String(row.vimeoId || '')))
-  const bare = lessons.docs.filter((row) => String(row.vimeoId || '').trim() && !Number(row.durationSeconds)).length
-  return lessons.totalDocs > 107 || stale || bare > 15
+  const open = lessons.docs.filter((row) => row.binned !== true)
+  const stale = open.some((row) => /^496/.test(String(row.vimeoId || '')))
+  const bare = open.filter((row) => String(row.vimeoId || '').trim() && !Number(row.durationSeconds)).length
+  return open.length > 107 || stale || bare > 15
 }
 
 /**

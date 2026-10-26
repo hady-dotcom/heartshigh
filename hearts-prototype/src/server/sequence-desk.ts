@@ -478,6 +478,7 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
         transcriptSource: 'none' as const,
         transcriptNote: film.transcript.slice(0, 2000) || null,
         tooShort: false,
+        binned: false,
         publishState: 'published' as const,
         jibrilSection: null,
         ghunyaHeading: null,
@@ -514,7 +515,13 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
   for (const row of lessons) {
     if (kept.has(row.id)) continue
     if (!managed.has(home.get(row.id) || 0)) continue
-    if (await lessonHasAnswers(payload, row.id)) continue
+    if (await lessonHasAnswers(payload, row.id)) {
+      // A duplicate that already has answers stays in the database, but it leaves the film list.
+      if (row.binned !== true) {
+        await payload.update({ collection: 'lessons', id: row.id, overrideAccess: true, data: { binned: true } as never })
+      }
+      continue
+    }
     await deleteLesson(payload, row.id)
     home.delete(row.id)
   }
