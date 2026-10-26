@@ -1015,6 +1015,7 @@ export function CoursePlayer({
               <section key={point.id} data-testid="film-swarm-question" data-point={point.id}>
                 <SwarmList
                   showName
+                  reportNext={next}
                   items={items.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
                 />
               </section>
