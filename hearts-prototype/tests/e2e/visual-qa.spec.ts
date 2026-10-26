@@ -493,6 +493,144 @@ test('HEARTS learner screens', async ({ page }, info) => {
   expect(hits, hits.map((hit) => `${hit.screen} ${hit.kind}: ${hit.detail}`).join('\n')).toEqual([])
 })
 
+/** Same-row chips share a height, a centred text block, the same left padding, and icons only when every chip has one. */
+async function chipProblems(page: Page) {
+  return page.evaluate(() => {
+    const problems: string[] = []
+    const root = document.querySelector('.j-scene-wrap:not(.leaving)') || document
+    const tiles = [...root.querySelectorAll('[data-testid="tile"]')].filter((el) => {
+      const rect = el.getBoundingClientRect()
+      const cs = getComputedStyle(el)
+      return rect.width > 20 && rect.height > 20 && cs.visibility !== 'hidden' && Number(cs.opacity) > 0
+    })
+    if (tiles.length < 2) problems.push('missing chips')
+    const rows = new Map<number, Element[]>()
+    for (const tile of tiles) {
+      const top = Math.round(tile.getBoundingClientRect().top)
+      const key = [...rows.keys()].find((row) => Math.abs(row - top) < 12) ?? top
+      const list = rows.get(key) || []
+      list.push(tile)
+      rows.set(key, list)
+    }
+    for (const row of rows.values()) {
+      if (row.length < 2) continue
+      const heights = row.map((el) => Math.round(el.getBoundingClientRect().height))
+      const chipTops = row.map((el) => Math.round(el.getBoundingClientRect().top))
+      const pads = row.map((el) => getComputedStyle(el).paddingLeft)
+      const icons = row.map((el) => el.querySelectorAll('svg').length)
+      if (Math.max(...heights) - Math.min(...heights) > 1) problems.push(`height ${heights.join(',')}`)
+      if (Math.max(...chipTops) - Math.min(...chipTops) > 1) problems.push(`row ${chipTops.join(',')}`)
+      if (new Set(pads).size > 1) problems.push(`padding ${pads.join(',')}`)
+      if (icons.some((count) => count > 0) && icons.some((count) => count === 0)) problems.push('lone icon')
+      const lineBoxes = row.map((el) => {
+        const text = [...el.querySelectorAll(':scope > span')].find((span) => !span.classList.contains('j-glyph'))
+        if (!text) return []
+        const range = document.createRange()
+        range.selectNodeContents(text)
+        return [...range.getClientRects()]
+      })
+      for (const el of row) {
+        const text = [...el.querySelectorAll(':scope > span')].find((span) => !span.classList.contains('j-glyph'))
+        if (!text) {
+          problems.push('missing label')
+          continue
+        }
+        const box = el.getBoundingClientRect()
+        const words = text.getBoundingClientRect()
+        const mid = (words.top + words.bottom) / 2
+        const chip = (box.top + box.bottom) / 2
+        if (Math.abs(mid - chip) > 2) problems.push(`baseline ${el.getAttribute('data-option')} off by ${Math.abs(mid - chip).toFixed(1)}`)
+      }
+      if (lineBoxes.every((lines) => lines.length === lineBoxes[0].length) && lineBoxes[0].length > 0) {
+        const tops = lineBoxes.map((lines) => Math.round(lines[0].top))
+        if (Math.max(...tops) - Math.min(...tops) > 2) problems.push(`baseline ${tops.join(',')}`)
+      }
+    }
+    return problems
+  })
+}
+
+async function contrastProblems(page: Page) {
+  const axe = await new AxeBuilder({ page }).options({ runOnly: { type: 'rule', values: ['color-contrast'] } }).analyze()
+  return axe.violations.map((violation) => {
+    const node = violation.nodes[0]
+    return `${violation.help}: ${(node?.target || []).join(' ')} ${(node?.html || '').slice(0, 140)}`
+  })
+}
+
+test('signed-out first visit', async ({ page }, info) => {
+  test.skip(info.project.name !== 'webkit-phone', 'iPhone WebKit is the signed-out gate')
+  await page.context().clearCookies()
+  await page.goto('/p/parenting', { waitUntil: 'domcontentloaded' })
+  await page.waitForURL(/\/start/, { timeout: 60_000 })
+  await settle(page)
+  const play = page.getByTestId('lets-play')
+  await play.click()
+  const shown = await page.getByTestId('progress').waitFor({ timeout: 8_000 }).then(() => true).catch(() => false)
+  if (!shown) {
+    await play.click()
+    await page.getByTestId('progress').waitFor({ timeout: 15_000 })
+  }
+  for (let step = 1; step <= 8; step += 1) {
+    await expect(page.getByTestId('progress')).toHaveText(`${step} of 8`)
+    await settle(page)
+    const chips = await chipProblems(page)
+    expect(chips, chips.join('\n')).toEqual([])
+    const contrast = await contrastProblems(page)
+    expect(contrast, contrast.join('\n')).toEqual([])
+    await page.getByTestId('tile').first().click()
+  }
+  await expect(page.getByTestId('guest-film')).toBeVisible({ timeout: 20_000 })
+  await expect(page.getByTestId('guest-play')).toBeVisible()
+  await expect(page.getByTestId('guest-courses')).toBeVisible()
+  await settle(page)
+  const filmContrast = await contrastProblems(page)
+  expect(filmContrast, filmContrast.join('\n')).toEqual([])
+  const light = await page.evaluate(() => {
+    const paint = (el: Element | null) => getComputedStyle(el || document.body).backgroundColor
+    const lum = (value: string) => {
+      const parts = value.match(/\d+/g)?.slice(0, 3).map(Number) || [0, 0, 0]
+      return (0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2]) / 255
+    }
+    return { page: lum(paint(document.querySelector('.journey'))), title: lum(getComputedStyle(document.querySelector('.guest-film h1') || document.body).color) }
+  })
+  expect(light.page).toBeGreaterThan(0.75)
+  expect(light.title).toBeLessThan(0.25)
+  await page.getByTestId('guest-play').click()
+  const player = page.getByTestId('guest-player')
+  await expect(player).toHaveAttribute('src', /player\.vimeo\.com\/video\/1239173361\?.*playsinline=1/)
+  await page.getByTestId('tab-me').click()
+  await expect(page.getByTestId('keep-sheet')).toBeVisible()
+  await expect(page.getByTestId('keep-title')).toHaveText('Want us to keep your place?')
+  await expect(page.getByTestId('guest-film')).toBeVisible()
+  const sheet = await page.evaluate(() => {
+    const lum = (value: string) => {
+      const parts = value.match(/\d+/g)?.slice(0, 3).map(Number) || [0, 0, 0]
+      return (0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2]) / 255
+    }
+    const card = document.querySelector('[data-testid="keep-sheet"]')
+    const title = document.querySelector('[data-testid="keep-title"]')
+    return {
+      card: lum(getComputedStyle(card || document.body).backgroundColor),
+      title: lum(getComputedStyle(title || document.body).color),
+    }
+  })
+  expect(sheet.card).toBeGreaterThan(0.9)
+  expect(sheet.title).toBeLessThan(0.25)
+  const sheetContrast = await contrastProblems(page)
+  expect(sheetContrast, sheetContrast.join('\n')).toEqual([])
+  await page.getByTestId('not-now').click()
+  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
+  await page.getByTestId('guest-courses').click()
+  await page.waitForURL(/\/courses/, { timeout: 60_000 })
+  await expect(page).not.toHaveURL(/\/login/)
+  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
+  await expect(page.getByTestId('course-home')).toBeVisible()
+  await expect(page.getByTestId('course-card').first()).toBeVisible()
+  const coursesContrast = await contrastProblems(page)
+  expect(coursesContrast, coursesContrast.join('\n')).toEqual([])
+})
+
 test('HEARTS admin screens', async ({ page }, info) => {
   const hits: Hit[] = []
   try {

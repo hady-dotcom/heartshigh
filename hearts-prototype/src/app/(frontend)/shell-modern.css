@@ -1660,6 +1660,157 @@ html[data-theme] .app-stage.shell-modern .name-edit[open] summary::after {
   transform: rotate(45deg);
 }
 
+/* Opening chips: one height, words centred, no lone icon. */
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tiles {
+  align-items: stretch;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile {
+  display: flex;
+  align-items: center;
+  align-content: center;
+  align-self: stretch;
+  justify-content: flex-start;
+  height: auto;
+  min-height: calc(var(--hh-tap-min) + var(--hh-space-6));
+  min-width: 0;
+  padding: var(--hh-space-3);
+  text-align: left;
+  gap: 0;
+  box-sizing: border-box;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile .j-glyph {
+  display: none;
+}
+
+html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile > span {
+  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Keep-your-place sheet: white card, dark words, over a light page. */
+html[data-theme] .app-stage.shell-modern .j-sheet {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: none;
+  box-shadow: var(--hh-shadow-lift);
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet h2 {
+  color: var(--hh-ink);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-title1);
+  font-weight: 700;
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet p,
+html[data-theme] .app-stage.shell-modern .j-sheet .j-sheet-small {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet .j-escape.dark {
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet .handle {
+  background: var(--hh-line);
+  opacity: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet .pill.gold {
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  box-shadow: var(--hh-shadow-none);
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet a {
+  color: var(--hh-accent-deep);
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-guest {
+  background-color: var(--hh-canvas);
+  background-image: linear-gradient(180deg, var(--hh-accent-fill) 0, var(--hh-canvas) var(--hh-wash-size));
+  color: var(--hh-ink);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-film {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-3);
+  padding: var(--hh-space-4) var(--hh-space-3) var(--hh-space-4);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-guest .guest-film {
+  padding-bottom: calc(var(--hh-chrome) + var(--hh-space-4));
+}
+
+html[data-theme] .app-stage.shell-modern .guest-kicker,
+html[data-theme] .app-stage.shell-modern .guest-meta {
+  margin: 0;
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-kicker {
+  color: var(--hh-accent-deep);
+  font-weight: 600;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-stage {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-card);
+  overflow: hidden;
+  background: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-stage iframe,
+html[data-theme] .app-stage.shell-modern .guest-still,
+html[data-theme] .app-stage.shell-modern .guest-fallback {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  object-fit: cover;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-play {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: transparent;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-play-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--hh-space-2);
+  min-height: var(--hh-tap-min);
+  min-width: calc(var(--hh-tap-min) + var(--hh-space-6));
+  padding: 0 var(--hh-space-4);
+  border-radius: var(--hh-radius-pill);
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
+  font-size: var(--hh-font-size-body);
+  font-weight: 700;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-courses {
+  min-height: var(--hh-tap-min);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .app-stage.shell-modern .route-fade,
   html[data-theme] .app-stage.shell-modern .thumb.is-fallback,

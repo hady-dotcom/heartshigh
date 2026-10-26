@@ -9,7 +9,7 @@ import { Arch } from '@/components/arch'
 import { COMPASS_DISCLOSURE, compassPrivacyOn } from '@/lib/compass-privacy'
 import { OPENING_HEADING } from '@/lib/opening-data'
 import { openingStepLabel, questionStepLabel } from '@/lib/opening-progress'
-import { BUBBLE_TINTS, DOOR_TINTS, Glyph } from './glyphs'
+import { BUBBLE_TINTS, DOOR_TINTS, Glyph, everyTileHasGlyph } from './glyphs'
 
 export function Caption({ text, className = 'j-caption', testId, as: Tag = 'h1' }: { text: string; className?: string; testId?: string; as?: 'h1' | 'h2' | 'p' }) {
   const parts = text.split(/\*\*(.+?)\*\*/g)
@@ -57,6 +57,7 @@ type SceneProps = {
 
 export function SceneCard({ scene, index, total, selected, reply, picked, onPick, onPass, onJustShow, brand = '', light = false }: SceneProps & { brand?: string; light?: boolean }) {
   const steps = total ?? index + 2
+  const showGlyphs = everyTileHasGlyph(scene.options)
   const pillRef = useRef<HTMLParagraphElement>(null)
   const tilesRef = useRef<HTMLDivElement>(null)
   const swipe = useRef<{ x: number; y: number } | null>(null)
@@ -110,7 +111,7 @@ export function SceneCard({ scene, index, total, selected, reply, picked, onPick
                 data-option={option.key}
                 aria-pressed={selected === option.key}
               >
-                {option.crisis ? null : <span className="j-glyph"><Glyph name={option.key} /></span>}
+                {option.crisis || !showGlyphs ? null : <span className="j-glyph"><Glyph name={option.key} /></span>}
                 <span>{option.label}</span>
               </button>
             ))}

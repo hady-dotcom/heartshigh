@@ -33,6 +33,7 @@ import { feedBackHref } from '@/lib/lane-progress'
 import { appNameOf } from '@/lib/learner-brand'
 import { fontPairOf, sceneCssOf, shellOf } from '@/lib/portal-look'
 import { nextCourseFilms } from './course-home'
+import { firstGuestFilm } from '@/server/guest-films'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -82,6 +83,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   const modern = shellOf(portal) === 'modern'
   const sceneCss = modern ? sceneCssOf(portal) : null
   const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await nextCourseFilms(payload, user, base, 4) : []
+  const guestFilm = modern && !user ? await firstGuestFilm(payload, portal.id, base) : null
   return (
     <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
@@ -114,6 +116,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
             variants={variants}
             features={featuresOf(portal)}
             courseFilms={courseFilms}
+            guestFilm={guestFilm}
           />
         </JourneyErrorBoundary>
       </main>

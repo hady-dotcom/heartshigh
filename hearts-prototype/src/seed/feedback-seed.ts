@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { feedbackDemoSeedAllowed } from '@/lib/feedback'
+import { now } from '@/lib/clock'
 
 type Doc = Record<string, unknown> & { id: number }
 
@@ -46,8 +47,8 @@ export async function seedFeedbackDemo(payload: Payload, opts: { startersOnly?: 
     console.log('Feedback demo: no questions to hang sample answers on.')
     return
   }
-  const now = Date.now()
-  const day = (ago: number) => new Date(now - ago * 86_400_000).toISOString()
+  const seeded = now().getTime()
+  const day = (ago: number) => new Date(seeded - ago * 86_400_000).toISOString()
   async function answer(input: { point: Doc; user: Doc; portal: number; body: string; choice?: string; keepPrivate?: boolean; share?: boolean; ago: number }) {
     const lesson = Number(input.point.lesson)
     const created = (await payload.create({

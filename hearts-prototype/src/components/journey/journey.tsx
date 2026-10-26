@@ -25,6 +25,8 @@ import { NO_EXTRACT, NO_EXTRACT_LABEL, NO_TALK, NO_TALK_LABEL, hasFullTalk, hasL
 import { appetiserSpans, piecePoint } from '@/lib/clip-piece'
 import { STATE, UNPLAYABLE, createPlayer, cue, destroyPlayer, getPlayer, halfVisible, hasSound, hydrateSound, lowData, playOnly, playerSnapshot, preloadApi, setHidden, silence, silenceHidden, silenceOthers, soundOn, type PlayerKind } from '@/lib/yt'
 import { FilmFallback } from '@/components/app/film-fallback'
+import type { GuestFilm } from '@/lib/guest-film'
+import { GuestFilmView } from './guest-film'
 import { PageHelp } from '@/components/app/page-help'
 import { Arch } from '@/components/arch'
 import { TabBar } from '../app/shell'
@@ -77,6 +79,8 @@ export type JourneyProps = {
   features?: import('@/lib/features').FeatureMap
   /** Shown when this portal has no approved clips, so the feed is never a blank page. */
   courseFilms?: { href: string; title: string; course: string; place: number; poster: string | null; seconds?: number; done?: boolean }[]
+  /** First course film for a signed-out modern visitor, instead of an empty clip feed. */
+  guestFilm?: GuestFilm | null
 }
 
 const TAB_DELAY = 200
@@ -835,6 +839,12 @@ export function Journey(props: JourneyProps) {
     const begin = async () => {
       const state = heartRef.current
       if (!state) return
+      if (props.plain && !signedIn && props.guestFilm && !props.lane) {
+        itemsRef.current = []
+        setItems([])
+        setTabs(true)
+        return
+      }
       setFirstEver(state.served.length === 0)
       revealedRef.current = true
       setRevealed(true)
@@ -1038,6 +1048,22 @@ export function Journey(props: JourneyProps) {
         } catch {
           // Feed still opens. Home treats visits and saved taps as enough to stay in the app.
         }
+      }
+      if (props.plain && !props.signedIn && props.guestFilm && !props.lane) {
+        itemsRef.current = []
+        setItems([])
+        setFirstEver(true)
+        setLine(null)
+        revealedRef.current = true
+        setRevealed(true)
+        setPhase('feed')
+        setTabs(true)
+        if (depth.current > 0) {
+          rewinding.current = `${base}/feed`
+          window.history.go(-depth.current)
+          depth.current = 0
+        } else window.history.replaceState(window.history.state, '', `${base}/feed`)
+        return
       }
       if (starter) {
         itemsRef.current = [starter]
@@ -2591,7 +2617,27 @@ export function Journey(props: JourneyProps) {
     </>
   ) : null
 
+  const guardTabs = (event: React.MouseEvent) => {
+    if (signedIn) return
+    const target = (event.target as HTMLElement).closest('a')
+    if (!target) return
+    const id = target.getAttribute('data-testid')
+    if (id === 'tab-home') return
+    if (props.plain && id === 'tab-garden') return
+    event.preventDefault()
+    needsAccount('place')
+  }
+
   const courseFilms = props.courseFilms || []
+  if (phase === 'feed' && props.plain && !signedIn && props.guestFilm && items.length === 0 && !props.lane) {
+    return (
+      <div className="journey phase-guest" data-testid="journey" data-phase="feed">
+        <GuestFilmView film={props.guestFilm} />
+        {sheet ? <KeepPlaceSheet reason={sheet} loginHref={loginHref} offline={offline} onClose={closeSheet} onSubmit={signUp} /> : null}
+        <TabEntry base={base} unread={props.unread} features={props.features} plain={props.plain} onGuard={guardTabs} />
+      </div>
+    )
+  }
   if (phase === 'feed' && items.length === 0 && courseFilms.length) {
     return (
       <div className="journey phase-feed" data-testid="journey" data-phase="feed">
@@ -2836,14 +2882,7 @@ export function Journey(props: JourneyProps) {
           unread={props.unread}
           features={props.features}
           plain={props.plain}
-          onGuard={(event) => {
-            if (signedIn) return
-            const target = (event.target as HTMLElement).closest('a')
-            if (target && target.getAttribute('data-testid') !== 'tab-home') {
-              event.preventDefault()
-              needsAccount('place')
-            }
-          }}
+          onGuard={guardTabs}
         />
       ) : null}
     </div>
