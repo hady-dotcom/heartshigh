@@ -261,15 +261,18 @@ export async function seedParentingPortal(payload: Payload) {
     tenants: [{ tenant: portal.id }],
     courseList: [course.id],
   })
-  await ensureUser(payload, {
+  const teacherUser = await ensureUser(payload, {
     email: 'parenting-teacher@hearts.test',
     password: 'portal-teacher',
-    name: 'Parenting teacher',
+    name: 'Hannah Price',
     role: 'teacher',
     accessCode: teacher.id,
     tenants: [{ tenant: portal.id }],
     courseList: [course.id],
   })
+  if (teacherUser.name !== 'Hannah Price') {
+    await payload.update({ collection: 'users', id: teacherUser.id, overrideAccess: true, data: { name: 'Hannah Price' } })
+  }
   await ensureUser(payload, {
     email: 'parenting-learner@hearts.test',
     password: 'portal-learner',

@@ -21,6 +21,9 @@ import { HeartIcon, ImageIcon, LockIcon, MicIcon } from '../icons'
 import { track } from '@/lib/experiment-track'
 import { ReportButton } from '@/components/app/report-sheet'
 import { vimeoPlayerSrc } from '@/lib/vimeo'
+import { CopyLink } from '@/components/app/copy-link'
+import { KeepPlaceSheet } from '@/components/journey/sheet'
+import { readGuestDevice, rememberGuestAnswer, rememberGuestProgress } from '@/lib/guest-device'
 
 export type PointView = {
   id: number
@@ -93,6 +96,9 @@ export function CoursePlayer({
   clipEnd = null,
   videoComing = false,
   films = false,
+  shareUrl = null,
+  guest = false,
+  guestMeta = null,
 }: {
   courseTitle: string
   backHref: string
@@ -112,7 +118,7 @@ export function CoursePlayer({
   circleLabel?: string
   serverNow: string
   next: string
-  garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null }
+  garden: { done: number; total: number; links: { label: string; href: string }[]; gardenHref: string; nextPart?: { label: string; href: string } | null; prevPart?: { label: string; href: string } | null }
   /** Master flag popupOverPlayer. Off is the strict layout: the paused player stays fully in view. */
   overPlayer?: boolean
   film?: { provider: 'vimeo' | 'file'; vimeoId?: string | null; vimeoHash?: string | null; src?: string | null } | null
@@ -130,6 +136,12 @@ export function CoursePlayer({
   videoComing?: boolean
   /** Course pages say film. HEARTS keeps talk. */
   films?: boolean
+  /** A link a parent can send. Signed-out sharing still offers an account. */
+  shareUrl?: string | null
+  /** Saves the answer on this phone and offers an account when they choose to share it. */
+  guest?: boolean
+  /** Course and film place, so a signed-out visit can resume from this phone. */
+  guestMeta?: { courseId: number; place: number; filmTitle: string } | null
 }) {
   const router = useRouter()
   const card = useRef<HTMLDivElement>(null)
@@ -137,6 +149,7 @@ export function CoursePlayer({
   const filmBox = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const vimeoTime = useRef(startAt)
+  const guestSought = useRef(false)
   const watcher = useRef<PopupWatcher | null>(null)
   const viewing = useRef('')
   const queue = useRef<number[]>([])
@@ -153,6 +166,8 @@ export function CoursePlayer({
   const [speed, setSpeed] = useState(1)
   const speedRef = useRef(1)
   const [ended, setEnded] = useState(false)
+  const [offer, setOffer] = useState(false)
+  const [guestDone, setGuestDone] = useState<number | null>(null)
   const [openId, setOpenId] = useState<number | null>(null)
   const [fromTrigger, setFromTrigger] = useState(false)
   const [sheetTop, setSheetTop] = useState<number | null>(null)
@@ -337,7 +352,14 @@ export function CoursePlayer({
       }
       if (data?.event === 'pause' || data?.event === 'finish') setPlaying(false)
       if (data?.event === 'finish') setEnded(true)
-      if (data?.event === 'ready') listen()
+      if (data?.event === 'ready') {
+        listen()
+        if (guest && !guestSought.current) {
+          guestSought.current = true
+          const saved = readGuestDevice().progress.find((row) => row.lessonId === lessonId && !row.done && Number(row.seconds || 0) > 8)
+          if (saved?.seconds) frame()?.postMessage(JSON.stringify({ method: 'setCurrentTime', value: Math.floor(saved.seconds) }), '*')
+        }
+      }
     }
     window.addEventListener('message', onMessage)
     const arm = window.setInterval(listen, 500)
@@ -347,7 +369,7 @@ export function CoursePlayer({
       window.clearInterval(arm)
       window.clearTimeout(stop)
     }
-  }, [vimeoId])
+  }, [guest, lessonId, vimeoId])
 
   // The sheet never covers the film: default keeps the paused video in view above it, strict keeps the whole player clear.
   const placeSheet = useCallback(() => {
@@ -492,21 +514,56 @@ export function CoursePlayer({
 
   const postedWatch = useRef(0)
   useEffect(() => {
-    if (watched < 8 || watched - postedWatch.current < 15) return
+    if (guest || watched < 8 || watched - postedWatch.current < 15) return
     postedWatch.current = watched
     const body = new URLSearchParams({ action: 'watch', lesson: String(lessonId), seconds: String(Math.floor(watched)), at: String(Math.floor(timeRef.current)) })
     void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
-  }, [lessonId, watched])
+  }, [guest, lessonId, watched])
 
   const savedEnd = useRef(false)
   useEffect(() => {
-    if (!saveOnEnd || !endCard || savedEnd.current) return
+    if (guest || !saveOnEnd || !endCard || savedEnd.current) return
     savedEnd.current = true
     const played = Math.max(Math.floor(watched), length > 0 ? Math.ceil(length * 0.8) : 1)
     const body = new URLSearchParams({ action: 'complete', lesson: String(lessonId), seconds: String(played), ended: 'yes', level: 'talk' })
     if (length > 0) body.set('media', String(Math.floor(length)))
     void fetch('/api/hearts', { method: 'POST', headers: { accept: 'application/json' }, body }).catch(() => undefined)
-  }, [saveOnEnd, endCard, watched, length, lessonId])
+  }, [guest, saveOnEnd, endCard, watched, length, lessonId])
+
+  useEffect(() => {
+    if (!guest || !guestMeta) return
+    const saved = readGuestDevice().progress.find((row) => row.lessonId === lessonId)
+    rememberGuestProgress({
+      lessonId,
+      courseId: guestMeta.courseId,
+      courseTitle,
+      title: guestMeta.filmTitle,
+      place: guestMeta.place,
+      seconds: saved?.seconds ?? null,
+      done: Boolean(saved?.done),
+    })
+    const finished = readGuestDevice().progress.filter((row) => row.courseId === guestMeta.courseId && row.done)
+    setGuestDone(new Set(finished.map((row) => row.lessonId)).size)
+  }, [courseTitle, guest, guestMeta, lessonId])
+
+  useEffect(() => {
+    if (!guest || !guestMeta || time < 8) return
+    const done = Boolean(ended || (length > 0 && time / length >= 0.9))
+    const handle = window.setTimeout(() => {
+      rememberGuestProgress({
+        lessonId,
+        courseId: guestMeta.courseId,
+        courseTitle,
+        title: guestMeta.filmTitle,
+        place: guestMeta.place,
+        seconds: Math.floor(time),
+        done,
+      })
+      const finished = readGuestDevice().progress.filter((row) => row.courseId === guestMeta.courseId && row.done)
+      setGuestDone(new Set(finished.map((row) => row.lessonId)).size)
+    }, 1000)
+    return () => window.clearTimeout(handle)
+  }, [courseTitle, ended, guest, guestMeta, length, lessonId, time])
 
   useEffect(() => {
     for (const point of points) {
@@ -961,7 +1018,7 @@ export function CoursePlayer({
       {progressCard ? (
         <section className="garden-card" data-testid="sequence-progress-card">
           <p className="eyebrow">{progressCard.eyebrow}</p>
-          <h3 data-testid="sequence-progress-line">{progressCard.line}</h3>
+          <h3 data-testid="sequence-progress-line">{guest && guestDone != null ? `${guestDone} of ${garden.total} films` : progressCard.line}</h3>
           <Link className="pill outline small" href={progressCard.backHref} data-testid="sequence-back">{progressCard.backLabel}</Link>
         </section>
       ) : null}
@@ -972,10 +1029,12 @@ export function CoursePlayer({
           {films ? null : <span className="course-tree" role="img" aria-label={`${garden.done} of ${garden.total} fruits`} />}
           <div>
             <h3>{films ? 'Progress' : "What's done"}</h3>
-            <small data-testid="fruit-count">{garden.done} of {garden.total} {films ? 'films' : 'fruits'}</small>
+            <small data-testid="fruit-count">{(guest && guestDone != null ? guestDone : garden.done)} of {garden.total} {films ? 'films' : 'fruits'}</small>
             <p className="muted fruit-explain" data-testid="fruit-explain">{films ? 'Films you have watched and questions you have answered in this course.' : 'Talks you have watched and questions you have answered in this course.'}</p>
-            <div className="bar"><i style={{ width: `${garden.total ? (garden.done / garden.total) * 100 : 0}%` }} /></div>
+            <div className="bar"><i style={{ width: `${garden.total ? (((guest && guestDone != null ? guestDone : garden.done) / garden.total) * 100) : 0}%` }} /></div>
+            {garden.prevPart ? <Link className="garden-link" href={garden.prevPart.href} data-testid="garden-prev">↗ {garden.prevPart.label}</Link> : null}
             {garden.nextPart ? <Link className="garden-link" href={garden.nextPart.href} data-testid="garden-next">↗ {garden.nextPart.label}</Link> : null}
+            {shareUrl ? <CopyLink value={shareUrl} testId="film-share-link" label="Share link" className="pill outline small" /> : null}
             {garden.links.map((link) => <Link key={link.href} className="garden-link" href={link.href}>↗ {link.label}</Link>)}
             <Link className="pill teal small" href={garden.gardenHref} style={{ marginTop: 6 }}>{films ? 'Courses' : 'Open garden'}</Link>
           </div>
@@ -1013,6 +1072,18 @@ export function CoursePlayer({
           onThink={() => thinkAbout(open.id)}
           next={next}
           films={films}
+          guest={guest}
+          onOffer={() => setOffer(true)}
+        />
+      ) : null}
+      {guest && offer ? (
+        <KeepPlaceSheet
+          gentle
+          reason="place"
+          loginHref={`/login?next=${encodeURIComponent(next)}`}
+          offline={false}
+          onClose={() => setOffer(false)}
+          onSubmit={async () => 'Your answer is on this phone. Log in, or make an account, to send it to your teacher.'}
         />
       ) : null}
     </div>
@@ -1053,6 +1124,8 @@ function Sheet({
   onThink,
   next,
   films = false,
+  guest = false,
+  onOffer,
 }: {
   point: PointView
   lessonId: number
@@ -1070,6 +1143,8 @@ function Sheet({
   onThink: () => void
   next: string
   films?: boolean
+  guest?: boolean
+  onOffer?: () => void
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
   const [error, setError] = useState('')
@@ -1119,6 +1194,30 @@ function Sheet({
     form.set('answeredAt', new Date().toISOString())
     form.set('atSecond', String(Math.round(atSecond)))
     form.set('viewingId', viewingId)
+    if (guest) {
+      const text = String(form.get('body') || form.get('choice') || '').trim()
+      const privateOn = form.get('keepPrivate') === 'on'
+      const shareTeacher = form.get('shareWithTeacher') === 'on' && !privateOn
+      const shareLearners = form.get('shareWithLearners') === 'on' && !privateOn
+      if (text) {
+        rememberGuestAnswer({
+          lessonId,
+          pointId: point.id,
+          title: point.prompt,
+          body: text,
+          shareWithTeacher: shareTeacher,
+          shareWithLearners: shareLearners,
+        })
+      }
+      if (shareTeacher || shareLearners) onOffer?.()
+      leave({
+        pointId: point.id,
+        text: text || 'Saved on this phone.',
+        message: shareTeacher || shareLearners ? 'Saved on this phone. An account sends it on.' : 'Saved on this phone.',
+      })
+      setSending(false)
+      return
+    }
     try {
       const response = await fetch('/api/answers', { method: 'POST', body: form })
       const result = (await response.json().catch(() => ({}))) as { error?: string; keepPrivate?: boolean; sharedWithLearners?: boolean; notice?: string }

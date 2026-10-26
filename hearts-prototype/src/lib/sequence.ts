@@ -385,6 +385,35 @@ export function sequenceBar() {
   ]
 }
 
+export type SectionGroup<T> = { title: string; rows: { item: T; index: number }[] }
+
+/** Consecutive films that share a section title stay together, in the order the learner sees them. */
+export function sectionGroups<T>(items: readonly T[], titleOf: (item: T) => string): SectionGroup<T>[] {
+  const groups: SectionGroup<T>[] = []
+  items.forEach((item, index) => {
+    const title = titleOf(item).trim() || 'Films'
+    const last = groups[groups.length - 1]
+    if (!last || last.title !== title) groups.push({ title, rows: [] })
+    groups[groups.length - 1].rows.push({ item, index })
+  })
+  return groups
+}
+
+/** Module names in the order they first appear on a master sheet. Each one becomes a section. */
+export function modulesInSheetOrder(films: readonly { module: string }[]) {
+  const names: string[] = []
+  for (const film of films) {
+    const name = film.module.trim() || 'Films'
+    if (!names.includes(name)) names.push(name)
+  }
+  return names
+}
+
+export function sectionAnchor(title: string) {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return `section-${slug || 'films'}`
+}
+
 export function sequenceProgress(done: number, total: number) {
   const safeDone = Math.max(0, Math.min(done, total))
   return {

@@ -9,6 +9,7 @@ export function CopyLink({ value, testId = 'copy-link', label: idle = 'Copy link
       type="button"
       className={className}
       data-testid={testId}
+      data-url={value}
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(value)

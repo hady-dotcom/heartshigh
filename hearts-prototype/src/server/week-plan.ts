@@ -54,7 +54,8 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   const at = now()
   const todayKey = dateKeyInZone(at, zone)
   const days = weekStrip(at, zone)
-  const ids = await visibleCourseIds(payload, user)
+  const ids = await visibleCourseIds(payload, user, portal.id)
+  const allowed = new Set(ids)
   const [courseRows, lessonRows, plans] = await Promise.all([
     ids.length ? rows(payload, 'courses', { id: { in: ids } }) : Promise.resolve([] as Row[]),
     ids.length ? rows(payload, 'lessons', { course: { in: ids } }, { limit: 800, sort: 'order' }) : Promise.resolve([] as Row[]),
@@ -79,7 +80,10 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
     const currentStaff = staff(ref(current.owner))
     if (nextStaff && !currentStaff) preferred.set(key, plan)
   }
-  const mine = [...preferred.values()]
+  const mine = [...preferred.values()].filter((plan) => {
+    const courseId = ref(plan.course)
+    return courseId == null || allowed.has(courseId)
+  })
   const lessonsById = new Map(lessonRows.map((lesson) => [lesson.id, lesson]))
   const courses: WeekCourse[] = courseRows.map((course) => {
     const own = lessonRows.filter((lesson) => ref(lesson.course) === course.id)
@@ -88,10 +92,11 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   })
   const cards: WeekPlanCard[] = mine.map((plan) => {
     const courseId = ref(plan.course)
-    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number; courseId?: number }[]) || []).map((slot) => {
+    const slots = ((plan.slots as { date?: string; title?: string; lessonId?: number; courseId?: number }[]) || []).flatMap((slot) => {
       const lesson = slot.lessonId ? lessonsById.get(slot.lessonId) : null
       const minutes = lesson ? Math.max(0, Math.round(Number(lesson.durationSeconds || 0) / 60)) : 0
       const ownCourse = slotCourseId({ lessonCourse: lesson?.course, slotCourseId: slot.courseId, planCourseId: courseId })
+      if (ownCourse && !allowed.has(ownCourse)) return []
       const href = slotHref(base, slot.lessonId, ownCourse)
       return {
         date: String(slot.date || ''),

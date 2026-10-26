@@ -8,6 +8,7 @@ import {
   isSequencePortal,
   isUnderPortalMin,
   minTalkSecondsOf,
+  modulesInSheetOrder,
   parseCourseSheet,
   parseVideoList,
   type CourseFilm,
@@ -352,10 +353,7 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     where: { course: { equals: course.id } },
   })
   const unitsByTitle = new Map(unitRows.docs.map((row) => asDoc(row)).map((row) => [String(row.title || ''), row]))
-  const moduleNames: string[] = []
-  for (const film of parsed.films) {
-    if (!moduleNames.includes(film.module)) moduleNames.push(film.module)
-  }
+  const moduleNames = modulesInSheetOrder(parsed.films)
   const unitId = new Map<string, number>()
   for (let index = 0; index < moduleNames.length; index++) {
     const name = moduleNames[index]

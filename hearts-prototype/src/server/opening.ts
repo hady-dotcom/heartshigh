@@ -78,7 +78,7 @@ export async function catalogueCourseIds(payload: Payload, portal: PortalDoc) {
 
 export async function routeCourseIds(payload: Payload, portal: PortalDoc, user: SessionUser | null) {
   if (!user || user.role !== 'learner') return catalogueCourseIds(payload, portal)
-  return visibleCourseIds(payload, user)
+  return visibleCourseIds(payload, user, portal.id)
 }
 
 type Loaded = {

@@ -406,7 +406,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     if (!portal) return fail(403, 'Your account is not in a portal.')
     const lessonDoc = lessonId ? await findDoc(payload, 'lessons', lessonId) : null
     const courseOfPoint = lessonDoc ? idOf(lessonDoc.course) : null
-    const mayAnswer = courseOfPoint && (await visibleCourseIds(payload, user)).includes(courseOfPoint)
+    const mayAnswer = courseOfPoint && (await visibleCourseIds(payload, user, portal)).includes(courseOfPoint)
     if (!mayAnswer) return fail(403, 'That question is not in your portal.')
     const authorPortal = point.author ? portalIdOf((await findDoc(payload, 'users', idOf(point.author) || 0)) as SessionUser | null) : null
     if (point.audience === 'self' && idOf(point.author) !== user.id) return fail(403, 'That question is not for you.')
@@ -469,8 +469,10 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
     }
     const keepPrivate = Boolean(input.keepPrivate)
     const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
-    // Other learners read an answer only when its author opted in to sharing with learners and chose it here.
-    let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && Boolean(user.shareWithLearners)
+    const portalDoc = await payload.findByID({ collection: 'portals', id: portal, depth: 0, overrideAccess: true }).catch(() => null)
+    const sequenceShare = isSequencePortal(portalDoc as { shape?: string | null } | null)
+    // HEARTS still needs the account switch. A sequenced course treats the tick on this answer as the choice.
+    let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && (Boolean(user.shareWithLearners) || sequenceShare)
     if (shareWithLearners && (await circleMutedUntil(payload, user.id))) shareWithLearners = false
     const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
     const crisis = Boolean(point.crisisOption && (body === point.crisisOption || choice === point.crisisOption))

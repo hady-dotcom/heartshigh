@@ -16,6 +16,7 @@ import { daysWithUsLabel } from '@/lib/days-with-us'
 import { learnerWords } from '@/lib/tidy-caption'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, filmPoster, portalName, shownPoster } from '@/server/learner'
+import { visibleCourseIds } from '@/server/context'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
 import { LaneProgressSlot } from '@/components/app/lane-progress'
@@ -58,7 +59,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     growth(payload, user),
     unreadCount(payload, user),
     learnerClips(payload, portal, user),
-    courseCards(payload, user),
+    courseCards(payload, user, portal.id),
     user.role === 'learner' && featureOn(portal, 'compass') ? recalibrationDueFor(payload, user.id) : Promise.resolve(false),
     featureOn(portal, 'gather') ? homeGatherings({ payload, portal, user, base }) : Promise.resolve([]),
     featureOn(portal, 'live') ? liveHomeBits({ payload, portal, user }) : Promise.resolve({ live: null, upcoming: [] }),
@@ -75,7 +76,8 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     visits.map((row) => ref(row.lesson)).filter((id): id is number => Boolean(id)),
     done,
   )
-  const openLessons = (openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
+  const allowedCourses = new Set(await visibleCourseIds(payload, user, portal.id))
+  const openLessons = (openIds.length ? await rows(payload, 'lessons', { id: { in: openIds } }) : []).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)) && allowedCourses.has(ref(lesson.course) || 0))
   const courseIds = [...new Set(openLessons.map((row) => ref(row.course)).filter((id): id is number => Boolean(id)))]
   const openCourses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }) : []
   const modernHome = shellOf(portal) === 'modern'
@@ -129,7 +131,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   const days = dayNumber(user)
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const clips = items.slice(0, 3)
-  const nextFilms = clips.length ? [] : await nextCourseFilms(payload, user, base, 4)
+  const nextFilms = clips.length ? [] : await nextCourseFilms(payload, user, base, 4, portal.id)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
   let demoContinue = ''
   if (demo) {
@@ -269,7 +271,7 @@ function snippet(text: string, max: number) {
 export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   const [{ opening }, courses, unread, completions, sessions] = await Promise.all([
     learnerClips(payload, portal, user),
-    courseCards(payload, user),
+    courseCards(payload, user, portal.id),
     unreadCount(payload, user),
     rows(payload, 'completions', { user: { equals: user.id } }, { limit: 200 }),
     rows(payload, 'watch-sessions', { user: { equals: user.id } }, { limit: 400 }),
@@ -277,7 +279,7 @@ export async function LanesScreen({ payload, user, portal, base, query }: Ctx) {
   const modernLanes = shellOf(portal) === 'modern'
   const ownLibrary = await portalOwnsLibrary(payload, portal.id)
   const lanes = ownLibrary ? [] : lanesWithClips(opening.route, opening.clips, opening.laneTitles)
-  const nextFilms = lanes.length ? [] : await nextCourseFilms(payload, user, base, 4)
+  const nextFilms = lanes.length ? [] : await nextCourseFilms(payload, user, base, 4, portal.id)
   const today = dayNumber(user)
   return (
     <AppFrame testId="lanes" brand={learnerBrand(portal)}>

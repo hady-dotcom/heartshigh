@@ -7,6 +7,7 @@ import { FilmFallback } from '@/components/app/film-fallback'
 import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
 import { shellOf } from '@/lib/portal-look'
+import { sectionAnchor } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
@@ -56,8 +57,8 @@ function ringStyle(value: number): CSSProperties {
   return { ['--progress' as string]: `${value}%` }
 }
 
-export async function nextCourseFilms(payload: Payload, user: SessionUser, base: string, limit = 8): Promise<NextFilm[]> {
-  const courseIds = await visibleCourseIds(payload, user)
+export async function nextCourseFilms(payload: Payload, user: SessionUser, base: string, limit = 8, portalId?: number | null): Promise<NextFilm[]> {
+  const courseIds = await visibleCourseIds(payload, user, portalId)
   if (!courseIds.length) return []
   const [courses, lessonRows] = await Promise.all([
     rows(payload, 'courses', { id: { in: courseIds } }, { limit: 40 }),
@@ -110,7 +111,7 @@ function Thumb({ src, eager, place, title }: { src: string | null; eager?: boole
 }
 
 export async function CourseHomeScreen({ payload, user, portal, base, query }: Ctx) {
-  const courseIds = await visibleCourseIds(payload, user)
+  const courseIds = await visibleCourseIds(payload, user, portal.id)
   const [courses, lessonRows, unitRows] = await Promise.all([
     courseIds.length ? rows(payload, 'courses', { id: { in: courseIds } }, { limit: 40 }) : Promise.resolve([]),
     courseIds.length ? rows(payload, 'lessons', { course: { in: courseIds } }, { sort: 'order', limit: 500 }) : Promise.resolve([]),
@@ -192,7 +193,8 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             }
             const pct = percent(card.finished, card.own.length)
             return (
-              <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
+              <div key={card.course.id}>
+              <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
                 <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
                 <span className="t">
                   <b>{str(card.course.title)}</b>
@@ -208,6 +210,17 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                   {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
                 </span>
               </Link>
+              {modern && groups.length ? (
+                <div data-testid="course-sections">
+                  {groups.map((group) => (
+                    <Link className="garden-area" href={`${base}/course/${card.course.id}#${sectionAnchor(group.title)}`} data-testid="garden-area" key={group.title}>
+                      <strong>{group.title}</strong>
+                      <small>{group.count} films</small>
+                    </Link>
+                  ))}
+                </div>
+              ) : null}
+              </div>
             )
           })}
         </div>

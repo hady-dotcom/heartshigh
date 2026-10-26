@@ -1792,23 +1792,299 @@ html[data-theme] .app-stage.shell-modern .guest-play {
   padding: 0;
 }
 
+html[data-theme] .app-stage.shell-modern .guest-stage iframe {
+  z-index: 1;
+  opacity: 0;
+  background: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-stage iframe.is-ready {
+  opacity: 1;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-play {
+  z-index: 2;
+}
+
 html[data-theme] .app-stage.shell-modern .guest-play-mark {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--hh-space-2);
-  min-height: var(--hh-tap-min);
-  min-width: calc(var(--hh-tap-min) + var(--hh-space-6));
-  padding: 0 var(--hh-space-4);
+  width: calc(var(--hh-tap-min) + var(--hh-space-5));
+  height: calc(var(--hh-tap-min) + var(--hh-space-5));
   border-radius: var(--hh-radius-pill);
   background: var(--portal-accent, var(--hh-accent));
   color: var(--hh-on-accent);
-  font-size: var(--hh-font-size-body);
-  font-weight: 700;
+  box-shadow: var(--hh-shadow-lift);
 }
 
-html[data-theme] .app-stage.shell-modern .guest-courses {
+html[data-theme] .app-stage.shell-modern .guest-film h1 {
+  margin: 0;
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-title) !important;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-blurb {
+  margin: 0;
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-body);
+  line-height: 1.45;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next h2 {
+  margin: 0;
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-headline);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next ol {
+  list-style: none;
+  margin: var(--hh-space-2) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next a {
+  display: grid;
+  grid-template-columns: var(--hh-thumb-w) minmax(0, 1fr);
+  gap: var(--hh-space-3);
+  align-items: center;
   min-height: var(--hh-tap-min);
+  padding: var(--hh-space-2);
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  text-decoration: none;
+  box-shadow: var(--hh-shadow-lift);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next-still {
+  position: relative;
+  width: var(--hh-thumb-w);
+  aspect-ratio: 16 / 9;
+  border-radius: var(--hh-radius-control);
+  overflow: hidden;
+  background: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next-copy {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-1);
+  min-width: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next-copy b {
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-small);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-next-copy small {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-caption);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-see-all {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-3);
+  min-height: var(--hh-tap-min);
+  padding: var(--hh-space-3);
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  text-decoration: none;
+  font-size: var(--hh-font-size-body);
+  font-weight: 650;
+  box-shadow: var(--hh-shadow-lift);
+}
+
+/* Question screens: the card, chips and link are one group, balanced under the header. */
+html[data-theme] .app-stage.shell-modern .journey.phase-scene .j-body {
+  margin-top: auto;
+  margin-bottom: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-scene .j-choices {
+  margin-top: var(--hh-space-3);
+  padding-top: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-scene .j-actions {
+  margin-top: var(--hh-space-2);
+  margin-bottom: auto;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-scene .j-reply {
+  min-height: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: transparent;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-scene .j-reply[style*='visible'] {
+  height: auto;
+  min-height: var(--hh-space-5);
+  margin: 0 auto var(--hh-space-2);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  overflow: visible;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+/* The ? sits in the header bar at the same size and weight as Skip. */
+html[data-theme] .app-stage.shell-modern .journey.phase-scene > .page-help {
+  top: calc(10px + var(--safe-top, env(safe-area-inset-top, 0px)));
+  right: var(--hh-space-2);
+  left: auto;
+  height: 52px;
+  min-height: 52px;
+  align-items: center;
+}
+
+html[data-theme] .app-stage.shell-modern .journey.phase-scene > .page-help .page-help-btn {
+  width: var(--hh-tap-min);
+  min-width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  min-height: var(--hh-tap-min);
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--hh-ink);
+  font-weight: 650;
+  font-size: var(--hh-font-size-body);
+  line-height: 1;
+  box-shadow: none;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-note {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-body);
+  font-weight: 650;
+}
+
+html[data-theme] .app-stage.shell-modern .guest-note .field {
+  font-weight: 400;
+  min-height: calc(var(--hh-tap-min) + var(--hh-space-4));
+}
+
+html[data-theme] .app-stage.shell-modern .guest-catalog-list {
+  list-style: none;
+  margin: var(--hh-space-3) 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-catalog {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-3);
+  min-height: var(--hh-tap-min);
+  padding: var(--hh-space-2);
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  text-decoration: none;
+  box-shadow: var(--hh-shadow-lift);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-catalog.is-soon {
+  color: var(--hh-ink-2);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-catalog small,
+html[data-theme] .app-stage.shell-modern .guest-week-form p {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-days label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--hh-space-1);
+  min-height: var(--hh-tap-min);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .guest-offer {
+  display: flex;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+  margin-top: var(--hh-space-3);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hh-accent-deep);
+  font-size: var(--hh-font-size-body);
+  font-weight: 650;
+}
+
+html[data-theme] .app-stage.shell-modern .j-sheet.is-offer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 80;
+  width: min(430px, 100%);
+  margin: 0 auto;
+}
+
+html[data-theme] .app-stage.shell-modern .sequence-module {
+  margin-top: var(--hh-space-4);
+}
+
+html[data-theme] .app-stage.shell-modern .sequence-module h2 {
+  margin: 0 0 var(--hh-space-2);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .course-sections {
+  display: flex;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+  margin: 0 0 var(--hh-space-3);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-area {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--hh-space-3);
+  min-height: var(--hh-tap-min);
+  padding: var(--hh-space-3);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-lift);
+}
+
+html[data-theme] .app-stage.shell-modern .garden-area small {
+  color: var(--hh-muted);
 }
 
 @media (prefers-reduced-motion: reduce) {

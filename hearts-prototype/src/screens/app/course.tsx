@@ -14,7 +14,7 @@ import { readSaidAnswers, saidForFilm } from '@/lib/said-answers'
 import { learnerBrand } from '@/lib/learner-brand'
 import { calloutSecond, filmLabel } from '@/lib/portal-look'
 import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from '@/lib/film-availability'
-import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { kineticClipFor } from '@/server/sequence-desk'
@@ -63,7 +63,7 @@ function partHeading(index: number, lesson: Row, courseTitle: string, total: num
 }
 
 export async function SpeakerScreen({ payload, user, portal, base, query }: Ctx, speakerSlug: string) {
-  const [courses, { items }, unread, speaker] = await Promise.all([courseCards(payload, user), learnerClips(payload, portal, user), unreadCount(payload, user), speakerPage(payload, speakerSlug)])
+  const [courses, { items }, unread, speaker] = await Promise.all([courseCards(payload, user, portal.id), learnerClips(payload, portal, user), unreadCount(payload, user), speakerPage(payload, speakerSlug)])
   const drawn = await rows(payload, 'drawn-to', { and: [{ user: { equals: user.id } }, { speakerSlug: { in: [speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter(Boolean) } }] }, { limit: 5 })
   const addresses = new Set([speakerSlug, speaker?.slug, ...(speaker?.aliasSlugs || [])].filter((value): value is string => Boolean(value)))
   const theirs = courses.filter((course) => addresses.has(course.speakerSlug))
@@ -135,14 +135,15 @@ function partWeek(lesson: Row, cuts: Row[], doors: Door[], courseTitle: string) 
 
 async function CourseOverview({ payload, user, portal, base, query }: Ctx, course: Row, lessons: Row[]) {
   const lessonIds = lessons.map((row) => row.id)
-  const [completions, unread, partCuts, doors] = await Promise.all([
+  const sequence = isSequencePortal(portal)
+  const [completions, unread, partCuts, doors, unitRows] = await Promise.all([
     rows(payload, 'completions', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] }),
     unreadCount(payload, user),
     lessonIds.length ? rows(payload, 'cuts', { and: [{ lesson: { in: lessonIds } }, { status: { not_equals: 'rejected' } }] }, { limit: 300 }) : Promise.resolve([] as Row[]),
-    loadDoors(payload),
+    sequence ? Promise.resolve([] as Door[]) : loadDoors(payload),
+    sequence ? rows(payload, 'units', { course: { equals: course.id } }, { sort: 'order' }) : Promise.resolve([] as Row[]),
   ])
   const done = new Set(completions.filter((row) => countsTowardProgress({ level: pieceLevel(row.sourceLevel), inCourse: true, event: 'watch' })).map((row) => ref(row.lesson)))
-  const sequence = isSequencePortal(portal)
   const continueIndex = sequence
     ? firstPlayableIndex(lessons, lessonCanPlay, (lesson) => done.has(lesson.id))
     : Math.max(0, lessons.findIndex((lesson) => !done.has(lesson.id)))
@@ -172,8 +173,15 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0' }}>
           {sequence ? 'Questions appear inside each film, once you open it.' : 'Questions appear inside each talk, once you open it.'}
         </p>
-        <p className="eyebrow">{sequence ? 'Films in this course' : 'Talks in this course'}</p>
-        {lessons.map((lesson, index) => {
+        {sequence ? <p data-testid="sequence-progress">{sequenceProgress(done.size, lessons.length).line}</p> : <p className="eyebrow">Talks in this course</p>}
+        <div data-testid={sequence ? 'sequence-list' : undefined}>
+        {(sequence
+          ? sectionGroups(lessons, (lesson) => str(unitRows.find((unit) => unit.id === ref(lesson.unit))?.title) || 'Films')
+          : [{ title: '', rows: lessons.map((item, index) => ({ item, index })) }]
+        ).map((group) => (
+          <section className={sequence ? 'sequence-module' : undefined} id={sequence ? sectionAnchor(group.title) : undefined} key={group.title || 'films'} data-testid={sequence ? 'sequence-module' : undefined}>
+            {sequence ? <h2>{group.title}</h2> : null}
+            {group.rows.map(({ item: lesson, index }) => {
           const secondsHere = Number(lesson.durationSeconds || 0)
           const youtubeId = str(lesson.youtubeId) || null
           const name = partTitle(lesson, title)
@@ -195,7 +203,10 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
               ›
             </Link>
           )
-        })}
+            })}
+          </section>
+        ))}
+        </div>
       </div>
       <LearnerTabBar base={base} active={sequence ? 'garden' : 'lanes'} portal={portal} unread={unread} />
     </AppFrame>
@@ -217,7 +228,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const course = await one(payload, 'courses', courseId)
   if (!course) notFound()
   if (!ctx.demo) {
-    const visible = await visibleCourseIds(payload, user)
+    const visible = await visibleCourseIds(payload, user, portal.id)
     if (!visible.includes(courseId)) redirect(`${base}${sequence ? '' : '/lanes'}?error=${encodeURIComponent(sequence ? 'That film is not in this course.' : 'That course is not on your code. Ask your teacher if you would like it.')}`)
   }
   const [lessonRows, units, flags] = await Promise.all([
@@ -325,10 +336,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const swarm: Record<number, SwarmItem[]> = {}
   let circleLabel = ''
   // Swarm answers are always on (Leon, 2026-10-04): initials, read-only, screened. Sharing your own answer stays a choice.
-  // A sequenced course skips the circle fill so its questions stay, without that room's sample lines.
-  const swarmOn = !sequence
-  const shareChoice = Boolean(user.shareWithLearners)
-  if (!sequence && points.length) {
+  // A sequenced course shows real shared answers and skips the HEARTS sample lines.
+  const swarmOn = true
+  const shareChoice = sequence || Boolean(user.shareWithLearners)
+  if (points.length) {
     const shared = await rows(
       payload,
       'answers',
@@ -342,12 +353,13 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       const pointId = ref(answer.point)
       if (!pointId) continue
       const author = answer.user as { name?: string; shareWithLearners?: boolean } | null
-      if (!author?.shareWithLearners) continue
+      if (!sequence && !author?.shareWithLearners) continue
       const image = answer.image as { url?: string; id?: number } | null
       const imageSrc = image?.id ? `/api/hearts/file/${image.id}` : image?.url || null
       const name = author?.name || 'Someone in your circle'
       ;(swarm[pointId] ||= []).push({ name, body: str(answer.body) || str(answer.choice) || 'Shared a photo', image: imageSrc, initials: initialsOf(name), id: answer.id, kind: 'answer' })
     }
+    if (!sequence) {
     const settings = await circleSettings(payload)
     circleLabel = settings.label
     const pointIds = points.map((point) => point.id)
@@ -375,6 +387,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         initials: initialsOf(row.name),
         kind: 'circle-answer' as const,
       }))
+    }
     }
   }
 
@@ -410,6 +423,10 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const courseHref = withCurrentQuery(`${base}/course/${courseId}`, query)
   const nextAt = sequence ? lessons.findIndex((row, index) => index > partIndex && lessonCanPlay(row)) : (partIndex + 1 < lessons.length ? partIndex + 1 : -1)
   const nextLesson = nextAt >= 0 ? lessons[nextAt] : null
+  const prevAt = sequence
+    ? (() => { for (let index = partIndex - 1; index >= 0; index -= 1) if (lessonCanPlay(lessons[index])) return index; return -1 })()
+    : (partIndex > 0 ? partIndex - 1 : -1)
+  const prevLesson = prevAt >= 0 ? lessons[prevAt] : null
   const following = nextLesson ? { label: sequence ? `Film ${nextAt + 1} · Next` : nextPartLabel(nextAt + 1), href: withCurrentQuery(`${base}/course/${courseId}?part=${nextLesson.id}`, query) } : null
   const sequenceLabel = (index: number, row: Row) => filmLabel(index, str(row.title))
   const upNext = nextLesson && following
@@ -493,7 +510,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           videoComing={coming}
-          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : base, query), nextPart: following, links: [
+          shareUrl={sequence ? `${ctx.origin}${base}/course/${courseId}?part=${lessonId}` : null}
+          guest={false}
+          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : `${base}/courses`, query), nextPart: following, prevPart: sequence && prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: withCurrentQuery(`${base}/course/${courseId}?part=${prevLesson.id}`, query) } : null, links: [
             ...(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
             ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Saved answers' : 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}

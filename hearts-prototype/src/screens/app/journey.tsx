@@ -82,7 +82,7 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   const mission = user ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null
   const modern = shellOf(portal) === 'modern'
   const sceneCss = modern ? sceneCssOf(portal) : null
-  const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await nextCourseFilms(payload, user, base, 4) : []
+  const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await nextCourseFilms(payload, user, base, 4, portal.id) : []
   const guestFilm = modern && !user ? await firstGuestFilm(payload, portal.id, base) : null
   return (
     <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>

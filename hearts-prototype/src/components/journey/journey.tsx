@@ -9,6 +9,7 @@ import { clipStepUpLabel, LEVEL_WORDS, onlyClipToast, pieceSeconds, poolEndToast
 import { appendUnseenItems, boardItemForPlayer, boardTapTarget, isInterstitial, learnMoreTarget, settleOnLevel, stepUpIsOwn, swipeTarget, type Swipe } from '@/lib/feed-nav'
 import { applySignal, applyTap, buildFeed, decay, freshState, markServed, planFrom, routeFeed, spineStart, upgradeSpine, type FeedSlot, type HeartState, type SceneOption, type Signal } from '@/lib/heart'
 import { deviceKey, haptic, readCoachDismissed, readFeedPlace, readHeart, readPending, rememberSeenCard, sessionFlags, sessionSeenCards, sessionSeenCuts, setSessionFlags, viewAsId, writeCoachDismissed, writeFeedPlace, writeHeart, writePending } from '@/lib/device'
+import { dismissGuestOffer, guestOfferDismissed } from '@/lib/guest-device'
 import { EASE, T, animate, finished, reducedMotion, wait } from '@/lib/motion'
 import { nextPlaybackRate } from '@/lib/playback-rate'
 import { feedFilmCaption } from '@/lib/spoken-caption'
@@ -840,9 +841,7 @@ export function Journey(props: JourneyProps) {
       const state = heartRef.current
       if (!state) return
       if (props.plain && !signedIn && props.guestFilm && !props.lane) {
-        itemsRef.current = []
-        setItems([])
-        setTabs(true)
+        window.location.replace(props.guestFilm.href)
         return
       }
       setFirstEver(state.served.length === 0)
@@ -1050,19 +1049,7 @@ export function Journey(props: JourneyProps) {
         }
       }
       if (props.plain && !props.signedIn && props.guestFilm && !props.lane) {
-        itemsRef.current = []
-        setItems([])
-        setFirstEver(true)
-        setLine(null)
-        revealedRef.current = true
-        setRevealed(true)
-        setPhase('feed')
-        setTabs(true)
-        if (depth.current > 0) {
-          rewinding.current = `${base}/feed`
-          window.history.go(-depth.current)
-          depth.current = 0
-        } else window.history.replaceState(window.history.state, '', `${base}/feed`)
+        window.location.assign(props.guestFilm.href)
         return
       }
       if (starter) {
@@ -1456,6 +1443,7 @@ export function Journey(props: JourneyProps) {
   }, [advance, keepHarvest, signedIn])
 
   const closeSheet = () => {
+    if (props.plain && !signedIn) dismissGuestOffer()
     sheetRef.current = null
     setSheet(null)
     if (window.history.state?.hearts?.sheet) window.history.back()
@@ -2623,7 +2611,7 @@ export function Journey(props: JourneyProps) {
     if (!target) return
     const id = target.getAttribute('data-testid')
     if (id === 'tab-home') return
-    if (props.plain && id === 'tab-garden') return
+    if (props.plain && (id === 'tab-garden' || id === 'tab-week' || id === 'tab-me')) return
     event.preventDefault()
     needsAccount('place')
   }
@@ -2632,8 +2620,8 @@ export function Journey(props: JourneyProps) {
   if (phase === 'feed' && props.plain && !signedIn && props.guestFilm && items.length === 0 && !props.lane) {
     return (
       <div className="journey phase-guest" data-testid="journey" data-phase="feed">
-        <GuestFilmView film={props.guestFilm} />
-        {sheet ? <KeepPlaceSheet reason={sheet} loginHref={loginHref} offline={offline} onClose={closeSheet} onSubmit={signUp} /> : null}
+        <GuestFilmView film={props.guestFilm} onEnded={() => { if (!sheetRef.current && !guestOfferDismissed()) needsAccount('place') }} />
+        {sheet ? <KeepPlaceSheet gentle reason={sheet} loginHref={loginHref} offline={offline} onClose={closeSheet} onSubmit={signUp} /> : null}
         <TabEntry base={base} unread={props.unread} features={props.features} plain={props.plain} onGuard={guardTabs} />
       </div>
     )

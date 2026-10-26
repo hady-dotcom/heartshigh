@@ -550,6 +550,45 @@ async function chipProblems(page: Page) {
   })
 }
 
+/** The question, chips and link sit as one group, and ? matches Skip. */
+async function questionRhythm(page: Page) {
+  return page.evaluate(() => {
+    const problems: string[] = []
+    const root = document.querySelector('.j-scene-wrap:not(.leaving)')
+    const body = root?.querySelector('.j-body')
+    const tile = root?.querySelector('[data-testid="tile"]')
+    const link = root?.querySelector('[data-testid="just-show"]')
+    const skip = root?.querySelector('[data-testid="pass"]')
+    const help = document.querySelector('[data-testid="page-help-open"]')
+    const header = root?.querySelector('.j-top')
+    if (!body || !tile || !link || !skip || !help || !header) {
+      problems.push('missing question parts')
+      return problems
+    }
+    const gap = tile.getBoundingClientRect().top - body.getBoundingClientRect().bottom
+    const below = window.innerHeight - link.getBoundingClientRect().bottom
+    const above = body.getBoundingClientRect().top - header.getBoundingClientRect().bottom
+    if (gap > 72) problems.push(`gap ${Math.round(gap)}`)
+    if (gap < 4) problems.push(`tight ${Math.round(gap)}`)
+    if (below > window.innerHeight * 0.42) problems.push(`below ${Math.round(below)}`)
+    if (above > window.innerHeight * 0.42) problems.push(`above ${Math.round(above)}`)
+    const skipStyle = getComputedStyle(skip)
+    const helpStyle = getComputedStyle(help)
+    const skipH = Math.round(skip.getBoundingClientRect().height)
+    const helpH = Math.round(help.getBoundingClientRect().height)
+    if (Math.abs(skipH - helpH) > 8) problems.push(`help height ${helpH} skip ${skipH}`)
+    if (helpStyle.fontWeight !== skipStyle.fontWeight) problems.push(`weight help ${helpStyle.fontWeight} skip ${skipStyle.fontWeight}`)
+    const helpBg = helpStyle.backgroundColor
+    const clear = helpBg === 'transparent' || /rgba?\(\s*0\s*,\s*0\s*,\s*0\s*,\s*0\s*\)/.test(helpBg)
+    if (!clear) {
+      const parts = helpBg.match(/\d+/g)?.slice(0, 3).map(Number) || [0, 0, 0]
+      const lum = (0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2]) / 255
+      if (lum < 0.85) problems.push(`help fill ${helpBg}`)
+    }
+    return problems
+  })
+}
+
 async function contrastProblems(page: Page) {
   const axe = await new AxeBuilder({ page }).options({ runOnly: { type: 'rule', values: ['color-contrast'] } }).analyze()
   return axe.violations.map((violation) => {
@@ -576,33 +615,59 @@ test('signed-out first visit', async ({ page }, info) => {
     await settle(page)
     const chips = await chipProblems(page)
     expect(chips, chips.join('\n')).toEqual([])
+    const rhythm = await questionRhythm(page)
+    expect(rhythm, rhythm.join('\n')).toEqual([])
     const contrast = await contrastProblems(page)
     expect(contrast, contrast.join('\n')).toEqual([])
     await page.getByTestId('tile').first().click()
   }
-  await expect(page.getByTestId('guest-film')).toBeVisible({ timeout: 20_000 })
-  await expect(page.getByTestId('guest-play')).toBeVisible()
-  await expect(page.getByTestId('guest-courses')).toBeVisible()
-  await settle(page)
-  const filmContrast = await contrastProblems(page)
-  expect(filmContrast, filmContrast.join('\n')).toEqual([])
-  const light = await page.evaluate(() => {
-    const paint = (el: Element | null) => getComputedStyle(el || document.body).backgroundColor
-    const lum = (value: string) => {
-      const parts = value.match(/\d+/g)?.slice(0, 3).map(Number) || [0, 0, 0]
-      return (0.2126 * parts[0] + 0.7152 * parts[1] + 0.0722 * parts[2]) / 255
-    }
-    return { page: lum(paint(document.querySelector('.journey'))), title: lum(getComputedStyle(document.querySelector('.guest-film h1') || document.body).color) }
-  })
-  expect(light.page).toBeGreaterThan(0.75)
-  expect(light.title).toBeLessThan(0.25)
-  await page.getByTestId('guest-play').click()
-  const player = page.getByTestId('guest-player')
-  await expect(player).toHaveAttribute('src', /player\.vimeo\.com\/video\/1239173361\?.*playsinline=1/)
-  await page.getByTestId('tab-me').click()
+  await page.waitForURL(/\/course\/\d+/, { timeout: 20_000 })
+  await expect(page.getByTestId('course')).toBeVisible()
+  await expect(page.getByTestId('vimeo-player')).toBeVisible()
+  await expect(page.getByTestId('question-strip')).toBeVisible()
+  await expect(page.getByTestId('sequence-question')).toBeVisible()
+  await expect(page.getByTestId('garden-next')).toBeVisible()
+  await expect(page.getByTestId('film-share-link')).toBeVisible()
+  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
+  await page.getByTestId('answer-point').click()
+  await expect(page.getByTestId('popup-prompt')).toBeVisible()
+  const note = 'We watch in the evening'
+  await page.getByTestId('answer-text').fill(note)
+  await page.getByTestId('answer-private').uncheck()
+  await page.getByTestId('answer-share').check()
+  await page.getByTestId('answer-submit').click()
   await expect(page.getByTestId('keep-sheet')).toBeVisible()
-  await expect(page.getByTestId('keep-title')).toHaveText('Want us to keep your place?')
-  await expect(page.getByTestId('guest-film')).toBeVisible()
+  await page.getByTestId('not-now').click()
+  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
+  const kept = await page.evaluate(() => ({
+    heart: JSON.parse(window.localStorage.getItem('hearts.heart.v1') || '{}') as { taps?: { option?: string }[] },
+    guest: JSON.parse(window.localStorage.getItem('hearts.guest.v1') || '{}') as { answers?: { body?: string; shareWithTeacher?: boolean }[] },
+  }))
+  expect((kept.heart.taps || []).filter((tap) => tap.option && tap.option !== 'pass').length).toBeGreaterThan(0)
+  expect(kept.guest.answers?.[0]?.body).toBe(note)
+  expect(kept.guest.answers?.[0]?.shareWithTeacher).toBe(true)
+  await expect(page).not.toHaveURL(/\/login/)
+  await page.getByTestId('sequence-back').click()
+  await page.waitForURL(/\/course\/\d+$/, { timeout: 60_000 })
+  await expect(page.getByTestId('sequence-module').first()).toBeVisible()
+  await expect(page.getByTestId('buffet-talk').nth(1)).toBeVisible()
+  await page.getByTestId('tab-week').click()
+  await page.waitForURL(/\/week$/, { timeout: 60_000 })
+  await expect(page).not.toHaveURL(/\/login/)
+  await expect(page.getByRole('heading', { name: 'My week' })).toBeVisible()
+  await expect(page.getByTestId('week-continue')).toBeVisible()
+  await page.getByTestId('tab-me').click()
+  await page.waitForURL(/\/me$/, { timeout: 60_000 })
+  await expect(page).not.toHaveURL(/\/login/)
+  await expect(page.getByRole('heading', { name: 'Me' })).toBeVisible()
+  await expect(page.getByTestId('guest-saved-answer')).toContainText(note)
+  await expect(page.getByTestId('guest-opening')).not.toHaveText('0 opening answers saved')
+  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
+  await page.getByTestId('keep-offer').click()
+  await expect(page.getByTestId('keep-sheet')).toBeVisible()
+  await expect(page.getByTestId('sheet-copy')).toContainText('already on this phone')
+  await expect(page.getByRole('heading', { name: 'Me' })).toBeVisible()
+  await expect(page).not.toHaveURL(/\/login/)
   const sheet = await page.evaluate(() => {
     const lum = (value: string) => {
       const parts = value.match(/\d+/g)?.slice(0, 3).map(Number) || [0, 0, 0]
@@ -621,10 +686,10 @@ test('signed-out first visit', async ({ page }, info) => {
   expect(sheetContrast, sheetContrast.join('\n')).toEqual([])
   await page.getByTestId('not-now').click()
   await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
-  await page.getByTestId('guest-courses').click()
-  await page.waitForURL(/\/courses/, { timeout: 60_000 })
+  await expect(page.getByRole('heading', { name: 'Me' })).toBeVisible()
+  await page.getByTestId('tab-garden').click()
+  await page.waitForURL(/\/courses$/, { timeout: 60_000 })
   await expect(page).not.toHaveURL(/\/login/)
-  await expect(page.getByTestId('keep-sheet')).toHaveCount(0)
   await expect(page.getByTestId('course-home')).toBeVisible()
   await expect(page.getByTestId('course-card').first()).toBeVisible()
   const coursesContrast = await contrastProblems(page)

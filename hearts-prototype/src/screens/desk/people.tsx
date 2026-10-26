@@ -43,7 +43,7 @@ export async function TeachScreen(ctx: Ctx) {
     rows(payload, 'completions', { portal: { equals: portal.id } }, { limit: 2000 }),
     rows(payload, 'feedback-notes', { portal: { equals: portal.id } }, { depth: 1, sort: 'second' }),
     rows(payload, 'watch-sessions', { portal: { equals: portal.id } }, { depth: 1, sort: '-createdAt', limit: 50 }),
-    visibleCourseIds(payload, user),
+    visibleCourseIds(payload, user, portal.id),
     rows(payload, 'schedules', { portal: { equals: portal.id } }, { limit: 200 }),
   ])
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
@@ -65,23 +65,8 @@ export async function TeachScreen(ctx: Ctx) {
     return id == null ? [] : [id]
   }))
   const sharedAnswers = sharedAnswersNewestFirst(answers, consented)
-  const portalDocs = user.role === 'master'
-    ? await rows(payload, 'portals', undefined, { sort: 'name', limit: 40 })
-    : [portal]
-  let queueAnswers = answers
-  let queueEntries = entries
-  if (user.role === 'master') {
-    const extras = await Promise.all(portalDocs.filter((item) => item.id !== portal.id).map(async (item) => {
-      const [moreAnswers, moreEntries] = await Promise.all([
-        rows(payload, 'answers', { portal: { equals: item.id } }, { depth: 1, sort: '-createdAt', limit: 200 }),
-        rows(payload, 'workbook-entries', { portal: { equals: item.id } }, { depth: 0, sort: '-createdAt', limit: 200 }),
-      ])
-      return { moreAnswers, moreEntries }
-    }))
-    queueAnswers = [...answers, ...extras.flatMap((item) => item.moreAnswers)]
-    queueEntries = [...entries, ...extras.flatMap((item) => item.moreEntries)]
-  }
-  const queueCards = buildQueueCards(queueAnswers, queueEntries, portalDocs.map((item) => ({
+  const portalDocs = [portal]
+  const queueCards = buildQueueCards(answers, entries, portalDocs.map((item) => ({
     id: item.id,
     name: str(item.name),
     slug: str(item.slug),
@@ -299,7 +284,7 @@ export async function PlansScreen(ctx: Ctx) {
   const [people, plans, courseIds] = await Promise.all([
     portalPeople(payload, portal.id),
     rows(payload, 'schedules', { portal: { equals: portal.id } }, { sort: '-createdAt', limit: 100 }),
-    visibleCourseIds(payload, user),
+    visibleCourseIds(payload, user, portal.id),
   ])
   const courses = courseIds.length ? await rows(payload, 'courses', { id: { in: courseIds } }, { sort: 'title' }) : []
   const learners = people.filter((person) => person.role === 'learner')
