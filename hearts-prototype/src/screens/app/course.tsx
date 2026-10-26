@@ -160,13 +160,22 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
-        <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
-          {sequence && lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
-            ? `Watch from film ${continueIndex + 1}`
-            : done.size >= lessons.length && lessons.length && !sequence
-            ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
-            : started ? (sequence ? `Continue film ${continueIndex + 1}` : `Continue part ${continueIndex + 1}`) : (sequence ? `Start film ${continueIndex + 1}` : `Start part ${continueIndex + 1}`)}
-        </Link>
+        {sequence ? (
+          <div data-testid="play-next">
+            <p className="eyebrow">Play next</p>
+            <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
+              {lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
+                ? `Watch from film ${continueIndex + 1}`
+                : started ? `Continue film ${continueIndex + 1}` : `Start film ${continueIndex + 1}`}
+            </Link>
+          </div>
+        ) : (
+          <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
+            {done.size >= lessons.length && lessons.length
+              ? lessons.length === 1 ? 'Watch again' : 'Watch from part 1'
+              : started ? `Continue part ${continueIndex + 1}` : `Start part ${continueIndex + 1}`}
+          </Link>
+        )}
         <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? (sequence ? 'Schedule this film' : 'Schedule this talk') : 'Schedule all of these'}
         </Link>

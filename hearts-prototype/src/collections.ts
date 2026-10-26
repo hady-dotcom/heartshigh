@@ -465,10 +465,12 @@ export const Courses: CollectionConfig = {
   slug: 'courses',
   admin: { useAsTitle: 'title' },
   access: masterOnly,
-  hooks: { beforeChange: [plainFields('title', 'summary', 'speaker')] },
+  hooks: { beforeChange: [plainFields('title', 'summary', 'speaker', 'sheetTitle')] },
   fields: [
     { name: 'title', type: 'text', required: true },
     { name: 'summary', type: 'textarea' },
+    { name: 'sheetTitle', type: 'text', index: true, admin: { description: 'The master sheet, shown as a library collection. Modules in that sheet are the courses.' } },
+    { name: 'sheetOrder', type: 'number', admin: { description: 'The module order inside the master sheet.' } },
     { name: 'speaker', type: 'text' },
     { name: 'speakerProfile', type: 'relationship', relationTo: 'speakers' },
     {

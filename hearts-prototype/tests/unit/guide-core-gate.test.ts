@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
-import { modulesInSheetOrder, parseCourseSheet, sectionGroups } from '../../src/lib/sequence'
+import { coursesFromSheet, modulesInSheetOrder, parseCourseSheet, sectionGroups } from '../../src/lib/sequence'
 
 const root = new URL('../../', import.meta.url)
 const read = (file: string) => readFileSync(new URL(file, root), 'utf8')
 
-test('a master sheet becomes sections of films, with callouts', () => {
+test('a master sheet becomes one course per module, then sections of films, with callouts', () => {
   const sheet = [
     'order,module,title,public_title,vimeo_id,vimeo_link,final_video_drive,transcript,callouts',
     '1,Welcome,Internal,Public one,496862893,https://vimeo.com/496862893,,, "[171 freetype] How would you describe it?"',
@@ -16,6 +16,12 @@ test('a master sheet becomes sections of films, with callouts', () => {
   const parsed = parseCourseSheet(sheet)
   assert.equal(parsed.error, undefined)
   assert.deepEqual(modulesInSheetOrder(parsed.films), ['Welcome', 'Practice'])
+  const plans = coursesFromSheet(parsed.films)
+  assert.deepEqual(plans.map((plan) => plan.title), ['Welcome', 'Practice'])
+  assert.equal(plans[0].films.length, 2)
+  assert.equal(plans[0].films[0].section, 'Films')
+  const books = coursesFromSheet(parsed.films.map((film, index) => ({ ...film, publicTitle: index === 0 ? 'The Whole-Brain Child 1: Introduction' : film.publicTitle })), { groupByBook: true })
+  assert.equal(books[0].films[0].section, 'The Whole-Brain Child')
   const sections = sectionGroups(parsed.films, (film) => film.module)
   assert.equal(sections.length, 2)
   assert.equal(sections[0].rows.length, 2)
@@ -31,6 +37,11 @@ test('the generic course screens reuse Guide Core, and the player is not a plain
   const desk = read('src/server/sequence-desk.ts')
   const agents = readFileSync(new URL('../../../AGENTS.md', import.meta.url), 'utf8')
   assert.match(desk, /modulesInSheetOrder/)
+  assert.match(desk, /coursesFromSheet/)
+  assert.match(read('src/screens/app/course-home.tsx'), /library-collection|librarySections/)
+  assert.match(read('src/app/(frontend)/login/page.tsx'), /apple-door/)
+  assert.match(read('src/app/(frontend)/forgot/page.tsx'), /apple-door/)
+  assert.match(read('src/app/(frontend)/join/page.tsx'), /apple-door/)
   assert.match(course, /sectionGroups/)
   assert.match(course, /data-testid=\{sequence \? 'sequence-module' : undefined\}/)
   assert.match(course, /sequence-progress/)

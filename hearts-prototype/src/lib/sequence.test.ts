@@ -19,7 +19,12 @@ import {
   lockMessage,
   minTalkRefusal,
   minTalkSecondsOf,
+  bookSectionTitle,
+  cleanModuleLabel,
+  coursesFromSheet,
+  groupByBookSheet,
   moveItem,
+  parseCallouts,
   parseCourseSheet,
   parseVideoList,
   plainVimeoId,
@@ -154,6 +159,41 @@ test('a course sheet keeps modules, public titles, missing films and timed quest
   assert.equal(course.films[0].vimeoId, '1239173361')
   assert.equal(course.films[0].callouts[0].second, 171)
   assert.match(course.films[0].callouts[0].prompt, /home learning so far/)
+  assert.deepEqual(coursesFromSheet(course.films).map((plan) => plan.title), [
+    'Welcome',
+    'Preparation and resources',
+    'Key working from home considerations',
+    'Working with your Child (Physical and Verbal)',
+    'Select Learning Theories Overviews',
+    'Social and Emotional Readiness',
+    'Supporting your children to work (Focus orientated with child)',
+    'Student-lead problem solving',
+    'Going Further',
+    'Activities',
+  ])
+  assert.equal(cleanModuleLabel('2- Preperation and resouces'), 'Preparation and resources')
+  assert.equal(cleanModuleLabel('4 - Working with you Child'), 'Working with your Child')
+  assert.equal(groupByBookSheet('Book Summaries'), true)
+  assert.equal(bookSectionTitle('The Whole-Brain Child 1: Introduction'), 'The Whole-Brain Child')
+  assert.equal(bookSectionTitle('Home Learning Introduction 1: Why We Created This Course'), 'Home Learning Introduction')
+  const bookCallouts = parseCallouts('[50s 2] Do you agree? | [91s 2] Can you think of some examples? | [end freetype] What will you try?')
+  assert.equal(bookCallouts.length, 3)
+  assert.equal(bookCallouts[0].second, 50)
+  assert.equal(bookCallouts[1].second, 91)
+  assert.equal(bookCallouts[2].atEnd, true)
+  const books = parseCourseSheet(readFileSync(path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../uploads/book-summaries.csv'), 'utf8'))
+  assert.equal(books.films.length, 193)
+  const bookPlans = coursesFromSheet(books.films, { groupByBook: true })
+  assert.deepEqual(bookPlans.map((plan) => plan.title), [
+    'Raising calm, happy children',
+    'How children learn and remember',
+    'Motivation and mindset',
+    'What makes a good school',
+    'Getting on with people and work',
+  ])
+  const wholeBrain = bookPlans[0].films.filter((film) => film.section === 'The Whole-Brain Child')
+  assert.equal(wholeBrain.length, 7)
+  assert.ok(bookPlans[0].films.some((film) => film.callouts.length > 0))
   assert.equal(course.films[39].publicTitle, 'INTRODUCTION')
   assert.equal(course.films[39].vimeoId, '')
   assert.equal(course.films[39].callouts[0].atEnd, true)

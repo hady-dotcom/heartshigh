@@ -15,6 +15,7 @@ const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const WELCOME = 'Welcome. Watch the films in order.'
 const BRAND = 'Hady Home'
 const COURSE_TITLE = 'Guiding Home Learning'
+const BOOK_TITLE = 'Book Summaries'
 const COURSE_SUMMARY = 'Watch the films in order.'
 
 function codesFile() {
@@ -102,17 +103,6 @@ function hadyLook(existing?: { accent?: string | null; colour?: string | null; f
   }
 }
 
-async function lessonCount(payload: Payload, courseId: number) {
-  const found = await payload.find({
-    collection: 'lessons',
-    overrideAccess: true,
-    depth: 0,
-    limit: 1,
-    where: { course: { equals: courseId } },
-  })
-  return found.totalDocs
-}
-
 /**
  * The Guiding Home Learning course on its own portal.
  * Safe to run again. It does not create people or join codes.
@@ -159,33 +149,57 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   await ensureOpeningQuestions(payload, Number(portal.id))
   await ensureParentScenes(payload, Number(portal.id))
 
-  const courseFound = await payload.find({
+  const guidingReady = await payload.find({
     collection: 'courses',
     overrideAccess: true,
     limit: 1,
-    where: { and: [{ portal: { equals: portal.id } }, { origin: { equals: 'local' } }] },
+    where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { equals: COURSE_TITLE } }, { hidden: { not_equals: true } }] },
   })
-  const courseFields = {
-    title: COURSE_TITLE,
-    summary: COURSE_SUMMARY,
-    origin: 'local' as const,
-    portal: portal.id,
-    importable: false,
-    hidden: false,
-    visibility: 'published' as const,
-  }
-  const course = courseFound.docs[0]
-    ? refresh
-      ? await payload.update({ collection: 'courses', id: courseFound.docs[0].id, overrideAccess: true, data: courseFields })
-      : courseFound.docs[0]
-    : await payload.create({ collection: 'courses', overrideAccess: true, data: courseFields })
-
-  const count = await lessonCount(payload, Number(course.id))
-  if (refresh || count === 0) {
+  const booksReady = await payload.find({
+    collection: 'courses',
+    overrideAccess: true,
+    limit: 1,
+    where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { equals: BOOK_TITLE } }, { hidden: { not_equals: true } }] },
+  })
+  const bookPath = path.join(root, 'uploads/book-summaries.csv')
+  const needsSheets = refresh || guidingReady.totalDocs < 8 || (existsSync(bookPath) && booksReady.totalDocs < 4)
+  let courseIds: number[] = []
+  if (needsSheets) {
     const sheet = readFileSync(path.join(root, 'uploads/videos.csv'), 'utf8')
-    const synced = await syncCourseSheet(payload, Number(portal.id), sheet)
+    const synced = await syncCourseSheet(payload, Number(portal.id), sheet, { title: COURSE_TITLE, vimeoMetas: new Map() })
     if (synced.error) throw new Error(synced.error)
+    courseIds = synced.courseIds || []
+    if (existsSync(bookPath)) {
+      const books = await syncCourseSheet(payload, Number(portal.id), readFileSync(bookPath, 'utf8'), { title: BOOK_TITLE, vimeoMetas: new Map() })
+      if (books.error) throw new Error(books.error)
+      courseIds = [...courseIds, ...(books.courseIds || [])]
+    }
   }
+  if (!courseIds.length) {
+    const found = await payload.find({
+      collection: 'courses',
+      overrideAccess: true,
+      limit: 40,
+      sort: 'sheetOrder',
+      where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { equals: COURSE_TITLE } }, { hidden: { not_equals: true } }] },
+    })
+    courseIds = found.docs.map((row) => Number(row.id))
+  }
+  const course = courseIds[0]
+    ? await payload.findByID({ collection: 'courses', id: courseIds[0], overrideAccess: true, depth: 0 })
+    : await payload.create({
+        collection: 'courses',
+        overrideAccess: true,
+        data: {
+          title: COURSE_TITLE,
+          summary: COURSE_SUMMARY,
+          origin: 'local',
+          portal: portal.id,
+          importable: false,
+          hidden: false,
+          visibility: 'published',
+        },
+      })
   await ensureSaidAnswers(payload, Number(course.id))
   const { backfillVimeoFilms, clearMisplacedHomeAnswers } = await import('@/server/vimeo-backfill')
   await clearMisplacedHomeAnswers(payload)
@@ -197,16 +211,19 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     limit: 1,
     where: { and: [{ portal: { equals: portal.id } }, { owner: { equals: 'portal' } }] },
   })
-  const pack = packFound.docs[0] || (await payload.create({
-    collection: 'packs',
-    overrideAccess: true,
-    data: { title: 'Parenting course', summary: 'The films in this course.', owner: 'portal', portal: portal.id, courses: [course.id] },
-  }))
+  const packCourses = courseIds.length ? courseIds : [Number(course.id)]
+  const pack = packFound.docs[0]
+    ? await payload.update({ collection: 'packs', id: packFound.docs[0].id, overrideAccess: true, data: { courses: packCourses } })
+    : await payload.create({
+        collection: 'packs',
+        overrideAccess: true,
+        data: { title: 'Parenting course', summary: 'The films in this course.', owner: 'portal', portal: portal.id, courses: packCourses },
+      })
 
   const { ensureParentingDemoCode } = await import('@/server/parenting-demo')
-  await ensureParentingDemoCode(payload, Number(portal.id), Number(course.id), Number(pack.id))
+  await ensureParentingDemoCode(payload, Number(portal.id), packCourses, Number(pack.id))
 
-  return { portal, course, pack }
+  return { portal, course, courseIds: packCourses, pack }
 }
 
 /**
@@ -215,7 +232,8 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
  */
 export async function seedParentingPortal(payload: Payload) {
   const live = isProduction() || isRemoteDatabase()
-  const { portal, course, pack } = await ensureParentingCourse(payload, { refresh: !live })
+  const { portal, course, courseIds, pack } = await ensureParentingCourse(payload, { refresh: !live })
+  const granted = courseIds.length ? courseIds : [Number(course.id)]
   if (live) return
 
   async function ensureCode(label: string, role: 'admin' | 'teacher' | 'learner', linked?: number) {
@@ -235,7 +253,7 @@ export async function seedParentingPortal(payload: Payload) {
         role,
         portal: portal.id,
         packs: [pack.id],
-        courses: [course.id],
+        courses: granted,
         linkedTeacherCode: linked,
         uses: 0,
         disabled: false,
@@ -259,7 +277,7 @@ export async function seedParentingPortal(payload: Payload) {
     role: 'portal-admin',
     accessCode: admin.id,
     tenants: [{ tenant: portal.id }],
-    courseList: [course.id],
+    courseList: granted,
   })
   const teacherUser = await ensureUser(payload, {
     email: 'parenting-teacher@hearts.test',
@@ -268,7 +286,7 @@ export async function seedParentingPortal(payload: Payload) {
     role: 'teacher',
     accessCode: teacher.id,
     tenants: [{ tenant: portal.id }],
-    courseList: [course.id],
+    courseList: granted,
   })
   if (teacherUser.name !== 'Hannah Price') {
     await payload.update({ collection: 'users', id: teacherUser.id, overrideAccess: true, data: { name: 'Hannah Price' } })
@@ -280,6 +298,6 @@ export async function seedParentingPortal(payload: Payload) {
     role: 'learner',
     accessCode: learner.id,
     tenants: [{ tenant: portal.id }],
-    courseList: [course.id],
+    courseList: granted,
   })
 }

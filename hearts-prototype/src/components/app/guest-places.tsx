@@ -41,6 +41,16 @@ function KeepOffer({ portal, loginHref }: { portal: string; loginHref: string })
   )
 }
 
+/** A done tick for a film this phone has already finished. */
+export function GuestDone({ lessonId }: { lessonId: number }) {
+  const [done, setDone] = useState(false)
+  useEffect(() => {
+    setDone(readGuestDevice().progress.some((row) => row.lessonId === lessonId && row.done))
+  }, [lessonId])
+  if (!done) return null
+  return <span className="done-check" data-testid="film-done">Done</span>
+}
+
 /** Continue from the film saved on this phone. The first paint matches a new visit. */
 export function GuestCourseResume({ base, courseId, total, firstId, firstPlace }: { base: string; courseId: number; total: number; firstId: number | null; firstPlace: number }) {
   const [href, setHref] = useState(firstId ? `${base}/course/${courseId}?part=${firstId}` : `${base}/courses`)

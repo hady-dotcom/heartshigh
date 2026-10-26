@@ -9,16 +9,17 @@ import { learnerBrand } from '@/lib/learner-brand'
 import { calloutSecond } from '@/lib/portal-look'
 import { filmCanPlay } from '@/lib/film-availability'
 import { tidyQuestionPrompt } from '@/lib/question-prompt'
-import { sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { kineticMomentsOn, librarySections, sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
-import { GuestCourseResume, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
+import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { shareOrigin } from '@/lib/site-origin'
 import { guestLibrary } from '@/server/guest-films'
 import { FilmChips } from './course-home'
-import { ref, rows, str, type Row } from '../common'
+import { kineticClipFor } from '@/server/sequence-desk'
+import { clock, ref, rows, str, type Row } from '../common'
 
 /** Courses for a signed-out visitor. No account, and no dark empty feed. */
 export async function GuestCoursesScreen({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
@@ -27,21 +28,24 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <div className="app-head"><h1>Courses</h1></div>
-        {library.courses.length ? (
-          <div className="course-cards">
-            {library.courses.map((course) => (
-              <a key={course.id} className="course-card" href={course.listHref} data-testid="course-card">
-                {course.poster ? <span className="thumb"><img src={course.poster} alt="" /></span> : (
-                  <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={course.place} title={course.filmTitle} /></span>
-                )}
-                <span className="t">
-                  <b>{course.title}</b>
-                  <small>{course.count} film{course.count === 1 ? '' : 's'}</small>
-                </span>
-              </a>
-            ))}
-          </div>
-        ) : <p className="card">Films will show here once a course is added.</p>}
+        {library.courses.length ? librarySections(library.courses).map((section) => (
+          <section className="library-section" key={section.title} data-testid="library-collection">
+            <h2>{section.title}</h2>
+            <div className="course-cards">
+              {section.cards.map((course) => (
+                <a key={course.id} className="course-card" href={course.listHref} data-testid="course-card">
+                  {course.poster ? <span className="thumb"><img src={course.poster} alt="" /></span> : (
+                    <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={course.place} title={course.filmTitle} /></span>
+                  )}
+                  <span className="t">
+                    <b>{course.title}</b>
+                    <small>{course.count} film{course.count === 1 ? '' : 's'}{course.seconds ? ` · ${clock(course.seconds)}` : ''}</small>
+                  </span>
+                </a>
+              ))}
+            </div>
+          </section>
+        )) : <p className="card">Films will show here once a course is added.</p>}
       </div>
       <LearnerTabBar base={base} active="garden" portal={portal} />
     </AppFrame>
@@ -86,7 +90,7 @@ function pointViews(points: Row[], lesson: Row): PointView[] {
 }
 
 /** The same course player a signed-in parent uses. Answers stay on this phone until an account sends them. */
-export async function GuestCourseScreen({ payload, portal, base, courseId, part }: { payload: Payload; portal: PortalDoc; base: string; courseId: number; part?: string }) {
+export async function GuestCourseScreen({ payload, portal, base, courseId, part, at, clip }: { payload: Payload; portal: PortalDoc; base: string; courseId: number; part?: string; at?: string; clip?: string }) {
   const loaded = await courseFilms(payload, portal.id, courseId)
   if (!loaded) return null
   const { course, lessons, unitRows } = loaded
@@ -102,7 +106,10 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part 
             <a className="back" href={`${base}/courses`} data-testid="back">‹ Courses</a>
             <h1 data-testid="course-title">{title}</h1>
           </div>
-          <GuestCourseResume base={base} courseId={course.id} total={lessons.length} firstId={first?.id ?? null} firstPlace={first ? firstAt + 1 : 1} />
+          <div data-testid="play-next">
+            <p className="eyebrow">Play next</p>
+            <GuestCourseResume base={base} courseId={course.id} total={lessons.length} firstId={first?.id ?? null} firstPlace={first ? firstAt + 1 : 1} />
+          </div>
           <p className="muted">Questions appear inside each film, once you open it. Answers stay on this phone.</p>
           <div data-testid="sequence-list">
             {groups.map((group) => (
@@ -121,6 +128,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part 
                         <small>Film {index + 1}</small>
                         <b className="talk-name">{str(lesson.title)}</b>
                         <FilmChips seconds={Number(lesson.durationSeconds || 0)} coming={!playable} />
+                        <GuestDone lessonId={lesson.id} />
                       </span>
                       ›
                     </Link>
@@ -145,6 +153,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part 
   const coming = !playableLesson(lesson)
   const progress = sequenceProgress(0, lessons.length)
   const shareUrl = `${shareOrigin(await headers())}${here}`
+  const kineticTier = kineticMomentsOn(portal) ? await kineticClipFor(payload, lesson.id) : null
   return (
     <AppFrame testId="course" brand={learnerBrand(portal)}>
       <div className="app-scroll">
@@ -159,7 +168,8 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part 
           film={coming ? null : str(lesson.vimeoId) ? { provider: 'vimeo', vimeoId: str(lesson.vimeoId), vimeoHash: str(lesson.vimeoHash) || null } : null}
           poster={shownPoster(filmPoster(lesson))}
           duration={Number(lesson.durationSeconds || 0)}
-          startAt={0}
+          startAt={Number(at) || 0}
+          clipEnd={clip === '1' && kineticTier ? kineticTier.end : null}
           points={pointViews(points, lesson)}
           swarm={{}}
           swarmOn={false}
@@ -182,6 +192,12 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part 
             links: [{ label: 'Saved answers', href: `${base}/me` }],
           }}
         />
+        {kineticTier ? (
+          <section className="card" data-testid="kinetic-clip" data-start={kineticTier.start} data-end={kineticTier.end}>
+            <p><b>Kinetic text.</b> {kineticTier.quote}</p>
+            <Link href={`${base}/course/${course.id}?part=${lesson.id}&t=${kineticTier.start}&clip=1`} data-testid="kinetic-play">{SEQUENCE_COPY.playClip}</Link>
+          </section>
+        ) : null}
         {points[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {tidyQuestionPrompt(str(points[0].prompt)) || str(points[0].prompt)}</p> : null}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} />

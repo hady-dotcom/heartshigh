@@ -145,7 +145,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
         }
         if (area === 'course') {
           if (!a || !Number(a)) notFound()
-          const screen = await GuestCourseScreen({ payload: guest.payload, portal, base, courseId: Number(a), part: query.part })
+          const screen = await GuestCourseScreen({ payload: guest.payload, portal, base, courseId: Number(a), part: query.part, at: query.t, clip: query.clip })
           if (!screen) notFound()
           return screen
         }

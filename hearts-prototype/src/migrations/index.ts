@@ -49,6 +49,7 @@ import * as migration_20261025_235500_scene_key from './20261025_235500_scene_ke
 import * as migration_20261025_236500_support_note from './20261025_236500_support_note';
 import * as migration_20261025_237000_film_posters from './20261025_237000_film_posters';
 import * as migration_20261025_238000_system_font from './20261025_238000_system_font';
+import * as migration_20261026_120000_sheet_courses from './20261026_120000_sheet_courses';
 
 export const migrations = [
   {
@@ -305,5 +306,10 @@ export const migrations = [
     up: migration_20261025_238000_system_font.up,
     down: migration_20261025_238000_system_font.down,
     name: '20261025_238000_system_font',
+  },
+  {
+    up: migration_20261026_120000_sheet_courses.up,
+    down: migration_20261026_120000_sheet_courses.down,
+    name: '20261026_120000_sheet_courses',
   },
 ];

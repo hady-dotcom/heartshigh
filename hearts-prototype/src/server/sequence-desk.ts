@@ -2,6 +2,8 @@ import type { Payload } from 'payload'
 import { idOf } from '@/lib/ids'
 import {
   SEQUENCE_COPY,
+  coursesFromSheet,
+  groupByBookSheet,
   httpsLogo,
   hexColour,
   isCourseSheet,
@@ -278,7 +280,7 @@ function sameCourseTitle(left: string, right: string) {
   return left.trim().toLowerCase() === right.trim().toLowerCase()
 }
 
-async function courseNamed(payload: Payload, portal: Doc, title: string) {
+async function courseNamed(payload: Payload, portal: Doc, title: string, extra?: { sheetTitle?: string; sheetOrder?: number }) {
   const name = title.trim().slice(0, 200)
   const found = await payload.find({
     collection: 'courses',
@@ -288,22 +290,59 @@ async function courseNamed(payload: Payload, portal: Doc, title: string) {
     where: { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] },
   })
   const match = found.docs.map((row) => asDoc(row)).find((row) => sameCourseTitle(String(row.title || ''), name))
-  if (match) return { course: match, created: false }
+  const data = {
+    title: name,
+    summary: 'Watch the films in order.',
+    origin: 'local' as const,
+    portal: portal.id,
+    importable: false,
+    visibility: 'published' as const,
+    hidden: false,
+    ...(extra?.sheetTitle ? { sheetTitle: extra.sheetTitle.slice(0, 200) } : {}),
+    ...(extra?.sheetOrder ? { sheetOrder: extra.sheetOrder } : {}),
+  }
+  if (match) {
+    await payload.update({ collection: 'courses', id: match.id, overrideAccess: true, data })
+    return { course: { ...match, ...data }, created: false }
+  }
   const course = (await payload.create({
     collection: 'courses',
     overrideAccess: true,
-    data: {
-      title: name,
-      summary: 'Watch the films in order.',
-      origin: 'local',
-      portal: portal.id,
-      importable: false,
-      visibility: 'published',
-      hidden: false,
-    },
+    data,
   })) as unknown as Doc
   await offerCourse(payload, portal.id, course.id)
   return { course, created: true }
+}
+
+async function everyDoc(payload: Payload, collection: 'courses' | 'lessons' | 'units' | 'answers', where: Record<string, unknown>) {
+  const docs: Doc[] = []
+  let page = 1
+  for (;;) {
+    const found = await payload.find({
+      collection,
+      overrideAccess: true,
+      depth: 0,
+      limit: 100,
+      page,
+      sort: 'id',
+      where: where as never,
+    })
+    docs.push(...found.docs.map((row) => asDoc(row)))
+    if (!found.hasNextPage || !found.docs.length) return docs
+    page += 1
+    if (page > 40) return docs
+  }
+}
+
+async function lessonHasAnswers(payload: Payload, lessonId: number) {
+  const found = await payload.find({
+    collection: 'answers',
+    overrideAccess: true,
+    depth: 0,
+    limit: 1,
+    where: { lesson: { equals: lessonId } },
+  })
+  return found.docs.length > 0
 }
 
 /** A new course is on this portal's codes and on the accounts that already joined. */
@@ -334,55 +373,29 @@ export async function importPortalSheet(payload: Payload, portalId: number, raw:
   return syncCourseSheet(payload, portalId, raw, { anyPortal: true, title: name })
 }
 
-/** Replace this course with the sheet: same films update in place, missing ids stay, callouts become questions. */
+/** A master sheet becomes a collection. Each module becomes a course. Existing lessons move and keep their ids. */
 export async function syncCourseSheet(payload: Payload, portalId: number, raw: string, opts?: { anyPortal?: boolean; title?: string; vimeoMetas?: Map<string, VimeoMeta> }) {
   const portal = await portalDoc(payload, portalId)
   if (!opts?.anyPortal && !isSequencePortal(shapeOf(portal))) return { error: 'This portal does not use a sequenced course.' }
   const parsed = parseCourseSheet(raw)
   if (parsed.error) return { error: parsed.error }
   if (!parsed.films.length) return { error: 'That sheet has no films.' }
-  const vimeoMetas = opts?.vimeoMetas || (shouldFetchVimeo() ? await fetchVimeoMetas(parsed.films.map((film) => film.vimeoId)) : new Map<string, VimeoMeta>())
-  const named = opts?.title ? await courseNamed(payload, portal, opts.title) : { course: await ensureCourse(payload, portal), created: false }
-  const course = named.course
-  const unitRows = await payload.find({
-    collection: 'units',
-    overrideAccess: true,
-    depth: 0,
-    limit: 50,
-    sort: 'order',
-    where: { course: { equals: course.id } },
-  })
-  const unitsByTitle = new Map(unitRows.docs.map((row) => asDoc(row)).map((row) => [String(row.title || ''), row]))
+  const anchor = await sequenceCourseFor(payload, portal.id)
+  const collectionTitle = (opts?.title || String(anchor?.sheetTitle || '') || String(anchor?.title || '')).trim() || 'Films'
+  const groupByBook = groupByBookSheet(collectionTitle)
+  const plans = coursesFromSheet(parsed.films, { groupByBook })
   const moduleNames = modulesInSheetOrder(parsed.films)
-  const unitId = new Map<string, number>()
-  for (let index = 0; index < moduleNames.length; index++) {
-    const name = moduleNames[index]
-    const existing = unitsByTitle.get(name)
-    if (existing) {
-      if (Number(existing.order) !== index + 1) {
-        await payload.update({ collection: 'units', id: existing.id, overrideAccess: true, data: { order: index + 1 } })
-      }
-      unitId.set(name, existing.id)
-      continue
-    }
-    const created = await payload.create({
-      collection: 'units',
-      overrideAccess: true,
-      data: { title: name, course: course.id, order: index + 1 },
-    })
-    unitId.set(name, created.id)
-  }
-  const existing = await payload.find({
-    collection: 'lessons',
-    overrideAccess: true,
-    depth: 0,
-    limit: 300,
-    sort: 'order',
-    where: { course: { equals: course.id } },
-  })
-  const rows = existing.docs.map((item) => asDoc(item))
+  if (moduleNames.length !== plans.length) return { error: 'A film is missing its course.' }
+  const vimeoMetas = opts?.vimeoMetas || (shouldFetchVimeo() ? await fetchVimeoMetas(parsed.films.map((film) => film.vimeoId)) : new Map<string, VimeoMeta>())
+  const portalCourses = await everyDoc(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] })
+  const courseIdsOnPortal = portalCourses.map((row) => row.id)
+  const lessons = courseIdsOnPortal.length
+    ? await everyDoc(payload, 'lessons', { course: { in: courseIdsOnPortal } })
+    : []
   const buckets = new Map<string, Doc[]>()
-  for (const row of rows) {
+  const home = new Map<number, number>()
+  for (const row of lessons) {
+    home.set(row.id, idOf(row.course) || 0)
     const key = rowKey(row)
     if (!key) continue
     const list = buckets.get(key) || []
@@ -390,68 +403,151 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     buckets.set(key, list)
   }
   const kept = new Set<number>()
-  for (const film of parsed.films) {
-    const bucket = buckets.get(filmKey(film)) || []
-    const byFilm = bucket.find((row) => !kept.has(row.id))
-    const byOrder = rows.find((row) => !kept.has(row.id) && Number(row.order) === film.order)
-    const current = byFilm || byOrder
-    const unit = unitId.get(film.module)
-    if (!unit) return { error: 'A film is missing its section.' }
-    const meta = film.vimeoId ? vimeoMetas.get(film.vimeoId) : undefined
-    const data = {
-      title: film.publicTitle.slice(0, 240),
-      sourceTitle: film.title.slice(0, 240),
-      unit,
-      course: course.id,
-      portal: portal.id,
-      master: false,
-      order: film.order,
-      speaker: '',
-      speakerProfile: null,
-      sourceUrl: (film.vimeoLink || film.drive).slice(0, 500) || null,
-      youtubeUrl: null,
-      youtubeId: null,
-      vimeoId: film.vimeoId || null,
-      vimeoHash: null,
-      videoProvider: film.vimeoId ? 'vimeo' as const : null,
-      transcript: null,
-      transcriptSource: 'none' as const,
-      transcriptNote: film.transcript.slice(0, 2000) || null,
-      tooShort: false,
-      publishState: 'published' as const,
-      jibrilSection: null,
-      ghunyaHeading: null,
-      ...(meta?.durationSeconds ? { durationSeconds: meta.durationSeconds } : {}),
-      ...(meta?.posterUrl ? { posterUrl: meta.posterUrl } : {}),
+  const usedCourses = new Set<number>()
+  const courseIds: number[] = []
+  let createdCourse = false
+  for (const plan of plans) {
+    const named = await courseNamed(payload, portal, plan.title, { sheetTitle: collectionTitle, sheetOrder: plan.order })
+    if (named.created) createdCourse = true
+    const course = named.course
+    usedCourses.add(course.id)
+    courseIds.push(course.id)
+    const unitRows = await everyDoc(payload, 'units', { course: { equals: course.id } })
+    const unitsByTitle = new Map(unitRows.map((row) => [String(row.title || ''), row]))
+    const sectionNames: string[] = []
+    for (const film of plan.films) {
+      if (!sectionNames.includes(film.section)) sectionNames.push(film.section)
     }
-    const lesson = current
-      ? await payload.update({ collection: 'lessons', id: current.id, overrideAccess: true, data })
-      : await payload.create({ collection: 'lessons', overrideAccess: true, data })
-    const lessonId = lesson.id
-    kept.add(lessonId)
-    await syncFilmQuestions(payload, lessonId, film.callouts)
+    const unitId = new Map<string, number>()
+    for (let index = 0; index < sectionNames.length; index++) {
+      const name = sectionNames[index]
+      const existing = unitsByTitle.get(name)
+      if (existing) {
+        if (Number(existing.order) !== index + 1) {
+          await payload.update({ collection: 'units', id: existing.id, overrideAccess: true, data: { order: index + 1 } })
+        }
+        unitId.set(name, existing.id)
+        continue
+      }
+      const created = await payload.create({
+        collection: 'units',
+        overrideAccess: true,
+        data: { title: name, course: course.id, order: index + 1 },
+      })
+      unitId.set(name, created.id)
+    }
+    for (let index = 0; index < plan.films.length; index++) {
+      const film = plan.films[index]
+      const bucket = buckets.get(filmKey(film)) || []
+      const current = bucket.find((row) => !kept.has(row.id))
+      const unit = unitId.get(film.section)
+      if (!unit) return { error: 'A film is missing its section.' }
+      const meta = film.vimeoId ? vimeoMetas.get(film.vimeoId) : undefined
+      const data = {
+        title: film.publicTitle.slice(0, 240),
+        sourceTitle: film.title.slice(0, 240),
+        unit,
+        course: course.id,
+        portal: portal.id,
+        master: false,
+        order: index + 1,
+        speaker: '',
+        speakerProfile: null,
+        sourceUrl: (film.vimeoLink || film.drive).slice(0, 500) || null,
+        youtubeUrl: null,
+        youtubeId: null,
+        vimeoId: film.vimeoId || null,
+        vimeoHash: null,
+        videoProvider: film.vimeoId ? 'vimeo' as const : null,
+        transcript: null,
+        transcriptSource: 'none' as const,
+        transcriptNote: film.transcript.slice(0, 2000) || null,
+        tooShort: false,
+        publishState: 'published' as const,
+        jibrilSection: null,
+        ghunyaHeading: null,
+        ...(meta?.durationSeconds ? { durationSeconds: meta.durationSeconds } : {}),
+        ...(meta?.posterUrl ? { posterUrl: meta.posterUrl } : {}),
+      }
+      const lesson = current
+        ? await payload.update({ collection: 'lessons', id: current.id, overrideAccess: true, data })
+        : await payload.create({ collection: 'lessons', overrideAccess: true, data })
+      const lessonId = lesson.id
+      kept.add(lessonId)
+      home.set(lessonId, course.id)
+      await syncFilmQuestions(payload, lessonId, film.callouts)
+    }
+    const wantedUnits = new Set(unitId.values())
+    for (const row of unitRows) {
+      if (wantedUnits.has(row.id)) continue
+      const still = await payload.find({
+        collection: 'lessons',
+        overrideAccess: true,
+        depth: 0,
+        limit: 1,
+        where: { unit: { equals: row.id } },
+      })
+      if (!still.docs.length) await payload.delete({ collection: 'units', id: row.id, overrideAccess: true })
+    }
   }
-  for (const row of existing.docs.map((item) => asDoc(item))) {
-    if (!kept.has(row.id)) await deleteLesson(payload, row.id)
+  const planTitles = new Set(plans.map((plan) => plan.title))
+  const managed = new Set(portalCourses.filter((row) => {
+    const title = String(row.title || '')
+    const sheet = String(row.sheetTitle || '')
+    return sheet === collectionTitle || title === collectionTitle || planTitles.has(title) || usedCourses.has(row.id)
+  }).map((row) => row.id))
+  for (const row of lessons) {
+    if (kept.has(row.id)) continue
+    if (!managed.has(home.get(row.id) || 0)) continue
+    if (await lessonHasAnswers(payload, row.id)) continue
+    await deleteLesson(payload, row.id)
+    home.delete(row.id)
   }
-  const wanted = new Set(unitId.values())
-  for (const row of unitRows.docs.map((item) => asDoc(item))) {
-    if (wanted.has(row.id)) continue
-    const left = await payload.find({
-      collection: 'lessons',
-      overrideAccess: true,
-      depth: 0,
-      limit: 1,
-      where: { unit: { equals: row.id } },
-    })
-    if (!left.docs.length) await payload.delete({ collection: 'units', id: row.id, overrideAccess: true })
+  for (const row of portalCourses) {
+    if (usedCourses.has(row.id)) continue
+    if (!managed.has(row.id)) continue
+    const left = [...home.values()].filter((courseId) => courseId === row.id).length
+    if (left) continue
+    await payload.update({ collection: 'courses', id: row.id, overrideAccess: true, data: { hidden: true, sheetTitle: collectionTitle } as never })
   }
+  await rememberSheetCourses(payload, portal.id, courseIds)
   const extra = parsed.skipped.length ? ` ${parsed.skipped.slice(0, 2).join(' ')}` : ''
-  const title = String(course.title || opts?.title || 'the course')
-  const notice = named.created
-    ? `${SEQUENCE_COPY.sheetMade} ${title}, ${parsed.films.length} films.${extra}`
-    : `Updated ${title}. ${parsed.films.length} films.${extra}`
-  return { notice }
+  const notice = createdCourse && portalCourses.length === 0
+    ? `${SEQUENCE_COPY.sheetMade} ${collectionTitle}, ${parsed.films.length} films.${extra}`
+    : `Updated ${collectionTitle}. ${parsed.films.length} films.${extra}`
+  return { notice, courseIds, courseId: courseIds[0] || 0 }
+}
+
+/** Codes, packs and saved course lists pick up every course in the collection. */
+async function rememberSheetCourses(payload: Payload, portalId: number, courseIds: number[]) {
+  for (const courseId of courseIds) await offerCourse(payload, portalId, courseId)
+  const packs = await payload.find({
+    collection: 'packs',
+    overrideAccess: true,
+    depth: 0,
+    limit: 20,
+    where: { portal: { equals: portalId } },
+  })
+  for (const pack of packs.docs) {
+    const current = ((pack.courses as unknown[]) || []).map((item) => idOf(item)).filter((id): id is number => Boolean(id))
+    const next = [...new Set([...current, ...courseIds])]
+    if (next.length === current.length) continue
+    await payload.update({ collection: 'packs', id: pack.id, overrideAccess: true, data: { courses: next } })
+  }
+  const users = await payload.find({
+    collection: 'users',
+    overrideAccess: true,
+    depth: 0,
+    limit: 200,
+    where: { 'tenants.tenant': { equals: portalId } },
+  }).catch(() => null)
+  for (const user of users?.docs || []) {
+    const current = ((user.courseList as unknown[]) || []).map((item) => Number(item)).filter((id) => Number.isFinite(id) && id > 0)
+    if (!current.length) continue
+    const next = [...new Set([...current, ...courseIds])]
+    if (next.length === current.length) continue
+    await payload.update({ collection: 'users', id: user.id, overrideAccess: true, data: { courseList: next } })
+  }
 }
 
 export async function saveSequenceImport(payload: Payload, portalId: number, raw: string, lookup: VideoLookup = lookupVideo) {

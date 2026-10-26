@@ -210,7 +210,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
             const poster = shownPoster(course.poster) || shownPoster(own.map((lesson) => filmPoster(lesson)).find(Boolean) || null)
             const first = own[0]
             const meta = modernHome
-              ? `${watched} of ${course.parts} film${course.parts === 1 ? '' : 's'}`
+              ? `${course.sheetTitle ? `${course.sheetTitle} · ` : ''}${watched} of ${course.parts} film${course.parts === 1 ? '' : 's'}`
               : [course.speaker, plural(course.parts, 'part')].filter(Boolean).join(' · ')
             return (
               <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">

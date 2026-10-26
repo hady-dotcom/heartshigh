@@ -7,4 +7,6 @@ test('a garbled ASR quote keeps only the real question', () => {
   assert.equal(tidyQuestionPrompt(raw), 'What from that stayed with you on the way home?')
   assert.equal(usableQuestionPrompt('landing in a shape on the Ragini'), false)
   assert.equal(tidyQuestionPrompt('What stayed with you?'), 'What stayed with you?')
+  const book = 'Do you agree with the claim that parents are more knowledgeable about their children’s bodies than about their brain? If yes, why do you think this happens?'
+  assert.equal(tidyQuestionPrompt(book), book)
 })

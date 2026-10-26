@@ -8,7 +8,7 @@ export default async function Reset({ searchParams }: { searchParams: Promise<{ 
   const query = await searchParams
   const token = query.token || ''
   return (
-    <main className="door garden-door" data-testid="reset">
+    <main className="door apple-door" data-testid="reset">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Choose a new password</h1>

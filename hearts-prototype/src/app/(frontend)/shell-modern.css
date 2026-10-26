@@ -676,8 +676,10 @@ html[data-theme] .desk.desk-modern .side a.nav.on {
   color: var(--hh-on-accent);
 }
 
-html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint) {
+html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint),
+html[data-theme] .desk.desk-modern .side-brand b {
   color: var(--hh-ink);
+  font-family: var(--hh-font-display);
 }
 
 /* Sidebar copy was cream for a dark bar. The modern bar is a light surface. */
@@ -2112,4 +2114,16 @@ html[data-theme] .app-stage.shell-modern .garden-area small {
   html[data-theme] .app-stage.shell-modern :is(.course-card, .carry-on, .buffet-row, .continue-row, .part-row, .pill, .tab):active {
     transform: none;
   }
+}
+
+html[data-theme] .app-stage.shell-modern .library-section {
+  margin: var(--hh-space-4) 0 var(--hh-space-2);
+}
+
+html[data-theme] .app-stage.shell-modern .library-section > h2 {
+  margin: 0 var(--hh-space-1) var(--hh-space-2);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-h2);
+  line-height: 1.2;
+  color: var(--hh-ink);
 }

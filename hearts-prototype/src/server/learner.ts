@@ -92,6 +92,7 @@ export type FeedItem = {
 export type CourseCard = {
   id: number
   title: string
+  sheetTitle: string
   summary: string
   speaker: string
   speakerSlug: string
@@ -247,6 +248,7 @@ export async function courseCards(payload: Payload, user: SessionUser, portalId?
     return {
       id: course.id,
       title: tidyTalkTitle(String(course.title || '')),
+      sheetTitle: String((course as { sheetTitle?: string | null }).sheetTitle || ''),
       summary: String(course.summary || ''),
       speaker,
       speakerSlug: slugify(speaker),

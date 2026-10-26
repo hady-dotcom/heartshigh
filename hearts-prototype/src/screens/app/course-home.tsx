@@ -7,7 +7,7 @@ import { FilmFallback } from '@/components/app/film-fallback'
 import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
 import { shellOf } from '@/lib/portal-look'
-import { sectionAnchor } from '@/lib/sequence'
+import { librarySections } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
@@ -113,7 +113,7 @@ function Thumb({ src, eager, place, title }: { src: string | null; eager?: boole
 export async function CourseHomeScreen({ payload, user, portal, base, query }: Ctx) {
   const courseIds = await visibleCourseIds(payload, user, portal.id)
   const [courses, lessonRows, unitRows] = await Promise.all([
-    courseIds.length ? rows(payload, 'courses', { id: { in: courseIds } }, { limit: 40 }) : Promise.resolve([]),
+    courseIds.length ? rows(payload, 'courses', { id: { in: courseIds } }, { limit: 80 }) : Promise.resolve([]),
     courseIds.length ? rows(payload, 'lessons', { course: { in: courseIds } }, { sort: 'order', limit: 500 }) : Promise.resolve([]),
     courseIds.length ? rows(payload, 'units', { course: { in: courseIds } }, { sort: 'order', limit: 80 }) : Promise.resolve([]),
   ])
@@ -136,29 +136,17 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
   const carry = cards.find((card) => card.finished < card.own.length) || cards[0]
   const modern = shellOf(portal) === 'modern'
   const carryPct = carry ? percent(carry.finished, carry.own.length) : 0
+  const sections = librarySections(cards.map((card) => ({
+    ...card,
+    title: str(card.course.title),
+    sheetTitle: str(card.course.sheetTitle),
+    sheetOrder: Number(card.course.sheetOrder || 0),
+  })))
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <Flash error={query.error} notice={query.notice} />
-        {modern && carry?.next ? (
-          <section className="course-hero" data-testid="course-hero">
-            {carry.poster ? <img className="course-hero-still" src={carry.poster} alt="" /> : (
-              <span className="course-hero-still is-fallback" data-testid="hero-still">
-                <FilmFallback place={carry.nextAt + 1} title={str(carry.next.title)} />
-              </span>
-            )}
-            <div className="course-hero-scrim">
-              <div className="course-hero-copy">
-                <p className="eyebrow">Courses</p>
-                <h1>{str(carry.course.title)}</h1>
-                <p className="hero-line">{carry.finished} of {carry.own.length} films</p>
-                <div className="bar" data-testid="hero-bar"><i style={{ width: `${carryPct}%` }} /></div>
-              </div>
-            </div>
-          </section>
-        ) : (
-          <div className="app-head"><h1>Courses</h1></div>
-        )}
+        <div className="app-head"><h1>Courses</h1></div>
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
             <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />
@@ -182,8 +170,11 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             </Link>
           </article>
         ) : <p className="card">Films will show here once a course is added.</p>}
-        <div className="course-cards">
-          {cards.map((card, index) => {
+        {sections.map((section) => (
+          <section className="library-section" key={section.title} data-testid="library-collection">
+            <h2>{section.title}</h2>
+            <div className="course-cards">
+          {section.cards.map((card, index) => {
             const groups: { title: string; count: number }[] = []
             for (const lesson of card.own) {
               const title = unitTitle.get(ref(lesson.unit) || 0) || 'Films'
@@ -192,13 +183,14 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
               groups[groups.length - 1].count += 1
             }
             const pct = percent(card.finished, card.own.length)
+            const length = card.own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
             return (
               <div key={card.course.id}>
               <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
                 <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
                 <span className="t">
                   <b>{str(card.course.title)}</b>
-                  <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>
+                  <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
                   <span className="bar"><i style={{ width: `${pct}%` }} /></span>
                   {modern ? (
                     <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>
@@ -210,20 +202,12 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                   {groups.length > 1 ? <small className="muted">{groups.map((group) => group.title).join(' · ')}</small> : null}
                 </span>
               </Link>
-              {modern && groups.length ? (
-                <div data-testid="course-sections">
-                  {groups.map((group) => (
-                    <Link className="garden-area" href={`${base}/course/${card.course.id}#${sectionAnchor(group.title)}`} data-testid="garden-area" key={group.title}>
-                      <strong>{group.title}</strong>
-                      <small>{group.count} films</small>
-                    </Link>
-                  ))}
-                </div>
-              ) : null}
               </div>
             )
           })}
-        </div>
+            </div>
+          </section>
+        ))}
       </div>
       <LearnerTabBar base={base} active="garden" portal={portal} />
     </AppFrame>

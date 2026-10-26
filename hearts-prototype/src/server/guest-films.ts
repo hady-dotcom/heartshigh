@@ -1,5 +1,6 @@
 import type { Payload } from 'payload'
 import { guestDescription, knownSeconds, type GuestFilm, type GuestNext } from '@/lib/guest-film'
+import { sheetRank } from '@/lib/sequence'
 import { filmCanPlay } from '@/lib/film-availability'
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
@@ -10,7 +11,7 @@ import { filmPoster, shownPoster } from '@/server/learner'
 const HEX = /^[0-9a-f]{6,20}$/i
 const STILL_MS = 60 * 60 * 1000
 
-type CourseRow = { id: number; title?: string | null; hidden?: boolean | null; visibility?: string | null; summary?: string | null }
+type CourseRow = { id: number; title?: string | null; hidden?: boolean | null; visibility?: string | null; summary?: string | null; sheetTitle?: string | null; sheetOrder?: number | null }
 type LessonRow = {
   id: number
   title?: string | null
@@ -33,7 +34,10 @@ type FilmDraft = GuestFilm & { upNext: NextDraft[]; courseSummary: string }
 export type GuestCourseCard = {
   id: number
   title: string
+  sheetTitle: string
+  sheetOrder: number
   count: number
+  seconds: number
   href: string
   listHref: string
   poster: string | null
@@ -53,8 +57,9 @@ export type GuestCatalogFilm = {
 
 const stillCache = new Map<string, { poster: string; seconds: number; at: number }>()
 
-function guidingFirst(title: string) {
-  return /guid|home learning/i.test(title) ? 0 : 1
+function courseSort(course: CourseRow) {
+  const sheet = str(course.sheetTitle)
+  return sheetRank(sheet || str(course.title)) * 1000 + Number(course.sheetOrder || 0)
 }
 
 function hashOf(lesson: LessonRow) {
@@ -172,9 +177,9 @@ function orderedLessons(lessons: LessonRow[], courseId: number) {
 
 /** Local courses on this portal, in teaching order, with the first film that can play. */
 export async function guestLibrary(payload: Payload, portalId: number, base: string) {
-  const courses = (await rows(payload, 'courses', { portal: { equals: portalId } }, { limit: 40 }) as CourseRow[])
+  const courses = (await rows(payload, 'courses', { portal: { equals: portalId } }, { limit: 80 }) as CourseRow[])
     .filter((course) => course.hidden !== true && str(course.visibility) !== 'draft')
-    .sort((a, b) => guidingFirst(str(a.title)) - guidingFirst(str(b.title)) || a.id - b.id)
+    .sort((a, b) => courseSort(a) - courseSort(b) || a.id - b.id)
   const ids = courses.map((course) => course.id)
   if (!ids.length) return { first: null as FilmDraft | null, courses: [] as GuestCourseCard[], films: new Map<number, FilmDraft>(), lists: new Map<number, GuestCatalogFilm[]>() }
   const lessons = (await rows(payload, 'lessons', { course: { in: ids } }, { sort: 'order', limit: 500 })) as LessonRow[]
@@ -205,7 +210,10 @@ export async function guestLibrary(payload: Payload, portalId: number, base: str
     cards.push({
       id: course.id,
       title: str(course.title) || 'Course',
+      sheetTitle: str(course.sheetTitle),
+      sheetOrder: Number(course.sheetOrder || 0),
       count: ordered.length,
+      seconds: ordered.reduce((sum, row) => sum + Number(row.lesson.durationSeconds || 0), 0),
       href: film.href,
       listHref: `${base}/course/${course.id}`,
       poster,
