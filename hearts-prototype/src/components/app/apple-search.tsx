@@ -35,8 +35,10 @@ export function AppleSearch() {
   useEffect(() => {
     setRecent(readRecent())
     let gone = false
-    fetch('/api/hearts/catalogue', { headers: { accept: 'application/json' } })
-      .then((response) => response.json())
+    const portal = window.location.pathname.match(/^\/p\/([^/]+)/)?.[1] || ''
+    const catalogue = portal ? `/api/hearts/catalogue?portal=${encodeURIComponent(portal)}` : '/api/hearts/catalogue'
+    fetch(catalogue, { headers: { accept: 'application/json' } })
+      .then((response) => (response.ok ? response.json() : { items: [] }))
       .then((body: { items?: Hit[] }) => {
         if (!gone && Array.isArray(body.items)) setItems(body.items)
       })

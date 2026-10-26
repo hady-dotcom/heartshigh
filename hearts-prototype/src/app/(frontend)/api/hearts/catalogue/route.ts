@@ -1,14 +1,36 @@
 import { learnerLessonVisible, asLessonVisibility } from '@/lib/publish-state'
-import { json } from '@/server/api'
+import { json, portalOf } from '@/server/api'
 import { getSession, visibleCourseIds } from '@/server/context'
+import { guestLibrary } from '@/server/guest-films'
 import { idOf, portalIdOf } from '@/lib/ids'
 
 export const dynamic = 'force-dynamic'
 
-/** Courses and films the signed-in learner can open. The search field filters this list on the phone. */
-export async function GET() {
+/** Courses and films this portal can open. Signed out, the same public list as Courses. Never a 401. */
+async function guestItems(session: Awaited<ReturnType<typeof getSession>>, req: Request) {
+  const portal = await portalOf(session, req)
+  if (!portal) return []
+  const base = `/p/${portal.slug}`
+  const library = await guestLibrary(session.payload, portal.id, base)
+  return [
+    ...library.courses.map((course) => ({
+      kind: 'course' as const,
+      title: course.title,
+      detail: 'Course',
+      href: course.listHref,
+    })),
+    ...library.courses.flatMap((course) => (library.lists.get(course.id) || []).map((film) => ({
+      kind: 'film' as const,
+      title: film.title,
+      detail: course.title,
+      href: film.href,
+    }))),
+  ]
+}
+
+export async function GET(req: Request) {
   const session = await getSession({ touch: false })
-  if (!session.user) return json({ items: [] }, 401)
+  if (!session.user) return json({ items: await guestItems(session, req) })
   const portalId = portalIdOf(session.user)
   if (!portalId) return json({ items: [] })
   const portal = await session.payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null)
