@@ -89,10 +89,12 @@ export async function MasterOpening(ctx: MasterCtx) {
                           )) : <span className="hint">None</span>}
                         </td>
                         <td>{laneTitle(option.intentLane)}</td>
-                        <td style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                          {option.crisis ? <span className="badge rose">Help screen</span> : null}
-                          {option.spineFirst ? <span className="badge purple">Spine first</span> : null}
-                          {option.sensitivity === 'private' ? <span className="badge ink" data-testid="private-option">Private</span> : null}
+                        <td>
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                            {option.crisis ? <span className="badge rose">Help screen</span> : null}
+                            {option.spineFirst ? <span className="badge purple">Spine first</span> : null}
+                            {option.sensitivity === 'private' ? <span className="badge ink" data-testid="private-option">Private</span> : null}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -116,9 +118,9 @@ export async function MasterOpening(ctx: MasterCtx) {
                 <select name="status" defaultValue={str(scene.status) || 'draft'}><option value="draft">Draft</option><option value="published">Published</option></select>
                 <button className="btn ink small" type="submit" data-testid="scene-save">Save scene</button>
                 <Link className="btn ghost small" href={`/admin/collections/opening-scenes/${scene.id}`}>Options and nudges</Link>
-                <DeleteInline kind="scene" id={scene.id} next="/master/opening" testId={`delete-scene-${scene.id}`} />
               </div>
             </form>
+            <DeleteInline kind="scene" id={scene.id} next="/master/opening" testId={`delete-scene-${scene.id}`} />
           </section>
         )
       })}

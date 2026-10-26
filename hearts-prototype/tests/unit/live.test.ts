@@ -8,7 +8,10 @@ import {
   liveCountsTowardProgress,
   liveDemoGuard,
   LIVE_DEMO_TITLES,
+  liveWhenHidden,
   liveWhenLabel,
+  liveWhenPreview,
+  londonTomorrowEvening,
   muxConfigured,
   muxNotConfiguredMessage,
   parseLiveSource,
@@ -95,6 +98,10 @@ test('schedule times can be now, ISO, or a British date', () => {
 
 test('live dates are UK style with a 12-hour clock', () => {
   assert.equal(liveWhenLabel(new Date('2026-10-06T15:42:00.000Z')), 'Tue 6 Oct, 4:42 pm')
+  const evening = londonTomorrowEvening(new Date('2026-10-06T15:42:00.000Z'))
+  assert.deepEqual(evening, { day: 7, month: 9, year: 2026, hour: 7, minute: 0, period: 'pm' })
+  assert.equal(liveWhenHidden(evening), '07/10/2026 19:00')
+  assert.equal(liveWhenPreview(evening), 'Wed 7 Oct, 7:00 pm')
 })
 
 test('live door labels speak the door number, never the W-code', () => {

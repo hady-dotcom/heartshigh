@@ -270,6 +270,52 @@ export function parseLiveWhen(raw: string, now = new Date()): Date | null {
   return Number.isNaN(date.getTime()) ? null : date
 }
 
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+const MONTHS_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+export type LiveWhenParts = {
+  day: number
+  month: number
+  year: number
+  hour: number
+  minute: number
+  period: 'am' | 'pm'
+}
+
+/** Tomorrow at 7pm in London. The parts do not depend on the machine's time zone, so server and browser render the same controls. */
+export function londonTomorrowEvening(at = new Date()): LiveWhenParts {
+  const tomorrow = new Date(at.getTime() + 86_400_000)
+  const formatted = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/London',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(tomorrow)
+  const part = (type: Intl.DateTimeFormatPartTypes) => formatted.find((item) => item.type === type)?.value || ''
+  return {
+    day: Number(part('day')),
+    month: Number(part('month')) - 1,
+    year: Number(part('year')),
+    hour: 7,
+    minute: 0,
+    period: 'pm',
+  }
+}
+
+export function liveWhenHidden(parts: LiveWhenParts) {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  let hour = parts.hour % 12
+  if (parts.period === 'pm') hour += 12
+  if (parts.period === 'am' && parts.hour === 12) hour = 0
+  return `${pad(parts.day)}/${pad(parts.month + 1)}/${parts.year} ${pad(hour)}:${pad(parts.minute)}`
+}
+
+export function liveWhenPreview(parts: LiveWhenParts) {
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const weekday = WEEKDAYS[new Date(Date.UTC(parts.year, parts.month, parts.day)).getUTCDay()]
+  return `${weekday} ${parts.day} ${MONTHS_SHORT[parts.month]}, ${parts.hour}:${pad(parts.minute)} ${parts.period}`
+}
+
 export function liveWhenLabel(iso: string | Date | null | undefined, timeZone = 'Europe/London') {
   const date = iso instanceof Date ? iso : new Date(String(iso || ''))
   if (Number.isNaN(date.getTime())) return ''
