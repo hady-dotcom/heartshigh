@@ -156,11 +156,16 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   return (
     <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
       <div className="app-scroll">
+        {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
-        <div className={`app-head${sequence ? ' course-head' : ''}`}>
-          <Back href={sequence ? `${base}/courses` : `${base}/lanes`} label={sequence ? 'Courses' : 'Lanes'} />
-          <h1 data-testid="course-title">{title}</h1>
-        </div>
+        {sequence ? (
+          <div className="app-head course-head">
+            <Back href={`${base}/courses`} label="Courses" />
+            <h1 data-testid="course-title">{title}</h1>
+          </div>
+        ) : (
+          <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
+        )}
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         {sequence ? (
           <div data-testid="play-next">
