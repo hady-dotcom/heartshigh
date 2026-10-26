@@ -6,7 +6,7 @@ import { orderSwarm, type SwarmMode } from '@/lib/swarm-sort'
 
 export type SwarmFace = { name: string; body: string; image?: string | null; circle?: boolean; initials: string; id?: number; kind?: 'answer' | 'circle-answer' }
 
-const DOTS = ['#d4a84b', '#c9d6b0', '#e4d4f4', '#e8a15a', '#e7a0b4']
+const DOTS = ['var(--hh-accent)', 'var(--hh-accent)', 'var(--hh-accent)', '#e8a15a', '#e7a0b4']
 
 export function SwarmList({
   items,

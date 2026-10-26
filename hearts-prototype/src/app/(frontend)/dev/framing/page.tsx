@@ -32,7 +32,7 @@ export default async function DevFraming({ searchParams }: { searchParams: Promi
   const variant = query.variant || process.env.HEARTS_FRAMING_MODE
   const placeholder = query.placeholder !== '0'
   return (
-    <main style={{ margin: 0, minHeight: '100dvh', background: '#0F3B3A' }} data-testid="dev-framing">
+    <main style={{ margin: 0, minHeight: '100dvh', background: 'var(--hh-surface)' }} data-testid="dev-framing">
       <FramingPlayer
         youtubeId={track.youtubeId}
         track={track}

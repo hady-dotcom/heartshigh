@@ -14,7 +14,7 @@ function HelpSheet({ title, body, titleId, helpKey, plain = false, onClose }: { 
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className={`page-help-sheet${plain ? ' help-plain' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} data-testid="page-help-sheet" onClick={onClose}>
+    <div className="page-help-sheet help-plain" role="dialog" aria-modal="true" aria-labelledby={titleId} data-testid="page-help-sheet" data-plain={plain ? 'yes' : 'no'} onClick={onClose}>
       <div className="page-help-card" onClick={(event) => event.stopPropagation()}>
         <h2 id={titleId} data-testid="page-help-title">{title}</h2>
         {body.map((line) => (
@@ -69,9 +69,9 @@ export function TopicHelp({ topic, label = 'What is this?' }: { topic: string; l
           width: 22,
           height: 22,
           borderRadius: 999,
-          border: '1px solid #D4A84B',
-          background: '#0E2A2B',
-          color: '#D4A84B',
+          border: '1px solid var(--hh-accent)',
+          background: 'var(--hh-canvas)',
+          color: 'var(--hh-accent)',
           fontWeight: 700,
           cursor: 'pointer',
         }}

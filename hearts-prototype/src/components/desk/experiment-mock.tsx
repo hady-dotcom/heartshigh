@@ -7,7 +7,7 @@ import styles from './experiment-mock.module.css'
 function Arrow({ down = false }: { down?: boolean }) {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true" style={down ? { transform: 'rotate(180deg)' } : undefined}>
-      <path d="M6 10V3M3.2 5.4 6 2.4l2.8 3" fill="none" stroke="#1a1408" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M6 10V3M3.2 5.4 6 2.4l2.8 3" fill="none" stroke="var(--hh-on-accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   )
 }

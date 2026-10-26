@@ -1,5 +1,6 @@
 import config from '@payload-config'
 import '@payloadcms/next/css'
+import './admin-house.css'
 import { RootLayout, handleServerFunctions } from '@payloadcms/next/layouts'
 import { redirect } from 'next/navigation'
 import type { ServerFunctionClient } from 'payload'

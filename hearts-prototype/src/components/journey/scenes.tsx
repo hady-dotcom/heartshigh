@@ -24,7 +24,7 @@ export function Opener({ caption, subline, onPlay, onJustShow, loginHref, signed
   return (
     <section className="j-screen j-opener" data-screen="opener" data-testid="opener">
       <header className="j-top">
-        {brand ? <p className="brand-word" data-testid="portal-brand" style={light ? undefined : { color: '#f6eedc' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
+        {brand ? <p className="brand-word" data-testid="portal-brand" style={light ? undefined : { color: 'var(--hh-ink)' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
         {signedIn ? null : <a className="j-login" href={loginHref} data-testid="opener-login">Log in</a>}
       </header>
       {brand ? null : <span className="j-arch" aria-hidden style={{ opacity: 0.15 }}><Arch size={120} /></span>}
@@ -87,7 +87,7 @@ export function SceneCard({ scene, index, total, selected, reply, picked, onPick
   return (
     <section className={`j-screen j-scene layout-${scene.layout}`} data-screen={`scene-${index + 1}`} data-testid="scene" data-scene={scene.key}>
       <header className="j-top">
-        {brand ? <p className="brand-word" data-testid="portal-brand" style={light ? undefined : { color: '#f6eedc' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
+        {brand ? <p className="brand-word" data-testid="portal-brand" style={light ? undefined : { color: 'var(--hh-ink)' }}>{brand}</p> : <span className="j-mark" aria-hidden><Arch size={34} /></span>}
         <button type="button" className="j-pass" onClick={onPass} disabled={locked} data-testid="pass">Skip</button>
       </header>
       <div className="j-body">

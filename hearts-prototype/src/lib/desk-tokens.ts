@@ -1,23 +1,23 @@
 /**
- * Shared desk tokens — evening garden.
- * Deep teal page and panels, warm dark gold, cream type. Cream is for floating cards (help tips), not the page.
- * Keep these hex values identical to the --desk-* custom properties in theme.css.
+ * Shared desk tokens — white canvas and blue accent.
+ * Same hex values as the --desk-* custom properties in theme.css.
+ * Cream is no longer the page colour. Floating help tips use the paper token.
  */
 
 export const deskTokens = {
-  page: '#0E2A2B',
-  card: '#163633',
-  ink: '#F6EEDC',
-  heading: '#F6EEDC',
-  sidebar: '#0B2223',
-  header: '#0F3B3A',
-  onDark: '#F6EEDC',
-  gold: '#D4A84B',
-  goldInk: '#1A1408',
-  teal: '#1A5552',
-  muted: '#E4D3A4',
-  line: '#C4923A',
-  field: '#102E2C',
+  page: '#F2F2F7',
+  card: '#FFFFFF',
+  ink: '#111827',
+  heading: '#111827',
+  sidebar: '#F3F4F6',
+  header: '#FFFFFF',
+  onDark: '#111827',
+  gold: '#2563EB',
+  goldInk: '#FFFFFF',
+  teal: '#1D4ED8',
+  muted: '#4B5563',
+  line: '#E5E7EB',
+  field: '#F3F4F6',
 } as const
 
 function channel(value: number) {

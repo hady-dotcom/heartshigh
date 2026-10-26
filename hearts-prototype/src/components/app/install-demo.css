@@ -26,7 +26,7 @@
 .install-dots { display: flex; justify-content: center; gap: 0; }
 .install-dots button { width: 28px; height: 44px; border: 0; padding: 0; background: transparent; display: grid; place-items: center; }
 .install-dots button::before { content: ''; width: 8px; height: 8px; border-radius: 99px; background: var(--line); }
-.install-dots button[aria-current='true']::before { width: 18px; background: var(--gold, #d4a84b); }
+.install-dots button[aria-current='true']::before { width: 18px; background: var(--gold, var(--hh-accent)); }
 .install-again { display: inline-flex; align-items: center; min-height: 44px; margin: 0 4px 6px; padding: 8px 0; background: none; border: 0; color: var(--ink-2); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
 
 .demo-phone { width: 210px; height: 372px; margin: 4px auto 0; border-radius: 32px; padding: 8px; background: #1c1c1e; box-shadow: 0 10px 24px rgba(14, 28, 26, 0.28); }
@@ -40,7 +40,7 @@
 .demo-site { position: absolute; z-index: 1; top: 70px; left: 0; right: 0; display: grid; justify-items: center; }
 .demo-site.android { top: 78px; }
 .demo-site.is-dim { opacity: 0.45; }
-.demo-badge { width: 54px; height: 54px; border-radius: 14px; background: #0F3B3A; color: #D4A84B; display: grid; place-items: center; }
+.demo-badge { width: 54px; height: 54px; border-radius: 14px; background: var(--hh-surface); color: var(--hh-accent); display: grid; place-items: center; }
 .demo-badge.big { width: 74px; height: 74px; border-radius: 18px; }
 .demo-arch { width: 70%; height: 70%; }
 .demo-toolbar { position: absolute; left: 0; right: 0; bottom: 16px; height: 44px; display: flex; align-items: center; justify-content: space-around; background: rgba(255, 255, 255, 0.94); border-top: 1px solid rgba(0, 0, 0, 0.08); }
@@ -64,13 +64,13 @@
 .demo-preview { position: absolute; inset: 64px 16px auto; display: grid; justify-items: center; gap: 6px; text-align: center; }
 .demo-preview strong { font-size: 15px; }
 .demo-preview small { color: #6e6e73; font-size: 12px; }
-.demo-homescreen { position: absolute; inset: 0; background: linear-gradient(180deg, #1a4a52, #0e2a2b); display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 58px; align-content: start; gap: 14px 8px; padding: 36px 14px 0; }
+.demo-homescreen { position: absolute; inset: 0; background: linear-gradient(180deg, #1a4a52, var(--hh-canvas)); display: grid; grid-template-columns: repeat(4, 1fr); grid-auto-rows: 58px; align-content: start; gap: 14px 8px; padding: 36px 14px 0; }
 .demo-blob { width: 36px; height: 36px; border-radius: 10px; justify-self: center; }
 .demo-blob.sage { background: #8fa36a; }
-.demo-blob.gold { background: #d4a84b; }
-.demo-blob.mist { background: #d7cbb8; }
+.demo-blob.gold { background: var(--hh-accent); }
+.demo-blob.mist { background: var(--hh-muted); }
 .demo-landing { display: grid; justify-items: center; gap: 3px; }
-.demo-landing .demo-badge { width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 0 0 2px #D4A84B; }
+.demo-landing .demo-badge { width: 40px; height: 40px; border-radius: 12px; box-shadow: 0 0 0 2px var(--hh-accent); }
 .demo-landing small { color: #fff; font-size: 11px; font-weight: 700; letter-spacing: 0.04em; line-height: 1.1; text-transform: none; white-space: nowrap; }
 .demo-homescreen.is-round .demo-blob,
 .demo-homescreen.is-round .demo-landing .demo-badge { border-radius: 50%; }

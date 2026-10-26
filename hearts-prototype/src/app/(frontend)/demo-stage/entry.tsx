@@ -5,9 +5,9 @@ import './entry.css'
 
 const ROLES = [
   { id: 'master', label: 'Master', colour: '#25214a' },
-  { id: 'portal', label: 'Portal admin', colour: '#1f8a78' },
-  { id: 'teacher', label: 'Teacher', colour: '#c48f2c' },
-  { id: 'learner', label: 'Learner', colour: '#7a4fa8' },
+  { id: 'portal', label: 'Portal admin', colour: 'var(--hh-accent)' },
+  { id: 'teacher', label: 'Teacher', colour: 'var(--hh-accent-deep)' },
+  { id: 'learner', label: 'Learner', colour: 'var(--hh-accent)' },
 ] as const
 
 export function DemoStageEntry() {

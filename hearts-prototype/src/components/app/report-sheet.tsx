@@ -29,7 +29,7 @@ export function ReportButton({
         data-target-type={targetType}
         data-target-id={String(targetId)}
         onClick={() => setOpen(true)}
-        style={quiet ? undefined : { fontSize: 13, color: '#E4D3A4' }}
+        style={quiet ? undefined : { fontSize: 13, color: 'var(--hh-muted)' }}
       >
         Report a concern
       </button>
@@ -52,7 +52,7 @@ export function ReportSheet({
   const [reason, setReason] = useState('')
   return (
     <div className="sheet-scrim" style={{ zIndex: 40 }} data-testid="report-sheet">
-      <section className="sheet" role="dialog" aria-label="Report a concern" style={{ background: '#0E2A2B', color: '#F6EEDC' }}>
+      <section className="sheet" role="dialog" aria-label="Report a concern" style={{ background: 'var(--hh-canvas)', color: 'var(--hh-ink)' }}>
         <div className="handle" />
         <button type="button" className="sheet-close" aria-label="Close" onClick={onClose}>×</button>
         <h2 style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

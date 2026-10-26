@@ -29,7 +29,7 @@ const AUDIENCE_OPTIONS = [
 function Card({ card, href }: { card: GatherCard; href: string }) {
   return (
     <article className="gather-card" data-testid="gather-card" data-id={card.id} data-status={card.mine || 'none'}>
-      <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: 'var(--g-heading, #0f3b3a)' }}>{card.title}</h2>
+      <h2 style={{ margin: '0 0 4px', fontSize: 22, lineHeight: 1.2, color: 'var(--g-heading, var(--hh-ink))' }}>{card.title}</h2>
       {card.onLine ? <p className="on-line" data-testid="gather-on">{card.onLine}</p> : null}
       <p className="gather-meta" style={{ marginTop: 0 }}>
         <span>{card.when}{card.place ? ` · ${card.place}` : ''}</span>
@@ -154,7 +154,7 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
           ) : null}
         </section>
         <section className="gather-card" data-testid="gather-share">
-          <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>Invite someone</h3>
+          <h3 style={{ marginTop: 0, color: 'var(--g-heading, var(--hh-ink))' }}>Invite someone</h3>
           <p>Send it on WhatsApp, or copy your invite link. It remembers that you brought them. They only see a first name.</p>
           <div className="gather-actions">
             <a className="pill gold small" href={share.whatsApp} data-testid="share-whatsapp">WhatsApp</a>
@@ -170,13 +170,13 @@ export async function GatherDetailScreen(ctx: Ctx, id: number) {
         </section>
         {card.prompts.length ? (
           <section className="gather-card" data-testid="gather-prompts">
-            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>If you sit and talk</h3>
+            <h3 style={{ marginTop: 0, color: 'var(--g-heading, var(--hh-ink))' }}>If you sit and talk</h3>
             {card.prompts.map((prompt) => <p key={prompt}>{prompt}</p>)}
           </section>
         ) : null}
         {mine ? (
           <section className="gather-card" data-testid="my-circle">
-            <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>{mine.name}</h3>
+            <h3 style={{ marginTop: 0, color: 'var(--g-heading, var(--hh-ink))' }}>{mine.name}</h3>
             <p>You’ll sit with {mine.memberIds.filter((member) => member !== String(user.id)).map((member) => nameOf.get(Number(member))?.split(' ')[0] || 'a guest').join(', ') || 'the host'}.</p>
           </section>
         ) : null}
@@ -290,7 +290,7 @@ export async function GatherDoorScreen(ctx: Ctx, id: number) {
           <button className="pill outline" type="submit" data-testid="split-circles">Split into circles</button>
         </form>
         <form className="gather-card" action="/api/gather" method="post" encType="multipart/form-data" style={{ marginTop: 16 }} data-testid="photo-form">
-          <h3 style={{ marginTop: 0, color: 'var(--g-heading, #0f3b3a)' }}>A photo from the night</h3>
+          <h3 style={{ marginTop: 0, color: 'var(--g-heading, var(--hh-ink))' }}>A photo from the night</h3>
           <p>Only people who agreed to be in the picture. It stays inside the portal.</p>
           <Hidden fields={{ action: 'photo', id, next: `${base}/gather/${id}` }} />
           <label>Photo<input className="field" type="file" name="image" accept="image/*" required data-testid="gather-photo" /></label>

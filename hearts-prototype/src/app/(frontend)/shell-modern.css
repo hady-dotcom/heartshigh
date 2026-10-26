@@ -2409,3 +2409,31 @@ html[data-theme] .page-help-sheet.help-plain .pill.gold {
   text-decoration: underline;
   cursor: pointer;
 }
+
+/* Surfaces outside the learner stage: same white canvas and blue accent. */
+html[data-theme] :is(.public-gather, .demo-stage, .demo-stage-entry, .splash) {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  color-scheme: light;
+}
+html[data-theme] :is(.demo-bar, .demo-stage-entry-card, .public-gather .gather-card) {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+}
+html[data-theme] .demo-kicker,
+html[data-theme] .demo-stage-entry-go {
+  color: var(--hh-accent);
+}
+html[data-theme] .sheet {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+}
+html[data-theme] .share-btn,
+html[data-theme] .demo-stage-entry-go {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+html[data-theme] .app-stage.shell-modern .part-status {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}

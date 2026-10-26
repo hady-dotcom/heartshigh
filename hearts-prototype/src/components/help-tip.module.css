@@ -27,7 +27,7 @@
   width: min(22rem, calc(100vw - 24px));
   max-width: min(22rem, calc(100vw - 24px));
   padding: 12px 14px;
-  background: #fffaf0;
+  background: var(--hh-paper);
   color: #14221f;
   border: 1px solid #d7c6a4;
   border-radius: 12px;

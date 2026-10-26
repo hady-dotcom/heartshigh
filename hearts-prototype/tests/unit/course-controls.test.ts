@@ -133,5 +133,5 @@ test('play and pause stay on the lecture while it is playing', () => {
   assert.equal(courseScreen.includes('var(--purple)'), false)
   const css = readFileSync(new URL('../../src/app/(frontend)/app.css', import.meta.url), 'utf8')
   assert.match(css, /\.part-row \{[\s\S]*border-radius: 18px;/)
-  assert.match(css, /\.part-status \{[\s\S]*background: #d4a84b;[\s\S]*color: #1a1408;/)
+  assert.match(css, /\.part-status \{[\s\S]*background: var\(--hh-accent\);[\s\S]*color: var\(--hh-on-accent\);/)
 })

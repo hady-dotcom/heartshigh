@@ -14,7 +14,7 @@ import { DeskFrame, masterNav } from './shell'
 import type { SessionUser } from '@/server/context'
 import type { Payload } from 'payload'
 
-const GOLD = { border: '2px solid #D4A84B', borderRadius: 16, padding: 16, background: '#163633' }
+const GOLD = { border: '2px solid var(--hh-accent)', borderRadius: 16, padding: 16, background: 'var(--hh-paper)' }
 
 function personName(value: unknown) {
   if (value && typeof value === 'object' && 'name' in value) return String((value as { name?: string }).name || 'A person')

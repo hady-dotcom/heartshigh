@@ -176,7 +176,7 @@ function guidedPage(portal: ExportPortal, videos: ExportVideo[]) {
   main { padding: 16px; max-width: 720px; margin: 0 auto; }
   fieldset { border: 0; margin: 0 0 16px; padding: 12px; background: #fff; border-radius: 12px; }
   label { display: block; margin: 8px 0; }
-  button, a.btn { background: var(--a); color: #1a1408; border: 0; border-radius: 999px; padding: 12px 16px; font: inherit; font-weight: 700; }
+  button, a.btn { background: var(--a); color: #ffffff; border: 0; border-radius: 999px; padding: 12px 16px; font: inherit; font-weight: 700; }
   .film { background: #111; aspect-ratio: 16/9; }
   .film iframe { width: 100%; height: 100%; border: 0; }
   .said { background: #fff; border-radius: 12px; padding: 10px 12px; margin: 8px 0; }

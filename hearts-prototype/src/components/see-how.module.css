@@ -13,7 +13,7 @@
   width: min(720px, 100%);
   max-height: min(88vh, 820px);
   overflow: auto;
-  background: #fffaf0;
+  background: var(--hh-paper);
   color: #14221f;
   border-radius: 18px 18px 0 0;
   padding: 14px 14px calc(18px + env(safe-area-inset-bottom, 0px));
@@ -48,7 +48,7 @@
   display: block;
   width: 100%;
   max-height: 54vh;
-  background: #0e2a2b;
+  background: var(--hh-canvas);
   border-radius: 12px;
 }
 

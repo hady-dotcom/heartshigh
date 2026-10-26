@@ -26,10 +26,10 @@ test('talkStill falls back to courtyard art when there is no film or speaker sti
   assert.equal(still.src, '/theme/evening-courtyard.jpg')
 })
 
-test('the course garden card uses evening teal and gold, never purple or cream', () => {
+test('the course garden card uses the white and blue house colours', () => {
   const css = `${readFileSync(path.join(root, 'src/app/(frontend)/app.css'), 'utf8')}\n${readFileSync(path.join(root, 'src/app/(frontend)/garden.css'), 'utf8')}`
   const block = [...css.matchAll(/\.garden-card[^{]*\{[^}]+\}/g)].map((row) => row[0]).join('\n')
-  assert.match(block, /#0E2A2B/i)
-  assert.match(block, /#D4A84B/i)
-  assert.doesNotMatch(block, /#2a2448|#243628|#fff8ee|#F1E4C6/i)
+  assert.match(block, /var\(--hh-canvas\)|var\(--hh-paper\)/)
+  assert.match(block, /var\(--hh-accent\)/)
+  assert.doesNotMatch(block, /#0E2A2B|#D4A84B|#2a2448|#243628|#fff8ee|#F1E4C6/i)
 })

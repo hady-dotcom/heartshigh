@@ -36,8 +36,8 @@ describe('N10 safeguarding visibility', () => {
 
   it('the mail names no extra personal data', () => {
     const html = tealMailHtml('A learner may need support', '<p>A learner may need support. Please look today.</p>')
-    assert.match(html, /#0E2A2B/)
-    assert.match(html, /#D4A84B/)
+    assert.match(html, /#F2F2F7/)
+    assert.match(html, /#2563EB/)
     assert.doesNotMatch(html, /[A-Z0-9._%+-]+@[A-Z0-9.-]+/i)
     assert.doesNotMatch(html, /answer body|voice note/i)
   })

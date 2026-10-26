@@ -85,9 +85,9 @@ export async function JourneyScreen({ payload, portal, user, base, initial, view
   const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await nextCourseFilms(payload, user, base, 4, portal.id) : []
   const guestFilm = modern && !user ? await firstGuestFilm(payload, portal.id, base) : null
   return (
-    <div className={`app-stage${modern ? ' shell-modern' : ' dusk'}${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : undefined} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
+    <div className={`app-stage shell-modern${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : 'system'} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
-      <main className={`app journey-frame${modern ? '' : ' dark'}`} data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
+      <main className="app journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
         <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
         {mission && initial === 'feed' && featureOn(portal, 'missions') ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
         <JourneyErrorBoundary homeHref={base}>

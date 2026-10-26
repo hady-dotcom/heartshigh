@@ -9,7 +9,7 @@
     radial-gradient(820px 360px at 100% 0%, rgba(122, 79, 168, 0.38), transparent 52%),
     radial-gradient(720px 320px at 78% 110%, rgba(31, 138, 120, 0.28), transparent 50%),
     radial-gradient(640px 260px at 0% 100%, rgba(196, 143, 44, 0.18), transparent 48%);
-  color: #f6f0e4;
+  color: var(--hh-ink);
   font-family: Inter, 'Segoe UI', system-ui, sans-serif;
 }
 
@@ -41,7 +41,7 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: #dca643;
+  color: var(--hh-accent);
 }
 
 .demo-stage-entry h1 {
@@ -50,7 +50,7 @@
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 600;
   line-height: 0.95;
-  color: #f6f0e4;
+  color: var(--hh-ink);
 }
 
 .demo-stage-entry-line {
@@ -71,8 +71,8 @@
   padding: 0 22px;
   border: 0;
   border-radius: 999px;
-  background: #d4a84b;
-  color: #1a1408;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
   font: inherit;
   font-size: 16px;
   font-weight: 700;
@@ -80,7 +80,7 @@
 }
 
 .demo-stage-entry-go:hover { background: #e0b65d; }
-.demo-stage-entry-go:focus-visible { outline: 3px solid #f6f0e4; outline-offset: 3px; }
+.demo-stage-entry-go:focus-visible { outline: 3px solid var(--hh-ink); outline-offset: 3px; }
 
 .demo-stage-entry-form {
   display: grid;
@@ -93,13 +93,13 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 650;
-  color: #f6f0e4;
+  color: var(--hh-ink);
 }
 
 html[data-theme] .demo-stage-entry .demo-stage-entry-form .field,
 .demo-stage-entry .demo-stage-entry-form .field {
   background: #1c1a26;
-  color: #f6f0e4;
+  color: var(--hh-ink);
   border-color: rgba(246, 240, 228, 0.28);
 }
 

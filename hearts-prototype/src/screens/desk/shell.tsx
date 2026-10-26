@@ -236,7 +236,7 @@ export async function DeskFrame({
         <button type="submit" className="btn ghost">Sign out</button>
       </form>
     </div>
-    <div className={`desk${evening ? ' evening' : ''}${modern ? ' desk-modern' : ''}${gatherDesk ? ' gather-desk' : ''}${showOnPhone ? ' desk-phone' : ''}`} data-testid={testId}>
+    <div className={`desk desk-modern${gatherDesk ? ' gather-desk' : ''}${showOnPhone ? ' desk-phone' : ''}`} data-testid={testId} data-evening={evening ? 'yes' : 'no'}>
       <aside className="side">
         <Link className="side-brand" href={brandHref}>
           {logoUrl ? <img className="side-logo" alt="" src={logoUrl} /> : <BrandMark size={40} />}

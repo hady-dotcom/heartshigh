@@ -8,7 +8,7 @@
 }
 .app-stage:has(.app[data-testid="learner-path"]),
 .app-stage:has(.app[data-testid="recalibrate"]) {
-  background: #0E2A2B;
+  background: var(--hh-canvas);
 }
 .app[data-testid="learner-path"] h1,
 .app[data-testid="recalibrate"] h1,
@@ -44,7 +44,7 @@
 .app[data-testid="recalibrate"] .eyebrow {
   display: block;
   position: static;
-  color: #D4A84B;
+  color: var(--hh-accent);
   margin: 22px 0 0;
 }
 .app[data-testid="learner-path"] a.next-step,
@@ -63,8 +63,8 @@
   border-radius: 50%;
   display: grid;
   place-items: center;
-  background: #0E2A2B;
-  color: #D4A84B;
+  background: var(--hh-canvas);
+  color: var(--hh-accent);
 }
 .app[data-testid="learner-path"] .step-copy {
   display: flex;
@@ -80,7 +80,7 @@
 .app[data-testid="learner-path"] .step-detail {
   font-size: 14.5px;
   line-height: 1.45;
-  color: #E7DCC8;
+  color: var(--hh-ink-2);
 }
 .app[data-testid="learner-path"] .card,
 .app[data-testid="recalibrate"] .card {
@@ -97,7 +97,7 @@
 }
 .app[data-testid="learner-path"] .focus-card {
   font-size: 18px;
-  border-color: #D4A84B;
+  border-color: var(--hh-accent);
 }
 .app[data-testid="learner-path"] .area-row,
 .app[data-testid="recalibrate"] .choice {
@@ -109,9 +109,9 @@
 }
 .app[data-testid="learner-path"] .chip,
 .app[data-testid="recalibrate"] .chip {
-  background: #0E2A2B;
+  background: var(--hh-canvas);
   color: #F6E7C1;
-  border: 1px solid #D4A84B;
+  border: 1px solid var(--hh-accent);
   border-radius: 999px;
   padding: 2px 10px;
   font-size: 13px;
@@ -125,7 +125,7 @@
 .app[data-testid="recalibrate"] .pill.gold,
 .app[data-testid="learner-path"] button.pill,
 .app[data-testid="recalibrate"] button.pill {
-  background: #D4A84B;
+  background: var(--hh-accent);
   color: #1A1814;
   border: 0;
   margin-top: 16px;
@@ -140,14 +140,14 @@
   padding: 0;
 }
 .app[data-testid="recalibrate"] input {
-  accent-color: #D4A84B;
+  accent-color: var(--hh-accent);
 }
 .app[data-testid="recalibrate"] textarea {
   width: 100%;
   margin-top: 8px;
-  background: #0E2A2B;
+  background: var(--hh-canvas);
   color: #F4EBD4;
-  border: 1px solid #D4A84B;
+  border: 1px solid var(--hh-accent);
   border-radius: 12px;
   padding: 10px 12px;
   font: inherit;
@@ -167,27 +167,27 @@
 .compass-learner { position: relative; }
 .app[data-testid="learner-path"] .tabbar,
 .app[data-testid="recalibrate"] .tabbar {
-  background: #0E2A2B;
-  border-top-color: rgba(212, 168, 75, 0.45);
+  background: var(--hh-canvas);
+  border-top-color: rgba(37, 99, 235, 0.45);
 }
 .app[data-testid="learner-path"] .tab,
 .app[data-testid="recalibrate"] .tab {
-  color: #E7DCC8;
+  color: var(--hh-ink-2);
 }
 .app[data-testid="learner-path"] .tab.on,
 .app[data-testid="recalibrate"] .tab.on {
-  color: #D4A84B;
+  color: var(--hh-accent);
 }
 .app[data-testid="learner-path"] .flash.notice,
 .app[data-testid="recalibrate"] .flash.notice,
 [data-testid="recalibrate-card"] {
-  background: #1A3F38;
-  color: #F6EEDC;
-  border: 1px solid rgba(212, 168, 75, 0.55);
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.55);
 }
 [data-testid="recalibrate-open"] {
-  background: #D4A84B;
-  color: #1A1408;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
 }
 .month-look { padding-bottom: 24px; }
 .month-progress { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
@@ -212,15 +212,15 @@
   overflow: visible;
   margin: 0;
   background: none;
-  color: #F6EEDC;
+  color: var(--hh-ink);
   font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.02em;
   line-height: 1.2;
   white-space: nowrap;
 }
-.progress-line { flex: 1; display: block; height: 5px; border-radius: 99px; background: rgba(212, 168, 75, 0.28); margin: 0; overflow: hidden; }
-.progress-line i { display: block; height: 100%; background: #D4A84B; }
+.progress-line { flex: 1; display: block; height: 5px; border-radius: 99px; background: rgba(37, 99, 235, 0.28); margin: 0; overflow: hidden; }
+.progress-line i { display: block; height: 100%; background: var(--hh-accent); }
 button.month-back {
   display: inline-flex;
   align-items: center;
@@ -236,7 +236,7 @@ button.month-back {
   font-size: 16px;
   color: #F6E7C1;
 }
-.app[data-testid="recalibrate"] .choice input { margin-top: 3px; accent-color: #D4A84B; }
+.app[data-testid="recalibrate"] .choice input { margin-top: 3px; accent-color: var(--hh-accent); }
 @keyframes month-enter { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
 @keyframes month-enter-back { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
 @keyframes month-exit { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-40px); } }
@@ -257,14 +257,14 @@ button.month-back {
 
 .desk[data-testid="compass-portal"],
 .desk[data-testid="compass-learner"] {
-  background: #0E2A2B;
-  color: #F6EEDC;
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] .side,
 .desk[data-testid="compass-learner"] .side {
-  background: #0E2A2B;
-  color: #F7EEDB;
-  border-right-color: #0F3B3A;
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  border-right-color: var(--hh-surface);
   z-index: 2;
 }
 .desk[data-testid="compass-portal"] .side a.nav,
@@ -273,45 +273,45 @@ button.month-back {
 .desk[data-testid="compass-learner"] .side-brand,
 .desk[data-testid="compass-portal"] .side-foot button,
 .desk[data-testid="compass-learner"] .side-foot button {
-  color: #F7EEDB;
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] .side a.nav.on,
 .desk[data-testid="compass-learner"] .side a.nav.on {
-  background: #D4A84B;
+  background: var(--hh-accent);
   color: #1A1814;
 }
 .desk[data-testid="compass-portal"] .side .group,
 .desk[data-testid="compass-learner"] .side .group,
 .desk[data-testid="compass-portal"] .side-brand small,
 .desk[data-testid="compass-learner"] .side-brand small {
-  color: #E4D3A4;
+  color: var(--hh-muted);
 }
 .desk[data-testid="compass-portal"] .main-head h1,
 .desk[data-testid="compass-learner"] .main-head h1 {
-  color: #F6EEDC;
+  color: var(--hh-ink);
   font-size: 40px;
   line-height: 1.1;
 }
 .desk[data-testid="compass-portal"] .panel,
 .desk[data-testid="compass-learner"] .panel {
-  background: #163633;
-  border-color: #C4923A;
-  color: #F6EEDC;
+  background: var(--hh-paper);
+  border-color: var(--hh-accent-deep);
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] .panel > header,
 .desk[data-testid="compass-learner"] .panel > header {
-  background: #0F3B3A;
-  color: #F7EEDB;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] .panel > header h2,
 .desk[data-testid="compass-learner"] .panel > header h2,
 .desk[data-testid="compass-portal"] .panel > header .hint,
 .desk[data-testid="compass-learner"] .panel > header .hint {
-  color: #F7EEDB;
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] .btn.gold,
 .desk[data-testid="compass-learner"] .btn.gold {
-  background: #D4A84B;
+  background: var(--hh-accent);
   color: #1A1814;
   border: 0;
   border-radius: 999px;
@@ -321,8 +321,8 @@ button.month-back {
 .desk[data-testid="compass-portal"] .chip,
 .desk[data-testid="compass-learner"] .chip {
   display: inline-block;
-  background: #0F3B3A;
-  color: #F7EEDB;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
   border-radius: 999px;
   padding: 2px 8px;
   font-size: 12px;
@@ -330,23 +330,23 @@ button.month-back {
 }
 .desk[data-testid="compass-portal"] .bell .count,
 .desk[data-testid="compass-learner"] .bell .count {
-  background: #D4A84B;
+  background: var(--hh-accent);
   color: #1A1814;
 }
 .desk[data-testid="compass-portal"] a,
 .desk[data-testid="compass-learner"] a {
-  color: var(--desk-heading, #F6EEDC);
+  color: var(--desk-heading, var(--hh-ink));
 }
 .cohort { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
 .cohort-row { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(80px, 2fr) 32px; gap: 10px; align-items: center; margin: 6px 0; }
 .cohort-row .bar { height: 10px; background: #E7D7B4; border-radius: 999px; overflow: hidden; }
-.cohort-row .bar i { display: block; height: 100%; background: #0F3B3A; }
+.cohort-row .bar i { display: block; height: 100%; background: var(--hh-surface); }
 .mix-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
-.mix-form label { display: grid; gap: 6px; font-weight: 650; color: #F6EEDC; }
-.mix-form input { width: 88px; background: #102E2C; color: #F6EEDC; border: 1px solid #C4923A; border-radius: 8px; padding: 8px; }
+.mix-form label { display: grid; gap: 6px; font-weight: 650; color: var(--hh-ink); }
+.mix-form input { width: 88px; background: var(--hh-paper); color: var(--hh-ink); border: 1px solid var(--hh-accent-deep); border-radius: 8px; padding: 8px; }
 .sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
-.spark-card { background: #163633; border: 1px solid #C4923A; border-radius: 14px; padding: 12px 12px 8px; color: #F6EEDC; }
-.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: #F6EEDC; padding: 0; }
+.spark-card { background: var(--hh-paper); border: 1px solid var(--hh-accent-deep); border-radius: 14px; padding: 12px 12px 8px; color: var(--hh-ink); }
+.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: var(--hh-ink); padding: 0; }
 .spark-card header b { font-size: 16px; }
 .spark-card .latest { font-variant-numeric: tabular-nums; font-weight: 700; }
 .spark-card .latest.up { color: #14564C; }
@@ -355,35 +355,35 @@ button.month-back {
 .spark path { fill: none; stroke-width: 2.4; }
 .spark path.up { stroke: #14564C; }
 .spark path.down { stroke: #8C4A55; }
-.spark path.flat { stroke: #0F3B3A; }
-.spark circle { fill: #D4A84B; stroke: #0F3B3A; }
+.spark path.flat { stroke: var(--hh-surface); }
+.spark circle { fill: var(--hh-accent); stroke: var(--hh-surface); }
 .spark text { fill: #3A4E48; font-size: 11px; font-family: inherit; }
 .spark-zero { stroke: #C4B089; stroke-dasharray: 3 3; }
 .spark-legend { display: flex; gap: 16px; margin: 0; color: #3A4E48; font-size: 13px; }
 .spark-legend i { display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 99px; }
 .spark-legend .up { background: #14564C; }
 .spark-legend .down { background: #8C4A55; }
-.desk .panel > header .spark-legend { margin: 0; color: #F7EEDB; opacity: 1; font-size: 14px; font-weight: 650; white-space: nowrap; }
+.desk .panel > header .spark-legend { margin: 0; color: var(--hh-ink); opacity: 1; font-size: 14px; font-weight: 650; white-space: nowrap; }
 .desk .panel > header .spark-legend .up { background: #9ED4C4; }
 .desk .panel > header .spark-legend .down { background: #E7A8B4; }
 .desk .side .brand-mark {
-  background: #0E2A2B;
-  color: #D4A84B;
-  border: 1.5px solid #D4A84B;
+  background: var(--hh-canvas);
+  color: var(--hh-accent);
+  border: 1.5px solid var(--hh-accent);
   flex: none;
 }
-.desk .side .brand-mark svg { color: #D4A84B; }
+.desk .side .brand-mark svg { color: var(--hh-accent); }
 .desk .side .brand-mark svg path { stroke-width: 2.6; }
 .desk .side .side-logo {
   width: 40px;
   height: 40px;
   border-radius: 50%;
   object-fit: cover;
-  border: 1.5px solid #D4A84B;
-  background: #0E2A2B;
+  border: 1.5px solid var(--hh-accent);
+  background: var(--hh-canvas);
   flex: none;
 }
-.persona-line { margin: 0 0 10px; font-size: 18px; color: #0F3B3A; }
+.persona-line { margin: 0 0 10px; font-size: 18px; color: var(--hh-surface); }
 .persona-chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .desk[data-testid="compass-learner"] .persona-chips .chip,
 .desk[data-testid="compass-portal"] .persona-chips .chip {
@@ -396,8 +396,8 @@ button.month-back {
 }
 .desk[data-testid="compass-learner"] .persona-chips .chip.on,
 .desk[data-testid="compass-portal"] .persona-chips .chip.on {
-  background: #0F3B3A;
-  color: #F7EEDB;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
 }
 .desk[data-testid="compass-portal"] table.data th.num,
 .desk[data-testid="compass-learner"] table.data th.num,
@@ -421,7 +421,7 @@ button.month-back {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.timeline time { color: #0F3B3A; font-weight: 700; margin-right: 8px; }
+.timeline time { color: var(--hh-surface); font-weight: 700; margin-right: 8px; }
 @media (max-width: 800px) {
   .cohort { grid-template-columns: 1fr; }
 }
@@ -432,12 +432,12 @@ button.month-back {
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] {
   position: relative;
   isolation: isolate;
-  background: #0e2a2b;
-  color: #f6eedc;
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
 }
 :is(html, html[data-theme]) .app-stage:has(.app[data-testid="learner-path"]),
 :is(html, html[data-theme]) .app-stage:has(.app[data-testid="recalibrate"]) {
-  background: #0e2a2b;
+  background: var(--hh-canvas);
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .app-scroll,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .app-scroll {
@@ -451,14 +451,14 @@ button.month-back {
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .lead,
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .back,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .back {
-  color: #f6eedc;
+  color: var(--hh-ink);
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .card,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .card,
 :is(html, html[data-theme]) [data-testid="recalibrate-card"] {
-  background: linear-gradient(180deg, #f3e2c0, #e8d4a6);
-  color: #0f3b3a;
-  border: 1px solid rgba(212, 168, 75, 0.75);
+  background: linear-gradient(180deg, var(--hh-paper), var(--hh-surface));
+  color: var(--hh-surface);
+  border: 1px solid rgba(37, 99, 235, 0.75);
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .card p,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .card p,
@@ -470,22 +470,22 @@ button.month-back {
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .choice,
 :is(html, html[data-theme]) [data-testid="recalibrate-card"] h2,
 :is(html, html[data-theme]) [data-testid="recalibrate-card"] p {
-  color: #0f3b3a;
+  color: var(--hh-surface);
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .step-mark {
-  background: #0f3b3a;
-  color: #d4a84b;
+  background: var(--hh-surface);
+  color: var(--hh-accent);
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .chip,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .chip {
-  background: #0f3b3a;
-  color: #f6eedc;
-  border-color: #d4a84b;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-color: var(--hh-accent);
 }
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] textarea,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .field {
   background: #fbf3e0;
-  color: #0f3b3a;
+  color: var(--hh-surface);
   border: 1.5px solid #14564c;
 }
 :is(html, html[data-theme]) .app[data-testid="learner-path"] .pill.gold,
@@ -493,22 +493,22 @@ button.month-back {
 :is(html, html[data-theme]) .app[data-testid="learner-path"] button.pill,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] button.pill,
 :is(html, html[data-theme]) [data-testid="recalibrate-open"] {
-  background: #d4a84b;
-  color: #1a1408;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
 }
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] .month-progress .progress,
 :is(html, html[data-theme]) .app[data-testid="recalibrate"] button.month-back {
-  color: #f6eedc;
+  color: var(--hh-ink);
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"],
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] {
-  background: var(--desk-page, #0E2A2B);
-  color: var(--desk-ink, #F6EEDC);
+  background: var(--desk-page, var(--hh-canvas));
+  color: var(--desk-ink, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .side,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .side {
-  background: var(--desk-sidebar, #0B2223);
-  color: var(--desk-on-dark, #F6EEDC);
+  background: var(--desk-sidebar, var(--hh-surface));
+  color: var(--desk-on-dark, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .main-head h1,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .main-head h1,
@@ -516,18 +516,18 @@ button.month-back {
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .persona-line,
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .mix-form label,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .mix-form label {
-  color: var(--desk-heading, #F6EEDC);
+  color: var(--desk-heading, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel {
-  background: var(--desk-card, #163633);
-  border-color: var(--desk-line, #C4923A);
-  color: var(--desk-ink, #F6EEDC);
+  background: var(--desk-card, var(--hh-paper));
+  border-color: var(--desk-line, var(--hh-accent-deep));
+  color: var(--desk-ink, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header {
-  background: var(--desk-header, #0F3B3A);
-  color: var(--desk-on-dark, #F6EEDC);
+  background: var(--desk-header, var(--hh-surface));
+  color: var(--desk-on-dark, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header h2,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header h2,
@@ -535,14 +535,14 @@ button.month-back {
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .hint,
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .spark-legend,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .spark-legend {
-  color: var(--desk-on-dark, #F6EEDC);
+  color: var(--desk-on-dark, var(--hh-ink));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .spark-card,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .spark-card {
-  background: var(--desk-field, #102E2C);
-  border-color: var(--desk-line, #C4923A);
+  background: var(--desk-field, var(--hh-paper));
+  border-color: var(--desk-line, var(--hh-accent-deep));
 }
 :is(html, html[data-theme]) .desk[data-testid="compass-portal"] .cohort-row .bar,
 :is(html, html[data-theme]) .desk[data-testid="compass-learner"] .cohort-row .bar {
-  background: var(--desk-page, #0E2A2B);
+  background: var(--desk-page, var(--hh-canvas));
 }

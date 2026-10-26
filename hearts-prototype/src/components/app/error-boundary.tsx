@@ -20,7 +20,7 @@ export class JourneyErrorBoundary extends Component<Props, State> {
     if (!this.state.failed) return this.props.children
     if (this.props.fallback) return this.props.fallback
     return (
-      <section className="j-screen" data-testid="clip-error" style={{ padding: '72px 24px 24px', color: '#f6eedc' }}>
+      <section className="j-screen" data-testid="clip-error" style={{ padding: '72px 24px 24px', color: 'var(--hh-ink)' }}>
         <h1 className="j-caption small">Something went wrong with this clip.</h1>
         <p className="j-sub">You can skip it, or go back to Home. Nothing else is lost.</p>
         <div className="j-actions">

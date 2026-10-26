@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { CSSProperties, ReactNode } from 'react'
 import { AppleSearch } from '@/components/app/apple-search'
+import { MODERN_ACCENT } from '@/lib/portal-look'
 import { InsightTracker } from '@/components/app/insight-tracker'
 import { PageHelp } from '@/components/app/page-help'
 import { RouteFade } from '@/components/app/route-fade'
@@ -31,12 +32,12 @@ export function AppFrame({ children, dark = false, evening = false, testId, tone
   const night = Boolean(evening) && !modern
   const paint = Boolean(brand) && !(brand?.shell === 'hearts' && !brand?.name)
   const branded = {
-    ...(paint && brand ? { '--portal-colour': brand.colour, '--portal-accent': brand.accent } : {}),
+    ...(paint && brand ? { '--portal-colour': MODERN_ACCENT, '--portal-accent': MODERN_ACCENT } : {}),
     ...(brand?.sceneCss ? { '--scene': brand.sceneCss } : {}),
   } as CSSProperties
   const showWord = Boolean(brand?.name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (
-    <div className={`app-stage${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern ? ' shell-modern' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'system' : undefined} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
+    <div className={`app-stage shell-modern${night ? ' evening' : ''}${gather ? ' gather-stage' : ''}${modern && brand?.scene ? ' has-scene' : ''}`} data-portal-brand={brand?.name ? 'yes' : undefined} data-font={modern ? brand?.font || 'system' : 'system'} data-shell={modern ? 'modern' : undefined} style={Object.keys(branded).length ? branded : undefined}>
       <main className={`app${dark ? ' dark' : ''}${night ? ' evening' : ''}${gather ? ' gather-shell' : ''}`} data-testid={testId}>
         {modern ? (
           <header className="glass-bar">

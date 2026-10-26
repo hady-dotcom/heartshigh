@@ -129,7 +129,7 @@ export async function CalendarPages({ ctx, master }: { ctx?: Ctx | null; master?
                 data-muharram={context.muharram ? 'yes' : 'no'}
                 data-hijri={context.hijriLabel}
               >
-                <p className={styles.quiet} style={{ color: 'var(--desk-gold, #D4A84B)', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11 }}>Feed</p>
+                <p className={styles.quiet} style={{ color: 'var(--desk-gold, var(--hh-accent))', letterSpacing: '0.14em', textTransform: 'uppercase', fontSize: 11 }}>Feed</p>
                 <p className={styles.phoneTitle}>{context.greeting || 'Your garden starts today'}</p>
                 <p className={styles.phoneWhen}>{ukDate(previewDay)} · {String(hour).padStart(2, '0')}:{String(minute).padStart(2, '0')}</p>
                 <p>{context.lastTenNights ? 'The last ten nights. A few quiet minutes, if you have them.' : context.ramadan ? 'A quieter evening in Ramadan. A short clip is waiting when you are ready.' : eid ? 'Eid mubarak. A short clip, if you would like one.' : context.dhulHijjah ? 'The first ten days. A short clip is waiting.' : context.muharram ? 'A new Hijri year. A short clip to begin.' : context.friday ? 'A Friday reminder, before Jumu\'ah, if you have a moment.' : 'Short clips from real talks, when you have a little time.'}</p>

@@ -1,0 +1,22 @@
+/* Payload data console. White canvas, blue actions. Layout stays Payload's own. */
+html,
+html[data-theme='light'],
+html[data-theme='dark'] {
+  --theme-bg: #f2f2f7;
+  --theme-text: #111827;
+  --theme-input-bg: #ffffff;
+  --theme-overlay: rgba(17, 24, 39, 0.4);
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f2f2f7;
+  --theme-elevation-100: #f3f4f6;
+  --theme-elevation-150: #e5e7eb;
+  --theme-elevation-200: #e5e7eb;
+  --theme-elevation-800: #111827;
+  --theme-elevation-1000: #111827;
+  --color-success-400: #3b82f6;
+  --color-success-500: #2563eb;
+  --color-success-600: #1d4ed8;
+  color-scheme: light;
+  background: #f2f2f7;
+  color: #111827;
+}

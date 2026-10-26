@@ -42,7 +42,7 @@
   margin: 8px 0 0;
   font-size: 15px;
   line-height: 1.4;
-  color: #f6eedc;
+  color: var(--hh-ink);
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
 }
 .gold-mark {
@@ -195,7 +195,7 @@
   margin: 0;
   padding: 2px 6px;
   border-radius: 999px;
-  background: rgba(14, 42, 43, 0.88);
+  background: rgba(255, 255, 255, 0.88);
   color: #f6e7c3;
   font-family: var(--sans);
   font-size: 9px;
@@ -216,7 +216,7 @@
   overflow: auto;
   padding: calc(64px + var(--safe-top)) 18px 28px;
   background: rgba(8, 22, 24, 0.94);
-  color: #f6eedc;
+  color: var(--hh-ink);
 }
 .tree-sheet h2, .tree-sheet h3 { margin: 0; color: #f6e7c3; }
 .tree-sheet h2 { font-family: var(--serif); font-size: 28px; font-weight: 600; }
@@ -237,10 +237,10 @@
 .tree-doors li { margin: 0 0 6px; font-size: 14px; line-height: 1.35; }
 .tree-lane { margin: 0 0 16px; }
 .tree-lane-count { margin: 4px 0 6px; font-size: 13px; }
-.tree-lane .bar { height: 6px; border-radius: 999px; background: rgba(212, 168, 75, 0.22); overflow: hidden; }
-.tree-lane .bar > i { display: block; height: 100%; background: #d4a84b; }
-.tree-lane .example-in-use { color: #f6eedc; }
-.tree-lane .example-sample h3, .tree-lane .example-body, .tree-lane .example-note { color: #f6eedc; }
+.tree-lane .bar { height: 6px; border-radius: 999px; background: rgba(37, 99, 235, 0.22); overflow: hidden; }
+.tree-lane .bar > i { display: block; height: 100%; background: var(--hh-accent); }
+.tree-lane .example-in-use { color: var(--hh-ink); }
+.tree-lane .example-sample h3, .tree-lane .example-body, .tree-lane .example-note { color: var(--hh-ink); }
 
 .garden-fruits { list-style: none; margin: 0; padding: 0; position: absolute; inset: 0; }
 .medallion {
@@ -269,12 +269,12 @@
 }
 
 .garden-card {
-  background: #0E2A2B;
-  color: #e6efe8;
-  border: 1px solid #D4A84B;
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  border: 1px solid var(--hh-accent);
 }
-.garden-card .eyebrow { color: #D4A84B; }
-.garden-card h3, .garden-card small, .garden-card .garden-link { color: #e6efe8; }
-.garden-card h3 { color: #D4A84B; }
-.garden-card .bar { background: rgba(212, 168, 75, 0.22); }
-.garden-card .bar > i { background: #D4A84B; }
+.garden-card .eyebrow { color: var(--hh-accent); }
+.garden-card h3, .garden-card small, .garden-card .garden-link { color: var(--hh-ink); }
+.garden-card h3 { color: var(--hh-accent); }
+.garden-card .bar { background: rgba(37, 99, 235, 0.22); }
+.garden-card .bar > i { background: var(--hh-accent); }

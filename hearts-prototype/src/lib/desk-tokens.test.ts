@@ -3,16 +3,16 @@ import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { contrastRatio, deskTokens } from './desk-tokens'
 
-test('desk tokens are the evening-garden teal, gold and cream values', () => {
-  assert.equal(deskTokens.page, '#0E2A2B')
-  assert.equal(deskTokens.card, '#163633')
-  assert.equal(deskTokens.ink, '#F6EEDC')
-  assert.equal(deskTokens.heading, '#F6EEDC')
-  assert.equal(deskTokens.gold, '#D4A84B')
-  assert.equal(deskTokens.muted, '#E4D3A4')
-  assert.equal(deskTokens.line, '#C4923A')
-  assert.equal(deskTokens.field, '#102E2C')
-  assert.notEqual(deskTokens.page.toLowerCase(), '#efe3c8')
+test('desk tokens are the white canvas and blue accent', () => {
+  assert.equal(deskTokens.page, '#F2F2F7')
+  assert.equal(deskTokens.card, '#FFFFFF')
+  assert.equal(deskTokens.ink, '#111827')
+  assert.equal(deskTokens.heading, '#111827')
+  assert.equal(deskTokens.gold, '#2563EB')
+  assert.equal(deskTokens.muted, '#4B5563')
+  assert.equal(deskTokens.line, '#E5E7EB')
+  assert.equal(deskTokens.field, '#F3F4F6')
+  assert.notEqual(deskTokens.page.toLowerCase(), '#0e2a2b')
   const css = readFileSync(new URL('../app/(frontend)/theme.css', import.meta.url), 'utf8')
   const desk = readFileSync(new URL('../app/(frontend)/desk.css', import.meta.url), 'utf8')
   for (const value of Object.values(deskTokens)) assert.match(css, new RegExp(value))
@@ -21,7 +21,7 @@ test('desk tokens are the evening-garden teal, gold and cream values', () => {
   assert.match(desk, /--gold:\s*var\(--desk-gold/)
 })
 
-test('desk type on teal panels meets 4.5:1', () => {
+test('desk type on white panels meets 4.5:1', () => {
   assert.ok(contrastRatio(deskTokens.ink, deskTokens.page) >= 4.5)
   assert.ok(contrastRatio(deskTokens.ink, deskTokens.card) >= 4.5)
   assert.ok(contrastRatio(deskTokens.heading, deskTokens.page) >= 4.5)

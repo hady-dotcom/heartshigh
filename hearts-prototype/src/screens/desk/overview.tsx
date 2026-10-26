@@ -262,7 +262,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
             {field('Logo', 'logoUrl', { placeholder: '/icons/hady-home.svg or https://', 'data-testid': 'logo-url' })}
             {field('Linked calendar', 'calendarUrl', { placeholder: 'https://' })}
             {field('Notification emails', 'notificationEmails')}
-            <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#1f1d36'} data-testid="portal-colour" /></label>
+            <label className="row"><span>Colour</span><input type="text" name="colour" defaultValue={portal.colour || '#2563EB'} data-testid="portal-colour" /></label>
             <label className="row"><span>Accent</span><input type="text" name="accent" defaultValue={str(portal.accent)} data-testid="accent-colour" placeholder="#2563EB" /></label>
             <label className="row"><span>Look</span>
               <select name="shell" defaultValue={shellOf(portal)} data-testid="shell-look">
@@ -310,7 +310,7 @@ export async function PortalSettingsScreen(ctx: Ctx) {
           <div className="body" style={{ display: 'grid', gap: 10 }}>
             <p className="hint">Paste this where you would like a button that opens the portal.</p>
             <p className="hint" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>Embed <HelpTip topic="embed">{TOOL.embed}</HelpTip></p>
-            <pre className="address" data-testid="embed" style={{ whiteSpace: 'pre-wrap' }}>{`<a href="${ctx.origin}${base}" style="background:${portal.colour || '#1f1d36'};color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none">${portalName(portal)}</a>`}</pre>
+            <pre className="address" data-testid="embed" style={{ whiteSpace: 'pre-wrap' }}>{`<a href="${ctx.origin}${base}" style="background:${portal.colour || '#2563EB'};color:#fff;padding:12px 20px;border-radius:999px;text-decoration:none">${portalName(portal)}</a>`}</pre>
             <Link className="btn ghost" href={`${base}/admin/wizard`}>Run the short setup again</Link>
           </div>
         </section>
