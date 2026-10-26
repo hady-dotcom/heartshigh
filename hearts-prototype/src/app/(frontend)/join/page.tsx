@@ -7,7 +7,8 @@ import { BrandLockup } from '@/components/brand'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { portalLogo } from '@/lib/learner-brand'
-import { brandForNext, nextQuery, safeNext } from '@/lib/door-brand'
+import { cookies } from 'next/headers'
+import { brandForDoor, nextQuery, safeNext } from '@/lib/door-brand'
 import { portalDisplayName } from '@/lib/portal-name'
 import { firstNameOf, inviteLine } from '@/lib/invite'
 
@@ -53,10 +54,12 @@ function brandIcons(name: string, logo: string): Metadata {
   }
 }
 
-export async function generateMetadata({ searchParams }: { searchParams: Promise<{ code?: string; from?: string; invitedBy?: string }> }): Promise<Metadata> {
+export async function generateMetadata({ searchParams }: { searchParams: Promise<{ code?: string; from?: string; invitedBy?: string; next?: string }> }): Promise<Metadata> {
   const query = await searchParams
   const invite = await inviteFor(query.code || '')
   if (invite.brand) return brandIcons(invite.brand, invite.logo)
+  const door = await brandForDoor(safeNext(query.next), (await cookies()).get('hh_door')?.value)
+  if (door.name) return brandIcons(door.name, door.logo)
   return {
     title: `${invite.line} to HEARTS`,
     description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
@@ -72,10 +75,12 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
   const query = await searchParams
   const code = query.code || ''
   const invite = await inviteFor(code)
-  const fromNext = invite.brand ? null : await brandForNext(safeNext(query.next))
-  const brandName = invite.brand || fromNext?.name || ''
+  const next = safeNext(query.next)
+  const door = invite.brand ? null : await brandForDoor(next, (await cookies()).get('hh_door')?.value)
+  const brandName = invite.brand || door?.name || ''
+  const dest = next !== '/' ? next : (door?.home || '/')
   const invited = invite.line
-  const back = `/login${nextQuery(safeNext(query.next))}`
+  const back = `/login${nextQuery(dest)}`
   return (
     <main className="door apple-door" data-testid="join">
       <PageHelp page="join" />
@@ -86,7 +91,7 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
         <p className="lede">{code ? 'Your code is already filled in. Add your name, email and a password to join.' : 'Type the access code you were given, then your name, email and a password.'}</p>
         <Flash error={query.error} />
         <form className="door-form" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after }} />
+          <Hidden fields={{ action: 'join', gatherGuest: query.gatherGuest, after: query.after, next: dest }} />
           <label>Access code<input className="field" data-testid="join-code" name="code" defaultValue={code} autoCapitalize="characters" placeholder="The code you were given" required /></label>
           <label>Your name<input className="field" data-testid="join-name" name="name" defaultValue={query.name || ''} autoComplete="name" placeholder="Your name" required /></label>
           <label>Email<input className="field" data-testid="join-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required /></label>

@@ -39,6 +39,10 @@ export function middleware(request: NextRequest) {
   const headers = new Headers(request.headers)
   headers.set('x-hearts-path', `${pathname}${search}`)
   const response = NextResponse.next({ request: { headers } })
+  const door = pathname.match(/^\/p\/([a-z0-9-]{1,80})(?:\/|$)/i)
+  if (door) {
+    response.cookies.set('hh_door', door[1], { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30, secure: process.env.NODE_ENV === 'production' })
+  }
   if (!request.cookies.get('hearts_device')) {
     const id = `d${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`.slice(0, 24)
     response.cookies.set('hearts_device', id, { path: '/', httpOnly: true, sameSite: 'lax', maxAge: 60 * 60 * 24 * 400, secure: process.env.NODE_ENV === 'production' })

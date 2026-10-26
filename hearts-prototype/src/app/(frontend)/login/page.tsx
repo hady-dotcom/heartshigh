@@ -4,8 +4,9 @@ import { Flash, Hidden } from '@/components/app/shell'
 import { PageHelp } from '@/components/app/page-help'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { cookies } from 'next/headers'
 import { isDemoStageLogin } from '@/lib/demo-stage-gate'
-import { brandForNext, nextQuery, safeNext } from '@/lib/door-brand'
+import { brandForDoor, nextQuery, safeNext } from '@/lib/door-brand'
 import { DemoStageLogin } from '../demo-stage/entry'
 
 function brandIcons(name: string, logo: string): Metadata {
@@ -30,7 +31,7 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
       description: 'Master login for the demo. It returns you to the Demo stage.',
     }
   }
-  const brand = await brandForNext(safeNext(query.next))
+  const brand = await brandForDoor(safeNext(query.next), (await cookies()).get('hh_door')?.value)
   if (brand.name) return brandIcons(brand.name, brand.logo)
   return {
     title: 'HEARTS',
@@ -42,7 +43,9 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const query = await searchParams
   if (isDemoStageLogin(query.next, query.demo)) return <DemoStageLogin error={query.error} notice={query.notice} />
   const next = safeNext(query.next)
-  const brand = await brandForNext(next)
+  const door = await brandForDoor(next, (await cookies()).get('hh_door')?.value)
+  const dest = next !== '/' ? next : (door.home || '/')
+  const brand = door
   return (
     <main className="door apple-door" data-testid="login">
       <PageHelp page="login" />
@@ -52,13 +55,13 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
         <p className="lede">Sign in and we will take you to where you left off.</p>
         <Flash error={query.error} notice={query.notice} />
         <form className="door-form" action="/api/hearts" method="post">
-          <Hidden fields={{ action: 'login', next }} />
+          <Hidden fields={{ action: 'login', next: dest }} />
           <label>Email<input className="field" data-testid="login-email" name="email" type="email" autoComplete="username" placeholder="you@example.com" required /></label>
           <label>Password<input className="field" data-testid="login-password" name="password" type="password" autoComplete="current-password" placeholder="Your password" required /></label>
           <TurnstileField />
           <button className="pill gold block" data-testid="login-submit" type="submit">Sign in</button>
         </form>
-        <div className="door-links"><Link href={`/forgot${nextQuery(next)}`}>Forgot password</Link><Link href={`/join${nextQuery(next)}`}>I have an access code</Link><Link href={next === '/' ? '/' : next}>Back</Link></div>
+        <div className="door-links"><Link href={`/forgot${nextQuery(dest)}`}>Forgot password</Link><Link href={`/join${nextQuery(dest)}`}>I have an access code</Link><Link href={dest === '/' ? '/' : dest}>Back</Link></div>
       </div>
     </main>
   )
