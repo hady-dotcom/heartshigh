@@ -6,7 +6,7 @@ import { BrandLockup } from '@/components/brand'
 export default async function Forgot({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
   const query = await searchParams
   return (
-    <main className="door garden-door" data-testid="forgot">
+    <main className="door apple-door" data-testid="forgot">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Reset your password</h1>

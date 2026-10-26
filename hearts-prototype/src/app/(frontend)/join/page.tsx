@@ -73,10 +73,10 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
   const invite = await inviteFor(code)
   const invited = invite.line
   return (
-    <main className={invite.brand ? 'door hady-door' : 'door garden-door'} data-testid="join">
+    <main className="door apple-door" data-testid="join">
       <PageHelp page="join" />
       <div className="door-card">
-        {invite.brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{invite.brand}</p> : <BrandLockup size={72} />}
+        {invite.brand ? <p className="brand-word" data-testid="portal-brand">{invite.brand}</p> : <BrandLockup size={72} />}
         <h1>Come in</h1>
         <p className="lede" data-testid="join-pitch">{invited}.</p>
         <p className="lede">{code ? 'Your code is already filled in. Add your name, email and a password to join.' : 'Type the access code you were given, then your name, email and a password.'}</p>

@@ -80,6 +80,8 @@ export async function seedFeedbackDemo(payload: Payload, opts: { startersOnly?: 
           consent: true,
           portal: input.portal,
           teacherReply: input.body === SHARED ? REPLY : '',
+          createdAt: day(input.ago),
+          updatedAt: day(input.ago),
         } as never,
       })
     }

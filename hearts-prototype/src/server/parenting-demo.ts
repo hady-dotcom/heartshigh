@@ -112,7 +112,7 @@ export async function saveDemoRoom(payload: Payload, room: DemoRoom) {
  * A join code that always opens the Parenting course.
  * It does not create a person. Safe to run on a live boot.
  */
-export async function ensureParentingDemoCode(payload: Payload, portalId: number, courseId: number, packId: number) {
+export async function ensureParentingDemoCode(payload: Payload, portalId: number, courseId: number | number[], packId: number) {
   const found = await payload.find({
     collection: 'access-codes',
     overrideAccess: true,
@@ -120,13 +120,14 @@ export async function ensureParentingDemoCode(payload: Payload, portalId: number
     limit: 1,
     where: { code: { equals: PARENTING_DEMO_CODE } },
   })
+  const courseIds = (Array.isArray(courseId) ? courseId : [courseId]).filter((id) => Number.isFinite(id) && id > 0)
   const data = {
     code: PARENTING_DEMO_CODE,
     label: 'Parenting demo',
     role: 'learner' as const,
     portal: portalId,
     packs: [packId],
-    courses: [courseId],
+    courses: courseIds,
     disabled: false,
     maxUses: null,
     expiresAt: null,

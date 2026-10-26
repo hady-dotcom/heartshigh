@@ -92,6 +92,7 @@ export type FeedItem = {
 export type CourseCard = {
   id: number
   title: string
+  sheetTitle: string
   summary: string
   speaker: string
   speakerSlug: string
@@ -191,8 +192,8 @@ export async function lessonsFor(payload: Payload, courseIds: number[]) {
   return (found.docs as unknown as Row[]).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
 }
 
-export async function courseCards(payload: Payload, user: SessionUser): Promise<CourseCard[]> {
-  const courseIds = await visibleCourseIds(payload, user)
+export async function courseCards(payload: Payload, user: SessionUser, portalId?: number | null): Promise<CourseCard[]> {
+  const courseIds = await visibleCourseIds(payload, user, portalId)
   if (!courseIds.length) return []
   const courses = (await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: courseIds } } })).docs as unknown as Row[]
   const lessons = await lessonsFor(payload, courseIds)
@@ -247,6 +248,7 @@ export async function courseCards(payload: Payload, user: SessionUser): Promise<
     return {
       id: course.id,
       title: tidyTalkTitle(String(course.title || '')),
+      sheetTitle: String((course as { sheetTitle?: string | null }).sheetTitle || ''),
       summary: String(course.summary || ''),
       speaker,
       speakerSlug: slugify(speaker),

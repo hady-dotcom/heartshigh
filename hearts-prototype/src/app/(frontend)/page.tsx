@@ -22,7 +22,7 @@ export default async function Door({ searchParams }: { searchParams: Promise<{ e
   // A signed-in visit to the door goes home. An error, notice, or “sign in as someone else” stays here so it can be read.
   if (user && home !== '/login' && !query.error && !query.notice && !otherAccount) redirect(home)
   return (
-    <main className="door garden-door" data-testid="door">
+    <main className="door apple-door" data-testid="door">
       <PageHelp page="door" />
       <div className="door-card">
         <BrandLockup size={88} />

@@ -177,7 +177,7 @@ export function Rings({ g, base, portal, own = false }: { g: Growth; base: strin
 }
 
 /** The lessons of the course the learner is in now, as one path with the active lesson marked. */
-export async function coursePath(payload: Payload, user: SessionUser, base: string, g: Growth, courseId?: number | null) {
+export async function coursePath(payload: Payload, user: SessionUser, base: string, g: Growth, courseId?: number | null, portalId?: number | null) {
   let id = courseId || null
   if (!id) {
     const counts = new Map<number, number>()
@@ -194,7 +194,7 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
     const lesson = visits[0] ? g.lessons.find((row) => row.id === ref(visits[0].lesson)) : null
     id = lesson ? ref(lesson.course) : null
   }
-  if (!id) id = (await visibleCourseIds(payload, user))[0] || null
+  if (!id) id = (await visibleCourseIds(payload, user, portalId))[0] || null
   if (!id) return null
   const course = (await rows(payload, 'courses', { id: { equals: id } }))[0]
   const lessons = (await rows(payload, 'lessons', { course: { equals: id } }, { sort: 'order', limit: 60 })).filter((lesson) => learnerLessonVisible(asLessonVisibility(lesson)))
@@ -217,8 +217,8 @@ export async function coursePath(payload: Payload, user: SessionUser, base: stri
 }
 
 /** Trees for the garden screen. Lessons are placed by a cut's best clause, then by a confirmed tag. */
-async function areaViews(payload: Payload, user: SessionUser, base: string, g: Growth): Promise<AreaView[]> {
-  const courseIds = await visibleCourseIds(payload, user)
+async function areaViews(payload: Payload, user: SessionUser, base: string, g: Growth, portalId?: number | null): Promise<AreaView[]> {
+  const courseIds = await visibleCourseIds(payload, user, portalId)
   const empty = areaGrowth({
     lessons: [],
     completions: [],
@@ -274,7 +274,7 @@ async function areaViews(payload: Payload, user: SessionUser, base: string, g: G
 
 export async function GardenScreen({ payload, user, portal, base, query }: Ctx) {
   const [g, unread, own] = await Promise.all([growth(payload, user), unreadCount(payload, user), portalOwnsLibrary(payload, portal.id)])
-  const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g), coursePath(payload, user, base, g), own ? Promise.resolve([]) : gardenBranches(base)])
+  const [areas, path, branches] = await Promise.all([areaViews(payload, user, base, g, portal.id), coursePath(payload, user, base, g, null, portal.id), own ? Promise.resolve([]) : gardenBranches(base)])
   const starting = doorOfClause(Number(user.startingClause || 0), g.doors)
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
@@ -434,7 +434,7 @@ export async function GardenDoor({ payload, user, portal, base, query }: Ctx, to
   const seats = seatsOf(g, door)
   const read = new Set(g.seatVisits.map((visit) => ref(visit.seat)))
   const cuts = await rows(payload, 'cuts', { and: [{ bestClause: { in: door.clauses } }, { status: { equals: 'approved' } }] }, { limit: 40 })
-  const visible = new Set(await visibleCourseIds(payload, user))
+  const visible = new Set(await visibleCourseIds(payload, user, portal.id))
   const lessonIds = [...new Set(cuts.map((cut) => ref(cut.lesson)).filter((id): id is number => Boolean(id)))]
   const lessons = lessonIds.length ? (await rows(payload, 'lessons', { id: { in: lessonIds } })).filter((lesson) => visible.has(ref(lesson.course) || 0)) : []
   const shownIds = lessons.map((lesson) => lesson.id)

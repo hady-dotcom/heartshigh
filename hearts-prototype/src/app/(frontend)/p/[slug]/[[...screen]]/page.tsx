@@ -19,7 +19,7 @@ import { LaneScreen } from '@/screens/app/lane'
 import { CourseScreen, SpeakerScreen } from '@/screens/app/course'
 import { GardenDoor, GardenGeneral, GardenGhunya, GardenJibril, GardenScreen, GardenWorkbook, GardenWorkbookEntry } from '@/screens/app/garden'
 import { CourseHomeScreen } from '@/screens/app/course-home'
-import { GuestCourseScreen, GuestCoursesScreen } from '@/screens/app/guest-courses'
+import { GuestCourseScreen, GuestCoursesScreen, GuestMeScreen, GuestWeekScreen } from '@/screens/app/guest-courses'
 import { GardenHarvest } from '@/screens/app/harvest'
 import { CircleScreen, MeScreen, PlanScreen, SavedScreen, SettingsScreen } from '@/screens/app/me'
 import { WeekScreen } from '@/screens/app/week'
@@ -133,7 +133,7 @@ export default async function PortalScreen({ params, searchParams }: { params: P
     }
   }
 
-  if (area === 'courses' || area === 'course' || area === 'garden') {
+  if (area === 'courses' || area === 'course' || area === 'garden' || area === 'week' || area === 'me') {
     const guest = await getSession()
     if (!guest.user) {
       const portal = await loadPortal(guest.payload, slug)
@@ -143,10 +143,14 @@ export default async function PortalScreen({ params, searchParams }: { params: P
           if (a) notFound()
           return GuestCoursesScreen({ payload: guest.payload, portal, base })
         }
-        if (!a || !Number(a)) notFound()
-        const screen = await GuestCourseScreen({ payload: guest.payload, portal, base, courseId: Number(a), part: query.part })
-        if (!screen) notFound()
-        return screen
+        if (area === 'course') {
+          if (!a || !Number(a)) notFound()
+          const screen = await GuestCourseScreen({ payload: guest.payload, portal, base, courseId: Number(a), part: query.part, at: query.t, clip: query.clip })
+          if (!screen) notFound()
+          return screen
+        }
+        if (area === 'week' && !a) return GuestWeekScreen({ portal, base })
+        if (area === 'me' && !a) return GuestMeScreen({ portal, base })
       }
     }
   }

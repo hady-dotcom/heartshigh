@@ -65,10 +65,10 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
   const next = safeNext(query.next)
   const brand = await brandForNext(next)
   return (
-    <main className={brand.name ? 'door hady-door' : 'door garden-door'} data-testid="login">
+    <main className="door apple-door" data-testid="login">
       <PageHelp page="login" />
       <div className="door-card">
-        {brand.name ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand.name}</p> : <BrandLockup size={72} />}
+        {brand.name ? <p className="brand-word" data-testid="portal-brand">{brand.name}</p> : <BrandLockup size={72} />}
         <h1>Welcome back</h1>
         <p className="lede">Sign in and we will take you to where you left off.</p>
         <Flash error={query.error} notice={query.notice} />

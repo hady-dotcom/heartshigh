@@ -9,7 +9,7 @@ export default async function ChangePassword({ searchParams }: { searchParams: P
   const query = await searchParams
   const next = query.next && query.next.startsWith('/') && !query.next.startsWith('//') ? query.next : '/'
   return (
-    <main className="door garden-door" data-testid="change-password">
+    <main className="door apple-door" data-testid="change-password">
       <div className="door-card">
         <BrandLockup size={72} />
         <h1>Choose a new password</h1>

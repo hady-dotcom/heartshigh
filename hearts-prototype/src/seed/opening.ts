@@ -514,7 +514,8 @@ export async function seedPeople(payload: Payload, opts: { portalIds: Map<string
           overrideAccess: true,
           data: { point: point.id, user: maryam.id, lesson: nur!.id, body: choice ? '' : body, choice: choice ? body : '', portal: elm, shareWithTeacher: true, answeredAt: new Date(opts.now.getTime() - 86_400_000).toISOString(), atSecond: point.second } as never,
         })) as unknown as Doc
-        await payload.create({ collection: 'workbook-entries', overrideAccess: true, data: { user: maryam.id, answer: answer.id, lesson: nur!.id, course: idOf(nur!.course), body, consent: true, portal: elm } as never })
+        const at = new Date(opts.now.getTime() - 86_400_000).toISOString()
+        await payload.create({ collection: 'workbook-entries', overrideAccess: true, data: { user: maryam.id, answer: answer.id, lesson: nur!.id, course: idOf(nur!.course), body, consent: true, portal: elm, createdAt: at, updatedAt: at } as never })
       }
     }
   }

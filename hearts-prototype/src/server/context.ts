@@ -4,6 +4,7 @@ import { cache } from 'react'
 import { getPayload, type Payload } from 'payload'
 import config from '@payload-config'
 import { idOf, portalIdOf } from '@/lib/ids'
+import { courseOnPortal } from '@/lib/portal-courses'
 import { forcedPasswordDestination } from '@/lib/password-gate'
 import { openedCourseIdsForCode } from './code-courses'
 import { presentPortal } from '@/lib/portal-public'
@@ -138,14 +139,17 @@ export async function getSession(options: { touch?: boolean } = {}): Promise<Ses
   return options.touch === false ? readSession(false) : touchedSession()
 }
 
-export async function visibleCourseIds(payload: Payload, user: SessionUser): Promise<number[]> {
-  if (user.role === 'master') {
+export async function visibleCourseIds(payload: Payload, user: SessionUser, portalId?: number | null): Promise<number[]> {
+  const viewing = typeof portalId === 'number' && portalId > 0 ? portalId : null
+  // The master desk, with no portal in front of it, still lists every course. A portal's learner app does not.
+  if (user.role === 'master' && !viewing) {
     const all = await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 500 })
     return all.docs.map((doc) => doc.id)
   }
-  const portal = portalIdOf(user)
+  const portal = viewing || portalIdOf(user)
   if (!portal) return []
-  if (user.role === 'portal-admin' || user.role === 'teacher') {
+  const adopted = new Set(await adoptedCourseIds(payload, portal))
+  if (user.role === 'master' || user.role === 'portal-admin' || user.role === 'teacher') {
     const local = await payload.find({
       collection: 'courses',
       overrideAccess: true,
@@ -153,11 +157,16 @@ export async function visibleCourseIds(payload: Payload, user: SessionUser): Pro
       limit: 200,
       where: { portal: { equals: portal } },
     })
-    const adopted = await adoptedCourseIds(payload, portal)
-    return [...new Set([...local.docs.map((doc) => doc.id), ...adopted])]
+    const ids = new Set(local.docs.map((doc) => doc.id))
+    const extra = [...adopted].filter((id) => !ids.has(id))
+    const more = extra.length
+      ? await payload.find({ collection: 'courses', overrideAccess: true, depth: 0, limit: 200, where: { id: { in: extra } } })
+      : { docs: [] as { id: number; origin?: string | null; portal?: unknown }[] }
+    return [...local.docs, ...more.docs]
+      .filter((course) => courseOnPortal(course as { id: number; origin?: string | null; portal?: unknown }, portal, adopted))
+      .map((course) => course.id)
   }
   const granted = await learnerCourseIds(payload, user)
-  const adopted = new Set(await adoptedCourseIds(payload, portal))
   const courses = granted.length
     ? await payload.find({
         collection: 'courses',
@@ -169,11 +178,10 @@ export async function visibleCourseIds(payload: Payload, user: SessionUser): Pro
     : { docs: [] }
   return courses.docs
     .filter((course) => {
-      const doc = course as { id: number; origin?: string; portal?: unknown; visibility?: string; hidden?: boolean | null }
+      const doc = course as { id: number; origin?: string | null; portal?: unknown; visibility?: string; hidden?: boolean | null }
       if (doc.hidden) return false
       if (doc.visibility === 'draft') return false
-      if (doc.origin === 'local') return idOf(doc.portal) === portal
-      return adopted.has(doc.id)
+      return courseOnPortal(doc, portal, adopted)
     })
     .map((course) => course.id)
 }

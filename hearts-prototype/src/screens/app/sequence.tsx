@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { AppFrame, Flash, Hidden } from '@/components/app/shell'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { PrefToggle } from '@/components/app/me-controls'
-import { brandColours, lockMessage, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
+import { brandColours, lockMessage, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { DemoFrameTools } from '@/components/demo/frame-tools'
 import { sortParts } from '@/lib/part-order'
@@ -17,14 +17,10 @@ function comingFilm(lesson: Row) {
 }
 
 function groupsOf(lessons: Row[], units: Map<number, string>) {
-  const groups: { title: string; rows: { lesson: Row; index: number }[] }[] = []
-  lessons.forEach((lesson, index) => {
-    const title = units.get(ref(lesson.unit) || 0) || 'Films'
-    const last = groups[groups.length - 1]
-    if (!last || last.title !== title) groups.push({ title, rows: [] })
-    groups[groups.length - 1].rows.push({ lesson, index })
-  })
-  return groups
+  return sectionGroups(lessons, (lesson) => units.get(ref(lesson.unit) || 0) || 'Films').map((group) => ({
+    title: group.title,
+    rows: group.rows.map((row) => ({ lesson: row.item, index: row.index })),
+  }))
 }
 
 async function filmsFor(payload: Payload, portalId: number) {

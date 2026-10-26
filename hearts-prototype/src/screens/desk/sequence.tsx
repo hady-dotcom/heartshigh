@@ -7,6 +7,7 @@ import { FEATURE_KEYS, featuresOf } from '@/lib/features'
 import { readSaidAnswers } from '@/lib/said-answers'
 import { PARENTING_DEMO_CODE, learnerAnswers, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
 import { SEQUENCE_COPY, kineticMomentsOn } from '@/lib/sequence'
+import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers'
 import { portalWithDemoFeatures } from '@/server/parenting-demo'
 import { KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY } from '@/lib/sequence-features'
 import { sortParts } from '@/lib/part-order'
@@ -175,6 +176,21 @@ export async function SequenceCodes(ctx: Ctx) {
   )
 }
 
+async function SharedWithTeacher({ payload, portalId }: { payload: Ctx['payload']; portalId: number }) {
+  const answers = await rows(payload, 'answers', { and: [{ portal: { equals: portalId } }, { shareWithTeacher: { equals: true } }, { keepPrivate: { not_equals: true } }] }, { depth: 1, sort: '-createdAt', limit: 40 })
+  const shared = sharedAnswersNewestFirst(answers)
+  return (
+    <section className="panel" data-testid="teacher-shared">
+      <h2>Shared with you</h2>
+      {shared.length ? shared.map((answer) => {
+        const person = answer.user as { name?: string } | number | null
+        const name = person && typeof person === 'object' ? str(person.name) : 'A learner'
+        return <p key={answer.id} data-testid="teacher-shared-answer"><b>{name || 'A learner'}.</b> {sharedAnswerText({ body: answer.body, choice: answer.choice, video: answer.video, audio: answer.audio, image: answer.image })}</p>
+      }) : <p data-testid="teacher-shared-empty">No shared answers yet.</p>}
+    </section>
+  )
+}
+
 async function ParentSaid({ payload, portalId, base, film }: { payload: Ctx['payload']; portalId: number; base: string; film?: string }) {
   const { sequenceCourseFor } = await import('@/server/sequence-desk')
   const course = await sequenceCourseFor(payload, portalId)
@@ -242,6 +258,8 @@ export async function SequenceLearners(ctx: Ctx) {
           />
         </div>
       </section>
+      <p data-testid="teacher-name">{user.name || 'Teacher'}</p>
+      {await SharedWithTeacher({ payload, portalId: portal.id })}
       {await ParentSaid({ payload, portalId: portal.id, base: here, film: ctx.query.film })}
       {learners.length ? (
         <ul data-testid="sequence-learner-list">

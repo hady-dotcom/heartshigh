@@ -92,7 +92,7 @@ export async function WelcomeScreen(ctx: Ctx) {
   }
 
   const door = doorOfClause(Number(user.startingClause || 0), await loadDoors(payload))
-  const first = (await courseCards(payload, user))[0]
+  const first = (await courseCards(payload, user, portal.id))[0]
   return (
     <AppFrame testId="placing-result" brand={learnerBrand(portal)}>
       <div className="app-scroll">

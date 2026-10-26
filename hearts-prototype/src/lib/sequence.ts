@@ -233,7 +233,13 @@ export type CourseSheet = {
 }
 
 const CHOICE_TYPE = /^(?:choice|multiple|multiple_choice|mcq)$/i
-const CALLOUT = /^\[(\d+(?:\.\d+)?|end)\s+([a-z0-9_-]+)\]\s*([\s\S]+)$/i
+const CALLOUT = /^\[(\d+(?:\.\d+)?s?|end)\s+([a-z0-9_-]+)\]\s*([\s\S]+)$/i
+const LABEL_FIXES: [RegExp, string][] = [
+  [/\bPreperation\b/g, 'Preparation'],
+  [/\bresouces\b/g, 'resources'],
+  [/\bOverivews\b/g, 'Overviews'],
+  [/\bWorking with you Child\b/g, 'Working with your Child'],
+]
 
 function headerIndex(head: string[], name: string) {
   return head.findIndex((cell) => cell === name)
@@ -266,10 +272,11 @@ function calloutFrom(piece: string): CourseCallout | null {
       else options.push(part)
     }
   }
-  const atEnd = match[1].toLowerCase() === 'end'
+  const stamp = match[1].toLowerCase()
+  const atEnd = stamp === 'end'
   const type = match[2].toLowerCase()
   return {
-    second: atEnd ? 0 : Math.max(0, Math.round(Number(match[1]))),
+    second: atEnd ? 0 : Math.max(0, Math.round(Number(stamp.replace(/s$/, '')))),
     atEnd,
     type,
     kind: CHOICE_TYPE.test(type) ? 'multiple_choice' : 'question',
@@ -280,7 +287,7 @@ function calloutFrom(piece: string): CourseCallout | null {
 }
 
 export function parseCallouts(cell: string): CourseCallout[] {
-  return cell.split(/\s*\|\|\s*/).map((piece) => piece.trim()).filter(Boolean).flatMap((piece) => {
+  return cell.split(/\s*\|\|\s*|\s+\|\s+/).map((piece) => piece.trim()).filter(Boolean).flatMap((piece) => {
     const callout = calloutFrom(piece)
     return callout && callout.prompt ? [callout] : []
   })
@@ -383,6 +390,101 @@ export function sequenceBar() {
     { key: 'garden' as const, label: 'Courses', path: '/courses' },
     { key: 'me' as const, label: 'Me', path: '/me' },
   ]
+}
+
+export type SectionGroup<T> = { title: string; rows: { item: T; index: number }[] }
+
+/** Consecutive films that share a section title stay together, in the order the learner sees them. */
+export function sectionGroups<T>(items: readonly T[], titleOf: (item: T) => string): SectionGroup<T>[] {
+  const groups: SectionGroup<T>[] = []
+  items.forEach((item, index) => {
+    const title = titleOf(item).trim() || 'Films'
+    const last = groups[groups.length - 1]
+    if (!last || last.title !== title) groups.push({ title, rows: [] })
+    groups[groups.length - 1].rows.push({ item, index })
+  })
+  return groups
+}
+
+/** Strip the sheet's leading number and the known typos. "2- Preperation and resouces" becomes "Preparation and resources". */
+export function cleanModuleLabel(raw: string) {
+  let name = String(raw || '').trim().replace(/^\d+\s*[-–—]\s*/, '').replace(/\s+/g, ' ').trim()
+  if (!name) name = 'Films'
+  for (const [pattern, replacement] of LABEL_FIXES) name = name.replace(pattern, replacement)
+  return name.replace(/\s+\)/g, ')')
+}
+
+/** The book name is the public title before " 3:". Other titles are not books. */
+export function bookSectionTitle(publicTitle: string) {
+  const match = String(publicTitle || '').trim().match(/^(.*?)\s+\d+\s*:/)
+  const name = match?.[1]?.replace(/\s+/g, ' ').trim() || ''
+  return name.length >= 2 ? name : ''
+}
+
+export function groupByBookSheet(title: string) {
+  return /book summar/i.test(title)
+}
+
+export type SheetCoursePlan = {
+  title: string
+  order: number
+  films: (CourseFilm & { section: string })[]
+}
+
+/** One course per cleaned module, in sheet order. Book Summaries films then sit in book sections. */
+export function coursesFromSheet(films: readonly CourseFilm[], opts?: { groupByBook?: boolean }): SheetCoursePlan[] {
+  const plans: SheetCoursePlan[] = []
+  const index = new Map<string, SheetCoursePlan>()
+  for (const film of films) {
+    const title = cleanModuleLabel(film.module)
+    let plan = index.get(title)
+    if (!plan) {
+      plan = { title, order: plans.length + 1, films: [] }
+      plans.push(plan)
+      index.set(title, plan)
+    }
+    const book = opts?.groupByBook ? bookSectionTitle(film.publicTitle) : ''
+    plan.films.push({ ...film, section: book || 'Films' })
+  }
+  return plans
+}
+
+/** Module names in the order they first appear on a master sheet. Each one becomes a course. */
+export function modulesInSheetOrder(films: readonly { module: string }[]) {
+  const names: string[] = []
+  for (const film of films) {
+    const name = cleanModuleLabel(film.module)
+    if (!names.includes(name)) names.push(name)
+  }
+  return names
+}
+
+export function sheetRank(name: string) {
+  if (/guid|home learning/i.test(name)) return 0
+  if (/book summar/i.test(name)) return 1
+  return 2
+}
+
+/** Collections as headed sections. Courses keep the sheet's module order inside each one. */
+export function librarySections<T extends { sheetTitle?: string; sheetOrder?: number; title: string }>(cards: readonly T[]) {
+  const sorted = [...cards].sort((a, b) => {
+    const left = (a.sheetTitle || '').trim() || 'Courses'
+    const right = (b.sheetTitle || '').trim() || 'Courses'
+    return sheetRank(left) - sheetRank(right) || left.localeCompare(right) || Number(a.sheetOrder || 0) - Number(b.sheetOrder || 0) || a.title.localeCompare(b.title)
+  })
+  const groups: { title: string; cards: T[] }[] = []
+  for (const card of sorted) {
+    const title = (card.sheetTitle || '').trim() || 'Courses'
+    const last = groups[groups.length - 1]
+    if (!last || last.title !== title) groups.push({ title, cards: [] })
+    groups[groups.length - 1].cards.push(card)
+  }
+  return groups
+}
+
+export function sectionAnchor(title: string) {
+  const slug = title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return `section-${slug || 'films'}`
 }
 
 export function sequenceProgress(done: number, total: number) {

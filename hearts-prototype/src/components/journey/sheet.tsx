@@ -17,12 +17,14 @@ export const SHEET_TITLES: Record<SheetReason, string> = {
  * Rises over the lower half; the clip above stays paused and nothing advances until it closes.
  * The account is made in the same request that carries the opening off the device.
  */
-export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }: {
+export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit, gentle = false }: {
   reason: SheetReason
   loginHref: string
   offline: boolean
   onClose: () => void
   onSubmit: (account: { name: string; email: string; password: string }) => Promise<string | null>
+  /** Optional offer. The page behind it stays usable, and Not now dismisses it. */
+  gentle?: boolean
 }) {
   const ref = useRef<HTMLElement>(null)
   const [error, setError] = useState<string | null>(null)
@@ -49,11 +51,13 @@ export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }
   }
 
   return (
-    <section ref={ref} className="j-sheet" role="dialog" aria-labelledby="keep-title" data-testid="keep-sheet" data-reason={reason}>
+    <section ref={ref} className={`j-sheet${gentle ? ' is-offer' : ''}`} role="dialog" aria-labelledby="keep-title" data-testid="keep-sheet" data-reason={reason} data-offer={gentle ? 'yes' : 'no'}>
       <span className="handle" aria-hidden />
       <h2 id="keep-title" data-testid="keep-title">{SHEET_TITLES[reason]}</h2>
       {offline ? (
         <p data-testid="sheet-offline">Connect to keep your place. Your answers stay on this phone until then.</p>
+      ) : gentle ? (
+        <p data-testid="sheet-copy">Your films and answers are already on this phone. An account is optional, for another phone.</p>
       ) : (
         <p>{reason === 'place' ? <>Make an account to open this, and we&apos;ll remember where you got to and what you liked. Your answers stay on this phone until you make one.</> : <>Make an account and we&apos;ll remember what you liked, so the next clips fit you better. Your answers stay on this phone until you make one.</>}</p>
       )}
@@ -68,7 +72,7 @@ export function KeepPlaceSheet({ reason, loginHref, offline, onClose, onSubmit }
       ) : (
         <button type="button" className="pill gold block" disabled={offline} onClick={() => setForm(true)} data-testid="keep-open">Keep my place ›</button>
       )}
-      <button type="button" className="j-escape dark" onClick={close} data-testid="not-now">Not now, keep watching</button>
+      <button type="button" className="j-escape dark" onClick={close} data-testid="not-now">{gentle ? 'Not now' : 'Not now, keep watching'}</button>
       <p className="j-sheet-small">Already with us? <a href={loginHref} data-testid="sheet-login">Log in</a></p>
     </section>
   )

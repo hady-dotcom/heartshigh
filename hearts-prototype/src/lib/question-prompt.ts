@@ -5,6 +5,8 @@
 export function tidyQuestionPrompt(text: string) {
   const t = String(text || '').replace(/\s+/g, ' ').trim()
   if (!t) return ''
+  // A short prompt that already starts as a question is the question. A transcript blob in front still falls through.
+  if (t.length <= 400 && /^(?:what|why|how|when|where|who|which|is|are|do|does|can|could|would|if)\b/i.test(t) && looksLikeQuestion(t)) return t
   const named = t.match(/((?:What|Why|How|When|Where|Who|Which)\b[^?]*\?)\s*$/i)
   if (named && named[1].length >= 12 && named[1].length <= 220) return named[1].trim()
   const lastQ = t.lastIndexOf('?')

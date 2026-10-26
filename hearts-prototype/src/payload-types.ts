@@ -366,17 +366,29 @@ export interface Portal {
    * Learner-facing name. Empty keeps HEARTS. Parenting uses Hady Home.
    */
   brandName?: string | null;
-  /** Modern is the white learner shell. HEARTS keeps the evening theme. */
+  /**
+   * Modern is the white learner shell. HEARTS keeps the evening theme.
+   */
   shell?: ('modern' | 'hearts') | null;
-  /** Type on the modern shell. System is the Apple-style default. */
+  /**
+   * Type on the modern shell. System is the Apple-style default. The other pairs stay available.
+   */
   fontPair?: ('system' | 'jakarta' | 'bricolage' | 'outfit' | 'inter') | null;
-  /** Course cards is the usual course home. Garden is the older picture. */
+  /**
+   * Course cards is the usual course home. Garden is the older picture.
+   */
   courseHome?: ('cards' | 'garden') | null;
-  /** Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard. */
+  /**
+   * Learner background. None until a portal admin chooses a place. HEARTS uses the courtyard.
+   */
   sceneKey?: ('plain' | 'courtyard' | 'office' | 'staff-room' | 'kitchen' | 'living-room' | 'upload') | null;
-  /** Picture uploaded by the portal admin, when the background is Upload. */
+  /**
+   * Picture uploaded by the portal admin, when the background is Upload.
+   */
   sceneUrl?: string | null;
-  /** A line on the welcome page. Blank hides it. HEARTS keeps the donations sentence until an admin clears it. */
+  /**
+   * A line on the welcome page. Blank hides it. HEARTS keeps the donations sentence until an admin clears it.
+   */
   supportNote?: string | null;
   /**
    * Practice rooms for the parenting demo. Real learners are not stored here.
@@ -551,6 +563,14 @@ export interface Course {
   id: number;
   title: string;
   summary?: string | null;
+  /**
+   * The master sheet, shown as a library collection. Modules in that sheet are the courses.
+   */
+  sheetTitle?: string | null;
+  /**
+   * The module order inside the master sheet.
+   */
+  sheetOrder?: number | null;
   speaker?: string | null;
   speakerProfile?: (number | null) | Speaker;
   origin: 'master' | 'local';
@@ -789,7 +809,9 @@ export interface Lesson {
    * The extra code at the end of a private Vimeo link. Unlisted films need it to play.
    */
   vimeoHash?: string | null;
-  /** Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square. */
+  /**
+   * Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square.
+   */
   posterUrl?: string | null;
   film?: (number | null) | Media;
   /**
@@ -3726,6 +3748,8 @@ export interface SpeakersSelect<T extends boolean = true> {
 export interface CoursesSelect<T extends boolean = true> {
   title?: T;
   summary?: T;
+  sheetTitle?: T;
+  sheetOrder?: T;
   speaker?: T;
   speakerProfile?: T;
   origin?: T;

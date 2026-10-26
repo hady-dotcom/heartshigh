@@ -1199,6 +1199,100 @@ html[data-theme] .panel > header p { opacity: 1; }
 }
 .video-coming strong { font-size: 22px; }
 .video-coming p { margin: 0; font-size: 14px; }
+
+/* apple-door-start. Auth screens share the white and blue learner tokens. The evening courtyard stays off these doors. */
+html[data-theme] .door.apple-door {
+  background: var(--hh-canvas);
+  background-image: none;
+  color: var(--hh-ink);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door::before,
+html[data-theme] .door.apple-door::after {
+  content: none;
+  background: none;
+}
+html[data-theme] .door.apple-door .door-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-card);
+  backdrop-filter: none;
+}
+html[data-theme] .door.apple-door .door-card h1,
+html[data-theme] .door.apple-door .brand-word {
+  font-family: var(--hh-font-display);
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-title1);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+html[data-theme] .door.apple-door .door-card p,
+html[data-theme] .door.apple-door .door-card p.lede,
+html[data-theme] .door.apple-door .door-form label,
+html[data-theme] .door.apple-door .door-hint,
+html[data-theme] .door.apple-door .door-links,
+html[data-theme] .door.apple-door .door-links a {
+  font-family: var(--hh-font-system);
+  color: var(--hh-ink-2);
+}
+html[data-theme] .door.apple-door .field {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .field::placeholder { color: var(--hh-muted); opacity: 1; }
+html[data-theme] .door.apple-door .field:focus {
+  border-color: var(--hh-accent);
+  box-shadow: var(--hh-shadow-none);
+}
+html[data-theme] .door.apple-door .pill.gold,
+html[data-theme] .door.apple-door .pill.gold.block {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
+  box-shadow: var(--hh-shadow-none);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .pill.outline {
+  background: var(--hh-paper);
+  color: var(--hh-accent-deep);
+  border-color: var(--hh-accent);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .page-help-btn {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border: var(--hh-line-width) solid var(--hh-accent);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .brand-mark {
+  background: var(--hh-accent-fill);
+  color: var(--hh-accent);
+}
+html[data-theme] .door.apple-door .brand-mark .arch {
+  color: var(--hh-accent);
+}
+html[data-theme] .door.apple-door .example-sample {
+  background-color: var(--hh-surface);
+  color: var(--hh-ink);
+}
+html[data-theme] .door.apple-door .example-sample :is(h3, p, .hint) {
+  color: var(--hh-ink-2);
+}
+html[data-theme] .door.apple-door .example-kicker,
+html[data-theme] .door.apple-door .example-note {
+  color: var(--hh-muted);
+}
+html[data-theme] .door.apple-door .flash.notice,
+html[data-theme] .door.apple-door .flash.error {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+/* apple-door-end */
 .sequence-list, .sequence-edit { list-style: none; padding: 0; margin: 12px 0; }
 .sequence-list li, .sequence-edit li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dccd; }
 .sequence-list a { display: flex; gap: 8px; align-items: center; color: inherit; text-decoration: none; flex: 1; }

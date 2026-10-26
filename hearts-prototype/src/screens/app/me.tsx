@@ -25,7 +25,7 @@ function noteBody(body: string) {
 export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
   const notes = (await rows(payload, 'notifications', { user: { equals: user.id } }, { sort: '-createdAt', limit: 30 })).filter((note) => note.channel !== 'email-stub' && note.channel !== 'think')
   const modern = shellOf(portal) === 'modern'
-  const sampleFilm = modern ? (await nextCourseFilms(payload, user, base, 1))[0] : null
+  const sampleFilm = modern ? (await nextCourseFilms(payload, user, base, 1, portal.id))[0] : null
   const savedExample = modern
     ? sampleFilm
       ? { title: sampleFilm.title, detail: sampleFilm.course, hint: 'A film in this course', href: sampleFilm.href, action: 'Watch this film' }
@@ -250,7 +250,7 @@ export async function SettingsScreen({ payload, user, portal, base, query }: Ctx
 
 export async function SavedScreen({ payload, user, portal, base }: Ctx) {
   const unread = await unreadCount(payload, user)
-  const sampleFilm = shellOf(portal) === 'modern' ? (await nextCourseFilms(payload, user, base, 1))[0] : null
+  const sampleFilm = shellOf(portal) === 'modern' ? (await nextCourseFilms(payload, user, base, 1, portal.id))[0] : null
   const savedExample = shellOf(portal) === 'modern'
     ? sampleFilm
       ? { title: sampleFilm.title, detail: sampleFilm.course, hint: 'A film in this course', href: sampleFilm.href, action: 'Watch this film' }
