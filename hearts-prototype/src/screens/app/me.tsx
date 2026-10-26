@@ -128,7 +128,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <EmptyState
             testId="notes-empty"
             action={featureOn(portal, 'garden') ? (modern ? { href: `${base}/courses`, label: 'Open courses' } : { href: `${base}/garden`, label: 'Open the garden' }) : { href: base, label: 'Back home' }}
-            example={{ title: 'Your teacher replied', body: <p>{modern ? 'Amina wrote back on the answer you shared. Open your saved answers to read it.' : 'Amina wrote back on the answer you shared. Open your workbook to read it.'}</p> }}
+            example={modern ? undefined : { title: 'Your teacher replied', body: <p>Amina wrote back on the answer you shared. Open your workbook to read it.</p> }}
           >
             Nothing new. Replies from your teacher and Live in person evenings will show here.
           </EmptyState>

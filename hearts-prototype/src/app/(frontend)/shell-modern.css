@@ -2220,3 +2220,50 @@ html[data-theme] .app-stage.shell-modern .sheet .lock-box {
   color: var(--hh-ink);
   border-color: var(--hh-line);
 }
+
+/* The evening popup colours are more specific. A film portal uses paper and blue. */
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'],
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] :is(h2, p, label, .eyebrow, .toggle, .attach, .link-btn) {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .kind-tabs span,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .kind-tabs span.on,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .share-btn,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .pill,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .handle,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .sheet-close {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .kind-tabs span {
+  background: var(--hh-paper);
+  color: var(--hh-ink-2);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .handle {
+  background: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .sheet-close {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .compose,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .compose textarea,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .already-answered,
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .lock-box {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .already-answered {
+  background: var(--hh-accent-fill);
+}
