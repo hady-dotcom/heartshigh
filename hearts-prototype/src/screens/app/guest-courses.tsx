@@ -19,6 +19,7 @@ import { shareOrigin } from '@/lib/site-origin'
 import { guestLibrary } from '@/server/guest-films'
 import { FilmChips } from './course-home'
 import { kineticClipFor } from '@/server/sequence-desk'
+import { loadFilmSwarm } from '@/server/parent-swarm'
 import { clock, ref, rows, str, type Row } from '../common'
 
 /** Courses for a signed-out visitor. No account, and no dark empty feed. */
@@ -155,6 +156,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   const shareUrl = `${shareOrigin(await headers())}${here}`
   const kineticTier = kineticMomentsOn(portal) ? await kineticClipFor(payload, lesson.id) : null
   const filmPoints = pointViews(points, lesson)
+  const swarm = await loadFilmSwarm(payload, portal.id, filmPoints.map((point) => point.id))
   return (
     <AppFrame testId="course" brand={learnerBrand(portal)}>
       <div className="app-scroll">
@@ -172,8 +174,8 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
           startAt={Number(at) || 0}
           clipEnd={clip === '1' && kineticTier ? kineticTier.end : null}
           points={filmPoints}
-          swarm={{}}
-          swarmOn={false}
+          swarm={swarm}
+          swarmOn
           shareChoice
           serverNow={new Date().toISOString()}
           next={here}

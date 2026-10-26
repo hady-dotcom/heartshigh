@@ -11,10 +11,13 @@ export function SwarmList({
   items,
   mine,
   circleLabel,
+  showName = false,
 }: {
   items: SwarmFace[]
   mine?: string | null
   circleLabel?: string
+  /** Hady Home shows the parent’s name. HEARTS keeps initials. */
+  showName?: boolean
 }) {
   const [mode, setMode] = useState<SwarmMode>('mix')
   const answered = Boolean(mine && mine.trim())
@@ -37,7 +40,7 @@ export function SwarmList({
           <div className="other" key={`${item.initials}-${at}`} data-testid="swarm-item" data-source={item.circle ? 'circle' : 'learner'}>
             <span className="dot" style={{ background: DOTS[at % DOTS.length] }} />
             <div>
-              <b data-testid="swarm-initials">{item.initials}</b>
+              <b data-testid="swarm-initials">{showName ? item.name : item.initials}</b>
               {item.circle && circleLabel ? <small className="circle-note" data-testid="circle-label">{circleLabel}</small> : null}
               <p>&lsquo;{item.body}&rsquo;</p>
               {item.image ? <img src={item.image} alt="" /> : null}
