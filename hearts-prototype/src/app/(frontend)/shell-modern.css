@@ -2269,59 +2269,60 @@ html[data-theme] .app-stage.shell-modern .sheet[data-testid='popup'] .already-an
 }
 
 html[data-theme] .app-stage.shell-modern .parent-workbook {
-  background: #fff;
-  color: #172033;
+  background: transparent;
+  color: var(--hh-ink);
 }
 html[data-theme] .app-stage.shell-modern .workbook-film {
-  background: #fff;
-  border: 1px solid #d5e2f5;
-  border-radius: 16px;
-  padding: 14px 14px 8px;
-  margin: 0 0 14px;
-  box-shadow: 0 1px 0 rgba(37, 99, 235, 0.06);
+  background: var(--hh-paper);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+  padding: var(--hh-space-3) var(--hh-space-3) var(--hh-space-2);
+  margin: 0 0 var(--hh-space-3);
+  box-shadow: var(--hh-shadow-card);
 }
 html[data-theme] .app-stage.shell-modern .workbook-film h2 {
-  margin: 0 0 6px;
-  font-size: 18px;
+  margin: 0 0 var(--hh-space-1);
+  font-size: var(--hh-font-size-h3);
   line-height: 1.3;
-  color: #172033;
+  color: var(--hh-ink);
 }
 html[data-theme] .app-stage.shell-modern .workbook-film > a {
-  color: #2563eb;
-  font-size: 14px;
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-small);
   font-weight: 650;
 }
 html[data-theme] .app-stage.shell-modern .workbook-question {
-  margin: 10px 0;
-  font-size: 16px;
+  margin: var(--hh-space-2) 0;
+  font-size: var(--hh-font-size-body);
   line-height: 1.45;
-  color: #1e3a5f;
+  color: var(--hh-ink);
 }
 html[data-theme] .app-stage.shell-modern .workbook-prompt {
-  margin: 0 0 8px;
-  color: #5b6b82;
-  font-size: 14px;
+  margin: 0 0 var(--hh-space-2);
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
 }
 html[data-theme] .app-stage.shell-modern .workbook-own {
-  margin: 0 0 8px;
-  font-size: 15px;
+  margin: 0 0 var(--hh-space-2);
+  font-size: var(--hh-font-size-body);
   line-height: 1.45;
+  color: var(--hh-ink);
 }
 html[data-theme] .app-stage.shell-modern .parent-workbook textarea {
   width: 100%;
-  border: 1px solid #c5d4ea;
-  border-radius: 12px;
-  padding: 10px 12px;
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-control);
+  padding: var(--hh-space-2) var(--hh-space-3);
   font: inherit;
-  color: #172033;
-  background: #f7faff;
-  margin-bottom: 8px;
+  color: var(--hh-ink);
+  background: var(--hh-accent-fill);
+  margin-bottom: var(--hh-space-2);
 }
 html[data-theme] .app-stage.shell-modern .parent-workbook .pill {
-  background: #2563eb;
-  color: #fff;
+  background: var(--portal-accent, var(--hh-accent));
+  color: var(--hh-on-accent);
   border: 0;
-  margin-bottom: 8px;
+  margin-bottom: var(--hh-space-2);
 }
 html[data-theme] .app-stage.shell-modern .workbook-others {
   list-style: none;
@@ -2329,19 +2330,69 @@ html[data-theme] .app-stage.shell-modern .workbook-others {
   padding: 0;
 }
 html[data-theme] .app-stage.shell-modern .workbook-others li {
-  border-top: 1px solid #e4edf8;
-  padding: 8px 0;
+  border-top: var(--hh-line-width) solid var(--hh-line);
+  padding: var(--hh-space-2) 0;
 }
 html[data-theme] .app-stage.shell-modern .workbook-others b {
   display: block;
-  color: #2563eb;
-  font-size: 13px;
+  color: var(--portal-accent, var(--hh-accent));
+  font-size: var(--hh-font-size-caption);
 }
 html[data-theme] .app-stage.shell-modern .workbook-others p {
   margin: 2px 0 0;
-  font-size: 14px;
+  font-size: var(--hh-font-size-small);
   line-height: 1.45;
-  color: #243044;
+  color: var(--hh-ink-2);
+}
+
+html[data-theme] .app-stage.shell-modern .care-panel,
+html[data-theme] .app-stage.shell-modern .care-lines li {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+html[data-theme] .app-stage.shell-modern .care-panel h2,
+html[data-theme] .app-stage.shell-modern .care-panel p,
+html[data-theme] .app-stage.shell-modern .care-lines,
+html[data-theme] .app-stage.shell-modern .care-lines li,
+html[data-theme] .app-stage.shell-modern .care-lines b {
+  color: var(--hh-ink);
+}
+html[data-theme] .app-stage.shell-modern .care-lines small {
+  color: var(--hh-muted);
+}
+html[data-theme] .app-stage.shell-modern .example-sample h3 {
+  color: var(--hh-ink);
+}
+html[data-theme] .app-stage.shell-modern .help-mark {
+  border-color: var(--hh-line) !important;
+  background: var(--hh-paper) !important;
+  color: var(--portal-accent, var(--hh-accent)) !important;
+}
+
+html[data-theme] .page-help-sheet.help-plain {
+  background: var(--hh-scene-wash);
+}
+html[data-theme] .page-help-sheet.help-plain .page-help-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  box-shadow: var(--hh-shadow-lift);
+}
+html[data-theme] .page-help-sheet.help-plain .page-help-card h2 {
+  color: var(--hh-ink);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-h2);
+}
+html[data-theme] .page-help-sheet.help-plain .page-help-card p {
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-body);
+}
+html[data-theme] .page-help-sheet.help-plain .pill.gold {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: transparent;
+  box-shadow: var(--hh-shadow-none);
 }
 
 .app-stage.shell-modern .report-under {

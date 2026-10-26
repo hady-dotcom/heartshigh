@@ -1,8 +1,11 @@
 import Link from 'next/link'
 import { AppFrame, Back, Flash, Hidden, TabBar } from '@/components/app/shell'
+import { LearnerTabBar } from '@/components/app/learner-bar'
 import { ExampleInUse, Helplines } from '@/components/app/care'
 import { MissionCard } from '@/components/app/mission-card'
 import { CARE_SUPPORT_LEAD, CARE_SUPPORT_NOW } from '@/lib/care-copy'
+import { learnerBrand } from '@/lib/learner-brand'
+import { shellOf } from '@/lib/portal-look'
 import { joinCount, loadMission, missionView, openMissionsFor, shapedFor, supportMessages, threadFor } from '@/server/missions'
 import { helpContactsFor } from '@/server/opening'
 import { type Ctx, shortDate, str, unreadCount } from '../common'
@@ -94,14 +97,15 @@ export async function SupportScreen({ payload, user, portal, base, query }: Ctx)
   const messages = await supportMessages(payload, thread.id)
   const contacts = await helpContactsFor(payload, portal.id)
   const unread = await unreadCount(payload, user)
+  const modern = shellOf(portal) === 'modern'
   return (
-    <AppFrame evening testId="support-page">
+    <AppFrame evening={!modern} testId="support-page" brand={modern ? learnerBrand(portal) : undefined}>
       <div className="app-scroll">
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Ask for help</h1></div>
         <Flash error={query.error} notice={query.notice} />
         <section className="care-panel" data-testid="support-care">
-          <h2 style={{ margin: 0, fontSize: 22 }}>A person will read this</h2>
+          <h2 style={modern ? { margin: 0 } : { margin: 0, fontSize: 22 }}>A person will read this</h2>
           <p>{CARE_SUPPORT_LEAD}</p>
           <p>{CARE_SUPPORT_NOW}</p>
           <Helplines contacts={contacts} />
@@ -124,7 +128,7 @@ export async function SupportScreen({ payload, user, portal, base, query }: Ctx)
           <button className="pill gold" type="submit" data-testid="support-send">Send to the team</button>
         </form>
       </div>
-      <TabBar base={base} active="me" unread={unread} />
+      {modern ? <LearnerTabBar base={base} active="me" portal={portal} unread={unread} /> : <TabBar base={base} active="me" unread={unread} />}
     </AppFrame>
   )
 }

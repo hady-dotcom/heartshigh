@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom'
 import { SeeHowLink } from '@/components/see-how'
 import { helpFor, learnerHelp } from '@/lib/page-help'
 
-function HelpSheet({ title, body, titleId, helpKey, onClose }: { title: string; body: string[]; titleId: string; helpKey?: string; onClose: () => void }) {
+function HelpSheet({ title, body, titleId, helpKey, plain = false, onClose }: { title: string; body: string[]; titleId: string; helpKey?: string; plain?: boolean; onClose: () => void }) {
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
@@ -14,7 +14,7 @@ function HelpSheet({ title, body, titleId, helpKey, onClose }: { title: string; 
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
   return (
-    <div className="page-help-sheet" role="dialog" aria-modal="true" aria-labelledby={titleId} data-testid="page-help-sheet" onClick={onClose}>
+    <div className={`page-help-sheet${plain ? ' help-plain' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} data-testid="page-help-sheet" onClick={onClose}>
       <div className="page-help-card" onClick={(event) => event.stopPropagation()}>
         <h2 id={titleId} data-testid="page-help-title">{title}</h2>
         {body.map((line) => (
@@ -41,7 +41,7 @@ export function PageHelp({ page, plain = false }: { page?: string; plain?: boole
         ?
       </button>
       {open && mounted
-        ? createPortal(<HelpSheet title={copy.title} body={copy.body} titleId={titleId} helpKey={page} onClose={() => setOpen(false)} />, document.body)
+        ? createPortal(<HelpSheet title={copy.title} body={copy.body} titleId={titleId} helpKey={page} plain={plain} onClose={() => setOpen(false)} />, document.body)
         : null}
     </div>
   )
@@ -80,7 +80,7 @@ export function TopicHelp({ topic, label = 'What is this?' }: { topic: string; l
       </button>
       {open && mounted
         ? createPortal(
-            <HelpSheet title={label} body={[text]} titleId={titleId} helpKey={topic} onClose={() => setOpen(false)} />,
+            <HelpSheet title={label} body={[text]} titleId={titleId} helpKey={topic} plain={Boolean(document.querySelector('.app-stage.shell-modern'))} onClose={() => setOpen(false)} />,
             document.body,
           )
         : null}

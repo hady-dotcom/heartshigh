@@ -36,6 +36,7 @@ test('each learner surface keeps its own ? copy', () => {
     ['course', 'How to use a talk'],
     ['course-overview', 'How to use this course'],
     ['support-page', 'How to ask for help'],
+    ['parent-workbook', 'How to use the Workbook'],
     ['gather', 'How to use Gather'],
     ['live-home', 'How to use Live recordings'],
     ['live-screen', 'How to use Live recordings'],

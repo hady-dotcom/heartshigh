@@ -229,6 +229,13 @@ const PAGES: Record<string, HelpCopy> = {
       'If you need someone right now, call a helpline. Do not wait for the reply.',
     ],
   },
+  'parent-workbook': {
+    title: 'How to use the Workbook',
+    body: [
+      'Each film has one question. Write your answer under it.',
+      'Save keeps it on this phone until you have an account. A few answers from other parents sit underneath.',
+    ],
+  },
   'shaped-page': {
     title: 'How to use this page',
     body: [

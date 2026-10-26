@@ -8,7 +8,7 @@ const PAGES = [
   'home', 'feed', 'appetiser', 'start', 'welcome', 'join', 'lanes', 'garden', 'garden-general',
   'garden-jibril', 'garden-ghunya', 'garden-workbook', 'garden-harvest', 'me', 'settings', 'plan',
   'learner-path', 'course', 'course-overview', 'circle', 'speaker', 'help', 'login', 'door',
-  'placing', 'placing-result', 'saved', 'support-page', 'shaped-page', 'mission-page', 'live-screen',
+  'placing', 'placing-result', 'saved', 'support-page', 'parent-workbook', 'shaped-page', 'mission-page', 'live-screen',
   'gather', 'gather-detail', 'gather-propose', 'gather-door', 'gather-reflect', 'recalibrate',
   'closed', 'feature-unavailable',
 ]
