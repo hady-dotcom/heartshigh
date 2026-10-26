@@ -1,6 +1,11 @@
+import { existsSync, readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
-import { fetchVimeoMetas, shouldFetchVimeo } from '@/lib/vimeo-meta'
+import { fetchVimeoMetas, shouldFetchVimeo, type VimeoMeta } from '@/lib/vimeo-meta'
 import { misplacedHomeAnswers } from '@/lib/said-answers'
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 type LessonRow = {
   id: number
@@ -12,6 +17,50 @@ type LessonRow = {
 
 const PAGE = 100
 const PAGES = 8
+
+/** Lengths and pictures captured from Vimeo oEmbed, so a boot can fill films without calling Vimeo again. */
+export function loadStoredVimeoMetas() {
+  const map = new Map<string, VimeoMeta>()
+  const file = path.join(root, 'uploads/vimeo-meta.json')
+  if (!existsSync(file)) return map
+  const raw = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>
+  for (const [id, value] of Object.entries(raw)) {
+    if (!/^\d{6,12}$/.test(id) || !Array.isArray(value)) continue
+    const duration = Number(value[0] || 0)
+    const poster = String(value[1] || '')
+    if (!duration && !poster.startsWith('https://')) continue
+    map.set(id, { durationSeconds: duration > 0 ? Math.round(duration) : 0, posterUrl: poster.startsWith('https://') ? poster : '', hash: '' })
+  }
+  return map
+}
+
+/** Writes stored lengths and pictures onto films that are still missing them. Safe to run again. */
+export async function applyStoredVimeoMeta(payload: Payload, metas = loadStoredVimeoMetas()) {
+  if (!metas.size) return { updated: 0 }
+  let updated = 0
+  for (let page = 1; page <= PAGES; page += 1) {
+    const found = await payload.find({
+      collection: 'lessons',
+      overrideAccess: true,
+      depth: 0,
+      limit: PAGE,
+      page,
+      where: { vimeoId: { exists: true } },
+    })
+    for (const row of found.docs as LessonRow[]) {
+      const meta = metas.get(String(row.vimeoId || '').trim())
+      if (!meta) continue
+      const data: { durationSeconds?: number; posterUrl?: string } = {}
+      if (!Number(row.durationSeconds) && meta.durationSeconds) data.durationSeconds = meta.durationSeconds
+      if (!String(row.posterUrl || '').trim() && meta.posterUrl) data.posterUrl = meta.posterUrl
+      if (!Object.keys(data).length) continue
+      await payload.update({ collection: 'lessons', id: row.id, overrideAccess: true, data })
+      updated += 1
+    }
+    if (!found.hasNextPage) break
+  }
+  return { updated }
+}
 
 function needsVimeo(row: LessonRow) {
   const id = String(row.vimeoId || '').trim()

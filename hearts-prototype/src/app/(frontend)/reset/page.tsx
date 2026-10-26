@@ -3,14 +3,18 @@ import { ExampleInUse } from '@/components/app/care'
 import { Flash, Hidden } from '@/components/app/shell'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
+import { brandForNext, nextQuery, safeNext } from '@/lib/door-brand'
 
-export default async function Reset({ searchParams }: { searchParams: Promise<{ error?: string; token?: string }> }) {
+export default async function Reset({ searchParams }: { searchParams: Promise<{ error?: string; token?: string; next?: string }> }) {
   const query = await searchParams
   const token = query.token || ''
+  const next = safeNext(query.next)
+  const brand = await brandForNext(next)
+  const signIn = `/login${nextQuery(next)}`
   return (
     <main className="door apple-door" data-testid="reset">
       <div className="door-card">
-        <BrandLockup size={72} />
+        {brand.name ? <p className="brand-word" data-testid="portal-brand">{brand.name}</p> : <BrandLockup size={72} />}
         <h1>Choose a new password</h1>
         <p className="lede">{token ? 'Pick a new password for this account.' : 'This page needs the link from your email.'}</p>
         <Flash error={query.error} />
@@ -22,11 +26,11 @@ export default async function Reset({ searchParams }: { searchParams: Promise<{ 
             <button className="pill gold block" data-testid="reset-submit" type="submit">Save password</button>
           </form>
         ) : (
-          <ExampleInUse title="A reset link" action={{ href: '/forgot', label: 'Ask for a new link' }}>
+          <ExampleInUse title="A reset link" action={{ href: `/forgot${nextQuery(next)}`, label: 'Ask for a new link' }}>
             <p>Open the email we sent, then choose a new password on this page.</p>
           </ExampleInUse>
         )}
-        <div className="door-links"><Link href="/forgot">Ask for a new link</Link><Link href="/login">Sign in</Link></div>
+        <div className="door-links"><Link href={`/forgot${nextQuery(next)}`}>Ask for a new link</Link><Link href={signIn}>Sign in</Link></div>
       </div>
     </main>
   )

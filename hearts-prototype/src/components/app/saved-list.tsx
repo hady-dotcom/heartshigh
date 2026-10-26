@@ -14,7 +14,7 @@ function loadIds() {
 
 type SavedExample = { title: string; detail: string; hint: string; href: string; action: string }
 
-export function SavedList({ base, example }: { base: string; example?: SavedExample | null }) {
+export function SavedList({ base, example, plain = false }: { base: string; example?: SavedExample | null; plain?: boolean }) {
   // Empty on the server and the first paint. Reading localStorage later must not
   // swap a one-line "loading" note for the example card, or the page jumps.
   const [ids, setIds] = useState<string[]>([])
@@ -53,6 +53,7 @@ export function SavedList({ base, example }: { base: string; example?: SavedExam
   }, [ids])
   if (ids.length > 0 && !ready) return <p className="muted" data-testid="saved-list">Loading saved clips…</p>
   if (!ids.length) {
+    if (plain) return <p className="muted" data-testid="saved-empty">Films you save show up here.</p>
     return (
       <div data-testid="saved-empty">
         <ExampleInUse title={example?.title || 'Patience · a short clip'} action={{ href: example?.href || `${base}/feed`, label: example?.action || 'Watch today’s clips' }}>

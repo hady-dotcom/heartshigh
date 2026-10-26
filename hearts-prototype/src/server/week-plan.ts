@@ -1,6 +1,7 @@
 import type { Payload } from 'payload'
 import { now } from '@/lib/clock'
-import { dayTalkCounts, minutesLabel, talksLabel, scheduledInWeek, weekBusy, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { dayTalkCounts, filmsLabel, minutesLabel, talksLabel, scheduledInWeek, weekBusy, weekStrip, zoneOrToronto, dateKeyInZone, type WeekDay } from '@/lib/week'
+import { isSequencePortal } from '@/lib/sequence'
 import { overMinutesNote, spreadNote, studyDates } from '@/lib/schedule'
 import { isTimeZone, portalTimeZone } from '@/lib/zone-time'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
@@ -88,7 +89,8 @@ export async function weekView(payload: Payload, user: SessionUser, portal: Port
   const courses: WeekCourse[] = courseRows.map((course) => {
     const own = lessonRows.filter((lesson) => ref(lesson.course) === course.id)
     const seconds = own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
-    return { id: course.id, title: tidyTalkTitle(str(course.title)), talks: own.length, seconds, label: talksLabel(own.length, seconds) }
+    const label = isSequencePortal(portal) ? filmsLabel(own.length, seconds) : talksLabel(own.length, seconds)
+    return { id: course.id, title: tidyTalkTitle(str(course.title)), talks: own.length, seconds, label }
   })
   const cards: WeekPlanCard[] = mine.map((plan) => {
     const courseId = ref(plan.course)

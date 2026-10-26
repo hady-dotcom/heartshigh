@@ -156,9 +156,16 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   return (
     <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
       <div className="app-scroll">
-        <Back href={sequence ? `${base}/courses` : `${base}/lanes`} label={sequence ? 'Courses' : 'Lanes'} />
+        {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
-        <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
+        {sequence ? (
+          <div className="app-head course-head">
+            <Back href={`${base}/courses`} label="Courses" />
+            <h1 data-testid="course-title">{title}</h1>
+          </div>
+        ) : (
+          <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
+        )}
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         {sequence ? (
           <div data-testid="play-next">
@@ -440,7 +447,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const sequenceLabel = (index: number, row: Row) => filmLabel(index, str(row.title))
   const upNext = nextLesson && following
     ? { href: following.href, label: sequence ? sequenceLabel(nextAt, nextLesson) : following.label, minutes: Math.max(1, Math.round(Number(nextLesson.durationSeconds || 0) / 60)), last: false }
-    : { href: sequence ? base : courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
+    : { href: courseHref, label: sequence ? SEQUENCE_COPY.back : lastPartCopy(lessons.length), minutes: 0, last: true }
   const progress = sequenceProgress(doneLessons.size, lessons.length)
   const callout = sequence ? partCuts.find((row) => ref(row.lesson) === lessonId) : null
   const kineticTier = sequence && showKinetic ? await kineticClipFor(payload, lessonId) : null
@@ -492,7 +499,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
         ) : null}
         <CoursePlayer
           courseTitle={sequence ? str(course.title) : tidyTalkTitle(str(course.title))}
-          backHref={withCurrentQuery(sequence ? base : `${base}/lanes`, query)}
+          backHref={sequence ? `${base}/course/${courseId}` : withCurrentQuery(`${base}/lanes`, query)}
           lessonId={lessonId}
           partLabel={sequence ? sequenceLabel(partIndex, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
@@ -514,16 +521,16 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           deferred={deferred}
           initialOpenId={Number(query.answer) || deferred[0]?.pointId || null}
           sentences={showKinetic ? parseTrack(lesson.framingTrack)?.sentences || [] : []}
-          progressCard={sequence && (!ctx.demo || ctx.demo.state.features.progress) ? { eyebrow: progress.eyebrow, line: ctx.demo ? `${watchedCount(ctx.demo.state, ctx.demo.cast.learner)} of ${lessons.length} films` : progress.line, backLabel: progress.back, backHref: ctx.demo ? withDemoQuery(base, ctx.demo.token, ctx.demo.role) : base } : null}
+          progressCard={sequence && (!ctx.demo || ctx.demo.state.features.progress) ? { eyebrow: progress.eyebrow, line: ctx.demo ? `${watchedCount(ctx.demo.state, ctx.demo.cast.learner)} of ${lessons.length} films` : progress.line, backLabel: progress.back, backHref: ctx.demo ? withDemoQuery(`${base}/course/${courseId}`, ctx.demo.token, ctx.demo.role) : `${base}/course/${courseId}` } : null}
           saveOnEnd={sequence}
           showResume={showResume}
           clipEnd={sequence && showKinetic && query.clip === '1' && kineticTier ? kineticTier.end : null}
           videoComing={coming}
           shareUrl={sequence ? `${ctx.origin}${base}/course/${courseId}?part=${lessonId}` : null}
           guest={false}
-          garden={{ done, total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : `${base}/courses`, query), nextPart: following, prevPart: sequence && prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: withCurrentQuery(`${base}/course/${courseId}?part=${prevLesson.id}`, query) } : null, links: [
+          garden={{ done: sequence ? doneLessons.size : done, total: sequence ? lessons.length : total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : `${base}/courses`, query), nextPart: following, prevPart: sequence && prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: withCurrentQuery(`${base}/course/${courseId}?part=${prevLesson.id}`, query) } : null, links: [
             ...(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
-            ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Saved answers' : 'Your workbook', href: withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Saved answers' : 'Your workbook', href: sequence ? `${base}/me#answers` : withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
         {sequence && showKinetic && kineticTier ? (

@@ -10,6 +10,7 @@ import { cleanPortalScenes } from '@/lib/portal-scenes'
 import { fillSampleGaps, readSaidAnswers } from '@/lib/said-answers'
 import { defaultFeatures } from '@/lib/features'
 import { syncCourseSheet } from '@/server/sequence-desk'
+import { applyStoredVimeoMeta, loadStoredVimeoMetas } from '@/server/vimeo-backfill'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 const WELCOME = 'Welcome. Watch the films in order.'
@@ -103,6 +104,29 @@ function hadyLook(existing?: { accent?: string | null; colour?: string | null; f
   }
 }
 
+/** The live course picked up three extra films and the old Vimeo ids, which come back without a length. */
+async function parentingFilmsNeedRepair(payload: Payload, portalId: number) {
+  const courses = await payload.find({
+    collection: 'courses',
+    overrideAccess: true,
+    depth: 0,
+    limit: 20,
+    where: { and: [{ portal: { equals: portalId } }, { sheetTitle: { equals: COURSE_TITLE } }, { hidden: { not_equals: true } }] },
+  })
+  const ids = courses.docs.map((row) => row.id)
+  if (!ids.length) return false
+  const lessons = await payload.find({
+    collection: 'lessons',
+    overrideAccess: true,
+    depth: 0,
+    limit: 200,
+    where: { course: { in: ids } },
+  })
+  const stale = lessons.docs.some((row) => /^496/.test(String(row.vimeoId || '')))
+  const bare = lessons.docs.filter((row) => String(row.vimeoId || '').trim() && !Number(row.durationSeconds)).length
+  return lessons.totalDocs > 107 || stale || bare > 15
+}
+
 /**
  * The Guiding Home Learning course on its own portal.
  * Safe to run again. It does not create people or join codes.
@@ -162,15 +186,17 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { equals: BOOK_TITLE } }, { hidden: { not_equals: true } }] },
   })
   const bookPath = path.join(root, 'uploads/book-summaries.csv')
+  const storedMetas = loadStoredVimeoMetas()
   const needsSheets = refresh || guidingReady.totalDocs < 8 || (existsSync(bookPath) && booksReady.totalDocs < 4)
+  const needsRepair = !needsSheets && await parentingFilmsNeedRepair(payload, Number(portal.id))
   let courseIds: number[] = []
-  if (needsSheets) {
+  if (needsSheets || needsRepair) {
     const sheet = readFileSync(path.join(root, 'uploads/videos.csv'), 'utf8')
-    const synced = await syncCourseSheet(payload, Number(portal.id), sheet, { title: COURSE_TITLE, vimeoMetas: new Map() })
+    const synced = await syncCourseSheet(payload, Number(portal.id), sheet, { title: COURSE_TITLE, vimeoMetas: storedMetas })
     if (synced.error) throw new Error(synced.error)
     courseIds = synced.courseIds || []
     if (existsSync(bookPath)) {
-      const books = await syncCourseSheet(payload, Number(portal.id), readFileSync(bookPath, 'utf8'), { title: BOOK_TITLE, vimeoMetas: new Map() })
+      const books = await syncCourseSheet(payload, Number(portal.id), readFileSync(bookPath, 'utf8'), { title: BOOK_TITLE, vimeoMetas: storedMetas })
       if (books.error) throw new Error(books.error)
       courseIds = [...courseIds, ...(books.courseIds || [])]
     }
@@ -181,7 +207,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
       overrideAccess: true,
       limit: 40,
       sort: 'sheetOrder',
-      where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { equals: COURSE_TITLE } }, { hidden: { not_equals: true } }] },
+      where: { and: [{ portal: { equals: portal.id } }, { sheetTitle: { in: [COURSE_TITLE, BOOK_TITLE] } }, { hidden: { not_equals: true } }] },
     })
     courseIds = found.docs.map((row) => Number(row.id))
   }
@@ -203,6 +229,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   await ensureSaidAnswers(payload, Number(course.id))
   const { backfillVimeoFilms, clearMisplacedHomeAnswers } = await import('@/server/vimeo-backfill')
   await clearMisplacedHomeAnswers(payload)
+  await applyStoredVimeoMeta(payload, storedMetas)
   await backfillVimeoFilms(payload)
 
   const packFound = await payload.find({

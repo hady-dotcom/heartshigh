@@ -32,11 +32,14 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
       : { title: 'A film from your course', detail: appNameOf(portal), hint: 'Films show here once a course is added.', href: `${base}/courses`, action: 'Open courses' }
     : null
   const shaped = await shapedFor(payload, user.id)
+  const savedAnswers = modern
+    ? await rows(payload, 'answers', { and: [{ user: { equals: user.id } }, { portal: { equals: portal.id } }] }, { sort: '-createdAt', limit: 20 })
+    : []
   const unread = notes.filter((note) => !note.read).length
   const links: [string, string, string, string][] = [
     ...(featureOn(portal, 'planner') ? [['plan', 'My week', 'Spread a course across the days that suit you', 'week'] as [string, string, string, string]] : []),
     ['saved', 'Saved', modern ? 'Films you kept' : 'Clips you kept from the feed', 'me/saved'],
-    ...(featureOn(portal, 'workbook') ? [['workbook', modern ? 'Saved answers' : 'Workbook', modern ? 'Answers you saved, and your teacher’s replies' : 'Your answers and your teacher’s replies', 'garden/workbook'] as [string, string, string, string]] : []),
+    ...(featureOn(portal, 'workbook') ? [['workbook', modern ? 'Saved answers' : 'Workbook', modern ? 'Answers you saved, and your teacher’s replies' : 'Your answers and your teacher’s replies', modern ? 'me#answers' : 'garden/workbook'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'compass') ? [['path', 'Where to grow next', modern ? 'Plain words, only when a film or an answer backs them' : 'Plain words, only when a real talk or answer backs them', 'me/path'] as [string, string, string, string]] : []),
     ...(featureOn(portal, 'missions') ? [['shaped', 'Things you helped shape', 'Missions you joined, and what we decided', 'me/shaped'] as [string, string, string, string]] : []),
     ['help', 'Ask for help', 'Write to the team here. You do not need an email.', 'me/help'],
@@ -54,7 +57,17 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
         </div>
         <SavedToast />
         <p className="eyebrow" id="saved" style={{ marginTop: 18 }}>Saved</p>
-        <SavedList base={base} example={savedExample} />
+        <SavedList base={base} example={modern ? null : savedExample} plain={modern} />
+        {modern ? (
+          <section id="answers" data-testid="saved-answers">
+            <p className="eyebrow">Saved answers</p>
+            {savedAnswers.length ? savedAnswers.map((answer) => (
+              <article key={answer.id} className="card" data-testid="saved-answer">
+                <p>{str(answer.body) || str(answer.choice) || 'Saved answer'}</p>
+              </article>
+            )) : <p className="muted">Answers you save on a film show up here.</p>}
+          </section>
+        ) : null}
         <details className="card name-edit" data-testid="name-edit">
           <summary>Change the name we use</summary>
           <form className="form-stack" action="/api/hearts" method="post" style={{ marginTop: 10 }}>
@@ -115,7 +128,7 @@ export async function MeScreen({ payload, user, portal, base, query }: Ctx) {
           <EmptyState
             testId="notes-empty"
             action={featureOn(portal, 'garden') ? (modern ? { href: `${base}/courses`, label: 'Open courses' } : { href: `${base}/garden`, label: 'Open the garden' }) : { href: base, label: 'Back home' }}
-            example={{ title: 'Your teacher replied', body: <p>{modern ? 'Amina wrote back on the answer you shared. Open your saved answers to read it.' : 'Amina wrote back on the answer you shared. Open your workbook to read it.'}</p> }}
+            example={modern ? undefined : { title: 'Your teacher replied', body: <p>Amina wrote back on the answer you shared. Open your workbook to read it.</p> }}
           >
             Nothing new. Replies from your teacher and Live in person evenings will show here.
           </EmptyState>
@@ -262,7 +275,7 @@ export async function SavedScreen({ payload, user, portal, base }: Ctx) {
         <Back href={`${base}/me`} label="Me" />
         <div className="app-head"><h1>Saved</h1></div>
         <p className="lead">{shellOf(portal) === 'modern' ? 'Films you kept. They stay on this phone.' : 'Clips you kept from the feed. They stay on this phone.'}</p>
-        <SavedList base={base} example={savedExample} />
+        <SavedList base={base} example={shellOf(portal) === 'modern' ? null : savedExample} plain={shellOf(portal) === 'modern'} />
       </div>
       <LearnerTabBar base={base} active="me" portal={portal} unread={unread} />
     </AppFrame>
