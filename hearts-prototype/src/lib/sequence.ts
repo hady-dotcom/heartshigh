@@ -233,7 +233,7 @@ export type CourseSheet = {
 }
 
 const CHOICE_TYPE = /^(?:choice|multiple|multiple_choice|mcq)$/i
-const CALLOUT = /^\[(\d+(?:\.\d+)?s?|end)\s+([a-z0-9_-]+)\]\s*([\s\S]+)$/i
+const CALLOUT = /^\[(\d+(?:\.\d+)?s?|end)\s+([a-z0-9_/-]+)\]\s*([\s\S]+)$/i
 const LABEL_FIXES: [RegExp, string][] = [
   [/\bPreperation\b/g, 'Preparation'],
   [/\bresouces\b/g, 'resources'],

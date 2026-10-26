@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneCssOf, sceneKeyOf, sceneUrlOf, shellOf, showHeartsMark, shownSupportNote, supportNoteOf } from '../../src/lib/portal-look'
+import { accentOf, calloutSecond, courseHomeOf, filmLabel, fontPairOf, hasHeartsWording, sceneCssOf, sceneKeyOf, sceneUrlOf, shellOf, showHeartsMark, shownCalloutSecond, shownSupportNote, supportNoteOf } from '../../src/lib/portal-look'
 
 test('a portal with no look stored stays plain and white', () => {
   assert.equal(courseHomeOf(null), 'cards')
@@ -45,6 +45,9 @@ test('a callout past the film is pulled to 80 percent, and film numbers follow t
   assert.equal(calloutSecond(171, 60), 48)
   assert.equal(calloutSecond(20, 60), 20)
   assert.equal(calloutSecond(171, 0), 171)
+  assert.equal(shownCalloutSecond(227, 230, true), 227)
+  assert.equal(shownCalloutSecond(135, 168, true), 135)
+  assert.equal(shownCalloutSecond(227, 230, false), 184)
   assert.equal(filmLabel(0, 'Why we started'), '1. Why we started')
   assert.equal(filmLabel(0, 'Home Learning Introduction 2: How To Use This Course'), '1. Home Learning Introduction 2: How To Use This Course')
   assert.equal(filmLabel(1, 'Introduction 2'), '2. Introduction 2')

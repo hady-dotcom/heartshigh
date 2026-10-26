@@ -6,9 +6,9 @@ import { FilmFallback } from '@/components/app/film-fallback'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { CoursePlayer, type PointView } from '@/components/app/course-player'
 import { learnerBrand } from '@/lib/learner-brand'
-import { calloutSecond } from '@/lib/portal-look'
+import { shownCalloutSecond } from '@/lib/portal-look'
 import { filmCanPlay } from '@/lib/film-availability'
-import { tidyQuestionPrompt } from '@/lib/question-prompt'
+import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { kineticMomentsOn, librarySections, sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
 import { learnerLessonVisible } from '@/lib/publish-state'
@@ -78,15 +78,15 @@ function pointViews(points: Row[], lesson: Row): PointView[] {
   return points.filter((point) => ref(point.lesson) === lesson.id && str(point.family) !== 'workbook').map((point, index) => ({
     id: point.id,
     number: index + 1,
-    second: calloutSecond(Number(point.second || 0), Number(lesson.durationSeconds || 0)),
-    prompt: tidyQuestionPrompt(str(point.prompt)) || `Question ${index + 1}`,
+    second: shownCalloutSecond(Number(point.second || 0), Number(lesson.durationSeconds || 0), true),
+    prompt: shownQuestionPrompt(str(point.prompt), { sheet: true, index }),
     kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
     options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
     state: 'open' as const,
     unlocksAt: null,
     answered: false,
     timeLimitSec: Number(point.timeLimitSec || 0) || null,
-  }))
+  })).filter((view) => view.prompt)
 }
 
 /** The same course player a signed-in parent uses. Answers stay on this phone until an account sends them. */
@@ -154,6 +154,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   const progress = sequenceProgress(0, lessons.length)
   const shareUrl = `${shareOrigin(await headers())}${here}`
   const kineticTier = kineticMomentsOn(portal) ? await kineticClipFor(payload, lesson.id) : null
+  const filmPoints = pointViews(points, lesson)
   return (
     <AppFrame testId="course" brand={learnerBrand(portal)}>
       <div className="app-scroll">
@@ -170,7 +171,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
           duration={Number(lesson.durationSeconds || 0)}
           startAt={Number(at) || 0}
           clipEnd={clip === '1' && kineticTier ? kineticTier.end : null}
-          points={pointViews(points, lesson)}
+          points={filmPoints}
           swarm={{}}
           swarmOn={false}
           shareChoice
@@ -198,7 +199,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
             <Link href={`${base}/course/${course.id}?part=${lesson.id}&t=${kineticTier.start}&clip=1`} data-testid="kinetic-play">{SEQUENCE_COPY.playClip}</Link>
           </section>
         ) : null}
-        {points[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {tidyQuestionPrompt(str(points[0].prompt)) || str(points[0].prompt)}</p> : null}
+        {filmPoints[0] ? <p data-testid="sequence-question"><b>{SEQUENCE_COPY.question}.</b> {filmPoints[0].prompt}</p> : null}
       </div>
       <LearnerTabBar base={base} active="home" portal={portal} />
     </AppFrame>

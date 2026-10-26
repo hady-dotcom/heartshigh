@@ -9,7 +9,8 @@ import { parentOpeningScenes } from '@/lib/parent-opening'
 import { cleanPortalScenes } from '@/lib/portal-scenes'
 import { fillSampleGaps, readSaidAnswers } from '@/lib/said-answers'
 import { defaultFeatures } from '@/lib/features'
-import { syncCourseSheet } from '@/server/sequence-desk'
+import { parseCourseSheet } from '@/lib/sequence'
+import { syncCourseSheet, syncPortalFilmQuestions } from '@/server/sequence-desk'
 import { applyStoredVimeoMeta, loadStoredVimeoMetas } from '@/server/vimeo-backfill'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -232,6 +233,14 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   await clearMisplacedHomeAnswers(payload)
   await applyStoredVimeoMeta(payload, storedMetas)
   await backfillVimeoFilms(payload)
+  const masterPath = path.join(root, 'uploads/hady-home-master-sheet.csv')
+  if (!existsSync(masterPath)) throw new Error('The Hady Home master sheet is missing.')
+  const sheetFilms = [
+    ...parseCourseSheet(readFileSync(masterPath, 'utf8')).films,
+    ...(existsSync(bookPath) ? parseCourseSheet(readFileSync(bookPath, 'utf8')).films : []),
+  ]
+  const questions = await syncPortalFilmQuestions(payload, Number(portal.id), sheetFilms)
+  if (questions.updated) payload.logger.info(`Updated the sheet questions on ${questions.updated} films.`)
 
   const packFound = await payload.find({
     collection: 'packs',

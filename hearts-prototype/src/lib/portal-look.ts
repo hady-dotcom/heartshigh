@@ -168,6 +168,13 @@ export function calloutSecond(second: number, duration?: number | null) {
   return at <= latest ? at : latest
 }
 
+/** Sheet films show the timestamp from the sheet. HEARTS still pulls a late question back into the film. */
+export function shownCalloutSecond(second: number, duration: number | null | undefined, sheet: boolean) {
+  const at = Math.max(0, Math.floor(Number(second) || 0))
+  if (sheet) return at
+  return calloutSecond(at, duration)
+}
+
 /** 1-based label from the film's place in the list the learner can see, not a stored order that may have a gap. */
 export function filmLabel(index: number, title: string) {
   const place = Math.max(0, index)
