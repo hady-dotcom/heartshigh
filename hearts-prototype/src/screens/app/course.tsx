@@ -186,6 +186,12 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         <Link className="pill outline block" href={withCurrentQuery(`${base}/week?course=${course.id}&view=new&from=course`, query)} data-testid="schedule-all" style={{ marginTop: 10 }}>
           {lessons.length === 1 ? (sequence ? 'Schedule this film' : 'Schedule this talk') : 'Schedule all of these'}
         </Link>
+        {sequence && shellOf(portal) === 'modern' ? (
+          <a className="list-link" href={withCurrentQuery(`${base}/workbook`, query)} data-testid="open-workbook">
+            <span className="grow">Workbook<small>The first ten films, your answer, and a few from other parents</small></span>
+            <span aria-hidden>›</span>
+          </a>
+        ) : null}
         <p className="muted" data-testid="buffet-note" style={{ margin: '10px 2px 0' }}>
           {sequence ? 'Questions appear inside each film, once you open it.' : 'Questions appear inside each talk, once you open it.'}
         </p>
@@ -530,7 +536,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           guest={false}
           garden={{ done: sequence ? doneLessons.size : done, total: sequence ? lessons.length : total, gardenHref: withCurrentQuery(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? `${base}/garden` : `${base}/courses`, query), nextPart: following, prevPart: sequence && prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: withCurrentQuery(`${base}/course/${courseId}?part=${prevLesson.id}`, query) } : null, links: [
             ...(featureOn(portal, 'garden') && shellOf(portal) === 'hearts' ? [{ label: "See what you've sown", href: withCurrentQuery(`${base}/garden/general`, query) }] : []),
-            ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Saved answers' : 'Your workbook', href: sequence ? `${base}/me#answers` : withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
+            ...(featureOn(portal, 'workbook') ? [{ label: sequence ? 'Workbook' : 'Your workbook', href: sequence && shellOf(portal) === 'modern' ? `${base}/workbook` : withCurrentQuery(`${base}/garden/workbook`, query) }] : []),
           ] }}
         />
         {sequence && showKinetic && kineticTier ? (

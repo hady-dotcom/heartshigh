@@ -29,6 +29,10 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <div className="app-head"><h1>Courses</h1></div>
+        <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+          <span className="grow">Workbook<small>The first ten films</small></span>
+          <span aria-hidden>›</span>
+        </a>
         {library.courses.length ? librarySections(library.courses).map((section) => (
           <section className="library-section" key={section.title} data-testid="library-collection">
             <h2>{section.title}</h2>
@@ -112,6 +116,10 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
             <GuestCourseResume base={base} courseId={course.id} total={lessons.length} firstId={first?.id ?? null} firstPlace={first ? firstAt + 1 : 1} />
           </div>
           <p className="muted">Questions appear inside each film, once you open it. Answers stay on this phone.</p>
+          <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+            <span className="grow">Workbook<small>Your answer and a few from other parents</small></span>
+            <span aria-hidden>›</span>
+          </a>
           <div data-testid="sequence-list">
             {groups.map((group) => (
               <section className="sequence-module" id={sectionAnchor(group.title)} key={group.title} data-testid="sequence-module">
@@ -192,7 +200,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
             gardenHref: `${base}/courses`,
             nextPart: nextLesson ? { label: `Film ${nextAt + 1} · Next`, href: `${base}/course/${course.id}?part=${nextLesson.id}` } : null,
             prevPart: prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: `${base}/course/${course.id}?part=${prevLesson.id}` } : null,
-            links: [{ label: 'Saved answers', href: `${base}/me` }],
+            links: [{ label: 'Workbook', href: `${base}/workbook` }],
           }}
         />
         {kineticTier ? (

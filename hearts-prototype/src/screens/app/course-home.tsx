@@ -148,6 +148,12 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
       <div className="app-scroll" data-testid="course-home">
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1>Courses</h1></div>
+        {modern ? (
+          <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+            <span className="grow">Workbook<small>The first ten films</small></span>
+            <span aria-hidden>›</span>
+          </a>
+        ) : null}
         {carry?.next ? (
           <article className="carry-on" data-testid="carry-on">
             <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />

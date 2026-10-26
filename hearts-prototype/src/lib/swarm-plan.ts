@@ -19,8 +19,6 @@ export type PlannedAnswer = {
   source: 'real' | 'written'
 }
 
-const STOP = new Set('the a an of to and or your you how what would with for this that from into about their have been when where which does did are was were will can could should our my we they them then than just very really quite'.split(' '))
-
 export function questionMatchKey(value: string) {
   return String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim()
 }
@@ -41,55 +39,19 @@ export function isBlankPrompt(prompt: string) {
   return !key || key === 'n a' || key === 'na'
 }
 
-function hash(value: string) {
-  let h = 2166136261
-  for (let i = 0; i < value.length; i += 1) h = Math.imul(h ^ value.charCodeAt(i), 16777619)
-  return h >>> 0
-}
-
-function anchorOf(prompt: string) {
-  const words = String(prompt || '')
-    .replace(/\([^)]*\bwords?\b[^)]*\)/gi, ' ')
-    .toLowerCase()
-    .replace(/[^a-z0-9\s]/g, ' ')
-    .split(/\s+/)
-    .filter((word) => word.length > 3 && !STOP.has(word))
-  return words.slice(0, 4).join(' ') || 'the film'
-}
-
 function tidy(text: string) {
   return text.replace(/\s+/g, ' ').replace(/\s+([?.!,])/g, '$1').trim()
 }
 
-type Voice = { anchor: string; kid: string; age: number; aside: string }
+/** Same letters as a stored answer, so a real 2021 line can be told from a generated one. */
+export function keptAnswerKey(text: string) {
+  return tidy(text).toLowerCase()
+}
 
-const VOICES: ((row: Voice) => string)[] = [
-  ({ kid, age, anchor }) => `Asked ${kid} about ${anchor}. At ${age} they mostly shrugged and went back to the tablet.`,
-  ({ aside, anchor }) => `${aside}. ${anchor} is going to have to wait until the weekend, if we get one.`,
-  ({ anchor }) => `I only caught half of it. The bit on ${anchor} I want to play again.`,
-  ({ kid, anchor }) => `${kid} said it was boring. I still think ${anchor} is the bit we actually need.`,
-  ({ age, anchor }) => `Gave it about ${age} minutes, which is our usual limit. ${anchor} did not stick.`,
-  ({ anchor, aside }) => `Note to self: ${anchor}. ${aside}.`,
-  ({ anchor }) => `Not really there yet. We are still stuck on ${anchor} from last week.`,
-  ({ kid, anchor }) => `Did this in the car because ${kid} talks more there. ${anchor} came out muddled but at least they talked.`,
-  ({ anchor }) => `Wrote ${anchor} on a scrap of paper and stuck it on the fridge. Nobody looked.`,
-  ({ kid, age, anchor }) => `${kid} is ${age}. ${anchor} sounds sensible and then the evening falls apart.`,
-  ({ anchor }) => `Ok so ${anchor}. I think. Might have missed the point of the film.`,
-  ({ aside, anchor }) => `${aside}, so I did not get far with ${anchor}.`,
-  ({ kid, anchor }) => `We had a go after tea. ${kid} lasted until ${anchor} came up, then wanted a snack.`,
-  ({ anchor }) => `${anchor}? In our house that turns into a row.`,
-  ({ kid, anchor }) => `I let ${kid} answer first. They said something about ${anchor} that I had not thought of.`,
-  ({ anchor, aside }) => `Short version, ${anchor} is unfinished. ${aside}.`,
-  ({ kid, anchor }) => `Tried explaining ${anchor} while I was cooking. ${kid} heard about half.`,
-  ({ anchor }) => `Watched it twice. Second time ${anchor} made more sense, still not sure what to do tomorrow.`,
-  ({ age, anchor, aside }) => `Our ${age} year old blanked. ${anchor}. ${aside}.`,
-  ({ kid, anchor }) => `Put ${anchor} in my notes and forgot until ${kid} asked what we were doing.`,
-]
-
-export function writtenAnswer(prompt: string, parent: SwarmParent, salt = 0) {
-  const anchor = anchorOf(prompt)
-  const voice = VOICES[(hash(`${prompt}|${parent.email}|${salt}`) + salt) % VOICES.length]
-  return tidy(voice({ anchor, kid: parent.kid, age: parent.age, aside: parent.aside }))
+export function isRealAnswerBody(body: string, realTexts: readonly string[]) {
+  const key = keptAnswerKey(body)
+  if (!key) return false
+  return realTexts.some((text) => keptAnswerKey(text) === key)
 }
 
 function pickReal(texts: string[], want: number) {
@@ -107,23 +69,14 @@ function pickReal(texts: string[], want: number) {
   return picked
 }
 
-/** Four to eight answers. Real 2021 lines come first. Gaps are written in that parent's voice. */
+/** Real 2021 lines only. Nothing is invented or built from the question's words. */
 export function planQuestionSwarm(input: { prompt: string; real: { question: string; text: string }[]; parents?: readonly SwarmParent[] }): PlannedAnswer[] {
   if (isBlankPrompt(input.prompt)) return []
   const parents = input.parents?.length ? input.parents : SWARM_PARENTS
-  const target = 4 + (hash(questionMatchKey(input.prompt)) % 5)
   const matched = input.real.filter((row) => questionsMatch(input.prompt, row.question)).map((row) => row.text)
-  const real = pickReal(matched, Math.min(target, parents.length))
-  const start = hash(input.prompt) % parents.length
-  const answers: PlannedAnswer[] = []
-  const used = new Set<string>()
-  for (let index = 0; index < parents.length && answers.length < target; index += 1) {
-    const parent = parents[(start + index) % parents.length]
-    if (used.has(parent.email)) continue
-    const body = index < real.length ? real[index] : writtenAnswer(input.prompt, parent, index)
-    if (!body || answers.some((row) => row.body.toLowerCase() === body.toLowerCase())) continue
-    used.add(parent.email)
-    answers.push({ name: parent.name, email: parent.email, body: body.slice(0, 1800), source: index < real.length ? 'real' : 'written' })
-  }
-  return answers
+  const real = pickReal(matched, Math.min(8, parents.length))
+  return real.map((body, index) => {
+    const parent = parents[index % parents.length]
+    return { name: parent.name, email: parent.email, body: body.slice(0, 1800), source: 'real' as const }
+  })
 }
