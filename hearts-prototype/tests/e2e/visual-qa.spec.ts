@@ -515,14 +515,19 @@ async function chipProblems(page: Page) {
     for (const row of rows.values()) {
       if (row.length < 2) continue
       const heights = row.map((el) => Math.round(el.getBoundingClientRect().height))
+      const chipTops = row.map((el) => Math.round(el.getBoundingClientRect().top))
       const pads = row.map((el) => getComputedStyle(el).paddingLeft)
       const icons = row.map((el) => el.querySelectorAll('svg').length)
       if (Math.max(...heights) - Math.min(...heights) > 1) problems.push(`height ${heights.join(',')}`)
+      if (Math.max(...chipTops) - Math.min(...chipTops) > 1) problems.push(`row ${chipTops.join(',')}`)
       if (new Set(pads).size > 1) problems.push(`padding ${pads.join(',')}`)
       if (icons.some((count) => count > 0) && icons.some((count) => count === 0)) problems.push('lone icon')
-      const lines = row.map((el) => {
+      const lineBoxes = row.map((el) => {
         const text = [...el.querySelectorAll(':scope > span')].find((span) => !span.classList.contains('j-glyph'))
-        return text ? text.getClientRects().length : 0
+        if (!text) return []
+        const range = document.createRange()
+        range.selectNodeContents(text)
+        return [...range.getClientRects()]
       })
       for (const el of row) {
         const text = [...el.querySelectorAll(':scope > span')].find((span) => !span.classList.contains('j-glyph'))
@@ -536,11 +541,8 @@ async function chipProblems(page: Page) {
         const chip = (box.top + box.bottom) / 2
         if (Math.abs(mid - chip) > 2) problems.push(`baseline ${el.getAttribute('data-option')} off by ${Math.abs(mid - chip).toFixed(1)}`)
       }
-      if (new Set(lines).size === 1 && lines[0] > 0) {
-        const tops = row.map((el) => {
-          const text = [...el.querySelectorAll(':scope > span')].find((span) => !span.classList.contains('j-glyph'))
-          return text ? Math.round(text.getClientRects()[0]?.top || 0) : 0
-        })
+      if (lineBoxes.every((lines) => lines.length === lineBoxes[0].length) && lineBoxes[0].length > 0) {
+        const tops = lineBoxes.map((lines) => Math.round(lines[0].top))
         if (Math.max(...tops) - Math.min(...tops) > 2) problems.push(`baseline ${tops.join(',')}`)
       }
     }

@@ -1668,6 +1668,7 @@ html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene
 html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-tile {
   display: flex;
   align-items: center;
+  align-content: center;
   align-self: stretch;
   justify-content: flex-start;
   height: auto;
