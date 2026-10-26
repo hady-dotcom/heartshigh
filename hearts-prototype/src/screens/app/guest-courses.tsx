@@ -102,7 +102,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
     return (
       <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
         <div className="app-scroll">
-          <div className="app-head">
+          <div className="app-head course-head">
             <a className="back" href={`${base}/courses`} data-testid="back">‹ Courses</a>
             <h1 data-testid="course-title">{title}</h1>
           </div>
@@ -161,7 +161,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
           guest
           films
           courseTitle={title}
-          backHref={`${base}/courses`}
+          backHref={`${base}/course/${course.id}`}
           lessonId={lesson.id}
           partLabel={`${partIndex + 1}. ${str(lesson.title)}`}
           youtubeId={coming ? null : str(lesson.youtubeId) || null}

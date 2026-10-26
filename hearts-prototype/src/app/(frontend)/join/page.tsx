@@ -7,6 +7,7 @@ import { BrandLockup } from '@/components/brand'
 import { getPayload } from 'payload'
 import config from '@payload-config'
 import { portalLogo } from '@/lib/learner-brand'
+import { brandForNext, nextQuery, safeNext } from '@/lib/door-brand'
 import { portalDisplayName } from '@/lib/portal-name'
 import { firstNameOf, inviteLine } from '@/lib/invite'
 
@@ -67,16 +68,19 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   }
 }
 
-export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; name?: string; from?: string; invitedBy?: string; gatherGuest?: string; after?: string }> }) {
+export default async function Join({ searchParams }: { searchParams: Promise<{ error?: string; code?: string; name?: string; from?: string; invitedBy?: string; gatherGuest?: string; after?: string; next?: string }> }) {
   const query = await searchParams
   const code = query.code || ''
   const invite = await inviteFor(code)
+  const fromNext = invite.brand ? null : await brandForNext(safeNext(query.next))
+  const brandName = invite.brand || fromNext?.name || ''
   const invited = invite.line
+  const back = `/login${nextQuery(safeNext(query.next))}`
   return (
     <main className="door apple-door" data-testid="join">
       <PageHelp page="join" />
       <div className="door-card">
-        {invite.brand ? <p className="brand-word" data-testid="portal-brand">{invite.brand}</p> : <BrandLockup size={72} />}
+        {brandName ? <p className="brand-word" data-testid="portal-brand">{brandName}</p> : <BrandLockup size={72} />}
         <h1>Come in</h1>
         <p className="lede" data-testid="join-pitch">{invited}.</p>
         <p className="lede">{code ? 'Your code is already filled in. Add your name, email and a password to join.' : 'Type the access code you were given, then your name, email and a password.'}</p>
@@ -90,8 +94,8 @@ export default async function Join({ searchParams }: { searchParams: Promise<{ e
           <TurnstileField />
           <button className="pill gold block" data-testid="join-submit" type="submit">Join</button>
         </form>
-        {code ? null : <p className="door-hint">Use the code your masjid gave you.</p>}
-        <div className="door-links"><Link href="/login">I already have an account</Link></div>
+        {code ? null : <p className="door-hint">{brandName ? 'Use the access code you were given.' : 'Use the code your masjid gave you.'}</p>}
+        <div className="door-links"><Link href={back}>I already have an account</Link></div>
       </div>
     </main>
   )

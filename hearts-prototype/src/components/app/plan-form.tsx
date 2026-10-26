@@ -26,6 +26,7 @@ export function PlanForm({
   next,
   portalSlug,
   open,
+  films = false,
 }: {
   courses: WeekCourse[]
   selected?: number | null
@@ -36,6 +37,7 @@ export function PlanForm({
   next: string
   portalSlug: string
   open: boolean
+  films?: boolean
 }) {
   const initial = selected || courses[0]?.id || 0
   const [courseId, setCourseId] = useState(initial)
@@ -109,7 +111,7 @@ export function PlanForm({
           </div>
         </div>
         <button className="pill purple block" data-testid="schedule-submit" type="submit">
-          Share out the parts
+          {films ? 'Share these films across these days' : 'Share out the parts'}
         </button>
       </form>
     </details>

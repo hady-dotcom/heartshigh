@@ -392,7 +392,7 @@ export type AnswerInput = {
   pendingSync?: boolean
 }
 
-export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; sharedWithLearners: boolean; correct: boolean | null; care?: boolean } | { ok: false; status: number; error: string }
+export type AnswerResult = { ok: true; answerId: number; updated: boolean; keepPrivate: boolean; sharedWithTeacher: boolean; sharedWithLearners: boolean; correct: boolean | null; care?: boolean } | { ok: false; status: number; error: string }
 
 /** Saves one pop-up answer and its workbook entry, for the answer sheet and for POST /api/answers. */
 export async function saveAnswer(payload: Payload, user: SessionUser, input: AnswerInput): Promise<AnswerResult> {
@@ -467,11 +467,13 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
       const limited = await hitShared(payload, uploadKey(user.id), UPLOAD_PER_HOUR, HOUR_MS)
       if (!limited.allowed) return fail(429, SLOW_DOWN)
     }
-    const keepPrivate = Boolean(input.keepPrivate)
-    const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
     const portalDoc = await payload.findByID({ collection: 'portals', id: portal, depth: 0, overrideAccess: true }).catch(() => null)
     const sequenceShare = isSequencePortal(portalDoc as { shape?: string | null } | null)
-    // HEARTS still needs the account switch. A sequenced course treats the tick on this answer as the choice.
+    // A sequenced course treats the share ticks as the choice, even when private started ticked.
+    // HEARTS still stores a private answer as private, and still needs the account switch for other learners.
+    let keepPrivate = Boolean(input.keepPrivate)
+    if (sequenceShare && (Boolean(input.shareWithTeacher) || Boolean(input.shareWithLearners))) keepPrivate = false
+    const shareWithTeacher = Boolean(input.shareWithTeacher) || Boolean(point.showImam)
     let shareWithLearners = !keepPrivate && Boolean(input.shareWithLearners) && (Boolean(user.shareWithLearners) || sequenceShare)
     if (shareWithLearners && (await circleMutedUntil(payload, user.id))) shareWithLearners = false
     const screened = await screenAnswerSafe([body, choice].filter(Boolean).join(' '))
@@ -502,7 +504,7 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         await payload.update({ collection: 'workbook-entries', id: entry.docs[0].id, overrideAccess: true, data: { body: body || choice, consent: shareWithTeacher, ...(imageId ? { image: imageId } : {}) } })
       }
       await afterLearnerWords(payload, user, portal, body || choice, { type: 'answer', id: earlier.docs[0].id }, crisis)
-      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithLearners: shareWithLearners, correct, care }
+      return { ok: true as const, answerId: earlier.docs[0].id, updated: true, keepPrivate, sharedWithTeacher: shareWithTeacher, sharedWithLearners: shareWithLearners, correct, care }
     }
     const answer = await payload.create({
       collection: 'answers',
@@ -551,13 +553,15 @@ export async function saveAnswer(payload: Payload, user: SessionUser, input: Ans
         key: `queued-${follower.id}`,
       })
     }
-    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, sharedWithLearners: shareWithLearners, correct, care }
+    return { ok: true as const, answerId: answer.id, updated: false, keepPrivate, sharedWithTeacher: shareWithTeacher, sharedWithLearners: shareWithLearners, correct, care }
   }
 
-export function answerSavedMessage(result: { keepPrivate: boolean; sharedWithLearners: boolean; care?: boolean }) {
+export function answerSavedMessage(result: { keepPrivate: boolean; sharedWithLearners: boolean; sharedWithTeacher?: boolean; care?: boolean }) {
   if (result.care) return CARE_SAVED
   if (result.keepPrivate) return 'Saved privately in your workbook.'
-  return result.sharedWithLearners ? 'Saved in your workbook and shared with other learners.' : 'Saved in your workbook.'
+  if (result.sharedWithLearners) return 'Saved in your workbook and shared with other learners.'
+  if (result.sharedWithTeacher) return 'Saved and shared with your teacher.'
+  return 'Saved in your workbook.'
 }
 
 export async function handlePost(req: Request) {

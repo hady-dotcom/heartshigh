@@ -178,6 +178,8 @@ export function CoursePlayer({
   const [trackWidth, setTrackWidth] = useState(340)
   const timelineRef = useRef<HTMLDivElement>(null)
   const [failed, setFailed] = useState(false)
+  const [vimeoReady, setVimeoReady] = useState(false)
+  const [vimeoFailed, setVimeoFailed] = useState(false)
   const [boot, setBoot] = useState(0)
   const [endCard, setEndCard] = useState(false)
   const [boardOpen, setBoardOpen] = useState(true)
@@ -326,6 +328,9 @@ export function CoursePlayer({
 
   useEffect(() => {
     if (!vimeoId) return
+    setVimeoReady(false)
+    setVimeoFailed(false)
+    let ready = false
     const frame = () => filmBox.current?.querySelector('iframe')?.contentWindow
     const listen = () => {
       const target = frame()
@@ -346,13 +351,24 @@ export function CoursePlayer({
         setTime(seconds)
       }
       if (data?.event === 'play' || data?.event === 'playProgress' || data?.event === 'timeupdate') {
+        ready = true
+        setVimeoReady(true)
+        setVimeoFailed(false)
         setPlaying(true)
         setLit(true)
         setCoverHeld(false)
       }
       if (data?.event === 'pause' || data?.event === 'finish') setPlaying(false)
       if (data?.event === 'finish') setEnded(true)
+      if (data?.event === 'error') {
+        ready = false
+        setVimeoReady(false)
+        setVimeoFailed(true)
+      }
       if (data?.event === 'ready') {
+        ready = true
+        setVimeoReady(true)
+        setVimeoFailed(false)
         listen()
         if (guest && !guestSought.current) {
           guestSought.current = true
@@ -364,10 +380,14 @@ export function CoursePlayer({
     window.addEventListener('message', onMessage)
     const arm = window.setInterval(listen, 500)
     const stop = window.setTimeout(() => window.clearInterval(arm), 8000)
+    const giveUp = window.setTimeout(() => {
+      if (!ready) setVimeoFailed(true)
+    }, 4000)
     return () => {
       window.removeEventListener('message', onMessage)
       window.clearInterval(arm)
       window.clearTimeout(stop)
+      window.clearTimeout(giveUp)
     }
   }, [guest, lessonId, vimeoId])
 
@@ -825,10 +845,11 @@ export function CoursePlayer({
           <div className="clip-row">
             <div className="clip-row-top">
               <Link className="chip white" href={backHref} data-testid="back">‹ Back</Link>
+              {films && garden.prevPart ? <Link className="chip white" href={garden.prevPart.href} data-testid="film-prev">‹ Previous film</Link> : null}
             </div>
           </div>
         </div>
-        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${mode === 'vimeo' ? ' vimeo-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}`} data-testid="player-card">
+        <div ref={card} className={`player-card is-f course-film-band${filmed ? ' yt-on' : ''}${mode === 'vimeo' ? ' vimeo-on' : ''}${playing ? ' is-live' : ''}${mode === 'loading' ? ' is-loading' : ''}${films && vimeoId && !vimeoReady ? ' is-hold' : ''}`} data-testid="player-card">
           <div key={coverKey} className={`poster${mode === 'loading' ? ' skeleton' : ''}${showCover ? '' : ' is-clear'}`} style={coverUrl ? { backgroundImage: `url(${coverUrl})` } : undefined} data-testid={mode === 'loading' ? 'player-skeleton' : 'player-poster'} />
           {mode === 'loading' && !failed ? <div className="player-veil" data-testid="player-veil" aria-hidden><span className="gold-spin" /></div> : null}
           {failed ? (
@@ -843,6 +864,12 @@ export function CoursePlayer({
           {vimeoId ? (
             <div className="yt j-film-band" ref={filmBox} style={{ visibility: mode === 'vimeo' ? 'visible' : 'hidden' }}>
               <iframe title={partLabel} src={vimeoPlayerSrc(vimeoId, film?.vimeoHash, { playsinline: '1', autopause: '0' })} allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media; web-share" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" data-testid="vimeo-player" />
+            </div>
+          ) : null}
+          {films && vimeoId && !vimeoReady && !videoComing ? (
+            <div className="film-hold" data-testid="film-hold" data-failed={vimeoFailed ? 'yes' : 'no'}>
+              {coverUrl ? <img src={coverUrl} alt="" /> : <strong>{partLabel}</strong>}
+              {vimeoFailed ? <a className="pill gold" href={`https://vimeo.com/${vimeoId}`} target="_blank" rel="noreferrer" data-testid="open-film">Open film</a> : null}
             </div>
           ) : null}
           {fileSrc ? (
@@ -1018,7 +1045,7 @@ export function CoursePlayer({
       {progressCard ? (
         <section className="garden-card" data-testid="sequence-progress-card">
           <p className="eyebrow">{progressCard.eyebrow}</p>
-          <h3 data-testid="sequence-progress-line">{guest && guestDone != null ? `${guestDone} of ${garden.total} films` : progressCard.line}</h3>
+          <h3 data-testid="sequence-progress-line">{films ? `${guest && guestDone != null ? guestDone : garden.done} of ${garden.total} films` : progressCard.line}</h3>
           <Link className="pill outline small" href={progressCard.backHref} data-testid="sequence-back">{progressCard.backLabel}</Link>
         </section>
       ) : null}
@@ -1147,6 +1174,8 @@ function Sheet({
   onOffer?: () => void
 }) {
   const [keepPrivate, setKeepPrivate] = useState(true)
+  const [shareTeacher, setShareTeacher] = useState(false)
+  const [shareLearners, setShareLearners] = useState(false)
   const [error, setError] = useState('')
   const [leaving, setLeaving] = useState(false)
   const [left, setLeft] = useState(point.timeLimitSec && point.state === 'open' && !point.answered ? point.timeLimitSec : null)
@@ -1296,7 +1325,7 @@ function Sheet({
           </div>
         ) : null}
         {point.state === 'open' && point.answered ? (
-          <div className="card" style={{ background: 'var(--mint)', borderColor: '#cfe5db' }} data-testid="already-answered">
+          <div className={`card already-answered${films ? ' is-film' : ''}`} style={films ? undefined : { background: 'var(--mint)', borderColor: '#cfe5db' }} data-testid="already-answered">
             <h3>Your answer</h3>
             <p>{point.myAnswer || 'Saved in your workbook.'}</p>
           </div>
@@ -1334,11 +1363,26 @@ function Sheet({
               {imageName ? <span className="attach-name">{imageName}</span> : null}
               {audioName ? <span className="attach-name">{audioName}</span> : null}
             </label>
-            <label className="toggle"><input type="checkbox" name="keepPrivate" checked={keepPrivate} onChange={(event) => setKeepPrivate(event.target.checked)} data-testid="answer-private" /> Keep my answer private</label>
+            <label className="toggle"><input type="checkbox" name="keepPrivate" checked={keepPrivate} onChange={(event) => {
+              const on = event.target.checked
+              setKeepPrivate(on)
+              if (on) {
+                setShareTeacher(false)
+                setShareLearners(false)
+              }
+            }} data-testid="answer-private" /> Keep my answer private</label>
             {point.showImam ? <input type="hidden" name="shareWithTeacher" value="on" /> : null}
-            {point.showImam ? <p data-testid="task-imam">Your imam and the portal admin can see this.</p> : <label className="toggle"><input type="checkbox" name="shareWithTeacher" data-testid="answer-share" /> Let my teacher read it</label>}
+            {point.showImam ? <p data-testid="task-imam">Your imam and the portal admin can see this.</p> : <label className="toggle"><input type="checkbox" name="shareWithTeacher" checked={shareTeacher} onChange={(event) => {
+              const on = event.target.checked
+              setShareTeacher(on)
+              if (on && films) setKeepPrivate(false)
+            }} data-testid="answer-share" /> Let my teacher read it</label>}
             {shareChoice ? (
-              <label className="toggle"><input type="checkbox" name="shareWithLearners" disabled={keepPrivate} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
+              <label className="toggle"><input type="checkbox" name="shareWithLearners" checked={shareLearners} disabled={!films && keepPrivate} onChange={(event) => {
+                const on = event.target.checked
+                setShareLearners(on)
+                if (on && films) setKeepPrivate(false)
+              }} data-testid="answer-share-learners" /> Let other learners on this video read it</label>
             ) : null}
             <button className="share-btn" type="submit" disabled={sending} data-testid="answer-submit">
               {sending ? 'Saving…' : point.kind === 'task' ? 'I have done this' : `${keepPrivate ? 'Save' : 'Share'} my ${SUBMIT[point.kind]}`}

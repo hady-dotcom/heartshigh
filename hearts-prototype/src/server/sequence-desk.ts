@@ -266,14 +266,25 @@ async function syncFilmQuestions(payload: Payload, lessonId: number, callouts: C
 }
 
 function filmKey(film: CourseFilm) {
-  return film.vimeoId ? `vimeo:${film.vimeoId}` : `title:${film.title.trim().toLowerCase()}`
+  return film.vimeoId ? `vimeo:${film.vimeoId}` : `title:${titleKey(film.publicTitle || film.title)}`
+}
+
+function titleKey(value: string) {
+  return value.trim().toLowerCase().replace(/\s+/g, ' ')
 }
 
 function rowKey(row: Doc) {
   const vimeoId = String(row.vimeoId || '').trim()
   if (vimeoId) return `vimeo:${vimeoId}`
-  const title = String(row.sourceTitle || '').trim().toLowerCase()
+  const title = titleKey(String(row.title || row.sourceTitle || ''))
   return title ? `title:${title}` : ''
+}
+
+function rememberLesson(buckets: Map<string, Doc[]>, key: string, row: Doc) {
+  if (!key) return
+  const list = buckets.get(key) || []
+  if (!list.includes(row)) list.push(row)
+  buckets.set(key, list)
 }
 
 function sameCourseTitle(left: string, right: string) {
@@ -396,11 +407,9 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
   const home = new Map<number, number>()
   for (const row of lessons) {
     home.set(row.id, idOf(row.course) || 0)
-    const key = rowKey(row)
-    if (!key) continue
-    const list = buckets.get(key) || []
-    list.push(row)
-    buckets.set(key, list)
+    rememberLesson(buckets, rowKey(row), row)
+    rememberLesson(buckets, `title:${titleKey(String(row.title || ''))}`, row)
+    rememberLesson(buckets, `title:${titleKey(String(row.sourceTitle || ''))}`, row)
   }
   const kept = new Set<number>()
   const usedCourses = new Set<number>()
@@ -438,11 +447,17 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
     }
     for (let index = 0; index < plan.films.length; index++) {
       const film = plan.films[index]
-      const bucket = buckets.get(filmKey(film)) || []
-      const current = bucket.find((row) => !kept.has(row.id))
+      const unused = (key: string) => (buckets.get(key) || []).find((row) => !kept.has(row.id))
+      const current = unused(filmKey(film)) || unused(`title:${titleKey(film.publicTitle)}`) || unused(`title:${titleKey(film.title)}`)
       const unit = unitId.get(film.section)
       if (!unit) return { error: 'A film is missing its section.' }
       const meta = film.vimeoId ? vimeoMetas.get(film.vimeoId) : undefined
+      const priorDuration = Number(current?.durationSeconds || 0)
+      const priorPoster = String(current?.posterUrl || '').trim()
+      const priorHash = String(current?.vimeoHash || '').trim()
+      const sameVideo = Boolean(current) && String(current?.vimeoId || '') === (film.vimeoId || '')
+      const metaHash = meta?.hash && /^[0-9a-f]{6,20}$/i.test(meta.hash) ? meta.hash : ''
+      const keptHash = metaHash || (sameVideo ? priorHash : '')
       const data = {
         title: film.publicTitle.slice(0, 240),
         sourceTitle: film.title.slice(0, 240),
@@ -457,7 +472,7 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
         youtubeUrl: null,
         youtubeId: null,
         vimeoId: film.vimeoId || null,
-        vimeoHash: null,
+        vimeoHash: keptHash || null,
         videoProvider: film.vimeoId ? 'vimeo' as const : null,
         transcript: null,
         transcriptSource: 'none' as const,
@@ -466,8 +481,8 @@ export async function syncCourseSheet(payload: Payload, portalId: number, raw: s
         publishState: 'published' as const,
         jibrilSection: null,
         ghunyaHeading: null,
-        ...(meta?.durationSeconds ? { durationSeconds: meta.durationSeconds } : {}),
-        ...(meta?.posterUrl ? { posterUrl: meta.posterUrl } : {}),
+        ...(Number(meta?.durationSeconds || 0) || priorDuration ? { durationSeconds: Number(meta?.durationSeconds || 0) || priorDuration } : {}),
+        ...((meta?.posterUrl || priorPoster) ? { posterUrl: meta?.posterUrl || priorPoster } : {}),
       }
       const lesson = current
         ? await payload.update({ collection: 'lessons', id: current.id, overrideAccess: true, data })

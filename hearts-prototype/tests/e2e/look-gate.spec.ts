@@ -2,7 +2,8 @@ import { expect, test, type Page } from '@playwright/test'
 
 const PHONE = { width: 390, height: 844 }
 
-const AUTH = ['/login?next=/p/parenting', '/forgot', '/join', '/reset', '/']
+const AUTH = ['/login?next=/p/parenting', '/forgot', '/join', '/reset', '/forgot?next=/p/parenting', '/join?next=/p/parenting', '/reset?next=/p/parenting', '/']
+const BRANDED = ['/login?next=/p/parenting', '/forgot?next=/p/parenting', '/join?next=/p/parenting', '/reset?next=/p/parenting']
 const GUEST = ['/p/parenting/courses', '/p/parenting/week', '/p/parenting/me']
 
 const BANNED = new Set([
@@ -57,6 +58,14 @@ test('auth, guest and parenting pages stay on the white and blue tokens', async 
     const hits = await oldTheme(page)
     if (hits.length) problems.push(`${path}: ${hits.join('; ')}`)
   }
+  for (const path of BRANDED) {
+    await page.goto(path)
+    await expect(page.getByTestId('portal-brand')).toHaveText('Hady Home')
+    await expect(page.locator('body')).not.toContainText(/\bHEARTS\b/)
+    await expect(page.locator('body')).not.toContainText(/masjid/i)
+  }
+  await page.goto('/login')
+  await expect(page.locator('body')).toContainText('HEARTS')
   await page.goto('/login?next=/p/parenting/admin')
   await page.getByTestId('login-email').fill('parenting-admin@hearts.test')
   await page.getByTestId('login-password').fill('portal-admin')

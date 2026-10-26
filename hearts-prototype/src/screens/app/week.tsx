@@ -6,6 +6,7 @@ import { AppFrame, Back, Flash } from '@/components/app/shell'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { learnerBrand } from '@/lib/learner-brand'
 import { shellOf } from '@/lib/portal-look'
+import { isSequencePortal } from '@/lib/sequence'
 import { formatLearnerDate, parseWeekdays } from '@/lib/week'
 import { libraryStartNote } from '@/lib/first-course'
 import { minutesADay } from '@/lib/study-plan'
@@ -113,6 +114,7 @@ export async function WeekScreen({ payload, user, portal, base, query }: Ctx) {
           next={from ? `${base}/week?from=${encodeURIComponent(from)}` : `${base}/week`}
           portalSlug={String(portal.slug || '')}
           open={showForm}
+          films={isSequencePortal(portal)}
         />
       </div>
       <LearnerTabBar base={base} active="week" portal={portal} unread={unread} />

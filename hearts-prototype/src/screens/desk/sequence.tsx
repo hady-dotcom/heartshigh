@@ -176,6 +176,20 @@ export async function SequenceCodes(ctx: Ctx) {
   )
 }
 
+async function SharedWithGroup({ payload, portalId }: { payload: Ctx['payload']; portalId: number }) {
+  const answers = await rows(payload, 'answers', { and: [{ portal: { equals: portalId } }, { shareWithLearners: { equals: true } }, { keepPrivate: { not_equals: true } }] }, { depth: 1, sort: '-createdAt', limit: 40 })
+  return (
+    <section className="panel" data-testid="group-shared">
+      <h2>Shared with the group</h2>
+      {answers.length ? answers.map((answer) => {
+        const person = answer.user as { name?: string } | number | null
+        const name = person && typeof person === 'object' ? str(person.name) : 'A learner'
+        return <p key={answer.id} data-testid="group-shared-answer"><b>{name || 'A learner'}.</b> {sharedAnswerText({ body: answer.body, choice: answer.choice, video: answer.video, audio: answer.audio, image: answer.image })}</p>
+      }) : <p data-testid="group-shared-empty">No answers have been shared with other learners yet.</p>}
+    </section>
+  )
+}
+
 async function SharedWithTeacher({ payload, portalId }: { payload: Ctx['payload']; portalId: number }) {
   const answers = await rows(payload, 'answers', { and: [{ portal: { equals: portalId } }, { shareWithTeacher: { equals: true } }, { keepPrivate: { not_equals: true } }] }, { depth: 1, sort: '-createdAt', limit: 40 })
   const shared = sharedAnswersNewestFirst(answers)
@@ -260,6 +274,7 @@ export async function SequenceLearners(ctx: Ctx) {
       </section>
       <p data-testid="teacher-name">{user.name || 'Teacher'}</p>
       {await SharedWithTeacher({ payload, portalId: portal.id })}
+      {await SharedWithGroup({ payload, portalId: portal.id })}
       {await ParentSaid({ payload, portalId: portal.id, base: here, film: ctx.query.film })}
       {learners.length ? (
         <ul data-testid="sequence-learner-list">

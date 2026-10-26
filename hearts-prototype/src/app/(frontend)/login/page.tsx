@@ -1,33 +1,12 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { getPayload } from 'payload'
-import config from '@payload-config'
 import { Flash, Hidden } from '@/components/app/shell'
 import { PageHelp } from '@/components/app/page-help'
 import { TurnstileField } from '@/components/app/turnstile-field'
 import { BrandLockup } from '@/components/brand'
-import { portalLogo } from '@/lib/learner-brand'
 import { isDemoStageLogin } from '@/lib/demo-stage-gate'
+import { brandForNext, nextQuery, safeNext } from '@/lib/door-brand'
 import { DemoStageLogin } from '../demo-stage/entry'
-
-function safeNext(value: string | undefined) {
-  return value && value.startsWith('/') && !value.startsWith('//') ? value : '/'
-}
-
-async function brandForNext(next: string) {
-  const slug = next.match(/^\/p\/([^/?#]+)/)?.[1]
-  if (!slug) return { name: '', logo: '' }
-  try {
-    const payload = await getPayload({ config })
-    const found = await payload.find({ collection: 'portals', overrideAccess: true, depth: 0, limit: 1, where: { slug: { equals: slug } } })
-    const portal = found.docs[0] as { brandName?: string | null; logoUrl?: string | null } | undefined
-    const name = String(portal?.brandName || '').trim()
-    if (name) return { name, logo: portalLogo(portal?.logoUrl) }
-  } catch {
-    // Sign-in still works when the portal lookup misses.
-  }
-  return { name: '', logo: '' }
-}
 
 function brandIcons(name: string, logo: string): Metadata {
   const hady = logo === '/icons/hady-home.svg'
@@ -79,7 +58,7 @@ export default async function Login({ searchParams }: { searchParams: Promise<{ 
           <TurnstileField />
           <button className="pill gold block" data-testid="login-submit" type="submit">Sign in</button>
         </form>
-        <div className="door-links"><Link href="/forgot">Forgot password</Link><Link href="/join">I have an access code</Link><Link href="/">Back</Link></div>
+        <div className="door-links"><Link href={`/forgot${nextQuery(next)}`}>Forgot password</Link><Link href={`/join${nextQuery(next)}`}>I have an access code</Link><Link href={next === '/' ? '/' : next}>Back</Link></div>
       </div>
     </main>
   )

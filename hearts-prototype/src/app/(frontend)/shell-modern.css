@@ -2127,3 +2127,96 @@ html[data-theme] .app-stage.shell-modern .library-section > h2 {
   line-height: 1.2;
   color: var(--hh-ink);
 }
+
+/* A long course title sits under the back link, on its own line. */
+html[data-theme] .app-stage.shell-modern .course-head {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: var(--hh-space-1);
+  min-height: 0;
+}
+
+html[data-theme] .app-stage.shell-modern .course-head .back {
+  position: static;
+}
+
+html[data-theme] .app-stage.shell-modern .course-head h1 {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+html[data-theme] .app-stage.shell-modern .clip-row-top {
+  flex-wrap: wrap;
+}
+
+/* While Vimeo has not started, cover its page with a white and blue poster. */
+html[data-theme] .app-stage.shell-modern .player-card.is-hold,
+html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card.course-film-band.is-hold {
+  background: var(--hh-accent-fill);
+}
+
+html[data-theme] .app-stage.shell-modern .film-hold {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--hh-space-3);
+  padding: var(--hh-space-4);
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .film-hold img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-theme] .app-stage.shell-modern .film-hold strong {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+}
+
+html[data-theme] .app-stage.shell-modern .film-hold .pill {
+  position: relative;
+  z-index: 1;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet .kind-tabs span {
+  background: var(--hh-paper);
+  color: var(--hh-ink-2);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet .kind-tabs span.on,
+html[data-theme] .app-stage.shell-modern .sheet .share-btn,
+html[data-theme] .app-stage.shell-modern .sheet .pill.teal,
+html[data-theme] .app-stage.shell-modern .sheet .pill.gold {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet .already-answered {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-theme] .app-stage.shell-modern .sheet .compose,
+html[data-theme] .app-stage.shell-modern .sheet .compose textarea,
+html[data-theme] .app-stage.shell-modern .sheet .lock-box {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
