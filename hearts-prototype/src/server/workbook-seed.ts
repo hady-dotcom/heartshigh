@@ -1,45 +1,42 @@
 import { randomBytes } from 'node:crypto'
-import type { Payload } from 'payload'
+import type { DataFromCollectionSlug, Payload, Where } from 'payload'
 import { WORKBOOK_FILMS, workbookParentEmail, type WorkbookFilm } from '@/lib/demo-workbook'
 import { questionsMatch } from '@/lib/swarm-plan'
+
+async function collect<C extends 'courses' | 'lessons' | 'engagement-points'>(payload: Payload, collection: C, where: Where) {
+  const docs: DataFromCollectionSlug<C>[] = []
+  let page = 1
+  for (;;) {
+    const found = await payload.find({ collection, overrideAccess: true, depth: 0, limit: 100, page, where })
+    docs.push(...found.docs)
+    if (!found.hasNextPage) break
+    page += 1
+    if (page > 20) break
+  }
+  return docs
+}
 
 /**
  * Puts the handwritten parent lines on the first ten Guiding Home Learning films.
  * It does not invent any other answers.
  */
 export async function seedWorkbookAnswers(payload: Payload, portalId: number, films: readonly WorkbookFilm[] = WORKBOOK_FILMS, sheetTitle: string | null = 'Guiding Home Learning') {
-  const courses = await payload.find({
-    collection: 'courses',
-    overrideAccess: true,
-    depth: 0,
-    limit: sheetTitle ? 40 : 80,
-    where: {
-      and: [
-        { portal: { equals: portalId } },
-        { hidden: { not_equals: true } },
-        ...(sheetTitle ? [{ sheetTitle: { equals: sheetTitle } }] : []),
-      ],
-    },
+  const courses = await collect(payload, 'courses', {
+    and: [
+      { portal: { equals: portalId } },
+      { hidden: { not_equals: true } },
+      ...(sheetTitle ? [{ sheetTitle: { equals: sheetTitle } }] : []),
+    ],
   })
-  const courseIds = courses.docs.map((row) => row.id)
+  const courseIds = courses.map((row) => row.id)
   if (!courseIds.length) return { created: 0 }
-  const lessons = await payload.find({
-    collection: 'lessons',
-    overrideAccess: true,
-    depth: 0,
-    limit: 30,
-    where: { and: [{ course: { in: courseIds } }, { vimeoId: { in: films.map((film) => film.vimeoId) } }, { binned: { not_equals: true } }] },
+  const lessons = await collect(payload, 'lessons', {
+    and: [{ course: { in: courseIds } }, { vimeoId: { in: films.map((film) => film.vimeoId) } }, { binned: { not_equals: true } }],
   })
-  const byVimeo = new Map(lessons.docs.map((row) => [String(row.vimeoId || ''), row]))
-  const lessonIds = lessons.docs.map((row) => row.id)
+  const byVimeo = new Map(lessons.map((row) => [String(row.vimeoId || ''), row]))
+  const lessonIds = lessons.map((row) => row.id)
   if (!lessonIds.length) return { created: 0 }
-  const points = await payload.find({
-    collection: 'engagement-points',
-    overrideAccess: true,
-    depth: 0,
-    limit: 40,
-    where: { lesson: { in: lessonIds } },
-  })
+  const points = await collect(payload, 'engagement-points', { lesson: { in: lessonIds } })
   const users = new Map<string, number>()
   const ensure = async (name: string) => {
     const email = workbookParentEmail(name)
@@ -71,10 +68,10 @@ export async function seedWorkbookAnswers(payload: Payload, portalId: number, fi
   for (const film of films) {
     const lesson = byVimeo.get(film.vimeoId)
     if (!lesson) continue
-    const point = points.docs.find((row) => {
+    const point = points.find((row) => {
       const lessonId = typeof row.lesson === 'object' && row.lesson ? row.lesson.id : Number(row.lesson)
       return lessonId === lesson.id && questionsMatch(String(row.prompt || ''), film.prompt)
-    }) || points.docs.find((row) => {
+    }) || points.find((row) => {
       const lessonId = typeof row.lesson === 'object' && row.lesson ? row.lesson.id : Number(row.lesson)
       return lessonId === lesson.id
     })
