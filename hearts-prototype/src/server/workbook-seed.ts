@@ -1,19 +1,25 @@
 import { randomBytes } from 'node:crypto'
 import type { Payload } from 'payload'
-import { WORKBOOK_FILMS, workbookParentEmail } from '@/lib/demo-workbook'
+import { WORKBOOK_FILMS, workbookParentEmail, type WorkbookFilm } from '@/lib/demo-workbook'
 import { questionsMatch } from '@/lib/swarm-plan'
 
 /**
  * Puts the handwritten parent lines on the first ten Guiding Home Learning films.
  * It does not invent any other answers.
  */
-export async function seedWorkbookAnswers(payload: Payload, portalId: number) {
+export async function seedWorkbookAnswers(payload: Payload, portalId: number, films: readonly WorkbookFilm[] = WORKBOOK_FILMS, sheetTitle: string | null = 'Guiding Home Learning') {
   const courses = await payload.find({
     collection: 'courses',
     overrideAccess: true,
     depth: 0,
-    limit: 20,
-    where: { and: [{ portal: { equals: portalId } }, { sheetTitle: { equals: 'Guiding Home Learning' } }, { hidden: { not_equals: true } }] },
+    limit: sheetTitle ? 40 : 80,
+    where: {
+      and: [
+        { portal: { equals: portalId } },
+        { hidden: { not_equals: true } },
+        ...(sheetTitle ? [{ sheetTitle: { equals: sheetTitle } }] : []),
+      ],
+    },
   })
   const courseIds = courses.docs.map((row) => row.id)
   if (!courseIds.length) return { created: 0 }
@@ -22,7 +28,7 @@ export async function seedWorkbookAnswers(payload: Payload, portalId: number) {
     overrideAccess: true,
     depth: 0,
     limit: 30,
-    where: { and: [{ course: { in: courseIds } }, { vimeoId: { in: WORKBOOK_FILMS.map((film) => film.vimeoId) } }, { binned: { not_equals: true } }] },
+    where: { and: [{ course: { in: courseIds } }, { vimeoId: { in: films.map((film) => film.vimeoId) } }, { binned: { not_equals: true } }] },
   })
   const byVimeo = new Map(lessons.docs.map((row) => [String(row.vimeoId || ''), row]))
   const lessonIds = lessons.docs.map((row) => row.id)
@@ -62,7 +68,7 @@ export async function seedWorkbookAnswers(payload: Payload, portalId: number) {
     return created.id
   }
   let created = 0
-  for (const film of WORKBOOK_FILMS) {
+  for (const film of films) {
     const lesson = byVimeo.get(film.vimeoId)
     if (!lesson) continue
     const point = points.docs.find((row) => {

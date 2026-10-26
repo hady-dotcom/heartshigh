@@ -41,7 +41,7 @@ test('cast, four live screens, and a change that moves between them', async ({ p
   await page.getByTestId('role-switch-learner').click()
   await page.waitForURL(/\/p\/parenting/)
   const learnerPage = page
-  await expect(learnerPage.getByTestId('demo-hello')).toContainText('Abdallah')
+  await expect(learnerPage.getByTestId('demo-hello')).toContainText('Amina')
   await expect(learnerPage.getByTestId('demo-note')).toBeVisible()
   await expect(learnerPage.locator('body')).not.toContainText(/payload|sandbox|iframe|endpoint|token/i)
   const phoneOverflow = await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
@@ -56,7 +56,7 @@ test('cast, four live screens, and a change that moves between them', async ({ p
   const teacher = page.frameLocator('[data-testid="demo-teacher-frame"]')
   const portal = page.frameLocator('[data-testid="demo-portal-frame"]')
   const master = page.frameLocator('[data-testid="demo-master-frame"]')
-  await expect(learner.getByTestId('demo-hello')).toContainText('Abdallah', { timeout: 60_000 })
+  await expect(learner.getByTestId('demo-hello')).toContainText('Amina', { timeout: 60_000 })
   await expect(teacher.getByTestId('sequence-learners')).toBeVisible({ timeout: 60_000 })
   await expect(portal.getByTestId('sequence-overview')).toBeVisible({ timeout: 60_000 })
   await expect(master.getByTestId('demo-join-code').first()).toContainText('PARENT-DEMO', { timeout: 60_000 })

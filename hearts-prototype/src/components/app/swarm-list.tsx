@@ -1,9 +1,10 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { ReportButton } from '@/components/app/report-sheet'
 import { orderSwarm, type SwarmMode } from '@/lib/swarm-sort'
 
-export type SwarmFace = { name: string; body: string; image?: string | null; circle?: boolean; initials: string }
+export type SwarmFace = { name: string; body: string; image?: string | null; circle?: boolean; initials: string; id?: number; kind?: 'answer' | 'circle-answer' }
 
 const DOTS = ['#d4a84b', '#c9d6b0', '#e4d4f4', '#e8a15a', '#e7a0b4']
 
@@ -12,12 +13,15 @@ export function SwarmList({
   mine,
   circleLabel,
   showName = false,
+  reportNext,
 }: {
   items: SwarmFace[]
   mine?: string | null
   circleLabel?: string
   /** Hady Home shows the parent’s name. HEARTS keeps initials. */
   showName?: boolean
+  /** When set, each shared answer gets its own concern link. */
+  reportNext?: string
 }) {
   const [mode, setMode] = useState<SwarmMode>('mix')
   const answered = Boolean(mine && mine.trim())
@@ -44,6 +48,9 @@ export function SwarmList({
               {item.circle && circleLabel ? <small className="circle-note" data-testid="circle-label">{circleLabel}</small> : null}
               <p>&lsquo;{item.body}&rsquo;</p>
               {item.image ? <img src={item.image} alt="" /> : null}
+              {reportNext && item.id && item.kind ? (
+                <ReportButton quiet targetType={item.kind} targetId={item.id} next={reportNext} />
+              ) : null}
             </div>
           </div>
         ))

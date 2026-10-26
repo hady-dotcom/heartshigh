@@ -2343,3 +2343,18 @@ html[data-theme] .app-stage.shell-modern .workbook-others p {
   line-height: 1.45;
   color: #243044;
 }
+
+.app-stage.shell-modern .report-under {
+  margin-top: var(--hh-space-1);
+}
+
+.app-stage.shell-modern .report-link {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--hh-muted);
+  font: inherit;
+  font-size: var(--hh-font-size-caption);
+  text-decoration: underline;
+  cursor: pointer;
+}

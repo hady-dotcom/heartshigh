@@ -85,10 +85,10 @@ const ASK_1 = 'How would you describe your experience of home learning so far?'
 export function defaultParentingCast(): ParentingCast {
   return {
     master: 'Leon',
-    portalAdmin: 'Rafiq',
-    portalName: 'Guiding Home Learning',
-    teacher: 'Sami',
-    learner: 'Abdallah',
+    portalAdmin: 'Rafiq Malik',
+    portalName: 'Hady Home',
+    teacher: 'Hannah Price',
+    learner: 'Amina',
   }
 }
 

@@ -179,10 +179,16 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     payload.logger.error({ err: error, msg: 'Could not remove the generated parent answers.' })
   })
   const { seedWorkbookAnswers } = await import('@/server/workbook-seed')
+  const { BOOK_SWARM } = await import('@/lib/book-swarm')
   void seedWorkbookAnswers(payload, Number(portal.id)).then((result) => {
     if (result.created) payload.logger.info(`Shared ${result.created} handwritten answers on the first ten films.`)
   }).catch((error) => {
     payload.logger.error({ err: error, msg: 'Could not share the workbook answers.' })
+  })
+  void seedWorkbookAnswers(payload, Number(portal.id), BOOK_SWARM, null).then((result) => {
+    if (result.created) payload.logger.info(`Shared ${result.created} handwritten answers on Raising calm, happy children.`)
+  }).catch((error) => {
+    payload.logger.error({ err: error, msg: 'Could not share the book summary answers.' })
   })
   await ensureOpeningQuestions(payload, Number(portal.id))
   await ensureParentScenes(payload, Number(portal.id))

@@ -40,7 +40,7 @@ test('an answer shows for the teacher, a note shows for the learner, and a switc
 
   const noted = reduceParentingDemo(answered, { type: 'note', body: 'Try the third film tonight.', from: cast.teacher }, cast)
   assert.equal(noted.notes[0]?.body, 'Try the third film tonight.')
-  assert.equal(noted.notes[0]?.from, 'Sami')
+  assert.equal(noted.notes[0]?.from, 'Hannah Price')
 
   const switched = reduceParentingDemo(noted, {
     type: 'features',

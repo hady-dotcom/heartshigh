@@ -11,22 +11,25 @@ export function ReportButton({
   targetType,
   targetId,
   next,
+  quiet = false,
 }: {
   targetType: TargetType
   targetId: number
   next: string
+  /** A small grey link under one answer, for the white Hady Home sheet. */
+  quiet?: boolean
 }) {
   const [open, setOpen] = useState(false)
   return (
-    <div style={{ position: 'relative' }}>
+    <div className={quiet ? 'report-under' : undefined} style={quiet ? undefined : { position: 'relative' }}>
       <button
         type="button"
-        className="link-btn"
+        className={quiet ? 'report-link' : 'link-btn'}
         data-testid="report-open"
         data-target-type={targetType}
         data-target-id={String(targetId)}
         onClick={() => setOpen(true)}
-        style={{ fontSize: 13, color: '#E4D3A4' }}
+        style={quiet ? undefined : { fontSize: 13, color: '#E4D3A4' }}
       >
         Report a concern
       </button>

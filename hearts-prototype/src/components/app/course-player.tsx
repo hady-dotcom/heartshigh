@@ -1424,8 +1424,9 @@ function Sheet({
               items={swarm.map((item) => ({ ...item, initials: item.initials || initialsOf(item.name) }))}
               mine={point.myAnswer}
               circleLabel={circleLabel}
+              reportNext={films ? next : undefined}
             />
-            {swarm.some((item) => item.id && item.kind) ? (
+            {!films && swarm.some((item) => item.id && item.kind) ? (
               <div style={{ marginTop: 8 }}>
                 {swarm.filter((item) => item.id && item.kind).map((item) => (
                   <ReportButton key={`${item.kind}-${item.id}`} targetType={item.kind!} targetId={item.id!} next={next} />

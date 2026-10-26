@@ -1,3 +1,4 @@
+import { BOOK_SWARM } from '@/lib/book-swarm'
 import { keptAnswerKey } from '@/lib/swarm-plan'
 
 /** The first ten Guiding Home Learning films, in sheet order. Welcome film 1 is not in the course. */
@@ -133,7 +134,10 @@ export const WORKBOOK_FILMS: WorkbookFilm[] = [
   },
 ]
 
-const HANDWRITTEN = new Set(WORKBOOK_FILMS.flatMap((film) => film.others.map((row) => keptAnswerKey(row.body))))
+const HANDWRITTEN = new Set([
+  ...WORKBOOK_FILMS.flatMap((film) => film.others.map((row) => keptAnswerKey(row.body))),
+  ...BOOK_SWARM.flatMap((film) => film.others.map((row) => keptAnswerKey(row.body))),
+])
 
 export function isHandwrittenAnswer(body: string) {
   const key = keptAnswerKey(body)
