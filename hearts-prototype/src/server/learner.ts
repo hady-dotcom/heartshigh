@@ -14,6 +14,7 @@ import { visibleCourseIds, type PortalDoc, type SessionUser } from './context'
 import type { FramingTrack } from '@/lib/framing/types'
 import { tidyTalkTitle } from '@/lib/talk-title'
 import { courseIsOpen, opensOnDay } from '@/lib/drip'
+import { bookStillUrl } from '@/lib/book-source'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 
 export type SlideStyle = 'kinetic' | 'cinema' | 'windows' | 'conversation' | 'unfold'
@@ -142,6 +143,8 @@ export function posterFor(youtubeId: string | null | undefined) {
 export function filmPoster(lesson: object | null | undefined) {
   const row = lesson as { posterUrl?: unknown; youtubeId?: unknown } | null | undefined
   const stored = String(row?.posterUrl || '').trim()
+  const still = bookStillUrl(stored)
+  if (still) return still
   if (/^https:\/\//i.test(stored)) return stored
   const youtubeId = typeof row?.youtubeId === 'string' ? row.youtubeId : null
   return posterFor(youtubeId)

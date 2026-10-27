@@ -251,6 +251,8 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
   await clearMisplacedHomeAnswers(payload)
   await applyStoredVimeoMeta(payload, storedMetas)
   await backfillVimeoFilms(payload)
+  const { applyBookSourceMedia } = await import('@/server/book-source')
+  await applyBookSourceMedia(payload)
   const masterPath = path.join(root, 'uploads/hady-home-master-sheet.csv')
   if (!existsSync(masterPath)) throw new Error('The Hady Home master sheet is missing.')
   const sheetFilms = [
