@@ -2,7 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { Payload } from 'payload'
-import { fetchVimeoMetas, shouldFetchVimeo, type VimeoMeta } from '@/lib/vimeo-meta'
+import { fetchVimeoMetas, shouldFetchVimeo, storedVimeoRow, type VimeoMeta } from '@/lib/vimeo-meta'
 import { misplacedHomeAnswers } from '@/lib/said-answers'
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
@@ -25,11 +25,9 @@ export function loadStoredVimeoMetas() {
   if (!existsSync(file)) return map
   const raw = JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>
   for (const [id, value] of Object.entries(raw)) {
-    if (!/^\d{6,12}$/.test(id) || !Array.isArray(value)) continue
-    const duration = Number(value[0] || 0)
-    const poster = String(value[1] || '')
-    if (!duration && !poster.startsWith('https://')) continue
-    map.set(id, { durationSeconds: duration > 0 ? Math.round(duration) : 0, posterUrl: poster.startsWith('https://') ? poster : '', hash: '' })
+    if (!/^\d{6,12}$/.test(id)) continue
+    const meta = storedVimeoRow(value)
+    if (meta) map.set(id, meta)
   }
   return map
 }
@@ -50,9 +48,10 @@ export async function applyStoredVimeoMeta(payload: Payload, metas = loadStoredV
     for (const row of found.docs as LessonRow[]) {
       const meta = metas.get(String(row.vimeoId || '').trim())
       if (!meta) continue
-      const data: { durationSeconds?: number; posterUrl?: string } = {}
+      const data: { durationSeconds?: number; posterUrl?: string; vimeoHash?: string } = {}
       if (!Number(row.durationSeconds) && meta.durationSeconds) data.durationSeconds = meta.durationSeconds
       if (!String(row.posterUrl || '').trim() && meta.posterUrl) data.posterUrl = meta.posterUrl
+      if (!String(row.vimeoHash || '').trim() && meta.hash) data.vimeoHash = meta.hash
       if (!Object.keys(data).length) continue
       await payload.update({ collection: 'lessons', id: row.id, overrideAccess: true, data })
       updated += 1

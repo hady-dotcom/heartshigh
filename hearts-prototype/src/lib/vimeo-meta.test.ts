@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { discoverVimeoHash, discoverVimeoPage, fetchVimeoMeta, readVimeoOembed, shouldFetchVimeo, vimeoHashFromHtml, vimeoOembedUrl } from './vimeo-meta'
+import { discoverVimeoHash, discoverVimeoPage, fetchVimeoMeta, readVimeoOembed, shouldFetchVimeo, storedVimeoRow, vimeoHashFromHtml, vimeoOembedUrl } from './vimeo-meta'
+
+test('a stored row keeps a real thumbnail and does not invent a length', () => {
+  const row = storedVimeoRow([0, 'https://i.vimeocdn.com/video/a.webp?f=webp&amp;region=us', '6a201aec2b'])
+  assert.equal(row?.durationSeconds, 0)
+  assert.equal(row?.posterUrl, 'https://i.vimeocdn.com/video/a.webp?f=webp&region=us')
+  assert.equal(row?.hash, '6a201aec2b')
+  assert.equal(storedVimeoRow([0, '', '']), null)
+  assert.equal(storedVimeoRow([169, 'https://i.vimeocdn.com/video/b.jpg'])?.durationSeconds, 169)
+})
 
 test('vimeo oEmbed keeps a real duration and an https thumbnail', () => {
   const meta = readVimeoOembed({ duration: 372.4, thumbnail_url: 'https://i.vimeocdn.com/video/123_640.jpg' })
