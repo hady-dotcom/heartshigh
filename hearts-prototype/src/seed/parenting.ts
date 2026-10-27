@@ -186,7 +186,7 @@ export async function ensureParentingCourse(payload: Payload, opts?: { refresh?:
     payload.logger.error({ err: error, msg: 'Could not share the workbook answers.' })
   })
   void seedWorkbookAnswers(payload, Number(portal.id), BOOK_SWARM, null).then((result) => {
-    if (result.created) payload.logger.info(`Shared ${result.created} handwritten answers on Raising calm, happy children.`)
+    if (result.created || result.renamed) payload.logger.info(`Book summary answers: shared ${result.created}, renamed ${result.renamed}.`)
   }).catch((error) => {
     payload.logger.error({ err: error, msg: 'Could not share the book summary answers.' })
   })

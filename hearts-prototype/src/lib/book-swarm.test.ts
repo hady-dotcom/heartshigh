@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { BOOK_SWARM } from './book-swarm'
 import { isHandwrittenAnswer } from './demo-workbook'
+import { assignBookParentNames, groupForSurname } from './parent-name-pools'
+import { speakerGender } from './speaker-gender'
 import { SWARM_PARENTS } from './swarm-plan'
 
 test('Raising calm, happy children keeps handwritten lines, with no repeated person', () => {
@@ -63,4 +65,28 @@ test('Raising calm, happy children keeps handwritten lines, with no repeated per
   assert.ok(bodies.every((body) => body.length > 80 && isHandwrittenAnswer(body)))
   assert.ok(BOOK_SWARM.every((film) => film.others.length >= 4 && film.others.length <= 8))
   assert.ok(BOOK_SWARM.every((film) => film.prompt.trim().toLowerCase() !== 'n/a'))
+  const assigned = assignBookParentNames(BOOK_SWARM)
+  const surnameCount = new Map<string, number>()
+  const cultureCount = new Map<string, number>()
+  BOOK_SWARM.forEach((film, index) => {
+    const cultures = new Set<string>()
+    film.others.forEach((row, slot) => {
+      assert.equal(row.name, assigned[index][slot])
+      const parts = row.name.split(' ')
+      assert.equal(parts.length, 2)
+      const group = groupForSurname(parts[1])
+      assert.ok(group, row.name)
+      const gender = speakerGender(row.body)
+      const pool = gender === 'woman' ? group!.women : gender === 'man' ? group!.men : [...group!.women, ...group!.men]
+      assert.ok(pool.some((name) => name.toLowerCase() === parts[0].toLowerCase()), row.name)
+      cultures.add(group!.culture)
+      cultureCount.set(group!.culture, (cultureCount.get(group!.culture) || 0) + 1)
+      const key = parts[1].toLowerCase()
+      surnameCount.set(key, (surnameCount.get(key) || 0) + 1)
+    })
+    assert.equal(cultures.size, film.others.length)
+  })
+  assert.equal(cultureCount.size, 7)
+  for (const count of cultureCount.values()) assert.ok(count >= 100)
+  for (const count of surnameCount.values()) assert.ok(count <= 2)
 })
