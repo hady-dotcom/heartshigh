@@ -19,6 +19,7 @@ import { safetyCollections } from './collections-safety'
 import { sheetCollections } from './collections-sheet'
 import { MasterFlags } from './collections-opening'
 import { databaseKind, isBuildPhase, isProduction, payloadSecret, postgresPush, readS3, serverOrigins, sqliteFileUrl } from './lib/env'
+import { postgresPool } from './lib/postgres-pool'
 import { migrations } from './migrations'
 import { copyPackCoursesOntoCodes } from './server/code-courses'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
@@ -92,7 +93,7 @@ export default buildConfig({
   db:
     kind === 'postgres'
       ? postgresAdapter({
-          pool: { connectionString: databaseUrl, max: 10 },
+          pool: postgresPool(databaseUrl),
           // Integer ids, matching the SQLite database the app already uses.
           idType: 'serial',
           push: postgresPush(),

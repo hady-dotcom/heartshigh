@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 
 const col = (name: string) => name as 'users'
+import { aiStepsListArgs, classifyAiStepsGet } from '@/lib/ai-steps-list'
 import { portalIdOf } from '@/lib/ids'
 import { getSession } from '@/server/context'
 import { actorOf, decidePortalChange, ensureSteps, publishVersion, saveVersion, setGrant, startJob, tryStep, useHeartsVersion } from '@/server/ai-desk'
@@ -34,7 +35,31 @@ export async function GET(req: Request) {
   const { payload, user } = await getSession()
   if (!user || (user.role !== 'master' && user.role !== 'portal-admin')) return NextResponse.json({ error: 'Sign in on the desk first.' }, { status: 401 })
   const url = new URL(req.url)
-  const jobId = Number(url.searchParams.get('job'))
+  const kind = classifyAiStepsGet(url.search)
+  if (kind.kind === 'list') {
+    try {
+      const args = aiStepsListArgs(url.search)
+      const found = await payload.find({
+        collection: 'ai-steps',
+        depth: args.depth,
+        draft: args.draft,
+        limit: args.limit,
+        page: args.page,
+        sort: args.sort,
+        where: args.where as never,
+        select: args.select as never,
+        locale: args.locale as never,
+        overrideAccess: false,
+        user,
+      })
+      return NextResponse.json(found)
+    } catch (error) {
+      const status = typeof (error as { status?: number }).status === 'number' ? (error as { status: number }).status : 400
+      const code = status >= 400 && status < 600 ? status : 400
+      return NextResponse.json({ error: error instanceof Error ? error.message : 'That list could not be read.' }, { status: code })
+    }
+  }
+  const jobId = kind.kind === 'job' ? kind.jobId : 0
   if (!jobId) return NextResponse.json({ error: 'Name the job.' }, { status: 400 })
   await ensureSteps(payload)
   const job = await payload.findByID({ collection: col('ai-step-jobs'), id: jobId, depth: 0, overrideAccess: true }).catch(() => null)

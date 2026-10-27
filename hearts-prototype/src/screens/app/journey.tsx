@@ -21,7 +21,7 @@ import { partTitle } from '@/lib/talk-title'
 import { posterFor, shownPoster } from '@/server/learner'
 import { loadOpening } from '@/server/opening'
 import { loadDoors } from '@/server/doors'
-import { doorNumberOfClause } from '@/lib/doors'
+import { DOORS, doorNumberOfClause } from '@/lib/doors'
 import { contextAt, popularTalkIds, resolveContextLabel } from '@/server/calendar'
 import { nudgeTalks } from '@/lib/calendar-context'
 import { activeMissionCard } from './mission'
@@ -34,6 +34,8 @@ import { appNameOf } from '@/lib/learner-brand'
 import { fontPairOf, sceneCssOf, shellOf } from '@/lib/portal-look'
 import { nextCourseFilms } from './course-home'
 import { firstGuestFilm } from '@/server/guest-films'
+import { readOr, retryRead } from '@/server/db-retry'
+import { fallbackPayload, type VariantView } from '@/lib/experiment-slots'
 
 export async function masterFlags(payload: Payload) {
   const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
@@ -54,36 +56,58 @@ async function mainsShelf(payload: Payload) {
   return shelf
 }
 
+const FEED_SLOTS = ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing']
+
+function quietVariants(): Record<string, VariantView> {
+  const out: Record<string, VariantView> = {}
+  for (const slot of FEED_SLOTS) {
+    const payload = fallbackPayload(slot)
+    out[slot] = {
+      slot,
+      experimentKey: null,
+      variantKey: null,
+      payload,
+      label: String(payload.label || ''),
+      framing: typeof payload.framing === 'string' ? payload.framing : undefined,
+      running: false,
+    }
+  }
+  return out
+}
+
 /** The one continuous learner surface: opener, scenes, the door, and the feed (spec 7 and 7A). */
 export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
   const deviceId = (await cookies()).get('hearts_device')?.value
+  const emptyLive = { live: null, upcoming: [], pollMs: 12_000 }
   const [opening, flags, mains, unread, doors, live, variants] = await Promise.all([
-    loadOpening(payload, portal, user),
-    masterFlags(payload),
-    mainsShelf(payload),
-    user ? unreadCount(payload, user) : Promise.resolve(0),
-    loadDoors(payload),
-    user ? homeLive(payload, portal, user) : Promise.resolve({ live: null, upcoming: [], pollMs: 12_000 }),
-    resolveSlots(payload, ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing'], subjectFrom(user, deviceId, portal.id)),
+    retryRead(() => loadOpening(payload, portal, user)),
+    readOr('flags', () => masterFlags(payload), { popupOverPlayer: true, chromeOverPlayer: true, showUnchecked: false }),
+    readOr('mains', () => mainsShelf(payload), {}),
+    user ? readOr('unread', () => unreadCount(payload, user), 0) : Promise.resolve(0),
+    readOr('doors', () => loadDoors(payload), DOORS),
+    user ? readOr('live', () => homeLive(payload, portal, user), emptyLive) : Promise.resolve(emptyLive),
+    readOr('variants', () => resolveSlots(payload, FEED_SLOTS, subjectFrom(user, deviceId, portal.id)), quietVariants()),
   ])
-  const context = await contextAt(payload, now(), undefined, undefined, portalTimeZone(portal))
-  for (const slot of Object.keys(variants)) {
-    const view = variants[slot]
-    if (view.running && view.label && !/^learn more\b/i.test(view.label)) continue
-    const label = await resolveContextLabel(payload, slot, view.payload, context)
-    if (label) variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+  const context = await readOr('context', () => contextAt(payload, now(), undefined, undefined, portalTimeZone(portal)), null)
+  if (context) {
+    for (const slot of Object.keys(variants)) {
+      const view = variants[slot]
+      if (!view || (view.running && view.label && !/^learn more\b/i.test(view.label))) continue
+      const label = await readOr(`label ${slot}`, () => resolveContextLabel(payload, slot, view.payload, context), '')
+      if (label) variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+    }
   }
-  const popular = await popularTalkIds(payload)
+  const popular = context ? await readOr('popular', () => popularTalkIds(payload), []) : []
   const titled = opening.route.cuts.map((cut) => ({
     ...cut,
     title: opening.clips[String(cut.id)]?.lessonTitle || opening.clips[String(cut.id)]?.courseTitle || '',
   }))
-  opening.route.cuts = nudgeTalks(titled, context, popular, true)
-  const mission = user ? await activeMissionCard(payload, portal.id, base, appNameOf(portal)) : null
+  if (context) opening.route.cuts = nudgeTalks(titled, context, popular, true)
+  const mission = user ? await readOr('mission', () => activeMissionCard(payload, portal.id, base, appNameOf(portal)), null) : null
   const modern = shellOf(portal) === 'modern'
   const sceneCss = modern ? sceneCssOf(portal) : null
-  const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await nextCourseFilms(payload, user, base, 4, portal.id) : []
-  const guestFilm = modern && !user ? await firstGuestFilm(payload, portal.id, base) : null
+  const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await readOr('course films', () => nextCourseFilms(payload, user, base, 4, portal.id), []) : []
+  const guestFilm = modern && !user ? await readOr('guest film', () => firstGuestFilm(payload, portal.id, base), null) : null
   return (
     <div className={`app-stage shell-modern${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : 'system'} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
       {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
