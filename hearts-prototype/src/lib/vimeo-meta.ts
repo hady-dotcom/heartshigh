@@ -1,5 +1,20 @@
 export type VimeoMeta = { durationSeconds: number; posterUrl: string; hash: string; pageSeen?: boolean }
 
+const STORED_HASH = /^[0-9a-f]{6,20}$/i
+
+/** One stored row: [seconds, thumbnail, privacy hash]. A missing length stays zero. Nothing is invented. */
+export function storedVimeoRow(value: unknown): VimeoMeta | null {
+  if (!Array.isArray(value)) return null
+  const duration = Number(value[0] || 0)
+  const poster = String(value[1] || '').replace(/&amp;/g, '&')
+  const hash = String(value[2] || '')
+  const posterUrl = poster.startsWith('https://') ? poster : ''
+  const safeHash = STORED_HASH.test(hash) ? hash : ''
+  const durationSeconds = Number.isFinite(duration) && duration > 0 ? Math.round(duration) : 0
+  if (!durationSeconds && !posterUrl && !safeHash) return null
+  return { durationSeconds, posterUrl, hash: safeHash }
+}
+
 const VIMEO_ID = /^\d{6,12}$/
 const HASH = /[0-9a-f]{6,20}/i
 
