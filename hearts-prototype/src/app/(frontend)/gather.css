@@ -1,5 +1,4 @@
-/* Gather desks use the same evening-garden tokens as desk-tokens.ts / desk.css.
-   Cream cards stay on the public and learner Gather screens only. */
+/* Gather desks and the public invite use the house tokens. */
 :is(html, html[data-theme]) .desk.gather-desk {
   --g-bg: var(--desk-page, var(--hh-canvas));
   --g-ink: var(--desk-ink, var(--hh-ink));
@@ -30,10 +29,10 @@
   --g-page: var(--hh-canvas);
   --g-sidebar: var(--hh-canvas);
   --g-on-dark: var(--hh-ink);
-  --g-field: #fbf3e0;
-  --g-line: #7a6238;
-  --g-ivy: #3e6b4f;
-  --g-muted: #e7d7b0;
+  --g-field: var(--hh-paper);
+  --g-line: var(--hh-line);
+  --g-ivy: var(--hh-accent);
+  --g-muted: var(--hh-muted);
 }
 
 html[data-theme='evening'] .public-gather,
@@ -46,7 +45,7 @@ html[data-theme='dawn'] .gather-stage {
   --g-ink: var(--hh-ink);
   --g-gold: var(--hh-accent);
   --g-gold-ink: var(--hh-on-accent);
-  --g-muted: #e7d7b0;
+  --g-muted: var(--hh-muted);
   --g-card: var(--hh-paper);
   --g-heading: var(--hh-surface);
   --g-page: var(--hh-canvas);
@@ -56,9 +55,7 @@ html[data-theme='dawn'] .gather-stage {
 :is(html, html[data-theme]) .app.gather-shell { background: var(--g-heading); color: var(--g-ink); }
 :is(html, html[data-theme]) .app.gather-shell .app-scroll,
 :is(html, html[data-theme]) .public-gather {
-  background:
-    linear-gradient(180deg, rgba(10, 40, 40, 0.55), rgba(7, 28, 28, 0.82)),
-    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+  background: var(--hh-canvas);
 }
 :is(html, html[data-theme]) .app.gather-shell .app-head h1,
 .gather h1, .gather h2, .gather h3 { font-family: var(--serif); font-weight: 600; color: var(--g-ink); }
@@ -68,17 +65,17 @@ html[data-theme='dawn'] .gather-stage {
 .gather .muted { color: var(--g-muted); }
 
 .gather-card {
-  background: linear-gradient(180deg, var(--g-card), var(--g-card-end));
-  color: var(--g-heading);
-  border: 1px solid rgba(37, 99, 235, 0.7);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: 1px solid var(--hh-line);
   border-radius: 22px;
   padding: 18px 16px 16px;
   margin: 0 0 14px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--hh-shadow-card);
 }
-.gather-card h2, .gather-card h3, .gather-card p, .gather-card .muted, .gather-card label { color: var(--g-heading); }
-.gather-card .muted { color: #3d5348; }
-.gather-card .eyebrow { color: var(--g-heading); }
+.gather-card h2, .gather-card h3, .gather-card p, .gather-card .muted, .gather-card label { color: var(--hh-ink); }
+.gather-card .muted { color: var(--hh-muted); }
+.gather-card .eyebrow { color: var(--hh-accent); }
 
 .gather-chip {
   display: inline-flex;
@@ -111,31 +108,31 @@ html[data-theme] .gather .pill.outline, html[data-theme] .public-gather .pill.ou
 }
 .gather-card .pill.outline, .public-gather .gather-card .pill.outline,
 html[data-theme] .gather-card .pill.outline, html[data-theme] .public-gather .gather-card .pill.outline {
-  color: var(--hh-surface);
-  border: 1.5px solid var(--hh-surface);
-  background: transparent;
+  color: var(--hh-accent);
+  border: 1.5px solid var(--hh-accent);
+  background: var(--hh-paper);
 }
 .gather .field, .public-gather .field, .gather-card .field,
 html[data-theme] .gather .field, html[data-theme] .public-gather .field, html[data-theme] .gather-card .field,
 html[data-theme] .public-gather input.field, html[data-theme] .gather-card input.field, html[data-theme] .gather-card textarea.field {
-  background: #fbf3e0;
-  color: var(--hh-surface);
-  border: 1.5px solid #14564c;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: 1.5px solid var(--hh-line);
   width: 100%;
 }
 html[data-theme] .public-gather .field::placeholder,
-html[data-theme] .gather-card .field::placeholder { color: #5e675f; opacity: 1; }
+html[data-theme] .gather-card .field::placeholder { color: var(--hh-muted); opacity: 1; }
 /* Beat a later theme rule on .app textarea.field, which otherwise paints a dark field and a dark placeholder. */
 html[data-theme] .app.gather-shell .gather-card textarea.field,
 html[data-theme] .app.gather-shell form.gather-card textarea.field {
-  background: #fbf3e0;
-  color: var(--hh-surface);
-  border: 1.5px solid #14564c;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: 1.5px solid var(--hh-line);
   width: 100%;
 }
 html[data-theme] .app.gather-shell .gather-card textarea.field::placeholder,
 html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder {
-  color: #5e675f;
+  color: var(--hh-muted);
   opacity: 1;
 }
 .gather-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -169,7 +166,7 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
   width: 52px;
   height: 32px;
   border-radius: 999px;
-  background: #cbb892;
+  background: var(--hh-line);
   position: relative;
   flex: none;
   display: block;
@@ -183,8 +180,8 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
   transition: transform 0.15s ease;
 }
 .gold-toggle input:checked + i { background: var(--g-gold); }
@@ -206,21 +203,19 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 .gather .flash.notice, .public-gather .flash.notice {
   background: var(--g-ivy);
   color: var(--g-card);
-  border: 1px solid #2d5240;
+  border: 1px solid var(--hh-line);
 }
 
 .public-gather {
   min-height: 100dvh;
-  background:
-    radial-gradient(520px 320px at 90% 0%, rgba(37, 99, 235, 0.3), transparent 60%),
-    radial-gradient(480px 300px at 0% 30%, rgba(62, 107, 79, 0.5), transparent 55%),
-    var(--g-heading);
-  color: var(--g-ink);
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  font-family: var(--hh-font-system);
   padding: 28px 18px 48px;
 }
 .public-gather .wrap { width: min(440px, 100%); margin: 0 auto; }
-.public-gather h1 { font-family: var(--serif); font-weight: 600; font-size: 40px; line-height: 1.05; margin: 8px 0; color: var(--g-ink); }
-.public-gather h2 { font-family: var(--serif); color: var(--g-heading); margin: 0 0 8px; font-size: 26px; }
+.public-gather h1 { font-family: var(--hh-font-display); font-weight: 600; font-size: 40px; line-height: 1.05; margin: 8px 0; color: var(--hh-ink); }
+.public-gather h2 { font-family: var(--hh-font-display); color: var(--hh-ink); margin: 0 0 8px; font-size: 26px; }
 .public-gather .kicker { letter-spacing: 0.16em; text-transform: uppercase; font-size: 12px; font-weight: 700; color: var(--g-gold); margin: 0; }
 .public-gather .when-line { margin: 0 0 10px; font-size: 16px; }
 
@@ -304,7 +299,7 @@ html[data-theme] .app.gather-shell form.gather-card textarea.field::placeholder 
 :is(html, html[data-theme]) .desk.gather-desk .chart .bar-count { text-align: center; font-size: 13px; font-weight: 700; color: var(--g-ink); line-height: 1.2; }
 :is(html, html[data-theme]) .desk.gather-desk .chart .col small { color: var(--g-muted); font-size: 12px; line-height: 1.25; white-space: normal; }
 
-.door-qr { display: grid; place-items: center; background: #fff; border-radius: 18px; padding: 16px; margin: 12px 0; }
+.door-qr { display: grid; place-items: center; background: var(--hh-paper); border-radius: 18px; padding: 16px; margin: 12px 0; }
 .door-qr .qr svg { width: 220px; height: 220px; }
 
 :is(html, html[data-theme]) .desk.gather-desk { background: var(--g-page); color: var(--g-ink); }

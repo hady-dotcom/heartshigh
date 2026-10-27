@@ -9,6 +9,7 @@ import { FadeLink } from '@/components/gather/fade-link'
 import { KIND_LABEL } from '@/lib/gather'
 import { shareOrigin } from '@/lib/site-origin'
 import { getSession, loadPortal } from '@/server/context'
+import { SampleInvite } from '@/components/gather/sample-open'
 import { publicView, publishedSampleSlug, sharePack } from '@/server/gather'
 import { featureOn } from '@/lib/features'
 
@@ -34,7 +35,7 @@ export default async function PublicGather({ params, searchParams }: { params: P
   const { payload } = await getSession()
   if (slug === 'sample') {
     const real = await publishedSampleSlug(payload)
-    if (!real) notFound()
+    if (!real) return <SampleInvite />
     const extra = new URLSearchParams()
     for (const [key, value] of Object.entries(query)) if (value) extra.set(key, value)
     const tail = extra.toString()

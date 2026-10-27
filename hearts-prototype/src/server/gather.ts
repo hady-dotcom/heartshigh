@@ -37,6 +37,7 @@ import {
   type TaskRef,
 } from '@/lib/gather'
 import { capitalAfterColon, doorByNumber, doorCode, doorLabel } from '@/lib/doors'
+import { featureOn } from '@/lib/features'
 import { eveningName } from '@/lib/evening-name'
 import { harvestLine } from '@/lib/harvest'
 import { idOf, portalIdOf } from '@/lib/ids'
@@ -181,17 +182,29 @@ export async function gatheringBySlug(payload: Payload, slug: string) {
   return (found.docs[0] as Doc | undefined) || null
 }
 
-/** `/gather/sample` is a placeholder. Point it at a real published gathering. The rows stay. */
+/**
+ * `/gather/sample` is a placeholder. Point it at a real published gathering
+ * whose portal still has Gather on. The rows stay. Empty means none qualify.
+ */
 export async function publishedSampleSlug(payload: Payload) {
   const found = await payload.find({
     collection: 'gatherings',
     overrideAccess: true,
     depth: 0,
-    limit: 1,
+    limit: 25,
     sort: '-startsAt',
     where: { status: { equals: 'published' } },
-  })
-  return text((found.docs[0] as Doc | undefined)?.slug)
+  }).catch(() => ({ docs: [] as Doc[] }))
+  for (const row of found.docs as Doc[]) {
+    const slug = text(row.slug)
+    if (!slug || slug === 'sample') continue
+    const portalId = idOf(row.portal)
+    if (!portalId) continue
+    const portal = await payload.findByID({ collection: 'portals', id: portalId, depth: 0, overrideAccess: true }).catch(() => null)
+    if (!featureOn(portal as { features?: unknown; shape?: string | null } | null, 'gather')) continue
+    return slug
+  }
+  return ''
 }
 
 export function slugifyTitle(title: string) {

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { Flash, Hidden } from '@/components/app/shell'
 import { getSession, loadPortal } from '@/server/context'
+import { SampleDoor } from '@/components/gather/sample-open'
 import { gatheringBySlug, publicView, publishedSampleSlug } from '@/server/gather'
 import { featureOn } from '@/lib/features'
 
@@ -13,7 +14,7 @@ export default async function CheckInPage({ params, searchParams }: { params: Pr
   const { payload, user } = await getSession()
   if (slug === 'sample') {
     const real = await publishedSampleSlug(payload)
-    if (!real) notFound()
+    if (!real) return <SampleDoor />
     redirect(`/gather/${real}/in${query.k ? `?k=${encodeURIComponent(query.k)}` : ''}`)
   }
   const row = await gatheringBySlug(payload, slug)

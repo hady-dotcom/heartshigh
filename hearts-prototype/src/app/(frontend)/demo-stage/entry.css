@@ -41,7 +41,7 @@
 
 .demo-stage-entry h1 {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--hh-font-display);
   font-size: clamp(40px, 6vw, 64px);
   font-weight: 600;
   line-height: 0.95;

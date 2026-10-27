@@ -30,7 +30,7 @@
 }
 .demo-title h1 {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--hh-font-display);
   font-size: 26px;
   font-weight: 600;
   line-height: 1;
@@ -80,7 +80,7 @@
   display: grid;
   place-items: center;
   padding: 24px;
-  background: rgba(23, 21, 31, 0.62);
+  background: var(--hh-scene-wash-deep);
 }
 .demo-cast {
   width: min(1040px, 100%);
@@ -97,7 +97,7 @@
 .demo-cast .demo-kicker { font-size: 12px; letter-spacing: 0.18em; }
 .demo-cast h2 {
   margin: 0;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--hh-font-display);
   font-size: clamp(36px, 4vw, 52px);
   font-weight: 600;
   line-height: 1;
@@ -111,7 +111,7 @@
 .demo-cast-kinds, .demo-cast-picks, .demo-cast-nav { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .demo-cast button {
   border: 1px solid rgba(31, 29, 54, 0.18);
-  background: white;
+  background: var(--hh-paper);
   color: var(--hh-ink);
   border-radius: 999px;
   padding: 7px 12px;
@@ -145,7 +145,7 @@
   border-bottom: 2px solid var(--hh-ink);
   background: transparent;
   color: var(--hh-ink);
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--hh-font-display);
   font-size: 32px;
   padding: 2px 0 6px;
   outline: none;
@@ -213,7 +213,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  background: white;
+  background: var(--hh-paper);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(31, 29, 54, 0.08);
@@ -507,7 +507,7 @@
 }
 .demo-steps h2 {
   margin: 0 0 6px;
-  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-family: var(--hh-font-display);
   font-size: 28px;
   font-weight: 600;
 }

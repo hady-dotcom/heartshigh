@@ -189,8 +189,8 @@ export function FramingPlayer({
       style={{ width, height, ...cssVars(layout), ['--fr-ms' as string]: `${TRANSITION_MS}ms` }}
     >
       <div className="fr-bg" aria-hidden />
-      {mode === 'C' ? (
-        <div className="fr-blur" aria-hidden style={{ backgroundImage: `url(https://i.ytimg.com/vi/${youtubeId}/maxresdefault.jpg)` }} />
+      {mode === 'C' && active && youtubeId ? (
+        <div className="fr-blur" aria-hidden style={{ backgroundImage: `url(https://i.ytimg.com/vi/${youtubeId}/hqdefault.jpg)` }} />
       ) : null}
       <div className="fr-film" data-testid="framing-film">
         <div className="fr-crop">
