@@ -1,5 +1,7 @@
 /** Preview-only colour pass. Default pages stay as they are until ?look=apple. */
 
+import { coverIcon, iconDataUri } from '@/lib/cover-art'
+
 export type AppleSurface = '' | 'home' | 'courses' | 'course' | 'player' | 'master' | 'cms'
 
 const TILES = [
@@ -78,8 +80,8 @@ function paintTiles() {
   links.forEach((link, index) => {
     link.style.setProperty('--ico', tileColor(index))
     if (link.classList.contains('nav__link')) {
-      const letter = (link.textContent || '').trim().charAt(0).toUpperCase()
-      if (letter) link.dataset.mark = letter
+      const name = coverIcon((link.textContent || '').trim(), link.getAttribute('href') || String(index))
+      link.style.setProperty('--mark', iconDataUri(name))
     }
   })
   document.querySelectorAll<HTMLElement>('[data-testid="portal-card"]').forEach((row, index) => {

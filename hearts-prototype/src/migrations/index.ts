@@ -51,6 +51,7 @@ import * as migration_20261025_237000_film_posters from './20261025_237000_film_
 import * as migration_20261025_238000_system_font from './20261025_238000_system_font';
 import * as migration_20261026_120000_sheet_courses from './20261026_120000_sheet_courses';
 import * as migration_20261028_120000_rate_hit_portal from './20261028_120000_rate_hit_portal';
+import * as migration_20261028_180000_editorial_covers from './20261028_180000_editorial_covers';
 
 export const migrations = [
   {
@@ -317,5 +318,10 @@ export const migrations = [
     up: migration_20261028_120000_rate_hit_portal.up,
     down: migration_20261028_120000_rate_hit_portal.down,
     name: '20261028_120000_rate_hit_portal',
+  },
+  {
+    up: migration_20261028_180000_editorial_covers.up,
+    down: migration_20261028_180000_editorial_covers.down,
+    name: '20261028_180000_editorial_covers',
   },
 ];

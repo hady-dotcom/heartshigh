@@ -14,7 +14,8 @@ import { sortParts } from '@/lib/part-order'
 import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
-import { appleLookOnServer, artStyle, swatchFor, swatchMap } from '@/server/swatch'
+import { appleLookOnServer, artStyle } from '@/server/swatch'
+import { coverColor, coverPath } from '@/lib/cover-art'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { WeekLibrary } from '@/components/app/week-library'
 import { guestWeekSections } from '@/server/week-library'
@@ -30,7 +31,6 @@ import { clock, ref, rows, str, type Row } from '../common'
 export async function GuestCoursesScreen({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
   const library = await guestLibrary(payload, portal.id, base)
   const tint = await appleLookOnServer()
-  const colors = tint ? await swatchMap(library.courses.map((course) => course.poster)) : new Map<string, string>()
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
@@ -40,12 +40,12 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
           <span aria-hidden>›</span>
         </a>
         {library.courses.length ? librarySections(library.courses).map((section) => (
-          <section className="library-section" key={section.title} data-testid="library-collection" style={artStyle(colors.get(section.cards.find((course) => course.poster)?.poster || ''))} data-art={colors.size ? '1' : undefined}>
+          <section className="library-section" key={section.title} data-testid="library-collection" style={tint ? artStyle(coverColor(section.cards[0]?.id || 0)) : undefined}>
             <h2>{section.title}</h2>
             <div className="course-cards">
               {section.cards.map((course) => (
-                <a key={course.id} className="course-card" href={course.listHref} data-testid="course-card" style={artStyle(colors.get(course.poster || ''))} data-art={colors.get(course.poster || '') ? '1' : undefined}>
-                  {course.poster ? <span className="thumb"><img src={course.poster} alt="" /></span> : (
+                <a key={course.id} className="course-card" href={course.listHref} data-testid="course-card" style={tint ? artStyle(coverColor(course.id)) : undefined}>
+                  {tint ? <span className="thumb"><img src={coverPath('course', course.id)} alt="" /></span> : course.poster ? <span className="thumb"><img src={course.poster} alt="" /></span> : (
                     <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={course.place} title={course.filmTitle} /></span>
                   )}
                   <span className="t">
@@ -111,11 +111,9 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
     const firstAt = lessons.findIndex((lesson) => playableLesson(lesson))
     const first = firstAt >= 0 ? lessons[firstAt] : null
     const tint = await appleLookOnServer()
-    const posters = lessons.map((lesson) => shownPoster(filmPoster(lesson)))
-    const colors = tint ? await swatchMap(posters) : new Map<string, string>()
-    const heroSrc = shownPoster(filmPoster(first || lessons[0]))
+    const heroSrc = tint ? coverPath('course', course.id) : shownPoster(filmPoster(first || lessons[0]))
     return (
-      <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={colors.get(heroSrc || '') || null}>
+      <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null}>
         <div className="app-scroll">
           <div className="course-top">
             <CourseArtHero src={heroSrc} />
@@ -135,14 +133,15 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
           </a>
           <div data-testid="sequence-list">
             {groups.map((group) => (
-              <section className="sequence-module" id={sectionAnchor(group.title)} key={group.title} data-testid="sequence-module" style={artStyle(colors.get(shownPoster(filmPoster(group.rows[0]?.item)) || ''))} data-art={colors.size ? '1' : undefined}>
+              <section className="sequence-module" id={sectionAnchor(group.title)} key={group.title} data-testid="sequence-module">
                 <h2>{group.title}</h2>
+                <div className={tint ? 'film-shelf' : undefined}>
                 {group.rows.map(({ item: lesson, index }) => {
                   const playable = playableLesson(lesson)
-                  const poster = shownPoster(filmPoster(lesson))
+                  const poster = tint ? coverPath('film', lesson.id) : shownPoster(filmPoster(lesson))
                   const href = `${base}/course/${course.id}?part=${lesson.id}`
                   return (
-                    <Link key={lesson.id} className="buffet-row" href={playable ? href : href} data-testid="buffet-talk" data-coming={playable ? 'no' : 'yes'} style={artStyle(colors.get(poster || ''))} data-art={colors.get(poster || '') ? '1' : undefined}>
+                    <Link key={lesson.id} className="buffet-row" href={href} data-testid="buffet-talk" data-coming={playable ? 'no' : 'yes'} style={tint ? artStyle(coverColor(course.id, lesson.id)) : undefined}>
                       <span className={`thumb${poster ? '' : ' is-fallback'}`} data-testid="talk-thumb">
                         {poster ? <img src={poster} alt="" /> : <FilmFallback place={index + 1} title={str(lesson.title)} />}
                       </span>
@@ -156,6 +155,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
                     </Link>
                   )
                 })}
+                </div>
               </section>
             ))}
           </div>
@@ -178,8 +178,8 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   const kineticTier = kineticMomentsOn(portal) ? await kineticClipFor(payload, lesson.id) : null
   const filmPoints = pointViews(points, lesson)
   const swarm = await loadFilmSwarm(payload, portal.id, filmPoints.map((point) => point.id))
-  const poster = shownPoster(filmPoster(lesson))
-  const art = (await appleLookOnServer()) ? await swatchFor(poster) : ''
+  const poster = (await appleLookOnServer()) ? coverPath('film', lesson.id) : shownPoster(filmPoster(lesson))
+  const art = poster.startsWith('/cover/') ? coverColor(course.id, lesson.id) : ''
   return (
     <AppFrame testId="course" brand={learnerBrand(portal)} art={art || null}>
       <div className="app-scroll">
@@ -192,7 +192,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
           partLabel={`${partIndex + 1}. ${str(lesson.title)}`}
           youtubeId={coming ? null : str(lesson.youtubeId) || null}
           film={coming ? null : str(lesson.vimeoId) ? { provider: 'vimeo', vimeoId: str(lesson.vimeoId), vimeoHash: str(lesson.vimeoHash) || null } : null}
-          poster={shownPoster(filmPoster(lesson))}
+          poster={poster}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={Number(at) || 0}
           clipEnd={clip === '1' && kineticTier ? kineticTier.end : null}

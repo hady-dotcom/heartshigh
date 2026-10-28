@@ -431,16 +431,15 @@ html[data-look='apple'][data-look-surface='cms'] .nav__link {
 }
 
 html[data-look='apple'][data-look-surface='cms'] .nav__link::before {
-  content: attr(data-mark);
+  content: '';
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  background: var(--ico, #0070eb);
-  color: #ffffff;
-  display: grid;
-  place-items: center;
-  font-size: 18px;
-  font-weight: 700;
+  background-color: var(--ico, #0070eb);
+  background-image: var(--mark);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px;
   flex: none;
 }
 

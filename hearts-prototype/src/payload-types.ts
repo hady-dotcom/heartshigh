@@ -596,6 +596,10 @@ export interface Course {
     | number
     | boolean
     | null;
+  /**
+   * Optional cover. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. A film still is not a cover.
+   */
+  cover?: (number | null) | Media;
   updatedAt: string;
   createdAt: string;
 }
@@ -813,6 +817,10 @@ export interface Lesson {
    * Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square.
    */
   posterUrl?: string | null;
+  /**
+   * Optional cover for this film. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. The film still above is not the cover.
+   */
+  cover?: (number | null) | Media;
   film?: (number | null) | Media;
   /**
    * Mux-ready. Unused until a Mux asset is attached.
@@ -3765,6 +3773,7 @@ export interface CoursesSelect<T extends boolean = true> {
   hiddenNote?: T;
   visibility?: T;
   sampleAnswers?: T;
+  cover?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -3801,6 +3810,7 @@ export interface LessonsSelect<T extends boolean = true> {
   vimeoId?: T;
   vimeoHash?: T;
   posterUrl?: T;
+  cover?: T;
   film?: T;
   muxAssetId?: T;
   muxPlaybackId?: T;

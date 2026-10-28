@@ -27,7 +27,8 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
-import { appleLookOnServer, artStyle, swatchFor, swatchMap } from '@/server/swatch'
+import { appleLookOnServer, artStyle } from '@/server/swatch'
+import { coverColor, coverPath } from '@/lib/cover-art'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -156,15 +157,13 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
   const title = tidyTalkTitle(str(course.title))
   const tint = await appleLookOnServer()
-  const filmStills = new Map(lessons.map((lesson) => [lesson.id, shownPoster(filmPoster(lesson)) || '']))
-  const colors = tint ? await swatchMap([...filmStills.values()]) : new Map<string, string>()
   return (
-    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={colors.get(filmStills.get(continueLesson.id) || '') || null}>
+    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null}>
       <div className="app-scroll">
         {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
         <div className="course-top">
-          <CourseArtHero src={filmStills.get(continueLesson.id) || null} />
+          <CourseArtHero src={tint ? coverPath('course', course.id) : shownPoster(filmPoster(continueLesson))} />
           {sequence ? (
             <div className="app-head course-head">
               <Back href={`${base}/courses`} label="Courses" />
@@ -209,17 +208,20 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           ? sectionGroups(lessons, (lesson) => str(unitRows.find((unit) => unit.id === ref(lesson.unit))?.title) || 'Films')
           : [{ title: '', rows: lessons.map((item, index) => ({ item, index })) }]
         ).map((group) => (
-          <section className={sequence ? 'sequence-module' : undefined} id={sequence ? sectionAnchor(group.title) : undefined} key={group.title || 'films'} data-testid={sequence ? 'sequence-module' : undefined} style={artStyle(colors.get(filmStills.get(group.rows[0]?.item.id) || ''))} data-art={colors.size ? '1' : undefined}>
+          <section className={sequence ? 'sequence-module' : undefined} id={sequence ? sectionAnchor(group.title) : undefined} key={group.title || 'films'} data-testid={sequence ? 'sequence-module' : undefined}>
             {sequence ? <h2>{group.title}</h2> : null}
+            <div className={tint ? 'film-shelf' : undefined}>
             {group.rows.map(({ item: lesson, index }) => {
           const secondsHere = Number(lesson.durationSeconds || 0)
           const youtubeId = str(lesson.youtubeId) || null
           const name = partTitle(lesson, title)
           const stored = filmPoster(lesson)
-          const still = stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
+          const still = tint
+            ? { src: coverPath('film', lesson.id), fallback: false as const }
+            : stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
-            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'} style={artStyle(colors.get(filmStills.get(lesson.id) || ''))} data-art={colors.get(filmStills.get(lesson.id) || '') ? '1' : undefined}>
+            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'} style={tint ? artStyle(coverColor(course.id, lesson.id)) : undefined}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 {still.src ? <img src={still.src} alt="" /> : null}
                 {still.fallback ? <FilmFallback place={index + 1} title={name} /> : null}
@@ -234,6 +236,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
             </Link>
           )
             })}
+            </div>
           </section>
         ))}
         </div>
@@ -491,7 +494,8 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       : undefined,
   }))
 
-  const playerArt = (await appleLookOnServer()) ? await swatchFor(shownPoster(filmPoster(lesson))) : ''
+  const playerLook = await appleLookOnServer()
+  const playerArt = playerLook ? coverColor(courseId, lesson.id) : ''
   return (
     <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerArt || null}>
       <div className="app-scroll">
@@ -519,7 +523,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
           partLabel={sequence ? sequenceLabel(partIndex, lesson) : partHeading(partIndex + 1, lesson, tidyTalkTitle(str(course.title)), lessons.length)}
           youtubeId={youtubeId}
           film={film}
-          poster={shownPoster(filmPoster(lesson)) || (sequence ? null : portraitFor(slugify(str(lesson.speaker || course.speaker))))}
+          poster={playerLook ? coverPath('film', lesson.id) : (shownPoster(filmPoster(lesson)) || (sequence ? null : portraitFor(slugify(str(lesson.speaker || course.speaker)))))}
           films={sequence}
           duration={Number(lesson.durationSeconds || 0)}
           startAt={startAt}

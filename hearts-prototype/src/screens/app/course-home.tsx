@@ -11,7 +11,8 @@ import { isSequencePortal, librarySections, sectionAnchor } from '@/lib/sequence
 import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
-import { appleLookOnServer, artStyle, swatchMap } from '@/server/swatch'
+import { appleLookOnServer, artStyle } from '@/server/swatch'
+import { coverColor, coverPath } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, clock, ref, rows, str } from '../common'
@@ -139,7 +140,6 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
   const sequence = isSequencePortal(portal)
   const carryPct = carry ? percent(carry.finished, carry.own.length) : 0
   const tint = await appleLookOnServer()
-  const colors = tint ? await swatchMap(cards.flatMap((card) => [card.poster, card.nextPoster])) : new Map<string, string>()
   const sections = librarySections(cards.map((card) => ({
     ...card,
     title: str(card.course.title),
@@ -158,8 +158,8 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
           </a>
         ) : null}
         {carry?.next ? (
-          <article className="carry-on" data-testid="carry-on" style={artStyle(colors.get((modern ? (carry.nextPoster || carry.poster) : carry.poster) || ''))} data-art={colors.size ? '1' : undefined}>
-            <Thumb src={modern ? (carry.nextPoster || carry.poster) : carry.poster} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />
+          <article className="carry-on" data-testid="carry-on" style={tint && carry.next ? artStyle(coverColor(carry.course.id, carry.next.id)) : undefined}>
+            <Thumb src={tint && carry.next ? coverPath('film', carry.next.id) : (modern ? (carry.nextPoster || carry.poster) : carry.poster)} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />
             {modern ? (
               <div className="carry-copy">
                 <p className="eyebrow">Carry on</p>
@@ -181,7 +181,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
           </article>
         ) : <p className="card">Films will show here once a course is added.</p>}
         {sequence ? sections.map((section) => (
-          <section className="library-section" key={section.title} data-testid="library-collection" style={artStyle(colors.get(section.cards.find((card) => card.poster)?.poster || ''))} data-art={colors.size ? '1' : undefined}>
+          <section className="library-section" key={section.title} data-testid="library-collection" style={tint ? artStyle(coverColor(section.cards[0]?.course.id || 0)) : undefined}>
             <h2>{section.title}</h2>
             <div className="course-cards">
               {section.cards.map((card, index) => {
@@ -195,8 +195,8 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                 const pct = percent(card.finished, card.own.length)
                 const length = card.own.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
                 return (
-                  <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card" style={artStyle(colors.get(card.poster || ''))} data-art={colors.get(card.poster || '') ? '1' : undefined}>
-                    <Thumb src={card.poster} eager={index < 2} place={card.next ? card.nextAt + 1 : undefined} title={card.next ? str(card.next.title) : undefined} />
+                  <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card" style={tint ? artStyle(coverColor(card.course.id)) : undefined}>
+                    <Thumb src={tint ? coverPath('course', card.course.id) : card.poster} eager={index < 2} place={card.next ? card.nextAt + 1 : undefined} title={card.next ? str(card.next.title) : undefined} />
                     <span className="t">
                       <b>{str(card.course.title)}</b>
                       <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
@@ -222,8 +222,8 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
               const pct = percent(card.finished, card.own.length)
               return (
                 <div key={card.course.id}>
-                  <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card">
-                    <Thumb src={card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
+                  <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card" style={tint ? artStyle(coverColor(card.course.id)) : undefined}>
+                    <Thumb src={tint ? coverPath('course', card.course.id) : card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
                     <span className="t">
                       <b>{str(card.course.title)}</b>
                       <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>
