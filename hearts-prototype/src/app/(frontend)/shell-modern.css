@@ -169,8 +169,7 @@ html[data-theme] .app-stage.shell-modern .app-scroll {
   background-repeat: no-repeat;
 }
 
-html[data-theme] .app-stage.shell-modern .app-head,
-html[data-theme] .app-stage.shell-modern .main-head {
+html[data-theme] .app-stage.shell-modern .app-head {
   background: transparent;
   background-image: none;
   border-radius: 0;
@@ -489,6 +488,11 @@ html[data-theme] .app-stage.shell-modern .journey .j-level-choices button {
   color: var(--hh-ink);
 }
 
+html[data-theme] .app-stage.shell-modern .journey.phase-feed :is(.speaker-row, .speaker-row b, .speaker-row small, .j-more-speaker, .j-speaker-plate .who b, .j-speaker-plate .who small) {
+  color: var(--hh-ink);
+  text-shadow: none;
+}
+
 html[data-theme] .app-stage.shell-modern .feed-card-bg { display: none; }
 
 html[data-theme] .app-stage.shell-modern .j-coach-card {
@@ -710,7 +714,11 @@ html[data-theme] .desk.desk-modern .side a.nav.on {
 html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, small, .hint),
 html[data-theme] .desk.desk-modern .side-brand b {
   color: var(--hh-ink);
-  font-family: var(--hh-font-display);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+html[data-theme] .desk.desk-modern :is(a, button, td, th, label, summary, span) {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
 /* Sidebar copy was cream for a dark bar. The modern bar is a light surface. */
@@ -1111,8 +1119,7 @@ html[data-theme] .app-stage.shell-modern[data-portal-brand] .glass-bar .shell-br
   font-weight: 800;
 }
 
-html[data-theme] .app-stage.shell-modern .app-head,
-html[data-theme] .app-stage.shell-modern .main-head {
+html[data-theme] .app-stage.shell-modern .app-head {
   position: static;
   background: transparent;
   backdrop-filter: none;

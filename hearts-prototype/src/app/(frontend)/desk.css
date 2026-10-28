@@ -265,7 +265,12 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .desk details > summary { list-style: none; cursor: pointer; }
 .desk details > summary::-webkit-details-marker { display: none; }
 
-.desk p, .desk td { overflow-wrap: break-word; word-break: break-word; }
+.desk p, .desk td { overflow-wrap: break-word; word-break: normal; }
+.desk table.data { width: 100%; }
+.desk table.data th,
+.desk table.data td { vertical-align: top; }
+.desk table.data td.course-cell { min-width: 16rem; white-space: normal; }
+.desk table.data td.portal-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; max-width: 22rem; }
 .view-as-ask { display: grid; gap: 8px; min-width: 260px; text-align: left; }
 .sim-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
 .sim-scale { display: grid; gap: 6px; font-size: 14px; }
@@ -372,10 +377,39 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk.desk-phone input[type='file'] { width: 100%; max-width: 100%; }
   .desk.desk-phone .main { padding: 16px 12px; min-width: 0; }
   .desk.desk-phone .desk-split { grid-template-columns: 1fr; }
-  .desk.desk-phone .panel { overflow-x: auto; max-width: 100%; }
-  .desk.desk-phone .table-wrap { overflow-x: auto; max-width: 100%; }
-  .desk.desk-phone table.data { width: 100%; table-layout: fixed; }
-  .desk.desk-phone table.data td { white-space: normal; overflow-wrap: anywhere; }
+  .desk.desk-phone .panel { overflow: visible; max-width: 100%; }
+  .desk.desk-phone .table-wrap { overflow: visible; max-width: 100%; }
+  .desk.desk-phone table.data {
+    display: block;
+    width: 100%;
+    min-width: 0;
+  }
+  .desk.desk-phone table.data thead { display: none; }
+  .desk.desk-phone table.data tbody,
+  .desk.desk-phone table.data tr { display: block; width: auto; }
+  .desk.desk-phone table.data tr {
+    background: var(--hh-paper);
+    border: var(--hh-line-width) solid var(--hh-line);
+    border-radius: var(--hh-radius-card);
+    padding: 12px 16px;
+    margin: 0 0 12px;
+  }
+  .desk.desk-phone table.data td {
+    display: block;
+    width: auto;
+    min-width: 0;
+    max-width: 100%;
+    padding: 4px 0;
+    border: 0;
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: normal;
+  }
+  .desk.desk-phone table.data td:first-child {
+    font-size: var(--hh-font-size-body);
+    font-weight: 650;
+    padding-bottom: 6px;
+  }
   .desk.desk-phone table.master-codes-table { display: block; }
   .desk.desk-phone table.master-codes-table thead { display: none; }
   .desk.desk-phone table.master-codes-table tbody,
@@ -526,7 +560,7 @@ abbr.tip { text-decoration: underline dotted; text-underline-offset: 3px; cursor
 .desk .seat-group > summary,
 .desk .tree-door > summary {
   color: var(--parchment);
-  font-family: var(--serif);
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 .desk .main-head h1 { font-size: 40px; font-weight: 650; line-height: 1.05; }
 .desk .main-head p,
@@ -788,7 +822,7 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .kinetic-line { position: absolute; left: 8%; right: 8%; top: 14%; bottom: 18%; z-index: 3; margin: 0; display: none; align-items: center; justify-content: center; text-align: center; font-size: 22px; font-weight: 700; line-height: 1.25; letter-spacing: -0.03em; }
 .kinetic-line.now { display: flex; }
 .kinetic-line[hidden] { display: none; }
-.kinetic-line-land.now { color: #E4C27A; }
+.kinetic-line-land.now { color: var(--hh-paper); }
 .kinetic-clock { position: absolute; top: 10px; right: 10px; z-index: 4; font-size: 11px; font-weight: 700; font-variant-numeric: tabular-nums; background: rgba(17, 16, 24, 0.5); padding: 4px 8px; border-radius: 999px; }
 .kinetic-play { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 5; min-height: 36px; padding: 6px 14px; border: 0; border-radius: 999px; background: var(--hh-accent); color: var(--hh-on-accent); font-weight: 800; }
 .kinetic-scrub { width: 100%; margin: 8px 0; accent-color: var(--gold); }
@@ -812,7 +846,7 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .kinetic-stage[data-bg="mask"][data-mask="diamond"] .kinetic-mask { background: linear-gradient(145deg, #E8793A, #2B2356 70%); clip-path: polygon(50% 8%, 90% 46%, 50% 86%, 10% 46%); }
 .kinetic-stage[data-bg="mask"][data-mask="window"] .kinetic-mask { background: linear-gradient(180deg, #F6F2E8, #D9A441); clip-path: inset(16% 12% 22% 12% round 28px); }
 .kinetic-stage[data-light="1"] { color: #1E1B3A; }
-.kinetic-stage[data-light="1"] .kinetic-line-land.now { color: #7A4FA3; }
+.kinetic-stage[data-light="1"] .kinetic-line-land.now { color: var(--hh-ink); }
 .kinetic-stage[data-light="1"] .kinetic-clock { background: rgba(255, 255, 255, 0.7); color: #1E1B3A; }
 @media (max-width: 899px) {
   .kinetic-desk-grid { grid-template-columns: 1fr; }
@@ -934,6 +968,11 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 .desk,
 .desk-narrow {
   --sans: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --serif: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+html[data-theme] .desk.desk-modern :is(h1, h2, h3, p, a, button, td, th, label, summary, span, small, .hint) {
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
@@ -942,7 +981,9 @@ html[data-theme] .desk .main-head {
   top: 0;
   right: 0;
   left: 248px;
-  z-index: 30;
+  z-index: 80;
+  box-sizing: border-box;
+  padding: 10px 16px;
   background: var(--hh-glass);
   backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
   -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
@@ -969,8 +1010,13 @@ html[data-theme] .desk.gather-desk {
   color: var(--hh-ink);
 }
 
-html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, .card, h1, h2, p, span, a, label, button, input, textarea) {
+html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, .card, h1, h2, p, label, input, textarea) {
   color: var(--hh-ink);
+}
+
+html[data-theme] .desk .hint,
+html[data-theme] .desk p.hint {
+  color: var(--hh-ink-2);
 }
 
 html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, input, textarea) {
@@ -985,7 +1031,7 @@ html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, input, textar
   .desk.desk-phone { padding-top: var(--hh-header); }
   html[data-theme] .desk.desk-phone .main-head,
   html[data-theme].desk-collapsed .desk.desk-phone .main-head { left: 0; right: 0; }
-  .desk.desk-phone .main { padding: var(--hh-space-3); padding-top: calc(var(--hh-header) + var(--hh-space-5)); }
+  .desk.desk-phone .main { padding: var(--hh-space-4); padding-top: calc(var(--hh-header) + var(--hh-space-5)); }
   .desk.desk-phone .desk-menu > summary {
     display: flex;
     align-items: center;

@@ -219,9 +219,53 @@ html .app-header button,
 html .list-controls button,
 html .list-controls a,
 html .paginator button,
-html .pill {
+html .pill,
+html .relationship-add-new__add-button,
+html .sort-column__button,
+html .per-page__base-button,
+html .per-page button,
+html .checkbox-input__input {
   min-height: 44px;
   min-width: 44px;
+}
+
+html .search-filter input,
+html .search-filter__input,
+html .field-type input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+html .field-type textarea,
+html .field-type select,
+html .per-page select {
+  min-height: 44px;
+}
+
+html .checkbox-input__input {
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+html .btn__label,
+html .doc-controls__label,
+html .doc-controls__title,
+html .upload__dragAndDropText,
+html .upload__dropzoneContent__orText,
+html .file-field__filename,
+html .monaco-editor .line-numbers,
+html .monaco-editor .line-numbers.active-line-number {
+  color: #1c1c1e !important;
+}
+
+html .btn--style-primary .btn__label,
+html .btn--style-primary .btn__content {
+  color: #ffffff;
+}
+
+html .hig-large-title {
+  margin: 12px 0 8px;
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.02em;
+  color: #111827;
 }
 
 html .hig-menu {

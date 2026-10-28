@@ -84,7 +84,7 @@
   justify-content: center;
   gap: 4px;
   background: var(--hh-accent);
-  color: var(--hh-on-accent);
+  color: var(--hh-on-accent) !important;
   font-size: 10px;
   font-weight: 750;
   line-height: 1.2;

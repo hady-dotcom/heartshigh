@@ -48,6 +48,8 @@ export default buildConfig({
     },
     components: {
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner', '/components/admin/apple-chrome#AppleAdminChrome'],
+      beforeDashboard: ['/components/admin/large-title#AdminDashboardTitle'],
+      beforeLogin: ['/components/admin/large-title#AdminLoginTitle'],
     },
   },
   collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections].map((collection) => withRecordedCreate({

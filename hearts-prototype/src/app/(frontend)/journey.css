@@ -484,11 +484,17 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   padding: 0;
   border: 0;
   background: none;
-  color: #f1e4c6;
+  color: var(--hh-ink);
   font-weight: 650;
   font-size: 13px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: none;
   cursor: pointer;
+}
+.journey.phase-feed .speaker-row,
+.journey.phase-feed .speaker-row b,
+.journey.phase-feed .speaker-row small {
+  color: var(--hh-ink);
+  text-shadow: none;
 }
 /* Clip / extract / Full talk is a compact group in the lower control stack.
    It stays in normal flow, left-aligned, so its hit boxes sit above the speed chip and the talk button. */

@@ -841,7 +841,7 @@ export async function AccessScreen(ctx: Ctx) {
                   <tr key={code.id} data-testid="code-card">
                     <td><div style={{ fontFamily: 'ui-monospace, monospace', fontWeight: 700 }} data-testid="code-value-cell">{str(code.code)}</div>{str(code.label) ? <div className="hint">{str(code.label)}</div> : null}</td>
                     <td><span className={`badge ${roleBadge[str(code.role)] || 'grey'}`}>{str(code.role)[0]?.toUpperCase() + str(code.role).slice(1)}</span></td>
-                    <td>{courseLine(titles)}</td>
+                    <td className="course-cell">{courseLine(titles)}</td>
                     <td>{str(teachers.find((row) => row.id === ref(code.linkedTeacherCode))?.code) || <span className="hint">None</span>}</td>
                     <td className="num"><CodeJoins people={people.filter((person) => ref(person.accessCode) === code.id)} /></td>
                     <td><CodeStatus code={code} next={here} portalSlug={portal.slug} /></td>
