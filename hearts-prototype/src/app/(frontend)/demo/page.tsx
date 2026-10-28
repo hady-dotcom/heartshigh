@@ -28,6 +28,7 @@ export default async function DemoPage({ searchParams }: { searchParams: Promise
   const cast = defaultParentingCast()
   return (
     <main className="parenting-cast" data-testid="parenting-demo-cast">
+      <header className="parenting-cast-bar" data-testid="demo-bar"><b>Practice room</b></header>
       <p className="parenting-demo-kicker">Cast your demo</p>
       <h1>Who is on the four screens?</h1>
       <p>Type a name for each person. The films are the live course. Answers and notes stay in this practice room, and you can start again any time.</p>

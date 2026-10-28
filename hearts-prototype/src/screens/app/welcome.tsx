@@ -100,6 +100,7 @@ export async function WelcomeScreen(ctx: Ctx) {
       <div className="app-scroll">
         <Journey at={2} />
         <Flash error={query.error} notice={query.notice} />
+        <header className="journey-glass" data-testid="welcome-bar"><span className="brand-word">{brand || portalName(portal)}</span></header>
         {ownLibrary ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36, textAlign: 'center' }}>{brand || portalName(portal)}</p> : <div style={{ textAlign: 'center', margin: '10px 0 6px', color: 'var(--gold)' }}><Arch size={64} /></div>}
         <h1 style={{ fontFamily: 'var(--serif)', fontSize: 34, textAlign: 'center', margin: '6px 0 14px', fontWeight: 600 }}>A good place to start</h1>
         {door && !ownLibrary ? (

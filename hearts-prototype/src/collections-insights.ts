@@ -9,7 +9,7 @@ const nobody: Access = () => false
 export const InsightEvents: CollectionConfig = {
   slug: 'insight-events',
   labels: { singular: 'Insight event', plural: 'Insight events' },
-  admin: { group: 'Insights', hidden: false },
+  admin: { group: 'Insights', hidden: false, useAsTitle: 'route', listSearchableFields: ['kind', 'route', 'sessionId', 'subject', 'step'] },
   access: { read: staffRead, create: nobody, update: nobody, delete: masterWrite },
   fields: [
     { name: 'kind', type: 'text', required: true, index: true },

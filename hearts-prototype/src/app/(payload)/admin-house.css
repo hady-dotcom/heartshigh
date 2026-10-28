@@ -190,11 +190,36 @@ html .nav__link {
 }
 
 html .field-description,
+html .field-label,
 html .nav__label,
 html .list-controls__toggle,
 html .table a,
-html .row-label {
-  color: #3a3a3c;
+html .row-label,
+html .paginator,
+html .paginator button,
+html .file-field__filename,
+html .upload-field,
+html .step-nav,
+html .step-nav a,
+html .monaco-editor .line-numbers {
+  color: #1c1c1e;
+}
+
+html .required,
+html .field-label .required {
+  color: #9f1239;
+}
+
+html .step-nav a,
+html .step-nav button,
+html .app-header a,
+html .app-header button,
+html .list-controls button,
+html .list-controls a,
+html .paginator button,
+html .pill {
+  min-height: 44px;
+  min-width: 44px;
 }
 
 html .hig-menu {

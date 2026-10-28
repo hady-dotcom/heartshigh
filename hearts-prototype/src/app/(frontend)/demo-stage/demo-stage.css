@@ -18,15 +18,25 @@
 }
 
 .demo-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
   height: var(--demo-bar);
   display: flex;
   align-items: center;
   gap: 18px;
   padding: 0 18px;
-  background: var(--hh-paper);
+  background: var(--hh-glass);
   color: var(--hh-ink);
   flex: none;
+  border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
 }
+
+.demo-stage { padding-top: var(--demo-bar); }
 .demo-title { min-width: 9rem; }
 .demo-kicker {
   margin: 0;

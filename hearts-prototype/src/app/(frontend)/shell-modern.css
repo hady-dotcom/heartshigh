@@ -283,12 +283,18 @@ html[data-theme] .app-stage.shell-modern .lane-card {
 
 html[data-theme] .app-stage.shell-modern .lane-card::after { display: none; }
 
-html[data-theme] .app-stage.shell-modern .lane-card :is(.lane-grows, .lane-progress .bar > i) {
-  color: var(--portal-accent, var(--hh-accent));
-  background: var(--portal-accent, var(--hh-accent));
+html[data-theme] .app-stage.shell-modern .lane-card .lane-grows {
+  color: var(--hh-ink);
+  background: var(--hh-paper);
 }
 
-html[data-theme] .app-stage.shell-modern .lane-card .lane-grows { background: transparent; }
+html[data-theme] .app-stage.shell-modern .lane-card .lane-progress .bar {
+  background: var(--hh-surface);
+}
+
+html[data-theme] .app-stage.shell-modern .lane-card .lane-progress .bar > i {
+  background: var(--portal-accent, var(--hh-accent));
+}
 
 html[data-theme] .app-stage.shell-modern .list-link {
   border-radius: 0;
@@ -467,9 +473,20 @@ html[data-theme] .app-stage.shell-modern .garden-card .eyebrow {
   color: var(--portal-accent, var(--hh-accent));
 }
 
-html[data-theme] .app-stage.shell-modern :is(.journey, .j-slot, .j-clip, .j-peek, .j-poster, .j-film-band, .phase-feed .j-clip) {
+html[data-theme] .app-stage.shell-modern :is(.journey.phase-opener, .journey.phase-scene, .journey.phase-handoff) {
   background-color: var(--hh-video);
   background-image: none;
+}
+
+html[data-theme] .app-stage.shell-modern :is(.journey.phase-feed, .journey.phase-help, .journey.phase-feed .j-slot, .journey.phase-feed .j-clip, .journey.phase-feed .j-peek, .journey.phase-feed .j-poster, .journey.phase-feed .j-film-band, .journey.phase-feed .j-board, .journey.phase-help .j-slot) {
+  background-color: var(--hh-canvas);
+  background-image: none;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-stage.shell-modern .journey .rail button,
+html[data-theme] .app-stage.shell-modern .journey .j-level-choices button {
+  color: var(--hh-ink);
 }
 
 html[data-theme] .app-stage.shell-modern .feed-card-bg { display: none; }
@@ -517,8 +534,8 @@ html[data-theme] .app-stage.shell-modern :is(.tabbar, .tabbar.dark, .tabbar.even
   border-top: var(--hh-line-width) solid var(--hh-line);
 }
 
-html[data-theme] .app-stage.shell-modern :is(.tab, .tabbar.dark .tab, .tabbar.evening .tab) {
-  color: var(--hh-muted);
+html[data-theme] .app-stage.shell-modern :is(.tab, .tabbar.dark .tab, .tabbar.evening .tab, .brand-word, .shell-brand) {
+  color: var(--hh-ink);
   font-size: var(--hh-font-size-small);
 }
 

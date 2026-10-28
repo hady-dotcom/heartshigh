@@ -938,14 +938,18 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
 }
 
 .desk .main-head {
-  position: sticky;
+  position: fixed;
   top: 0;
-  z-index: 20;
+  right: 0;
+  left: 248px;
+  z-index: 30;
   background: var(--hh-glass);
   backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
   -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
   border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
 }
+
+.desk .main { padding-top: calc(var(--hh-header) + var(--hh-space-4)); }
 
 .desk .main-head h1 { font-size: var(--hh-font-size-display); line-height: var(--hh-line-large-title); }
 
@@ -959,14 +963,26 @@ html.desk-collapsed .desk .main-head {
 
 html.desk-collapsed .desk .main-head h1 { font-size: var(--hh-font-size-headline); line-height: var(--hh-font-size-title); }
 
-.desk .main { padding-top: var(--hh-space-3); }
+html[data-theme] .desk[data-evening='yes'],
+html[data-theme] .desk.gather-desk {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, .card, h1, h2, p, span, a, label, button, input, textarea) {
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, input, textarea) {
+  background: var(--hh-paper);
+}
 
 .desk :is(.btn, button, .nav, summary, a.btn) { min-height: var(--hh-tap-min); }
 
 .desk-menu > summary { display: none; }
 
 @media (max-width: 899px) {
-  .desk.desk-phone .main { padding: var(--hh-space-3); }
+  .desk.desk-phone .main { padding: var(--hh-space-3); padding-top: calc(var(--hh-header) + var(--hh-space-5)); }
   .desk.desk-phone .desk-menu > summary {
     display: flex;
     align-items: center;

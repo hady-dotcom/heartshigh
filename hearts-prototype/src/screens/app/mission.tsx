@@ -26,6 +26,7 @@ export async function MissionScreen({ payload, user, portal, base, query }: Ctx,
       <AppFrame testId="mission-missing">
         <div className="app-scroll">
           <Back href={base} label="Home" />
+          <div className="app-head"><h1>This ask is not here</h1></div>
           <p>That ask is no longer here.</p>
         </div>
         <TabBar base={base} active="home" unread={unread} />

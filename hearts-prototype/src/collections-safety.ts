@@ -117,6 +117,8 @@ export const AnnouncementDismissals: CollectionConfig = {
 
 export const RateHits: CollectionConfig = {
   slug: 'rate-hits',
+  labels: { singular: 'Rate hit', plural: 'Rate hits' },
+  admin: { useAsTitle: 'key', description: 'How often a limit was reached. The app writes these rows.' },
   access: masterOnly,
   fields: [
     { name: 'key', type: 'text', required: true, index: true },

@@ -16,6 +16,7 @@ export default async function ParentingDemoMasterPage({ searchParams }: { search
     if (query.demo) notFound()
     return (
       <main className="parenting-cast" data-testid="parenting-demo-empty">
+        <header className="parenting-cast-bar" data-testid="demo-bar"><b>Practice room</b></header>
         <p className="parenting-demo-kicker">Practice room</p>
         <h1>Open a practice room</h1>
         <p>This desk follows a practice room. Start one from the demo board, then come back. Real portals are not listed here.</p>
