@@ -8,12 +8,12 @@ html[data-look='apple'][data-look-surface='home'] .app-stage,
 html[data-look='apple'][data-look-surface='courses'] .app-stage,
 html[data-look='apple'][data-look-surface='course'] .app-stage,
 html[data-look='apple'][data-look-surface='player'] .app-stage {
-  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 34%, var(--hh-paper)) 0%, color-mix(in srgb, var(--art, var(--hh-look-blue)) 14%, var(--hh-canvas)) 42%, var(--hh-canvas) 78%);
+  --look-wash: linear-gradient(180deg, var(--page, var(--hh-paper)) 0%, var(--hh-paper) 58%);
 }
 
 html[data-look='apple'][data-look-surface='course'] .app-stage,
 html[data-look='apple'][data-look-surface='player'] .app-stage {
-  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 46%, var(--hh-paper)) 0%, color-mix(in srgb, var(--art, var(--hh-look-blue)) 20%, var(--hh-canvas)) 58%, var(--hh-canvas) 100%);
+  --look-wash: linear-gradient(180deg, var(--page, var(--hh-paper)) 0%, var(--hh-paper) 70%);
 }
 html[data-look='apple'][data-theme][data-look-surface='home'] .app-stage.shell-modern,
 html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern,
@@ -33,7 +33,7 @@ html[data-look='apple'][data-theme][data-look-surface='player'] .app-stage.shell
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar {
-  background: color-mix(in srgb, var(--art, var(--hh-paper)) 30%, var(--hh-glass));
+  background: color-mix(in srgb, var(--page, var(--hh-paper)) 65%, var(--hh-glass));
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) .cover-line {
@@ -53,11 +53,11 @@ html[data-look='apple'][data-look-surface='course'] .play-panel {
   margin: 0 0 var(--hh-space-4);
   padding: var(--hh-space-4);
   border-radius: var(--hh-radius-card);
-  background: color-mix(in srgb, var(--art, var(--hh-look-blue)) 16%, var(--hh-paper));
+  background: color-mix(in srgb, var(--page, var(--hh-paper)) 40%, var(--hh-paper));
 }
 
 html[data-look='apple'][data-look-surface='course'] .play-panel .progress-ring {
-  box-shadow: inset 0 0 0 var(--hh-space-1) color-mix(in srgb, var(--art, var(--hh-accent)) 55%, var(--hh-paper));
+  box-shadow: inset 0 0 0 var(--hh-space-1) color-mix(in srgb, var(--btn, var(--hh-accent)) 28%, var(--hh-paper));
 }
 
 html[data-look='apple'][data-look-surface='course'] .play-meter {
@@ -74,7 +74,7 @@ html[data-look='apple'][data-look-surface='course'] .play-panel [data-testid='se
 }
 
 html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .play-panel :is(.pill.gold, [data-testid='start-part']) {
-  background: color-mix(in srgb, var(--art, var(--hh-accent)) 74%, var(--hh-ink));
+  background: var(--btn, var(--hh-accent));
   color: var(--hh-on-accent);
   border-color: transparent;
 }
@@ -114,19 +114,43 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .c
   object-fit: cover;
 }
 
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on)::after,
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 58%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 78%, transparent) 100%);
+}
+
 html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row) .t,
 html[data-look='apple'][data-theme] .app-stage.shell-modern .carry-on .carry-copy {
   position: absolute;
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1;
+  z-index: 2;
   display: flex;
   flex-direction: column;
+  align-items: flex-start;
   gap: var(--hh-space-1);
   margin: 0;
   padding: var(--hh-space-4);
   background: transparent;
+  text-align: left;
+}
+
+html[data-look='apple'][data-theme] .cover-kicker {
+  margin: 0;
+  font-size: var(--hh-font-size-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--hh-on-accent) 88%, transparent);
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) :is(b, h2, small, .muted, p, .eyebrow) {
@@ -208,11 +232,11 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .c
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .carry-on) .bar > i,
 html[data-look='apple'][data-theme] .app-stage.shell-modern .progress-ring {
-  background: color-mix(in srgb, var(--art, var(--hh-accent)) 70%, var(--hh-ink));
+  background: var(--btn, var(--hh-accent));
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .progress-ring {
-  background: conic-gradient(color-mix(in srgb, var(--art, var(--hh-accent)) 70%, var(--hh-ink)) var(--progress, 0%), var(--hh-paper) 0);
+  background: conic-gradient(var(--btn, var(--hh-accent)) var(--progress, 0%), var(--hh-paper) 0);
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .duration-chip {
@@ -239,15 +263,18 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.library-section
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .tab .tab-icon,
 html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon {
-  width: var(--hh-space-5);
-  height: var(--hh-space-5);
-  padding: var(--hh-space-1);
-  box-sizing: border-box;
-  border-radius: var(--hh-radius-control);
-  background: var(--ico, var(--hh-look-blue));
-  color: var(--hh-on-accent);
-  stroke: var(--hh-on-accent);
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  color: var(--hh-ink-2);
+  stroke: currentColor;
   filter: none;
+  border-radius: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon {
+  color: var(--hh-ink);
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .tab,
@@ -295,10 +322,17 @@ html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell
   left: 0;
   right: 0;
   bottom: 0;
-  z-index: 1;
+  z-index: 2;
+  align-items: flex-start;
   margin: 0;
   padding: var(--hh-space-4);
   background: transparent;
+  text-align: left;
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-top .cover-line {
+  margin: 0;
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
 }
 
 html[data-look='apple'][data-look-surface='course'] .course-hero[data-look-only] {

@@ -28,7 +28,7 @@ import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -158,7 +158,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   const title = tidyTalkTitle(str(course.title))
   const tint = await appleLookOnServer()
   return (
-    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null}>
+    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null} wash={tint ? coverPage(course.id) : null} btn={tint ? coverVivid(course.id) : null}>
       <div className="app-scroll">
         {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
@@ -167,7 +167,9 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           {sequence ? (
             <div className="app-head course-head">
               <Back href={`${base}/courses`} label="Courses" />
+              {tint ? <p className="cover-kicker">Course · {lessons.length} films</p> : null}
               <h1 data-testid="course-title">{title}</h1>
+              {tint ? <p className="cover-line">{coverLine(title)}</p> : null}
             </div>
           ) : (
             <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
@@ -506,7 +508,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const playerLook = await appleLookOnServer()
   const playerArt = playerLook ? coverColor(courseId, lesson.id) : ''
   return (
-    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerArt || null}>
+    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerArt || null} wash={playerLook ? coverPage(courseId, lesson.id) : null} btn={playerLook ? coverVivid(courseId, lesson.id) : null}>
       <div className="app-scroll">
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />

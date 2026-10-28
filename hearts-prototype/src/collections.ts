@@ -499,7 +499,7 @@ export const Courses: CollectionConfig = {
       ],
     },
     { name: 'sampleAnswers', type: 'json', admin: { description: 'Sample and real answers for this course only. Other portals never see them.' } },
-    { name: 'cover', type: 'upload', relationTo: 'media', admin: { description: 'Optional cover. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. A film still is not a cover.' } },
+    { name: 'cover', type: 'upload', relationTo: 'media', admin: { description: 'Photograph for this course. An upload here is used first. A picture supplied for the course is used when this is empty. Otherwise a cover is drawn. A film still is not a cover.' } },
   ],
 }
 
@@ -568,7 +568,7 @@ export const Lessons: CollectionConfig = {
     { name: 'vimeoId', type: 'text' },
     { name: 'vimeoHash', type: 'text', admin: { description: 'The extra code at the end of a private Vimeo link. Unlisted films need it to play.' } },
     { name: 'posterUrl', type: 'text', admin: { description: 'Still from the film host, usually the Vimeo oEmbed thumbnail. Empty means an accent block, not a grey square.' } },
-    { name: 'cover', type: 'upload', relationTo: 'media', admin: { description: 'Optional cover for this film. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. The film still above is not the cover.' } },
+    { name: 'cover', type: 'upload', relationTo: 'media', admin: { description: 'Photograph for this film. An upload here is used first. A picture supplied for the film is used when this is empty. Otherwise a cover is drawn. The film still above is not the cover.' } },
     { name: 'film', type: 'upload', relationTo: 'media' },
     { name: 'muxAssetId', type: 'text', admin: { description: 'Mux-ready. Unused until a Mux asset is attached.' } },
     { name: 'muxPlaybackId', type: 'text' },

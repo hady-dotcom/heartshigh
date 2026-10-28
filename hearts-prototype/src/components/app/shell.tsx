@@ -26,7 +26,7 @@ export function Flash({ error, notice }: { error?: string | string[]; notice?: s
   )
 }
 
-export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand, art }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; art?: string | null; brand?: { colour: string; accent: string; name?: string; shell?: 'modern' | 'hearts'; font?: string; scene?: boolean; sceneCss?: string | null } | null }) {
+export function AppFrame({ children, dark = false, evening = false, testId, tone, help, trendsOptIn, brand, art, wash, btn }: { children: ReactNode; dark?: boolean; evening?: boolean; testId?: string; tone?: 'gather'; help?: string; trendsOptIn?: boolean; art?: string | null; wash?: string | null; btn?: string | null; brand?: { colour: string; accent: string; name?: string; shell?: 'modern' | 'hearts'; font?: string; scene?: boolean; sceneCss?: string | null } | null }) {
   const gather = tone === 'gather'
   const modern = brand?.shell === 'modern'
   const night = Boolean(evening) && !modern
@@ -35,6 +35,8 @@ export function AppFrame({ children, dark = false, evening = false, testId, tone
     ...(paint && brand ? { '--portal-colour': MODERN_ACCENT, '--portal-accent': MODERN_ACCENT } : {}),
     ...(brand?.sceneCss ? { '--scene': brand.sceneCss } : {}),
     ...(art ? { '--art': art } : {}),
+    ...(wash ? { '--page': wash } : {}),
+    ...(btn ? { '--btn': btn } : {}),
   } as CSSProperties
   const showWord = Boolean(brand?.name) && testId !== 'welcome' && testId !== 'welcome-films'
   return (

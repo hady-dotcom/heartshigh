@@ -15,7 +15,7 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { WeekLibrary } from '@/components/app/week-library'
 import { guestWeekSections } from '@/server/week-library'
@@ -32,7 +32,7 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
   const library = await guestLibrary(payload, portal.id, base)
   const tint = await appleLookOnServer()
   return (
-    <AppFrame testId="garden" brand={learnerBrand(portal)} art={tint && library.courses[0] ? coverColor(library.courses[0].id) : null}>
+    <AppFrame testId="garden" brand={learnerBrand(portal)} art={tint && library.courses[0] ? coverColor(library.courses[0].id) : null} wash={tint && library.courses[0] ? coverPage(library.courses[0].id) : null} btn={tint && library.courses[0] ? coverVivid(library.courses[0].id) : null}>
       <div className="app-scroll" data-testid="course-home">
         <div className="app-head"><h1>Courses</h1></div>
         <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
@@ -49,6 +49,7 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
                     <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={course.place} title={course.filmTitle} /></span>
                   )}
                     <span className="t">
+                      {tint ? <small className="cover-kicker">Course · {course.count} film{course.count === 1 ? '' : 's'}</small> : null}
                       <b>{course.title}</b>
                       {tint ? <small className="cover-line">{coverLine(course.title)}</small> : null}
                       <small>{course.count} film{course.count === 1 ? '' : 's'}{course.seconds ? ` · ${clock(course.seconds)}` : ''}</small>
@@ -114,13 +115,15 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
     const tint = await appleLookOnServer()
     const heroSrc = tint ? coverPath('course', course.id) : shownPoster(filmPoster(first || lessons[0]))
     return (
-      <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null}>
+      <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null} wash={tint ? coverPage(course.id) : null} btn={tint ? coverVivid(course.id) : null}>
         <div className="app-scroll">
           <div className="course-top">
             <CourseArtHero src={heroSrc} />
             <div className="app-head course-head">
               <a className="back" href={`${base}/courses`} data-testid="back">‹ Courses</a>
+              {tint ? <p className="cover-kicker">Course · {lessons.length} films</p> : null}
               <h1 data-testid="course-title">{title}</h1>
+              {tint ? <p className="cover-line">{coverLine(title)}</p> : null}
             </div>
           </div>
           <div className={tint ? 'play-panel' : undefined} data-testid="play-next">
@@ -190,7 +193,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   const poster = (await appleLookOnServer()) ? coverPath('film', lesson.id) : shownPoster(filmPoster(lesson))
   const art = poster.startsWith('/cover/') ? coverColor(course.id, lesson.id) : ''
   return (
-    <AppFrame testId="course" brand={learnerBrand(portal)} art={art || null}>
+    <AppFrame testId="course" brand={learnerBrand(portal)} art={art || null} wash={art ? coverPage(course.id, lesson.id) : null} btn={art ? coverVivid(course.id, lesson.id) : null}>
       <div className="app-scroll">
         <CoursePlayer
           guest

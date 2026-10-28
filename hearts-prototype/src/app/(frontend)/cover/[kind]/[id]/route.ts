@@ -6,6 +6,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { coverColor, coverHue, coverSvg, type CoverKind } from '@/lib/cover-art'
 import { idOf } from '@/lib/ids'
+import { coverContentType, readCoverIndex, resolveSuppliedCover, suppliedCoverRoot } from '@/lib/supplied-cover'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,21 @@ async function uploaded(payload: Awaited<ReturnType<typeof getPayload>>, mediaId
   })
 }
 
-/** A designed cover for one course or film. An uploaded cover replaces the drawing. Film stills are never used. */
+function photograph(file: string, mime: string) {
+  const info = stat(file)
+  return info.then((found) => {
+    const stream = createReadStream(file)
+    return new Response(Readable.toWeb(stream) as ReadableStream, {
+      headers: {
+        'Content-Type': mime,
+        'Content-Length': String(found.size),
+        'Cache-Control': 'public, max-age=3600',
+      },
+    })
+  }).catch(() => null)
+}
+
+/** A photograph when one is uploaded or supplied. Otherwise the drawn cover. Film stills are never used. */
 export async function GET(_req: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
   const { kind: rawKind, id: rawId } = await params
   const kind = kindOf(rawKind)
@@ -57,6 +72,13 @@ export async function GET(_req: Request, { params }: { params: Promise<{ kind: s
   }
   const courseId = kind === 'course' ? id : idOf(doc?.course) || id
   const title = String(doc?.title || (kind === 'course' ? 'Course' : 'Film'))
+  const root = suppliedCoverRoot()
+  const supplied = resolveSuppliedCover({ root, kind, id, title, index: readCoverIndex(root) })
+  if (supplied) {
+    const mime = coverContentType(supplied)
+    const file = mime ? await photograph(supplied, mime) : null
+    if (file) return file
+  }
   const hue = coverHue(courseId, kind === 'film' ? id : undefined)
   const svg = coverSvg({ seed: `${kind}:${id}`, title, hue, wide: kind === 'course' })
   return new Response(svg, {

@@ -29,6 +29,16 @@ export function coverColor(courseId: number, filmId?: number) {
   return `hsl(${hue} 68% ${light}%)`
 }
 
+/** A near-white tint of the hue, for the page behind a photograph. */
+export function coverPage(courseId: number, filmId?: number) {
+  return `hsl(${coverHue(courseId, filmId)} 62% 96%)`
+}
+
+/** A bright form of the hue, for a button. Saturation stays high so it does not turn brown. */
+export function coverVivid(courseId: number, filmId?: number) {
+  return `hsl(${coverHue(courseId, filmId)} 88% 42%)`
+}
+
 export function coverPath(kind: CoverKind, id: number) {
   return `/cover/${kind}/${id}`
 }

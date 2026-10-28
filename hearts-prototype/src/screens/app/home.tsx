@@ -17,7 +17,7 @@ import { learnerWords } from '@/lib/tidy-caption'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, filmPoster, portalName, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -144,7 +144,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     if (local[0] && firstLesson) demoContinue = `${base}/course/${local[0].id}?part=${firstLesson.id}`
   }
   return (
-    <AppFrame testId="home" brand={learnerBrand(portal)} art={tint && carryOn[0] ? coverColor(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null}>
+    <AppFrame testId="home" brand={learnerBrand(portal)} art={tint && carryOn[0] ? coverColor(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null} wash={tint && carryOn[0] ? coverPage(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null} btn={tint && carryOn[0] ? coverVivid(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null}>
       <div className="app-scroll">
         <div className="app-head">
           <h1>Home</h1>
@@ -200,6 +200,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
                 {!tint && !row.thumb && modernHome ? <FilmFallback place={row.place} title={row.title} /> : null}
               </span>
               <span className="t">
+                {tint ? <small className="cover-kicker">Film</small> : null}
                 <b>{row.title}</b>
                 <span className="sr-only">. </span>
                 {tint ? <small className="cover-line">{coverLine(row.title)}</small> : null}
@@ -221,7 +222,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
                 <span className={`thumb${tint || poster ? '' : ' is-fallback'}`} style={tint ? { backgroundImage: `url(${coverPath('course', course.id)})` } : poster ? { backgroundImage: `url(${poster})` } : undefined}>
                   {!tint && !poster && modernHome && first ? <FilmFallback place={1} title={str(first.title)} /> : null}
                 </span>
-                <span className="t"><b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{meta}</small><DoorChips doors={course.doors} max={1} /></span>
+                <span className="t">{tint ? <small className="cover-kicker">Course · {course.parts} film{course.parts === 1 ? '' : 's'}</small> : null}<b>{tidyTalkTitle(course.title)}</b><span className="sr-only">. </span><small>{meta}</small><DoorChips doors={course.doors} max={1} /></span>
               </Link>
             )
           })}
@@ -238,7 +239,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
                 <span className={`thumb${tint || film.poster ? '' : ' is-fallback'}`} style={tint ? { backgroundImage: `url(${coverPath('film', Number(film.href.match(/part=(\d+)/)?.[1] || 0))})` } : film.poster ? { backgroundImage: `url(${film.poster})` } : undefined}>
                   {!tint && !film.poster && modernHome ? <FilmFallback place={film.place} title={film.title} /> : null}
                 </span>
-                <span className="t"><b>{film.place}. {film.title}</b><small>{film.course}</small>{modernHome ? <FilmChips seconds={film.seconds} done={film.done} /> : null}</span>
+                <span className="t">{tint ? <small className="cover-kicker">Film</small> : null}<b>{film.place}. {film.title}</b><small>{film.course}</small>{modernHome ? <FilmChips seconds={film.seconds} done={film.done} /> : null}</span>
               </Link>
             ))}
           </div>
