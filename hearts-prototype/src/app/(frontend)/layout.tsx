@@ -12,10 +12,13 @@ import './shell-modern.css'
 import './gather.css'
 import './live.css'
 import './framing.css'
+import './apple-look.css'
 import { themeBootScript } from '@/lib/daypart'
 import { installBootScript } from '@/lib/install-prompt'
+import { APPLE_LOOK_BOOT } from '@/lib/apple-look'
 import type { Metadata, Viewport } from 'next'
-import type { ReactNode } from 'react'
+import { Suspense, type ReactNode } from 'react'
+import { AppleLook } from '@/components/app/apple-look'
 import { StageFrameGuard } from '@/components/stage-frame-guard'
 import { ViewAsBanner } from '@/components/viewas-banner'
 
@@ -53,6 +56,7 @@ export default function Layout({ children }: { children: ReactNode }) {
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeBootScript() }} />
         <script dangerouslySetInnerHTML={{ __html: installBootScript() }} />
+        <script dangerouslySetInnerHTML={{ __html: APPLE_LOOK_BOOT }} />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-latin-400-normal.woff2" crossOrigin="" />
@@ -79,6 +83,9 @@ export default function Layout({ children }: { children: ReactNode }) {
       <body suppressHydrationWarning>
         <StageFrameGuard />
         <ViewAsBanner />
+        <Suspense fallback={null}>
+          <AppleLook />
+        </Suspense>
         {children}
       </body>
     </html>

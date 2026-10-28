@@ -1,9 +1,16 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useLayoutEffect } from 'react'
+import { usePathname } from 'next/navigation'
+import { applyAppleLook, watchArtwork } from '@/lib/apple-look'
 
 /** Scroll-collapse and the phone menu for the data console. It does not change fields or saves. */
 export function AppleAdminChrome() {
+  const path = usePathname()
+  useLayoutEffect(() => {
+    applyAppleLook()
+    return watchArtwork()
+  }, [path])
   useEffect(() => {
     const onScroll = () => {
       document.documentElement.classList.toggle('hig-collapsed', window.scrollY > 12)

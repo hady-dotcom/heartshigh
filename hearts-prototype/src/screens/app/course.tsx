@@ -27,6 +27,7 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
+import { appleLookOnServer, artStyle, swatchFor, swatchMap } from '@/server/swatch'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -38,6 +39,7 @@ import { lastPartCopy, playerPartLabel, resolvePartIndex } from '@/lib/player-la
 import { nextPartLabel } from '@/lib/study-plan'
 import { filmsLabel, talksLabel } from '@/lib/week'
 import { FilmFallback } from '@/components/app/film-fallback'
+import { CourseArtHero } from '@/components/app/course-art'
 import { FilmChips } from './course-home'
 import { masterFlags } from './journey'
 import { companyGatherings, relatedCards, TalkGatherNotice } from '@/screens/app/gather'
@@ -153,19 +155,25 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
     : done.size > 0
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
   const title = tidyTalkTitle(str(course.title))
+  const tint = await appleLookOnServer()
+  const filmStills = new Map(lessons.map((lesson) => [lesson.id, shownPoster(filmPoster(lesson)) || '']))
+  const colors = tint ? await swatchMap([...filmStills.values()]) : new Map<string, string>()
   return (
-    <AppFrame testId="course-overview" brand={learnerBrand(portal)}>
+    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={colors.get(filmStills.get(continueLesson.id) || '') || null}>
       <div className="app-scroll">
         {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
-        {sequence ? (
-          <div className="app-head course-head">
-            <Back href={`${base}/courses`} label="Courses" />
-            <h1 data-testid="course-title">{title}</h1>
-          </div>
-        ) : (
-          <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
-        )}
+        <div className="course-top">
+          <CourseArtHero src={filmStills.get(continueLesson.id) || null} />
+          {sequence ? (
+            <div className="app-head course-head">
+              <Back href={`${base}/courses`} label="Courses" />
+              <h1 data-testid="course-title">{title}</h1>
+            </div>
+          ) : (
+            <div className="app-head"><h1 data-testid="course-title">{title}</h1></div>
+          )}
+        </div>
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         {sequence ? (
           <div data-testid="play-next">
@@ -201,7 +209,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           ? sectionGroups(lessons, (lesson) => str(unitRows.find((unit) => unit.id === ref(lesson.unit))?.title) || 'Films')
           : [{ title: '', rows: lessons.map((item, index) => ({ item, index })) }]
         ).map((group) => (
-          <section className={sequence ? 'sequence-module' : undefined} id={sequence ? sectionAnchor(group.title) : undefined} key={group.title || 'films'} data-testid={sequence ? 'sequence-module' : undefined}>
+          <section className={sequence ? 'sequence-module' : undefined} id={sequence ? sectionAnchor(group.title) : undefined} key={group.title || 'films'} data-testid={sequence ? 'sequence-module' : undefined} style={artStyle(colors.get(filmStills.get(group.rows[0]?.item.id) || ''))} data-art={colors.size ? '1' : undefined}>
             {sequence ? <h2>{group.title}</h2> : null}
             {group.rows.map(({ item: lesson, index }) => {
           const secondsHere = Number(lesson.durationSeconds || 0)
@@ -211,7 +219,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           const still = stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
-            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'}>
+            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'} style={artStyle(colors.get(filmStills.get(lesson.id) || ''))} data-art={colors.get(filmStills.get(lesson.id) || '') ? '1' : undefined}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 {still.src ? <img src={still.src} alt="" /> : null}
                 {still.fallback ? <FilmFallback place={index + 1} title={name} /> : null}
@@ -483,8 +491,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       : undefined,
   }))
 
+  const playerArt = (await appleLookOnServer()) ? await swatchFor(shownPoster(filmPoster(lesson))) : ''
   return (
-    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)}>
+    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerArt || null}>
       <div className="app-scroll">
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />

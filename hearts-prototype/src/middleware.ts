@@ -38,7 +38,12 @@ export function middleware(request: NextRequest) {
   }
   const headers = new Headers(request.headers)
   headers.set('x-hearts-path', `${pathname}${search}`)
+  const lookParam = searchParams.get('look')
+  const lookOn = lookParam === 'off' ? false : lookParam === 'apple' || request.cookies.get('hh_look')?.value === 'apple'
+  if (lookOn) headers.set('x-hh-look', 'apple')
   const response = NextResponse.next({ request: { headers } })
+  if (lookParam === 'apple') response.cookies.set('hh_look', 'apple', { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 14, secure: process.env.NODE_ENV === 'production' })
+  if (lookParam === 'off') response.cookies.set('hh_look', '', { path: '/', sameSite: 'lax', maxAge: 0 })
   const door = pathname.match(/^\/p\/([a-z0-9-]{1,80})(?:\/|$)/i)
   if (door) {
     response.cookies.set('hh_door', door[1], { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30, secure: process.env.NODE_ENV === 'production' })

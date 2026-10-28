@@ -364,3 +364,101 @@ html .hig-readonly .btn {
   border-radius: 12px;
   text-decoration: none;
 }
+
+/* Colour preview, dashboard only. Other console routes stay as they are. */
+html[data-look='apple'][data-look-surface='cms'],
+html[data-look='apple'][data-look-surface='cms'] body,
+html[data-look='apple'][data-look-surface='cms'] .template-default {
+  background:
+    radial-gradient(90% 42% at 0% 0%, #b6e7ff 0%, transparent 62%),
+    radial-gradient(80% 40% at 100% 0%, #ffd7a8 0%, transparent 58%),
+    radial-gradient(70% 36% at 60% 100%, #ead6ff 0%, transparent 64%),
+    #f2f2f7;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .template-default {
+  display: block;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav {
+  display: flex !important;
+  flex-flow: row wrap !important;
+  align-content: flex-start;
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none;
+  inset: auto;
+  transform: none !important;
+  opacity: 1 !important;
+  background: transparent;
+  padding: 12px 12px 0;
+  gap: 4px 0;
+}
+
+html[data-look='apple'][data-look-surface='cms'] :is(.nav__scroll, .nav__wrap, .nav-group, .nav-group__content, .rah-static) {
+  display: contents !important;
+}
+
+html[data-look='apple'][data-look-surface='cms'] :is(.nav__header, .nav__controls, .nav-group__toggle, .nav-group__indicator) {
+  display: none !important;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .template-default__wrap {
+  width: 100%;
+  max-width: 100%;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav-group {
+  margin: 0 0 8px;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 84px;
+  min-height: 44px;
+  margin: 0 8px 8px 0;
+  padding: 4px;
+  color: #111827;
+  text-align: center;
+  vertical-align: top;
+  background: transparent;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link::before {
+  content: attr(data-mark);
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--ico, #0070eb);
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex: none;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link .nav__link-label,
+html[data-look='apple'][data-look-surface='cms'] .nav__link span {
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .dashboard,
+html[data-look='apple'][data-look-surface='cms'] .modular-dashboard,
+html[data-look='apple'][data-look-surface='cms'] .widget {
+  background: #ffffff;
+  border-radius: 20px;
+  color: #111827;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .hig-large-title {
+  color: #111827;
+}

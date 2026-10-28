@@ -74,4 +74,24 @@
   --hh-ring: 48px;
 
   --hh-tap-min: 44px;
+
+  /* Apple look preview. Deepened so a white glyph clears WCAG AA.
+     Soft washes stay light so dark text on the page still clears AA. */
+  --hh-look-red: #db3329;
+  --hh-look-orange: #ad6500;
+  --hh-look-yellow: #ffcc00;
+  --hh-look-on-yellow: #111827;
+  --hh-look-green: #23873d;
+  --hh-look-mint: #00837d;
+  --hh-look-teal: #237f8f;
+  --hh-look-cyan: #247da6;
+  --hh-look-blue: #0070eb;
+  --hh-look-indigo: #5856d6;
+  --hh-look-purple: #a54dd1;
+  --hh-look-pink: #e0284b;
+  --hh-look-brown: #8b7251;
+  --hh-look-sky: #64d2ff;
+  --hh-look-peach: #ffb340;
+  --hh-look-lilac: #d6b0ff;
+  --hh-look-dawn: #9fd4ff;
 }

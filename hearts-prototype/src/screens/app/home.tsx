@@ -16,6 +16,7 @@ import { daysWithUsLabel } from '@/lib/days-with-us'
 import { learnerWords } from '@/lib/tidy-caption'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, filmPoster, portalName, shownPoster } from '@/server/learner'
+import { appleLookOnServer, artStyle, swatchMap } from '@/server/swatch'
 import { visibleCourseIds } from '@/server/context'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -133,6 +134,8 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
   const clips = items.slice(0, 3)
   const nextFilms = clips.length ? [] : await nextCourseFilms(payload, user, base, 4, portal.id)
   const notes = featureOn(portal, 'announcements') ? await openAnnouncements(payload, user, portal.id) : []
+  const tint = await appleLookOnServer()
+  const homeColors = tint ? await swatchMap([...carryOn.map((row) => row.thumb), ...fallback.map((course) => shownPoster(course.poster)), ...nextFilms.map((film) => film.poster)]) : new Map<string, string>()
   let demoContinue = ''
   if (demo) {
     const local = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }, { hidden: { not_equals: true } }] }, { limit: 1 })
@@ -192,7 +195,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         <p className="eyebrow">Continue</p>
         <div data-testid="continue">
           {carryOn.map((row) => (
-            <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row">
+            <Link key={row.id} className="continue-row" href={row.href} data-testid="continue-row" style={artStyle(homeColors.get(row.thumb || ''))} data-art={homeColors.get(row.thumb || '') ? '1' : undefined}>
               <span className={`thumb${row.thumb ? '' : ' is-fallback'}`} style={row.thumb ? { backgroundImage: `url(${row.thumb})` } : undefined}>
                 {!row.thumb && modernHome ? <FilmFallback place={row.place} title={row.title} /> : null}
               </span>
@@ -213,7 +216,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
               ? `${course.sheetTitle ? `${course.sheetTitle} · ` : ''}${watched} of ${course.parts} film${course.parts === 1 ? '' : 's'}`
               : [course.speaker, plural(course.parts, 'part')].filter(Boolean).join(' · ')
             return (
-              <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row">
+              <Link key={course.id} className="continue-row" href={`${base}/course/${course.id}`} data-testid="continue-row" style={artStyle(homeColors.get(shownPoster(course.poster) || ''))} data-art={homeColors.get(shownPoster(course.poster) || '') ? '1' : undefined}>
                 <span className={`thumb${poster ? '' : ' is-fallback'}`} style={poster ? { backgroundImage: `url(${poster})` } : undefined}>
                   {!poster && modernHome && first ? <FilmFallback place={1} title={str(first.title)} /> : null}
                 </span>
@@ -230,7 +233,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
         {!clips.length && nextFilms.length ? (
           <div data-testid="feed-films">
             {nextFilms.map((film) => (
-              <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film">
+              <Link key={film.href} className="continue-row" href={film.href} data-testid="feed-film" style={artStyle(homeColors.get(film.poster || ''))} data-art={homeColors.get(film.poster || '') ? '1' : undefined}>
                 <span className={`thumb${film.poster ? '' : ' is-fallback'}`} style={film.poster ? { backgroundImage: `url(${film.poster})` } : undefined}>
                   {!film.poster && modernHome ? <FilmFallback place={film.place} title={film.title} /> : null}
                 </span>

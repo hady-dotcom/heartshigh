@@ -1194,6 +1194,10 @@ html[data-theme] .app-stage.shell-modern .tab.on[data-testid='tab-garden'] .tab-
   border-radius: 0;
 }
 
+.course-top { display: contents; }
+
+html[data-theme] .course-hero[data-look-only] { display: none; }
+
 html[data-theme] .app-stage.shell-modern .course-hero {
   position: relative;
   min-height: 0;
