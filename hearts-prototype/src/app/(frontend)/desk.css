@@ -930,3 +930,59 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
   font-weight: 550;
   color: var(--ink);
 }
+
+.desk,
+.desk-narrow {
+  --sans: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+}
+
+.desk .main-head {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--hh-glass);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
+}
+
+.desk .main-head h1 { font-size: var(--hh-font-size-display); line-height: var(--hh-line-large-title); }
+
+html.desk-collapsed .desk .main-head {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 240px;
+  z-index: 30;
+}
+
+html.desk-collapsed .desk .main-head h1 { font-size: var(--hh-font-size-headline); line-height: var(--hh-font-size-title); }
+
+.desk .main { padding-top: var(--hh-space-3); }
+
+.desk :is(.btn, button, .nav, summary, a.btn) { min-height: var(--hh-tap-min); }
+
+.desk-menu > summary { display: none; }
+
+@media (max-width: 899px) {
+  .desk.desk-phone .main { padding: var(--hh-space-3); }
+  .desk.desk-phone .desk-menu > summary {
+    display: flex;
+    align-items: center;
+    min-height: var(--hh-tap-min);
+    padding: 0 var(--hh-space-3);
+    color: var(--hh-on-accent);
+    background: var(--hh-accent);
+    border-radius: var(--hh-radius-control);
+    font-weight: 650;
+  }
+  .desk.desk-phone .desk-menu:not([open]) .side-nav-wrap,
+  .desk.desk-phone .side-foot { display: none; }
+  .desk.desk-phone .desk-menu[open] ~ .side-foot { display: block; }
+  html.desk-collapsed .desk.desk-phone .main-head { left: 0; }
+}
+
+@media (min-width: 900px) {
+  .desk-menu .side-nav-wrap { display: block !important; }
+}

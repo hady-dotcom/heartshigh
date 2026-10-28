@@ -8,6 +8,13 @@
   background: var(--hh-canvas);
   color: var(--hh-ink);
   font-family: var(--hh-font-system);
+  overflow-x: hidden;
+  max-width: 100%;
+}
+
+@media (max-width: 700px) {
+  .demo-cast { width: 100%; padding: var(--hh-space-3); }
+  .demo-cast-grid { grid-template-columns: 1fr; }
 }
 
 .demo-bar {

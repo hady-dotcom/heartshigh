@@ -117,3 +117,159 @@ html ::selection {
   background: #dbeafe;
   color: #111827;
 }
+
+html body,
+html .template-default,
+html .app-header,
+html .nav,
+html button,
+html input,
+html textarea,
+html select,
+html h1,
+html h2,
+html p,
+html a,
+html td,
+html th,
+html label,
+html span,
+html li {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+}
+
+html .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(242, 242, 247, 0.72);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border-bottom: 1px solid rgba(60, 60, 67, 0.18);
+}
+
+html .template-default {
+  padding-top: 64px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html .template-default :is(h1, .list-header__title, .doc-header__title, .collection-list__header h1) {
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+html.hig-collapsed .template-default :is(h1, .list-header__title, .doc-header__title) {
+  position: fixed;
+  top: 14px;
+  left: 72px;
+  z-index: 41;
+  margin: 0;
+  font-size: 17px;
+  line-height: 22px;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html .btn,
+html .nav__link,
+html .app-header button,
+html .nav-toggler,
+html .hig-menu {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+html .field-description,
+html .nav__label,
+html .list-controls__toggle,
+html .table a,
+html .row-label {
+  color: #3a3a3c;
+}
+
+html .hig-menu {
+  display: none;
+  align-items: center;
+  margin-left: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  html .hig-menu { display: inline-flex; }
+  html .nav { display: none; }
+  html.hig-nav-open .nav {
+    display: flex;
+    position: fixed;
+    z-index: 39;
+    top: 60px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    background: #ffffff;
+  }
+}
+
+html .tenantField__debug-pill { display: none; }
+
+html .render-fields,
+html .document-fields,
+html .gutter,
+html .collection-list {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+html a[href$="/insight-events/create"],
+html a[href$="/insight-sessions/create"],
+html a[href$="/experiment-events/create"],
+html a[href$="/experiment-assignments/create"],
+html a[href$="/opening-answers/create"],
+html a[href$="/view-as-sessions/create"],
+html a[href$="/compass-attempts/create"],
+html a[href$="/compass-serves/create"],
+html a[href$="/compass-mixes/create"],
+html a[href$="/heart-contributions/create"],
+html a[href$="/audit-log/create"] {
+  display: none;
+}
+
+html .hig-readonly {
+  max-width: 36rem;
+  margin: 24px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  color: #111827;
+}
+
+html .hig-readonly h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 41px;
+}
+
+html .hig-readonly p { color: #3a3a3c; }
+
+html .hig-readonly .btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 12px;
+  text-decoration: none;
+}

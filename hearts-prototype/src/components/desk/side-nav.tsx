@@ -21,21 +21,28 @@ export function SideNav({ children }: { children: ReactNode }) {
     const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(check)
     observer?.observe(el)
     window.addEventListener('resize', check)
+    const onScroll = () => document.documentElement.classList.toggle('desk-collapsed', window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
     return () => {
       el.removeEventListener('scroll', check)
       observer?.disconnect()
       window.removeEventListener('resize', check)
+      window.removeEventListener('scroll', onScroll)
     }
   }, [])
 
   return (
-    <div className={`side-nav-wrap${overflow ? ' overflow' : ''}${atEnd ? ' at-end' : ''}`}>
-      <nav ref={ref} className="side-nav" aria-label="Desk" data-testid="side-nav">
-        {children}
-      </nav>
-      {overflow && !atEnd ? (
-        <p className="side-nav-more" data-testid="nav-scroll-cue">More below</p>
-      ) : null}
-    </div>
+    <details className="desk-menu">
+      <summary className="desk-menu-button" data-testid="desk-menu">Menu</summary>
+      <div className={`side-nav-wrap${overflow ? ' overflow' : ''}${atEnd ? ' at-end' : ''}`}>
+        <nav ref={ref} className="side-nav" aria-label="Desk" data-testid="side-nav">
+          {children}
+        </nav>
+        {overflow && !atEnd ? (
+          <p className="side-nav-more" data-testid="nav-scroll-cue">More below</p>
+        ) : null}
+      </div>
+    </details>
   )
 }

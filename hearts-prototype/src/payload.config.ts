@@ -22,6 +22,7 @@ import { databaseKind, isBuildPhase, isProduction, payloadSecret, postgresPush, 
 import { postgresPool } from './lib/postgres-pool'
 import { migrations } from './migrations'
 import { copyPackCoursesOntoCodes } from './server/code-courses'
+import { withRecordedCreate } from './lib/recorded-collections'
 import { viewAsGlobalGuard, viewAsGuard } from './server/viewas'
 
 const filename = fileURLToPath(import.meta.url)
@@ -46,10 +47,10 @@ export default buildConfig({
       titleSuffix: '· HEARTS',
     },
     components: {
-      header: ['/components/viewas-admin-banner#ViewAsAdminBanner'],
+      header: ['/components/viewas-admin-banner#ViewAsAdminBanner', '/components/admin/apple-chrome#AppleAdminChrome'],
     },
   },
-  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections].map((collection) => ({
+  collections: [...collections, ...aiCollections, ...sheetCollections, ...experimentCollections, ...insightCollections, ...calendarCollections, ...missionCollections, ...gatherCollections, ...liveCollections, ...safetyCollections].map((collection) => withRecordedCreate({
     ...collection,
     hooks: { ...collection.hooks, beforeOperation: [...(collection.hooks?.beforeOperation || []), viewAsGuard as never] },
   })),
@@ -111,6 +112,7 @@ export default buildConfig({
       tenantsSlug: 'portals',
       tenantField: { name: 'portal' },
       tenantSelectorLabel: 'Portal',
+      debug: true,
       collections: {
         messages: {},
         events: {},
