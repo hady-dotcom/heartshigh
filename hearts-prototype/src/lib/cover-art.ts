@@ -1,5 +1,7 @@
 /** Deterministic editorial covers. No network, no model, the same item always draws the same picture. */
 
+import type { CSSProperties } from 'react'
+
 export type CoverKind = 'course' | 'film'
 
 const HUES = [210, 198, 164, 22, 348, 262, 146, 92]
@@ -37,6 +39,17 @@ export function coverPage(courseId: number, filmId?: number) {
 /** A bright form of the hue, for a button. Saturation stays high so it does not turn brown. */
 export function coverVivid(courseId: number, filmId?: number) {
   return `hsl(${coverHue(courseId, filmId)} 88% 42%)`
+}
+
+/** Each film pans and tints the shared course photograph until it has its own picture. */
+export function filmFrameStyle(courseId: number, filmId: number): CSSProperties {
+  const hash = coverHash(`film-crop:${filmId}`)
+  return {
+    ['--art' as string]: coverColor(courseId, filmId),
+    ['--film' as string]: coverVivid(courseId, filmId),
+    ['--crop-x' as string]: `${8 + (hash % 78)}%`,
+    ['--crop-y' as string]: `${4 + ((hash >>> 8) % 78)}%`,
+  }
 }
 
 /** Wide cards and heroes ask for 16:9. Tall cards and shelves ask for 4:5. */

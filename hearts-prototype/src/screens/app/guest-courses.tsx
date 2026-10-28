@@ -15,7 +15,7 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid, filmFrameStyle } from '@/lib/cover-art'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { WeekLibrary } from '@/components/app/week-library'
 import { guestWeekSections } from '@/server/week-library'
@@ -152,7 +152,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
                   const poster = tint ? coverPath('film', lesson.id, 'tall') : shownPoster(filmPoster(lesson))
                   const href = `${base}/course/${course.id}?part=${lesson.id}`
                   return (
-                    <Link key={lesson.id} className="buffet-row" href={href} data-testid="buffet-talk" data-coming={playable ? 'no' : 'yes'} style={tint ? artStyle(coverColor(course.id, lesson.id)) : undefined}>
+                    <Link key={lesson.id} className="buffet-row" href={href} data-testid="buffet-talk" data-coming={playable ? 'no' : 'yes'} style={tint ? filmFrameStyle(course.id, lesson.id) : undefined}>
                       <span className={`thumb${poster ? '' : ' is-fallback'}`} data-testid="talk-thumb">
                         {poster ? <img src={poster} alt="" /> : <FilmFallback place={index + 1} title={str(lesson.title)} />}
                       </span>

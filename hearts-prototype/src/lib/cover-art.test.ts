@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { coverColor, coverHue, coverIcon, coverPath, coverSvg } from './cover-art'
+import { coverColor, coverHue, coverIcon, coverPath, coverSvg, filmFrameStyle } from './cover-art'
 
 test('a cover is the same picture every time, and a different item is a different picture', () => {
   const first = coverSvg({ seed: 'course:33', title: 'Welcome', hue: coverHue(33) })
@@ -22,4 +22,8 @@ test('the symbol follows the topic and the picture is a drawn mesh, not a film s
   assert.doesNotMatch(svg, /emoji|clipart|youtube|vimeo/i)
   assert.equal(coverPath('course', 33), '/cover/course/33?shape=wide')
   assert.equal(coverPath('film', 9, 'tall'), '/cover/film/9?shape=tall')
+  const left = filmFrameStyle(78, 140)
+  const right = filmFrameStyle(78, 141)
+  assert.notEqual(left['--crop-x' as keyof typeof left], right['--crop-x' as keyof typeof right])
+  assert.notEqual(left['--film' as keyof typeof left], right['--film' as keyof typeof right])
 })

@@ -27,8 +27,8 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
-import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
+import { appleLookOnServer } from '@/server/swatch'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid, filmFrameStyle } from '@/lib/cover-art'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -231,7 +231,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
             : stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (
-            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'} style={tint ? artStyle(coverColor(course.id, lesson.id)) : undefined}>
+            <Link key={lesson.id} className="buffet-row" href={withCurrentQuery(`${base}/course/${course.id}?part=${lesson.id}`, query)} data-testid="buffet-talk" data-coming={sequence && !lessonCanPlay(lesson) ? 'yes' : 'no'} style={tint ? filmFrameStyle(course.id, lesson.id) : undefined}>
               <span className={`thumb${still.fallback ? ' is-fallback' : ''}`} data-testid="talk-thumb">
                 {still.src ? <img src={still.src} alt="" /> : null}
                 {still.fallback ? <FilmFallback place={index + 1} title={name} /> : null}
