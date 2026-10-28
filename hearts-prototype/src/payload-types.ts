@@ -597,7 +597,7 @@ export interface Course {
     | boolean
     | null;
   /**
-   * Optional cover. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. A film still is not a cover.
+   * Photograph for this course. An upload here is used first. A picture supplied for the course is used when this is empty. Otherwise a cover is drawn. A film still is not a cover.
    */
   cover?: (number | null) | Media;
   updatedAt: string;
@@ -818,7 +818,7 @@ export interface Lesson {
    */
   posterUrl?: string | null;
   /**
-   * Optional cover for this film. Leave this empty and a cover is drawn from the title. A picture uploaded here replaces that drawing. The film still above is not the cover.
+   * Photograph for this film. An upload here is used first. A picture supplied for the film is used when this is empty. Otherwise a cover is drawn. The film still above is not the cover.
    */
   cover?: (number | null) | Media;
   film?: (number | null) | Media;

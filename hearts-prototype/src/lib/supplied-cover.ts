@@ -4,9 +4,14 @@ import type { CoverKind } from '@/lib/cover-art'
 
 const EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
 
+export type CoverFrame = 'wide' | 'tall'
+
+/** One file for every frame, or a wide 16:9 and a tall 4:5. */
+export type CoverSlot = string | { wide?: string; tall?: string }
+
 export type CoverIndex = {
-  courses?: Record<string, string>
-  films?: Record<string, string>
+  courses?: Record<string, CoverSlot>
+  films?: Record<string, CoverSlot>
 }
 
 /** "Working with your Child" becomes "working-with-your-child". */
@@ -34,36 +39,64 @@ function insideRoot(root: string, file: string) {
   return resolved
 }
 
+function slotFile(slot: CoverSlot | undefined, frame: CoverFrame) {
+  if (!slot) return ''
+  if (typeof slot === 'string') return slot
+  return slot[frame] || ''
+}
+
+function candidatesFor(input: {
+  kind: CoverKind
+  id: number
+  title: string
+  frame: CoverFrame
+  bag: Record<string, CoverSlot>
+}) {
+  const slug = coverSlug(input.title)
+  const suffix = input.frame === 'tall' ? '4x5' : '16x9'
+  const named = [slotFile(input.bag[String(input.id)], input.frame), slug ? slotFile(input.bag[slug], input.frame) : '', slotFile(input.bag[input.title], input.frame)].filter(Boolean)
+  return [
+    ...named,
+    ...EXTS.flatMap((ext) => [
+      path.join(input.kind, `${input.id}-${suffix}${ext}`),
+      ...(slug ? [path.join(input.kind, `${slug}-${suffix}${ext}`)] : []),
+      `${input.kind}-${input.id}-${suffix}${ext}`,
+      ...(slug ? [`${slug}-${suffix}${ext}`] : []),
+      path.join(input.kind, `${input.id}${ext}`),
+      ...(slug ? [path.join(input.kind, `${slug}${ext}`)] : []),
+    ]),
+  ]
+}
+
 /**
  * A photograph supplied for this course or film.
+ * Wide is 16:9. Tall is 4:5. A film with no picture of its own uses its course.
  * An uploaded cover is checked before this. A missing file means the drawn cover.
- * Names: supplied-covers/course/welcome.jpg, supplied-covers/course/33.jpg,
- * or an entry in supplied-covers/index.json.
  */
 export function resolveSuppliedCover(input: {
   root: string
   kind: CoverKind
   id: number
   title: string
+  frame?: CoverFrame
+  courseId?: number
+  courseTitle?: string
   index?: CoverIndex
   exists?: (file: string) => boolean
 }) {
   const exists = input.exists ?? existsSync
-  const slug = coverSlug(input.title)
-  const bag = (input.kind === 'course' ? input.index?.courses : input.index?.films) || {}
-  const named = [bag[String(input.id)], slug ? bag[slug] : '', bag[input.title]].filter((name): name is string => Boolean(name))
-  const candidates = [
-    ...named,
-    ...EXTS.flatMap((ext) => [
-      path.join(input.kind, `${input.id}${ext}`),
-      ...(slug ? [path.join(input.kind, `${slug}${ext}`)] : []),
-      `${input.kind}-${input.id}${ext}`,
-      ...(slug ? [`${input.kind}-${slug}${ext}`] : []),
-    ]),
-  ]
-  for (const candidate of candidates) {
-    const file = insideRoot(input.root, candidate)
-    if (file && coverContentType(file) && exists(file)) return file
+  const frame = input.frame === 'tall' ? 'tall' : 'wide'
+  const index = input.index || {}
+  const ownBag = (input.kind === 'course' ? index.courses : index.films) || {}
+  const lists = [candidatesFor({ kind: input.kind, id: input.id, title: input.title, frame, bag: ownBag })]
+  if (input.kind === 'film' && input.courseId) {
+    lists.push(candidatesFor({ kind: 'course', id: input.courseId, title: input.courseTitle || '', frame, bag: index.courses || {} }))
+  }
+  for (const candidates of lists) {
+    for (const candidate of candidates) {
+      const file = insideRoot(input.root, candidate)
+      if (file && coverContentType(file) && exists(file)) return file
+    }
   }
   return null
 }

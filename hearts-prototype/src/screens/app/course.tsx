@@ -227,7 +227,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           const name = partTitle(lesson, title)
           const stored = filmPoster(lesson)
           const still = tint
-            ? { src: coverPath('film', lesson.id), fallback: false as const }
+            ? { src: coverPath('film', lesson.id, 'tall'), fallback: false as const }
             : stored ? { src: stored, fallback: false as const } : sequence ? { src: '', fallback: true as const } : talkStill(youtubeId, str(lesson.speaker || course.speaker))
           const week = partWeek(lesson, partCuts, doors, str(course.title))
           return (

@@ -21,6 +21,12 @@ test('a supplied photograph is found by title, by id, or by the index', () => {
     exists,
   }), '/covers/custom/kitchen.jpg')
   assert.equal(resolveSuppliedCover({ root: '/covers', kind: 'course', id: 8, title: 'Preparation and resources', exists }), null)
+  const frames = new Set(['/covers/welcome-16x9.jpg', '/covers/welcome-4x5.jpg'])
+  const frameExists = (file: string) => frames.has(file)
+  const hady = { courses: { '78': { wide: 'welcome-16x9.jpg', tall: 'welcome-4x5.jpg' } } }
+  assert.equal(resolveSuppliedCover({ root: '/covers', kind: 'course', id: 78, title: 'Welcome', frame: 'wide', index: hady, exists: frameExists }), '/covers/welcome-16x9.jpg')
+  assert.equal(resolveSuppliedCover({ root: '/covers', kind: 'film', id: 400, title: 'How to use this course', frame: 'tall', courseId: 78, index: hady, exists: frameExists }), '/covers/welcome-4x5.jpg')
+  assert.equal(resolveSuppliedCover({ root: '/covers', kind: 'film', id: 400, title: 'How to use this course', frame: 'tall', courseId: 33, courseTitle: 'Welcome', index: { courses: { welcome: { wide: 'welcome-16x9.jpg', tall: 'welcome-4x5.jpg' } } }, exists: frameExists }), '/covers/welcome-4x5.jpg')
 })
 
 test('a supplied path cannot leave the cover folder', () => {

@@ -39,8 +39,9 @@ export function coverVivid(courseId: number, filmId?: number) {
   return `hsl(${coverHue(courseId, filmId)} 88% 42%)`
 }
 
-export function coverPath(kind: CoverKind, id: number) {
-  return `/cover/${kind}/${id}`
+/** Wide cards and heroes ask for 16:9. Tall cards and shelves ask for 4:5. */
+export function coverPath(kind: CoverKind, id: number, frame: 'wide' | 'tall' = 'wide') {
+  return `/cover/${kind}/${id}?shape=${frame}`
 }
 
 type IconName =

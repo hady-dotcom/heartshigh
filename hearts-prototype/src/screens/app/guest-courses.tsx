@@ -149,7 +149,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
                 <div className={tint ? 'film-shelf' : undefined}>
                 {group.rows.map(({ item: lesson, index }) => {
                   const playable = playableLesson(lesson)
-                  const poster = tint ? coverPath('film', lesson.id) : shownPoster(filmPoster(lesson))
+                  const poster = tint ? coverPath('film', lesson.id, 'tall') : shownPoster(filmPoster(lesson))
                   const href = `${base}/course/${course.id}?part=${lesson.id}`
                   return (
                     <Link key={lesson.id} className="buffet-row" href={href} data-testid="buffet-talk" data-coming={playable ? 'no' : 'yes'} style={tint ? artStyle(coverColor(course.id, lesson.id)) : undefined}>

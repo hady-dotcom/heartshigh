@@ -6,7 +6,7 @@ import config from '@payload-config'
 import { getPayload } from 'payload'
 import { coverColor, coverHue, coverSvg, type CoverKind } from '@/lib/cover-art'
 import { idOf } from '@/lib/ids'
-import { coverContentType, readCoverIndex, resolveSuppliedCover, suppliedCoverRoot } from '@/lib/supplied-cover'
+import { coverContentType, readCoverIndex, resolveSuppliedCover, suppliedCoverRoot, type CoverFrame } from '@/lib/supplied-cover'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,10 +53,11 @@ function photograph(file: string, mime: string) {
 }
 
 /** A photograph when one is uploaded or supplied. Otherwise the drawn cover. Film stills are never used. */
-export async function GET(_req: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
+export async function GET(req: Request, { params }: { params: Promise<{ kind: string; id: string }> }) {
   const { kind: rawKind, id: rawId } = await params
   const kind = kindOf(rawKind)
   const id = Number(rawId)
+  const frame: CoverFrame = new URL(req.url).searchParams.get('shape') === 'tall' ? 'tall' : 'wide'
   if (!kind || !id) return new Response('Not found', { status: 404 })
   const payload = await getPayload({ config })
   const doc = await payload.findByID({
@@ -72,8 +73,22 @@ export async function GET(_req: Request, { params }: { params: Promise<{ kind: s
   }
   const courseId = kind === 'course' ? id : idOf(doc?.course) || id
   const title = String(doc?.title || (kind === 'course' ? 'Course' : 'Film'))
+  let courseTitle = kind === 'course' ? title : ''
+  if (kind === 'film' && courseId) {
+    const course = await payload.findByID({ collection: 'courses', id: courseId, depth: 0, overrideAccess: true }).catch(() => null) as Doc | null
+    courseTitle = String(course?.title || '')
+  }
   const root = suppliedCoverRoot()
-  const supplied = resolveSuppliedCover({ root, kind, id, title, index: readCoverIndex(root) })
+  const supplied = resolveSuppliedCover({
+    root,
+    kind,
+    id,
+    title,
+    frame,
+    courseId: kind === 'film' ? courseId : undefined,
+    courseTitle,
+    index: readCoverIndex(root),
+  })
   if (supplied) {
     const mime = coverContentType(supplied)
     const file = mime ? await photograph(supplied, mime) : null

@@ -20,5 +20,6 @@ test('the symbol follows the topic and the picture is a drawn mesh, not a film s
   assert.match(svg, /<circle/)
   assert.doesNotMatch(svg, /feTurbulence|feGaussianBlur/)
   assert.doesNotMatch(svg, /emoji|clipart|youtube|vimeo/i)
-  assert.equal(coverPath('course', 33), '/cover/course/33')
+  assert.equal(coverPath('course', 33), '/cover/course/33?shape=wide')
+  assert.equal(coverPath('film', 9, 'tall'), '/cover/film/9?shape=tall')
 })

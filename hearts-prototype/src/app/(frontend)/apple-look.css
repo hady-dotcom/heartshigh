@@ -88,7 +88,7 @@ html[data-look='apple'][data-look-surface='course'] .sequence-module > h2 {
 html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) {
   display: block;
   position: relative;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 16 / 9;
   margin: 0 0 var(--hh-space-4);
   padding: 0;
   overflow: hidden;
@@ -189,7 +189,7 @@ html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell
 
 html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row .thumb {
   width: 100%;
-  aspect-ratio: 3 / 4;
+  aspect-ratio: 4 / 5;
   height: auto;
   border-radius: var(--hh-radius-control);
   overflow: hidden;
@@ -258,7 +258,7 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.library-section
   margin-right: var(--hh-space-2);
   border-radius: var(--hh-radius-control);
   vertical-align: calc(var(--hh-space-1) * -1);
-  background: color-mix(in srgb, var(--art, var(--hh-look-blue)) 74%, var(--hh-ink));
+  background: var(--btn, var(--hh-accent));
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .tab .tab-icon,
@@ -290,7 +290,7 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-me
 html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top {
   display: block;
   position: relative;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 16 / 9;
   min-height: 0;
   margin: 0 0 var(--hh-space-4);
   border-radius: var(--hh-radius-card);

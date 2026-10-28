@@ -12,7 +12,7 @@ import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, clock, ref, rows, str } from '../common'
@@ -147,7 +147,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
     sheetOrder: Number(card.course.sheetOrder || 0),
   })))
   return (
-    <AppFrame testId="garden" brand={learnerBrand(portal)}>
+    <AppFrame testId="garden" brand={learnerBrand(portal)} art={tint && cards[0] ? coverColor(cards[0].course.id) : null} wash={tint && cards[0] ? coverPage(cards[0].course.id) : null} btn={tint && cards[0] ? coverVivid(cards[0].course.id) : null}>
       <div className="app-scroll" data-testid="course-home">
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1>Courses</h1></div>
@@ -162,7 +162,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
             <Thumb src={tint && carry.next ? coverPath('film', carry.next.id) : (modern ? (carry.nextPoster || carry.poster) : carry.poster)} eager place={modern ? carry.nextAt + 1 : undefined} title={modern ? str(carry.next.title) : undefined} />
             {modern ? (
               <div className="carry-copy">
-                <p className="eyebrow">Carry on</p>
+                {tint ? <p className="cover-kicker">Film</p> : <p className="eyebrow">Carry on</p>}
                 <h2>{carry.nextAt + 1}. {str(carry.next.title)}</h2>
                 <p className="muted">{str(carry.course.title)} · {carry.finished} of {carry.own.length} films</p>
                 <span className="progress-ring" style={ringStyle(carryPct)} aria-hidden="true"><span>{carryPct}%</span></span>
@@ -198,6 +198,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                   <Link key={card.course.id} className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card" style={tint ? artStyle(coverColor(card.course.id)) : undefined}>
                     <Thumb src={tint ? coverPath('course', card.course.id) : card.poster} eager={index < 2} place={card.next ? card.nextAt + 1 : undefined} title={card.next ? str(card.next.title) : undefined} />
                     <span className="t">
+                      {tint ? <small className="cover-kicker">Course · {card.own.length} film{card.own.length === 1 ? '' : 's'}</small> : null}
                       <b>{str(card.course.title)}</b>
                       {tint ? <small className="cover-line">{coverLine(str(card.course.title))}</small> : null}
                       <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
@@ -226,6 +227,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                   <Link className="course-card" href={`${base}/course/${card.course.id}`} data-testid="course-card" style={tint ? artStyle(coverColor(card.course.id)) : undefined}>
                     <Thumb src={tint ? coverPath('course', card.course.id) : card.poster} eager={index < 2} place={modern && card.next ? card.nextAt + 1 : undefined} title={modern && card.next ? str(card.next.title) : undefined} />
                     <span className="t">
+                      {tint ? <small className="cover-kicker">Course · {card.own.length} film{card.own.length === 1 ? '' : 's'}</small> : null}
                       <b>{str(card.course.title)}</b>
                       <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}</small>
                       <span className="bar"><i style={{ width: `${pct}%` }} /></span>
