@@ -159,6 +159,7 @@
 }
 .tab { display: grid; justify-items: center; gap: 4px; min-height: 56px; padding-top: 6px; text-decoration: none; font-size: 12px; font-weight: 600; color: var(--hh-muted); }
 .tab .tab-icon { display: block; }
+.tab-solid, .tab-book { display: none; }
 .tab.on, .tabbar.dark .tab.on { color: var(--hh-accent); }
 .tabbar.dark .tab { color: var(--hh-muted); }
 .tab.on .tab-icon { filter: drop-shadow(0 0 6px rgba(243, 211, 142, 0.45)); }
