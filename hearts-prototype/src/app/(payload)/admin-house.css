@@ -244,20 +244,41 @@ html .checkbox-input__input {
   box-sizing: border-box;
 }
 
-html .btn__label,
 html .doc-controls__label,
 html .doc-controls__title,
 html .upload__dragAndDropText,
 html .upload__dropzoneContent__orText,
+html .file-field__dragAndDropText,
+html .file-field__orText,
 html .file-field__filename,
+html .paginator__separator,
+html .paginator__page {
+  color: #1c1c1e;
+}
+
+html .btn:not(.btn--style-primary) .btn__label {
+  color: #1c1c1e;
+}
+
+html .btn.btn--style-primary,
+html .btn.btn--style-primary .btn__label,
+html .btn.btn--style-primary .btn__content,
+html .btn.btn--style-primary .btn__icon {
+  color: #ffffff !important;
+}
+
 html .monaco-editor .line-numbers,
 html .monaco-editor .line-numbers.active-line-number {
   color: #1c1c1e !important;
 }
 
-html .btn--style-primary .btn__label,
-html .btn--style-primary .btn__content {
-  color: #ffffff;
+html .table a,
+html td a,
+html .row-label,
+html .cell-id a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
 }
 
 html .hig-large-title {

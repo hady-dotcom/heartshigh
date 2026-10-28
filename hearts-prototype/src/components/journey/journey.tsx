@@ -2535,7 +2535,7 @@ export function Journey(props: JourneyProps) {
           <span className="j-board-handle" data-testid="board-handle" />
         </div>
         {laneVisible ? <span className="chip white" data-testid="lane-chip">Lane · {item.laneLabel}</span> : <span data-testid="lane-chip-hidden" />}
-        {item.lessonTitle || item.courseTitle ? <p className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</p> : null}
+        {item.lessonTitle || item.courseTitle ? <h1 className="j-board-title" data-testid="board-title">{item.lessonTitle || item.courseTitle}</h1> : null}
       <div className="rail">
         <button type="button" data-testid="share" onPointerDown={(event) => event.stopPropagation()} onPointerUp={(event) => boardAction(event, () => { void share() })} onClick={(event) => event.preventDefault()}><span className="bubble"><ShareIcon /></span>Share</button>
         <button type="button" aria-pressed={faves.includes(item.id)} data-testid="fave" data-cut={item.cutId} onPointerDown={(event) => pressBoard(event, item)} onPointerUp={(event) => boardAction(event, () => fave(boardTapTarget(boardPress.current, item)))} onClick={(event) => event.preventDefault()}><span className="bubble"><HeartIcon filled={faves.includes(item.id)} /></span>Like</button>

@@ -10,12 +10,14 @@ export function DeskNav({ groups, active }: { groups: NavGroup[]; active: string
   const started = useRef(false)
   useLayoutEffect(() => {
     if (!root.current) return
+    const y = window.scrollY
     const want = new Set(groups.filter((group) => group.items.some((item) => item.key === active)).map((group) => group.group))
     for (const details of root.current.querySelectorAll('details')) {
       const group = details.getAttribute('data-group') || ''
       if (!started.current || want.has(group)) details.open = true
     }
     started.current = true
+    if (window.scrollY !== y) window.scrollTo(0, y)
   }, [active, groups])
 
   return (

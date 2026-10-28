@@ -111,14 +111,24 @@ export type Session = {
 async function readSession(touch: boolean): Promise<Session> {
   const payload = await getPayloadClient()
   const reqHeaders = await headers()
-  const result = await payload.auth({ headers: reqHeaders })
+  let result: { user?: { id: number } | null }
+  try {
+    result = await payload.auth({ headers: reqHeaders })
+  } catch {
+    return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
+  }
   if (!result.user) return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
-  const full = (await payload.findByID({
-    collection: 'users',
-    id: result.user.id,
-    overrideAccess: true,
-    depth: 0,
-  })) as unknown as SessionUser
+  let full: SessionUser
+  try {
+    full = (await payload.findByID({
+      collection: 'users',
+      id: result.user.id,
+      overrideAccess: true,
+      depth: 0,
+    })) as unknown as SessionUser
+  } catch {
+    return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
+  }
   if (full.paused || (full.role === 'learner' && (full.removed || !portalIdOf(full)))) {
     return { payload, user: null, actor: null, viewAs: null, viewAsEnded: null }
   }

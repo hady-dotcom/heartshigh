@@ -704,6 +704,23 @@ html[data-theme] .desk.desk-modern :is(.side, .side-brand, .side a.nav, header, 
   color: var(--hh-ink);
 }
 
+html[data-theme] .desk .stat-chip {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk .stat-chip b,
+html[data-theme] .desk .stat-chip span {
+  background: transparent;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .desk .tier-player .hint,
+html[data-theme] .desk .tier-player p.hint,
+html[data-theme] .desk .film-preview {
+  color: var(--hh-paper);
+}
+
 html[data-theme] .desk.desk-modern .side { background: var(--hh-surface); }
 
 html[data-theme] .desk.desk-modern .side a.nav.on {

@@ -262,11 +262,7 @@ export async function DeskFrame({
       </aside>
       <main className="main">
         <div className="main-head">
-          <div>
-            <h1>{title}{tip ? <HelpTip topic={testId || active}>{tip}</HelpTip> : null}</h1>
-            {headerLine ? <p data-testid="desk-purpose">{headerLine}</p> : null}
-            {purpose && intro && typeof intro !== 'string' ? <div className="desk-back">{intro}</div> : null}
-          </div>
+          <h1>{title}{tip ? <HelpTip topic={testId || active}>{tip}</HelpTip> : null}</h1>
           <div className="head-tools">
             {action ? <Link className="btn" href={action.href} data-testid="primary-action">{action.label}</Link> : null}
             {tools}
@@ -293,6 +289,8 @@ export async function DeskFrame({
             </details>
           </div>
         </div>
+        {headerLine ? <p className="desk-purpose" data-testid="desk-purpose">{headerLine}</p> : null}
+        {purpose && intro && typeof intro !== 'string' ? <div className="desk-back">{intro}</div> : null}
         <Flash error={query.error} notice={query.notice} />
         <DeskFade>{children}</DeskFade>
       </main>
