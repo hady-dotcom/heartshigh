@@ -17,7 +17,10 @@ export function AppleAdminChrome() {
       type="button"
       className="hig-menu"
       data-testid="cms-menu"
-      onClick={() => document.documentElement.classList.toggle('hig-nav-open')}
+      onClick={() => {
+        document.documentElement.classList.toggle('hig-nav-open')
+        document.querySelector('.template-default')?.classList.toggle('template-default--nav-open')
+      }}
     >
       Menu
     </button>

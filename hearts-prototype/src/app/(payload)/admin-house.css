@@ -178,12 +178,15 @@ html.hig-collapsed .template-default :is(h1, .list-header__title, .doc-header__t
 }
 
 html .btn,
-html .nav__link,
 html .app-header button,
 html .nav-toggler,
 html .hig-menu {
   min-height: 44px;
   min-width: 44px;
+}
+
+html .nav__link {
+  min-height: 44px;
 }
 
 html .field-description,
@@ -208,18 +211,14 @@ html .hig-menu {
 
 @media (max-width: 900px) {
   html .hig-menu { display: inline-flex; }
-  html .nav { display: none; }
-  html.hig-nav-open .nav {
-    display: flex;
-    position: fixed;
-    z-index: 39;
-    top: 60px;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    overflow: auto;
-    background: #ffffff;
-  }
+}
+
+html.hig-nav-open .template-default {
+  grid-template-columns: min(280px, 85vw) minmax(0, 1fr);
+}
+
+html .template-default__wrap {
+  min-width: 0;
 }
 
 html .tenantField__debug-pill { display: none; }
