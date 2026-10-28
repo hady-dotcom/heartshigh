@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { coverSlug, resolveSuppliedCover } from './supplied-cover'
+import { coverSlug, needsCover, resolveSuppliedCover } from './supplied-cover'
 
 test('a supplied photograph is found by title, by id, or by the index', () => {
   const files = new Set([
@@ -39,4 +39,12 @@ test('a supplied path cannot leave the cover folder', () => {
     index: { courses: { welcome: '../../etc/passwd.jpg' } },
     exists,
   }), null)
+})
+
+test('a course needs a cover until a photograph is uploaded or supplied', () => {
+  assert.equal(needsCover({ kind: 'course', id: 78, title: 'Welcome' }), false)
+  assert.equal(needsCover({ kind: 'course', id: 99999, title: 'Brand new course' }), true)
+  assert.equal(needsCover({ kind: 'course', id: 99999, title: 'Brand new course', uploaded: true }), false)
+  assert.equal(needsCover({ kind: 'film', id: 5, title: 'A film', courseId: 78, courseTitle: 'Welcome' }), false)
+  assert.equal(needsCover({ kind: 'film', id: 5, title: 'A film', courseId: 99999, courseTitle: 'Brand new course' }), true)
 })

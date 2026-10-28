@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Hidden } from '@/components/app/shell'
 import { SEQUENCE_COPY, moveItem } from '@/lib/sequence'
 
-export type SequenceRow = { id: number; title: string }
+export type SequenceRow = { id: number; title: string; needsCover?: boolean }
 
 export function SequenceList({ rows, portalSlug, next }: { rows: SequenceRow[]; portalSlug: string; next: string }) {
   const [items, setItems] = useState(rows)
@@ -37,6 +37,7 @@ export function SequenceList({ rows, portalSlug, next }: { rows: SequenceRow[]; 
                 setItems((current) => current.map((row) => (row.id === item.id ? { ...row, title: value } : row)))
               }}
             />
+            {item.needsCover ? <span className="badge rose" data-testid="needs-cover">Needs cover</span> : null}
             <button type="button" data-testid="move-up" disabled={index === 0} onClick={() => setItems((current) => moveItem(current, index, index - 1))}>{SEQUENCE_COPY.moveUp}</button>
             <button type="button" data-testid="move-down" disabled={index === items.length - 1} onClick={() => setItems((current) => moveItem(current, index, index + 1))}>{SEQUENCE_COPY.moveDown}</button>
           </li>

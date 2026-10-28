@@ -22,6 +22,7 @@ import { adoptedCourseIds, type PortalDoc, type SessionUser } from '@/server/con
 import { partTitle } from '@/lib/talk-title'
 import { learnerEmbedSrc } from '@/lib/yt'
 import { counted, editorLink, youtubeThumb, youtubeWatch, type CourseUse } from '@/lib/library-catalogue'
+import { needsCover } from '@/lib/supplied-cover'
 import { shellOf } from '@/lib/portal-look'
 import { Pager } from '@/components/desk/pager'
 import { courseFilms, whoUsesCourse } from '@/server/library-catalogue'
@@ -98,6 +99,7 @@ export async function ContentScreen(ctx: Ctx) {
       <tr key={course.id} data-testid="course-row" data-origin={isLocal ? 'local' : 'imported'} data-hidden={course.hidden ? 'yes' : 'no'}>
         <td>
           <Link href={`${base}/admin/content/${course.id}`} style={{ fontWeight: 700 }}>{str(course.title)}</Link>
+          {needsCover({ kind: 'course', id: course.id, title: str(course.title), uploaded: Boolean(ref(course.cover)) }) ? <span className="badge rose" data-testid="needs-cover">Needs cover</span> : null}
           {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
         </td>
         <td>{str(course.speaker) || <span className="hint">Not set</span>}</td>
@@ -303,6 +305,7 @@ export async function CourseEditorBody({ payload, user, portal, editorHref, cour
                     </a>
                   ) : null}
                   <Link href={editorLink(editorHref, { part: row.id, films: filmPage.page })}>{partTitle(row, courseTitle)}</Link>
+                  {needsCover({ kind: 'film', id: row.id, title: str(row.title), uploaded: Boolean(ref(row.cover)), courseId, courseTitle }) ? <span className="badge rose" data-testid="needs-cover">Needs cover</span> : null}
                   {row.durationSeconds ? <small>{clock(Number(row.durationSeconds))}</small> : null}
                   {!locked ? (
                     <>
@@ -701,6 +704,7 @@ export async function LibraryScreen(ctx: Ctx) {
                     <tr key={course.id} data-testid="library-course" data-door={primaryDoorCode(grouped, course.id)}>
                       <td>
                         <b>{str(course.title)}</b>
+                        {needsCover({ kind: 'course', id: course.id, title: str(course.title), uploaded: Boolean(ref(course.cover)) }) ? <span className="badge rose" data-testid="needs-cover">Needs cover</span> : null}
                         {course.summary ? <div className="hint">{str(course.summary).slice(0, 140)}</div> : null}
                         {course.hidden && course.hiddenNote ? <div className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</div> : null}
                         {direct ? <DeletePick formId="bulk-adoption" id={direct.id} label={str(course.title)} /> : null}

@@ -17,6 +17,7 @@ import { counted, librarySummary, youtubeThumb, youtubeWatch } from '@/lib/libra
 import { Pager } from '@/components/desk/pager'
 import { libraryPage, libraryTotals } from '@/server/library-catalogue'
 import { one, ref, rows, str } from '../common'
+import { needsCover } from '@/lib/supplied-cover'
 import { listShortTalks } from '@/server/short-talks'
 import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
@@ -206,6 +207,7 @@ export async function MasterLibrary(ctx: MasterCtx) {
                   ) : null}
                   <div className="library-course-copy">
                     <Link href={`/master/library/${course.id}`} data-testid="course-open">{str(course.title)}</Link>
+                    {needsCover({ kind: 'course', id: course.id, title: str(course.title), uploaded: Boolean(ref(course.cover)) }) ? <span className="badge rose" data-testid="needs-cover">Needs cover</span> : null}
                     {str(course.speaker) ? <p>{str(course.speaker)}</p> : null}
                     {course.hidden && course.hiddenNote ? <p className="hint" data-testid="course-hidden-note">{str(course.hiddenNote)}</p> : null}
                     <p className="library-counts">

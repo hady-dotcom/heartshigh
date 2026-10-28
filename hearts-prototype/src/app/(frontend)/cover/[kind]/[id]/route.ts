@@ -7,7 +7,6 @@ import { getPayload } from 'payload'
 import { coverColor, coverHue, coverSvg, type CoverKind } from '@/lib/cover-art'
 import { idOf } from '@/lib/ids'
 import { coverContentType, readCoverIndex, resolveSuppliedCover, suppliedCoverRoot, type CoverFrame } from '@/lib/supplied-cover'
-import { findCoverPhoto } from '@/lib/cover-pick'
 
 export const dynamic = 'force-dynamic'
 
@@ -94,10 +93,6 @@ export async function GET(req: Request, { params }: { params: Promise<{ kind: st
     const mime = coverContentType(supplied)
     const file = mime ? await photograph(supplied, mime) : null
     if (file) return file
-  }
-  const picked = await findCoverPhoto(courseTitle || title, `${kind}:${id}:${frame}`)
-  if (picked) {
-    return Response.redirect(picked.url, 302)
   }
   const hue = coverHue(courseId, kind === 'film' ? id : undefined)
   const svg = coverSvg({ seed: `${kind}:${id}`, title, hue, wide: kind === 'course' })

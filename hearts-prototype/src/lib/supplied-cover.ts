@@ -113,3 +113,30 @@ export function readCoverIndex(root: string): CoverIndex {
     return {}
   }
 }
+
+/**
+ * True when learners would see the drawn cover.
+ * An upload or a file in supplied-covers/ counts. A film may use its course photograph.
+ */
+export function needsCover(input: {
+  kind: CoverKind
+  id: number
+  title: string
+  uploaded?: boolean
+  courseId?: number
+  courseTitle?: string
+}) {
+  if (input.uploaded) return false
+  const root = suppliedCoverRoot()
+  const index = readCoverIndex(root)
+  const found = resolveSuppliedCover({
+    root,
+    kind: input.kind,
+    id: input.id,
+    title: input.title,
+    courseId: input.kind === 'film' ? input.courseId : undefined,
+    courseTitle: input.courseTitle,
+    index,
+  })
+  return !found
+}

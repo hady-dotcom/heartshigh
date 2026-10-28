@@ -11,6 +11,7 @@ import { sharedAnswerText, sharedAnswersNewestFirst } from '@/lib/shared-answers
 import { portalWithDemoFeatures } from '@/server/parenting-demo'
 import { KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY } from '@/lib/sequence-features'
 import { sortParts } from '@/lib/part-order'
+import { needsCover } from '@/lib/supplied-cover'
 import { portalPeople, ref, rows, str, type Ctx } from '../common'
 
 export async function SequenceDesk(ctx: Ctx) {
@@ -50,7 +51,7 @@ export async function SequenceDesk(ctx: Ctx) {
           ))}
         </ol>
       ) : lessons.length ? (
-        <SequenceList rows={lessons.map((row) => ({ id: row.id, title: str(row.title) }))} portalSlug={portal.slug} next={next} />
+        <SequenceList rows={lessons.map((row) => ({ id: row.id, title: str(row.title), needsCover: needsCover({ kind: 'film', id: row.id, title: str(row.title), uploaded: Boolean(ref(row.cover)), courseId: course?.id, courseTitle: str(course?.title) }) }))} portalSlug={portal.slug} next={next} />
       ) : <p>No films yet. Paste a list to start.</p>}
       {canEdit ? (
         <form className="form-stack panel" id="look" action="/api/hearts" method="post" data-testid="sequence-settings-form">
