@@ -1595,7 +1595,7 @@ html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene
 }
 
 html[data-theme] .app-stage.shell-modern:has([data-testid='player']) .glass-bar {
-  position: sticky;
+  position: fixed;
   top: 0;
 }
 
