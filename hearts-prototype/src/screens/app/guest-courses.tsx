@@ -191,7 +191,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
   const filmPoints = pointViews(points, lesson)
   const swarm = await loadFilmSwarm(payload, portal.id, filmPoints.map((point) => point.id))
   const poster = (await appleLookOnServer()) ? coverPath('film', lesson.id) : shownPoster(filmPoster(lesson))
-  const art = poster.startsWith('/cover/') ? coverColor(course.id, lesson.id) : ''
+  const art = poster?.startsWith('/cover/') ? coverColor(course.id, lesson.id) : ''
   return (
     <AppFrame testId="course" brand={learnerBrand(portal)} art={art || null} wash={art ? coverPage(course.id, lesson.id) : null} btn={art ? coverVivid(course.id, lesson.id) : null}>
       <div className="app-scroll">
