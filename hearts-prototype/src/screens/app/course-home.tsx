@@ -12,7 +12,7 @@ import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, clock, ref, rows, str } from '../common'
@@ -199,6 +199,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
                     <Thumb src={tint ? coverPath('course', card.course.id) : card.poster} eager={index < 2} place={card.next ? card.nextAt + 1 : undefined} title={card.next ? str(card.next.title) : undefined} />
                     <span className="t">
                       <b>{str(card.course.title)}</b>
+                      {tint ? <small className="cover-line">{coverLine(str(card.course.title))}</small> : null}
                       <small>{card.own.length} film{card.own.length === 1 ? '' : 's'}{length ? ` · ${clock(length)}` : ''} · {pct}%</small>
                       <span className="bar"><i style={{ width: `${pct}%` }} /></span>
                       <span className="progress-ring" style={ringStyle(pct)} aria-hidden="true"><span>{pct}%</span></span>

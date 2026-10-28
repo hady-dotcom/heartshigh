@@ -50,7 +50,7 @@ type IconName =
 const ICONS: Record<IconName, string[]> = {
   house: ['M4 11.2 12 4.5l8 6.7', 'M7.2 10.4V19.5h9.6V10.4'],
   book: ['M4.5 6.2c2.6-.8 5-.4 7.5.8 2.5-1.2 4.9-1.6 7.5-.8', 'M12 7v12', 'M4.5 6.2V17c2.6-.6 5-.2 7.5 1', 'M19.5 6.2V17c-2.6-.6-5-.2-7.5 1'],
-  people: ['M12 8.4a2.6 2.6 0 1 0 0-5.2 2.6 2.6 0 0 0 0 5.2z', 'M5.4 19.4c.9-3.2 3.3-4.8 6.6-4.8s5.7 1.6 6.6 4.8'],
+  people: ['M12 4.6a2.4 2.4 0 1 1 0 4.8 2.4 2.4 0 0 1 0-4.8z', 'M6.2 19.8c.3-3.8 2.7-5.6 5.8-5.6s5.5 1.8 5.8 5.6'],
   heart: ['M12 18.4 5.6 12.2a3.6 3.6 0 0 1 5.1-5.1L12 8.4l1.3-1.3a3.6 3.6 0 0 1 5.1 5.1L12 18.4z'],
   sun: ['M12 15.6a3.6 3.6 0 1 0 0-7.2 3.6 3.6 0 0 0 0 7.2z', 'M12 4.2v1.6', 'M12 18.2v1.6', 'M5.2 5.2l1.1 1.1', 'M17.7 17.7l1.1 1.1', 'M4.2 12h1.6', 'M18.2 12h1.6', 'M5.2 18.8l1.1-1.1', 'M17.7 6.3l1.1-1.1'],
   target: ['M12 18.6a6.6 6.6 0 1 0 0-13.2 6.6 6.6 0 0 0 0 13.2z', 'M12 14.4a2.4 2.4 0 1 0 0-4.8 2.4 2.4 0 0 0 0 4.8z'],
@@ -84,8 +84,23 @@ export function coverIcon(title: string, seed: string): IconName {
   return names[coverHash(seed) % names.length]
 }
 
-export function iconPaths(name: IconName) {
-  return ICONS[name]
+const LINES: Record<IconName, string> = {
+  house: 'Begin at home',
+  book: 'A short reading',
+  people: 'With your child',
+  heart: 'Feelings, in order',
+  sun: 'The idea, plainly',
+  target: 'One thing at a time',
+  chat: 'Words you can use',
+  path: 'A way through',
+  layers: 'What you need first',
+  leaf: 'Ready when you are',
+  compass: 'Choose the next step',
+  bolt: 'Move, then talk',
+}
+
+export function coverLine(title: string) {
+  return LINES[coverIcon(title, title)]
 }
 
 /** Line icon as a data URI. Stroke is white. Safe to drop into a CSS variable. */
@@ -99,60 +114,48 @@ function hsl(hue: number, sat: number, light: number, alpha = 1) {
   return `hsl(${hue} ${sat}% ${light}%${a})`
 }
 
-/** Artwork only. The page sets the title over it, in the system face. */
+/** A clear colour field. Shapes stay sharp. Light is a corner wash, never a white oval. */
 export function coverSvg(input: { seed: string; title: string; hue: number; wide?: boolean; kicker?: string }) {
   const hash = coverHash(input.seed + input.title)
   const w = input.wide ? 1200 : 800
   const h = input.wide ? 900 : 1100
   const icon = coverIcon(input.title, input.seed)
-  const lightX = Math.round(w * (0.62 + unit(hash, 11) * 0.28))
-  const lightY = Math.round(h * (0.02 + unit(hash, 12) * 0.22))
-  const bloomX = Math.round(w * (0.08 + unit(hash, 21) * 0.3))
-  const bloomY = Math.round(h * (0.55 + unit(hash, 22) * 0.3))
-  const accent = (input.hue + 18 + Math.round(unit(hash, 31) * 16)) % 360
-  const deep = (input.hue + 360 - 12) % 360
-  const iconSize = input.wide ? 96 : 108
-  const iconX = 64
-  const iconY = input.wide ? 64 : 76
+  const hue = input.hue
+  const shape = hash % 3
+  const lightFromLeft = unit(hash, 11) > 0.5
+  const circleX = Math.round(w * (0.18 + unit(hash, 21) * 0.64))
+  const circleY = Math.round(h * (0.22 + unit(hash, 22) * 0.36))
+  const circleR = Math.round(Math.min(w, h) * (0.34 + unit(hash, 23) * 0.12))
+  const iconSize = input.wide ? 210 : 188
+  const iconX = Math.round(w * 0.1)
+  const iconY = Math.round(h * 0.16)
+  const plate = iconSize * 0.72
+  const shapes = shape === 0
+    ? `<circle cx="${circleX}" cy="${circleY}" r="${circleR}" fill="${hsl(hue, 78, 62)}"/>
+       <circle cx="${circleX}" cy="${circleY}" r="${Math.round(circleR * 0.72)}" fill="none" stroke="${hsl(hue, 82, 76)}" stroke-width="${Math.round(circleR * 0.08)}"/>`
+    : shape === 1
+      ? `<path d="M0 0 H${w} L0 ${Math.round(h * 0.62)} Z" fill="${hsl(hue, 76, 58)}"/>
+         <circle cx="${Math.round(w * 0.78)}" cy="${Math.round(h * 0.28)}" r="${Math.round(circleR * 0.55)}" fill="none" stroke="${hsl(hue, 80, 74)}" stroke-width="22"/>`
+      : `<circle cx="${Math.round(w * 0.22)}" cy="${Math.round(h * 0.3)}" r="${Math.round(circleR * 0.7)}" fill="${hsl(hue, 80, 60)}"/>
+         <circle cx="${Math.round(w * 0.72)}" cy="${Math.round(h * 0.48)}" r="${Math.round(circleR * 0.5)}" fill="${hsl((hue + 16) % 360, 70, 52)}"/>`
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">
   <defs>
-    <radialGradient id="bloom" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="${hsl(accent, 62, 52)}"/>
-      <stop offset="48%" stop-color="${hsl(accent, 54, 38)}"/>
-      <stop offset="100%" stop-color="${hsl(accent, 72, 44)}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="depth" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="${hsl(deep, 55, 16)}"/>
-      <stop offset="100%" stop-color="${hsl(deep, 55, 16)}" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="light" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="white" stop-opacity="0.9"/>
-      <stop offset="28%" stop-color="white" stop-opacity="0.28"/>
-      <stop offset="70%" stop-color="white" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="sheen" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="white" stop-opacity="0.2"/>
+    <linearGradient id="light" x1="${lightFromLeft ? 0 : 1}" y1="0" x2="${lightFromLeft ? 1 : 0}" y2="1">
+      <stop offset="0%" stop-color="white" stop-opacity="0.28"/>
       <stop offset="42%" stop-color="white" stop-opacity="0"/>
     </linearGradient>
     <linearGradient id="scrim" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="48%" stop-color="black" stop-opacity="0"/>
-      <stop offset="100%" stop-color="black" stop-opacity="0.78"/>
+      <stop offset="62%" stop-color="${hsl(hue, 70, 18)}" stop-opacity="0"/>
+      <stop offset="100%" stop-color="${hsl(hue, 72, 14)}" stop-opacity="0.9"/>
     </linearGradient>
-    <filter id="grain">
-      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="${hash % 80}"/>
-      <feColorMatrix type="saturate" values="0"/>
-      <feComponentTransfer><feFuncA type="linear" slope="0.14"/></feComponentTransfer>
-    </filter>
   </defs>
-  <rect width="${w}" height="${h}" fill="${hsl(input.hue, 58, 24)}"/>
-  <ellipse cx="${bloomX}" cy="${bloomY}" rx="${Math.round(w * 0.72)}" ry="${Math.round(h * 0.42)}" fill="url(#bloom)"/>
-  <ellipse cx="${lightX}" cy="${lightY}" rx="${Math.round(w * 0.55)}" ry="${Math.round(h * 0.32)}" fill="url(#light)"/>
-  <ellipse cx="${Math.round(w * 0.2)}" cy="${Math.round(h * 0.85)}" rx="${Math.round(w * 0.6)}" ry="${Math.round(h * 0.28)}" fill="url(#depth)"/>
-  <rect width="${w}" height="${h}" fill="url(#sheen)"/>
-  <rect width="${w}" height="${h}" filter="url(#grain)"/>
+  <rect width="${w}" height="${h}" fill="${hsl(hue, 74, 46)}"/>
+  ${shapes}
+  <rect width="${w}" height="${h}" fill="url(#light)"/>
   <rect width="${w}" height="${h}" fill="url(#scrim)"/>
-  <g transform="translate(${iconX} ${iconY}) scale(${iconSize / 24})" fill="none" stroke="white" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="${iconX + iconSize / 2}" cy="${iconY + iconSize / 2}" r="${plate}" fill="white" fill-opacity="0.16"/>
+  <g transform="translate(${iconX} ${iconY}) scale(${iconSize / 24})" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
     ${ICONS[icon].map((d) => `<path d="${d}"/>`).join('')}
   </g>
 </svg>`

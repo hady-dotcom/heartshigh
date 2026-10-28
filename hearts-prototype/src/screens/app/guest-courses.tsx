@@ -15,7 +15,7 @@ import { learnerLessonVisible } from '@/lib/publish-state'
 import type { PortalDoc } from '@/server/context'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { WeekLibrary } from '@/components/app/week-library'
 import { guestWeekSections } from '@/server/week-library'
@@ -32,7 +32,7 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
   const library = await guestLibrary(payload, portal.id, base)
   const tint = await appleLookOnServer()
   return (
-    <AppFrame testId="garden" brand={learnerBrand(portal)}>
+    <AppFrame testId="garden" brand={learnerBrand(portal)} art={tint && library.courses[0] ? coverColor(library.courses[0].id) : null}>
       <div className="app-scroll" data-testid="course-home">
         <div className="app-head"><h1>Courses</h1></div>
         <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
@@ -48,10 +48,11 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
                   {tint ? <span className="thumb"><img src={coverPath('course', course.id)} alt="" /></span> : course.poster ? <span className="thumb"><img src={course.poster} alt="" /></span> : (
                     <span className="thumb is-fallback" data-testid="film-thumb"><FilmFallback place={course.place} title={course.filmTitle} /></span>
                   )}
-                  <span className="t">
-                    <b>{course.title}</b>
-                    <small>{course.count} film{course.count === 1 ? '' : 's'}{course.seconds ? ` · ${clock(course.seconds)}` : ''}</small>
-                  </span>
+                    <span className="t">
+                      <b>{course.title}</b>
+                      {tint ? <small className="cover-line">{coverLine(course.title)}</small> : null}
+                      <small>{course.count} film{course.count === 1 ? '' : 's'}{course.seconds ? ` · ${clock(course.seconds)}` : ''}</small>
+                    </span>
                 </a>
               ))}
             </div>
@@ -122,8 +123,15 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
               <h1 data-testid="course-title">{title}</h1>
             </div>
           </div>
-          <div data-testid="play-next">
-            <p className="eyebrow">Play next</p>
+          <div className={tint ? 'play-panel' : undefined} data-testid="play-next">
+            {tint ? (
+              <div className="play-meter">
+                <span className="progress-ring" style={{ ['--progress' as string]: '0%' }} aria-hidden="true"><span>0</span></span>
+                <div>
+                  <p className="eyebrow">Play next</p>
+                </div>
+              </div>
+            ) : <p className="eyebrow">Play next</p>}
             <GuestCourseResume base={base} courseId={course.id} total={lessons.length} firstId={first?.id ?? null} firstPlace={first ? firstAt + 1 : 1} />
           </div>
           <p className="muted">Questions appear inside each film, once you open it. Answers stay on this phone.</p>
@@ -148,6 +156,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
                       <span className="t">
                         <small>Film {index + 1}</small>
                         <b className="talk-name">{str(lesson.title)}</b>
+                        {tint ? <small className="cover-line">{coverLine(str(lesson.title))}</small> : null}
                         <FilmChips seconds={Number(lesson.durationSeconds || 0)} coming={!playable} />
                         <GuestDone lessonId={lesson.id} />
                       </span>

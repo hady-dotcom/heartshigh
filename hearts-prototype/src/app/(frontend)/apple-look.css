@@ -4,16 +4,17 @@
  * Colours come from tokens.css. Artwork sets --art on each card.
  */
 
-html[data-look='apple'][data-look-surface='home'],
-html[data-look='apple'][data-look-surface='courses'] {
-  --look-wash: none;
+html[data-look='apple'][data-look-surface='home'] .app-stage,
+html[data-look='apple'][data-look-surface='courses'] .app-stage,
+html[data-look='apple'][data-look-surface='course'] .app-stage,
+html[data-look='apple'][data-look-surface='player'] .app-stage {
+  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 34%, var(--hh-paper)) 0%, color-mix(in srgb, var(--art, var(--hh-look-blue)) 14%, var(--hh-canvas)) 42%, var(--hh-canvas) 78%);
 }
 
-html[data-look='apple'][data-look-surface='course'],
-html[data-look='apple'][data-look-surface='player'] {
-  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 70%, var(--hh-video)) 0%, color-mix(in srgb, var(--art, var(--hh-look-blue)) 28%, var(--hh-canvas)) 34%, var(--hh-canvas) 68%);
+html[data-look='apple'][data-look-surface='course'] .app-stage,
+html[data-look='apple'][data-look-surface='player'] .app-stage {
+  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 46%, var(--hh-paper)) 0%, color-mix(in srgb, var(--art, var(--hh-look-blue)) 20%, var(--hh-canvas)) 58%, var(--hh-canvas) 100%);
 }
-
 html[data-look='apple'][data-theme][data-look-surface='home'] .app-stage.shell-modern,
 html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern,
 html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern,
@@ -31,7 +32,52 @@ html[data-look='apple'][data-theme][data-look-surface='player'] .app-stage.shell
   background-image: none;
 }
 
-html[data-look='apple'][data-look-surface='home'] .app-head h1,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar {
+  background: color-mix(in srgb, var(--art, var(--hh-paper)) 30%, var(--hh-glass));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) .cover-line {
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
+  font-size: var(--hh-font-size-small);
+  font-weight: 600;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .film-shelf .cover-line {
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-panel {
+  display: grid;
+  gap: var(--hh-space-3);
+  margin: 0 0 var(--hh-space-4);
+  padding: var(--hh-space-4);
+  border-radius: var(--hh-radius-card);
+  background: color-mix(in srgb, var(--art, var(--hh-look-blue)) 16%, var(--hh-paper));
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-panel .progress-ring {
+  box-shadow: inset 0 0 0 var(--hh-space-1) color-mix(in srgb, var(--art, var(--hh-accent)) 55%, var(--hh-paper));
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-3);
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-meter .eyebrow,
+html[data-look='apple'][data-look-surface='course'] .play-count,
+html[data-look='apple'][data-look-surface='course'] .play-panel [data-testid='sequence-progress'] {
+  color: var(--hh-ink);
+  margin: 0;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .play-panel :is(.pill.gold, [data-testid='start-part']) {
+  background: color-mix(in srgb, var(--art, var(--hh-accent)) 74%, var(--hh-ink));
+  color: var(--hh-on-accent);
+  border-color: transparent;
+}
 html[data-look='apple'][data-look-surface='courses'] .app-head h1,
 html[data-look='apple'][data-look-surface='course'] .app-head h1,
 html[data-look='apple'][data-look-surface='courses'] .library-section > h2,
@@ -214,15 +260,11 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-we
 html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-garden'] { --ico: var(--hh-look-green); }
 html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-me'] { --ico: var(--hh-look-purple); }
 
-html[data-look='apple'][data-look-surface='course'] .app-stage,
-html[data-look='apple'][data-look-surface='player'] .app-stage {
-  --look-wash: linear-gradient(180deg, color-mix(in srgb, var(--art, var(--hh-look-blue)) 42%, var(--hh-canvas)) 0%, var(--hh-canvas) 520px);
-}
-
 html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top {
   display: block;
   position: relative;
-  min-height: 460px;
+  aspect-ratio: 5 / 4;
+  min-height: 0;
   margin: 0 0 var(--hh-space-4);
   border-radius: var(--hh-radius-card);
   overflow: hidden;

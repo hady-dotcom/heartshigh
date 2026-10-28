@@ -28,7 +28,7 @@ import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverPath } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -175,8 +175,16 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
         </div>
         <p className="lead" data-testid="course-count">{sequence ? filmsLabel(lessons.length, seconds) : talksLabel(lessons.length, seconds)}</p>
         {sequence ? (
-          <div data-testid="play-next">
-            <p className="eyebrow">Play next</p>
+          <div className={tint ? 'play-panel' : undefined} data-testid="play-next">
+            {tint ? (
+              <div className="play-meter">
+                <span className="progress-ring" style={{ ['--progress' as string]: `${lessons.length ? Math.round((done.size / lessons.length) * 100) : 0}%` }} aria-hidden="true"><span>{lessons.length ? Math.round((done.size / lessons.length) * 100) : 0}</span></span>
+                <div>
+                  <p className="eyebrow">Play next</p>
+                  <p className="play-count">{sequenceProgress(done.size, lessons.length).line}</p>
+                </div>
+              </div>
+            ) : <p className="eyebrow">Play next</p>}
             <Link className="pill gold block" href={withCurrentQuery(`${base}/course/${course.id}?part=${continueLesson.id}`, query)} data-testid="start-part">
               {lessons.filter(lessonCanPlay).every((lesson) => done.has(lesson.id))
                 ? `Watch from film ${continueIndex + 1}`
@@ -229,6 +237,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
               <span className="t">
                 <small>{sequence ? `Film ${index + 1}` : `Part ${index + 1}`}</small>
                 <b className="talk-name">{name}</b>
+                {tint ? <small className="cover-line">{coverLine(name)}</small> : null}
                 {week ? <small className="part-week" data-testid="part-week">{doorLabel(week)}</small> : null}
                 {sequence ? <FilmChips seconds={secondsHere} done={done.has(lesson.id)} coming={!lessonCanPlay(lesson)} /> : <small>{secondsHere ? clock(secondsHere) : 'Length not known yet'}{done.has(lesson.id) ? ' · watched' : ''}</small>}
               </span>
