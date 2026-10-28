@@ -1,5 +1,28 @@
 /* The opening journey: opener, six scenes, help, hand-off and the full-bleed feed (ux-first-run, spec 7 and 7A). */
 .app.journey-frame { min-height: 100dvh; background: var(--dusk-0); }
+.app.journey-frame:has(.phase-feed),
+.app.journey-frame:has(.phase-help) { background: var(--hh-canvas); color: var(--hh-ink); }
+.journey.phase-feed,
+.journey.phase-help { background: var(--hh-canvas); color: var(--hh-ink); }
+.journey-glass {
+  position: fixed;
+  top: 0;
+  left: 50%;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  width: min(430px, 100%);
+  min-height: var(--hh-tap-min);
+  margin: 0;
+  padding: calc(8px + env(safe-area-inset-top, 0px)) 16px 8px;
+  transform: translateX(-50%);
+  background: var(--hh-glass);
+  color: var(--hh-ink);
+  border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+.journey:not(.phase-feed):not(.phase-help) .journey-glass { display: none; }
 .journey {
   position: fixed; inset: var(--viewas-h, 0px) 0 0 0; z-index: 1;
   width: min(430px, 100%); margin: 0 auto; overflow: hidden;
@@ -316,9 +339,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 }
 .j-speaker .speaker-row { flex: 1; min-width: 0; }
 .j-resume { display: block; text-align: center; color: #fff; font-size: 14px; text-decoration: underline; text-underline-offset: 3px; padding: 6px 0 10px; }
-.j-mains { display: flex; align-items: center; gap: 12px; background: rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 8px; color: #fff; text-decoration: none; backdrop-filter: blur(8px); }
-.j-mains .thumb { width: 72px; height: 44px; border-radius: 10px; background: #2a2640 center / cover; flex: none; }
-.j-mains small { display: block; font-size: 12px; color: rgba(255, 255, 255, 0.72); }
+.j-mains { display: flex; align-items: center; gap: 12px; background: var(--hh-paper); border-radius: 16px; padding: 8px; color: var(--hh-ink); text-decoration: none; backdrop-filter: blur(8px); }
+.j-mains .thumb { width: 72px; height: 44px; border-radius: 10px; background: var(--hh-surface) center / cover; flex: none; }
+.j-mains small { display: block; font-size: 12px; color: var(--hh-muted); }
 .j-mains b { display: block; font-size: 14px; line-height: 1.3; }
 
 /*
@@ -327,15 +350,14 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
  */
 .journey[data-mode='appetiser'] .j-chrome { display: block; padding: 0; }
 .journey[data-mode='appetiser'][data-video='yes'] .j-chrome { background: none; }
-.typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #14120e; z-index: 2; }
+.typography-player { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: var(--hh-surface); z-index: 2; }
 .feed-card {
   position: absolute; inset: 0; z-index: 4; overflow: hidden; isolation: isolate;
-  background: linear-gradient(180deg, #0b2425 0%, #0f3431 48%, #0a1f20 100%); color: var(--hh-ink);
+  background: var(--hh-canvas); color: var(--hh-ink);
   display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: calc(72px + var(--safe-top)) 36px 120px;
 }
-/* The evening garden, softened behind the words: a deep teal wash over the courtyard, never a pale page. */
-.feed-card-bg { position: absolute; inset: -24px; z-index: -1; background: url('/theme/evening-courtyard.jpg') center 40% / cover no-repeat; filter: blur(8px) saturate(0.95); opacity: 0.9; }
-.feed-card-bg::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10, 40, 40, 0.62) 0%, rgba(14, 54, 50, 0.5) 45%, rgba(8, 28, 28, 0.86) 100%); }
+.feed-card-bg { position: absolute; inset: 0; z-index: -1; background: var(--hh-canvas); opacity: 1; }
+.feed-card-bg::after { content: ''; position: absolute; inset: 0; background: var(--hh-canvas); }
 .feed-card .kicker { letter-spacing: 0.18em; text-transform: uppercase; font-size: 13px; font-weight: 700; color: var(--hh-accent); }
 .feed-card h2 { font-family: var(--serif, Georgia, 'Times New Roman', serif); font-weight: 600; font-size: 34px; line-height: 1.15; margin: 16px 0; color: var(--hh-ink); text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35); }
 .feed-card p { margin: 0 0 28px; font-size: 16px; color: var(--hh-ink-2); }
@@ -364,9 +386,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
 }
 .journey[data-mode='appetiser'] .j-chrome .clip-foot { position: static; flex: none; gap: 8px; }
 .journey[data-mode='appetiser'] .j-resume { padding: 2px 0 4px; }
-.journey[data-mode='appetiser'] .j-mains { background: #24203f; backdrop-filter: none; padding: 6px; }
+.journey[data-mode='appetiser'] .j-mains { background: var(--hh-paper); color: var(--hh-ink); backdrop-filter: none; padding: 6px; }
 .journey[data-mode='appetiser'] .j-mains .thumb { width: 60px; height: 38px; }
-.journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; background: #0F2E2C; color: #F1E4C6; border: 1px solid rgba(37, 99, 235, 0.42); }
+.journey[data-mode='appetiser'] .speaker-card { padding: 8px 12px; background: var(--hh-paper); color: var(--hh-ink); border: 1px solid var(--hh-line); }
 .journey[data-mode='appetiser'] .speaker-card small { color: var(--hh-accent); }
 .ready-controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; pointer-events: auto; }
 .ready-controls input[type='range'] { width: 100%; accent-color: var(--hh-accent); }
@@ -485,8 +507,8 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   margin: 0 0 10px;
   padding: 4px;
   border-radius: 14px;
-  border: 1px solid rgba(37, 99, 235, 0.45);
-  background: rgba(8, 24, 24, 0.82);
+  border: var(--hh-line-width) solid var(--hh-line);
+  background: var(--hh-paper);
   pointer-events: auto;
   touch-action: manipulation;
 }
@@ -494,11 +516,11 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   appearance: none;
   border: 0;
   background: transparent;
-  color: rgba(246, 238, 220, 0.82);
+  color: var(--hh-ink);
   border-radius: 10px;
   padding: 8px 6px;
-  min-height: 0;
-  min-width: 0;
+  min-height: var(--hh-tap-min);
+  min-width: var(--hh-tap-min);
   width: auto;
   flex: 1 1 0;
   max-width: none;
@@ -507,13 +529,13 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   line-height: 1.25;
   text-align: center;
   white-space: nowrap;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
+  text-shadow: none;
   box-shadow: none;
   touch-action: manipulation;
 }
 .j-chrome .clip-foot .j-level-choices button.on {
-  background: rgba(37, 99, 235, 0.16);
-  color: var(--hh-accent);
+  background: var(--hh-accent-fill);
+  color: var(--hh-accent-deep);
   border: 0;
 }
 .journey.phase-feed.overlay:not([data-words-in-picture='yes']) .j-chrome .caption { left: 22px; }
@@ -656,7 +678,7 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   position: fixed;
   inset: 0;
   z-index: 26;
-  background: rgba(6, 18, 18, 0.45);
+  background: var(--hh-scene-wash);
   pointer-events: auto;
 }
 .j-board {
@@ -669,9 +691,9 @@ html[data-theme='dawn'] .j-poster:not(.scenic) { background-image: url('/theme/d
   overflow-y: auto;
   padding: 0 16px calc(16px + var(--safe-bottom));
   border-radius: 22px 22px 0 0;
-  background: #0F2E2C;
-  color: #F1E4C6;
-  box-shadow: 0 -16px 40px rgba(0, 0, 0, 0.35);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  box-shadow: var(--hh-shadow-lift);
   pointer-events: auto;
   touch-action: pan-y;
 }

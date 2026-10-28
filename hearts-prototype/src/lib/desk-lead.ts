@@ -25,7 +25,7 @@ const MASTER: Record<string, Lead> = {
   library: {
     line: 'Shared courses any portal can link. Each course says which codes and portals can open it. Learners see a course when a code or a portal opens it.',
     label: 'Add a course',
-    href: '#new-library-course',
+    href: '/master/library#new-library-course',
   },
   'bring-in': {
     line: 'Paste films in. Learners see a talk only after you publish it.',
@@ -184,7 +184,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
   compass: {
     line: 'A monthly look, scored for the team. Learners see a gentle line, never the number.',
     label: 'See the circle',
-    path: '#compass-circle',
+    path: 'compass#compass-circle',
   },
   plans: {
     line: 'A course spread across days. Learners see it on My week.',
@@ -234,7 +234,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
   content: {
     line: 'Subjects, films, and the questions that pause them. Learners see a film once it is published.',
     label: 'Start a subject',
-    path: '#new-course',
+    path: 'content#new-course',
   },
   'bring-in': {
     line: 'Paste films in as drafts. Learners see a talk only after you publish it.',
@@ -254,7 +254,7 @@ const PORTAL: Record<string, { line: string; label: string; path: string }> = {
   experiments: {
     line: 'Results of quiet wording tests. Learners are never told they are in one.',
     label: 'See the tests',
-    path: '#experiment-list',
+    path: 'experiments#experiment-list',
   },
   insights: {
     line: 'Taps and drop-off for this portal. No typed answers. Portal admins see this.',

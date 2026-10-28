@@ -2629,6 +2629,7 @@ export function Journey(props: JourneyProps) {
   if (phase === 'feed' && items.length === 0 && courseFilms.length) {
     return (
       <div className="journey phase-feed" data-testid="journey" data-phase="feed">
+        <header className="journey-glass" data-testid="journey-bar"><span className="brand-word">{props.brand || 'HEARTS'}</span></header>
         <div className="app-scroll" data-testid="feed-films">
           <h1>Next to watch</h1>
           {courseFilms.map((film) => (
@@ -2647,6 +2648,7 @@ export function Journey(props: JourneyProps) {
             </a>
           ))}
         </div>
+        <TabEntry base={base} unread={props.unread} features={props.features} plain={props.plain} onGuard={guardTabs} />
       </div>
     )
   }
@@ -2654,6 +2656,9 @@ export function Journey(props: JourneyProps) {
   return (
     <div ref={rootRef} className={`journey ${overlay ? 'overlay' : 'strict'} phase-${phase}`} data-testid="journey" suppressHydrationWarning data-phase={phase} data-mode={mode} data-playing={shownState === STATE.PLAYING ? 'yes' : 'no'} data-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-appetiser-video={mode === 'appetiser' ? (videoAppetiser ? 'yes' : 'no') : undefined} data-index={index} data-card={cardKind || 'talk'} data-cut={item?.cutId ?? ''} data-lesson={item?.lessonId ?? ''} data-lesson-title={item?.lessonTitle || ''} data-course-title={item?.courseTitle || ''} data-cuts={items.map((row) => row.cutId).join(' ')} data-lane={item?.lane || ''} data-speaker={item?.speaker || ''} data-speaker-slug={item?.speakerSlug || ''} data-chrome={overlay ? 'over' : 'around'} data-vertical={item?.vertical ? 'yes' : undefined} data-words-in-picture={wordsInPicture ? 'yes' : undefined} data-framing={learnerFramingMode(item?.framingTrack, spokenAt)} data-board={boardOpen ? 'open' : 'closed'} data-cover={coverAttr(showPoster)} data-next-clip={nextClipAt == null ? 'none' : String(nextClipAt)} data-playhead={spokenAt == null ? '' : String(Math.round(spokenAt * 10) / 10)} data-player-state={shownState} data-player-muted={muted ? 'yes' : 'no'} data-seen={seenCuts.join(' ')} data-seen-cards={seenCards.join(' ')}>
       <PageHelp page={phase === 'help' ? 'help' : phase === 'feed' ? (mode === 'appetiser' ? 'appetiser' : 'feed') : 'start'} plain={props.plain} />
+      <header className="journey-glass" data-testid="journey-bar">
+        <span className="brand-word">{props.brand || 'HEARTS'}</span>
+      </header>
       <div className="j-sky" aria-hidden>
         {Array.from({ length: 8 }, (_, at) => (
           <div key={at} ref={(el) => { skyRefs.current[at] = el }} className={`j-sky-layer s${at}`} style={{ opacity: at === 0 ? 1 : 0 }} />

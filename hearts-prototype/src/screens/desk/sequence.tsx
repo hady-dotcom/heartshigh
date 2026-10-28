@@ -150,7 +150,7 @@ export async function SequenceCodes(ctx: Ctx) {
         ))}
       </ul>
       {canEdit ? (
-        <form className="form-stack panel" action="/api/hearts" method="post" data-testid="sequence-code-form">
+        <form className="form-stack panel" id="new-code" action="/api/hearts" method="post" data-testid="sequence-code-form">
           <Hidden fields={{ action: 'create-code', portalSlug: portal.slug, next }} />
           <label className="row">
             <span>Who it is for</span>
@@ -262,7 +262,7 @@ export async function SequenceLearners(ctx: Ctx) {
   return (
     <AdminFrame ctx={ctx} active="teach" title="Learners" intro="People in this course." testId="sequence-learners" showOnPhone>
       {user.role === 'teacher' ? <TeacherGroupCode slug={portal.slug} next={here} codes={groupCodes.map((row) => ({ id: row.id, code: str(row.code) }))} /> : null}
-      <section className="panel" data-testid="give-course-panel">
+      <section className="panel" id="learner-list" data-testid="give-course-panel">
         <header><div><h2>Give this course</h2><p>Search by name, then tick who should have it.</p></div></header>
         <div className="body">
           <GiveCourse

@@ -35,7 +35,7 @@ export function ParentWorkbookBoard({ films, signedIn, next }: { films: Workbook
           <article key={film.vimeoId} className="workbook-film" data-testid="workbook-film" data-vimeo={film.vimeoId}>
             <p className="eyebrow">Film {film.place}</p>
             <h2>{film.title}</h2>
-            {film.href ? <a href={film.href}>Open this film</a> : null}
+            {film.href ? <a className="workbook-open" href={film.href}>Open this film</a> : null}
             <p className="workbook-question" data-testid="workbook-question">{film.prompt}</p>
             <p className="eyebrow">Your answer</p>
             {own ? <p className="workbook-own" data-testid="workbook-own">{own}</p> : <p className="workbook-prompt" data-testid="workbook-write">Write your answer</p>}

@@ -25,6 +25,7 @@ export async function WelcomeScreen(ctx: Ctx) {
     const next = !user.seenWelcome && (welcome || intro) ? `${base}/welcome?step=films` : `${base}/start`
     return (
       <AppFrame testId="welcome" brand={learnerBrand(portal)}>
+        <header className="journey-glass" data-testid="welcome-bar"><span className="brand-word">{brand || portalName(portal)}</span></header>
         <div className="splash" data-testid="splash">
           <div>
             {brand ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{brand}</p> : plain ? <p className="brand-word" data-testid="portal-brand" style={{ fontSize: 36 }}>{portalName(portal)}</p> : <BrandLockup size={88} />}
@@ -43,6 +44,7 @@ export async function WelcomeScreen(ctx: Ctx) {
   if (step === 'films') {
     return (
       <AppFrame testId="welcome-films" brand={learnerBrand(portal)}>
+        <header className="journey-glass" data-testid="welcome-bar"><span className="brand-word">{brand || portalName(portal)}</span></header>
         <div className="app-scroll">
           <Journey at={0} />
           <div className="app-head"><h1>Before you begin</h1></div>

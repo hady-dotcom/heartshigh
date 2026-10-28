@@ -9,6 +9,7 @@ import { loadDoors } from '@/server/doors'
 import { type Ctx, ref, rows, str } from '../common'
 import { AdminFrame } from './overview'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { QuestionSearch } from '@/components/desk/question-search'
 
 export async function PortalQuestionsScreen(ctx: Ctx) {
   const { payload, portal, base } = ctx
@@ -41,6 +42,7 @@ export async function PortalQuestionsScreen(ctx: Ctx) {
       ) : null}
       {modern ? null : <section className="panel" style={{ marginBottom: 18 }} data-testid="placing-default-bank">
         <header className="light"><h2>Default bank</h2><span className="hint">Shown in every portal</span></header>
+        <QuestionSearch row="[data-testid=placing-default-row], [data-testid=placing-own-row]" />
         <DeleteMany kind="placing" next={here} portalSlug={portal.slug} formId="bulk-placing" />
         <div className="table-wrap">
           <table className="data">

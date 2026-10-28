@@ -22,6 +22,7 @@ import { CourseEditorBody } from './content'
 import { DeskFrame, masterNav } from './shell'
 import { TooShortFilter, TooShortTable } from './short-talks'
 import { DeleteInline, DeleteMany, DeletePick } from '@/components/desk/delete-controls'
+import { QuestionSearch } from '@/components/desk/question-search'
 import { courseRemovedFromDesk } from '@/lib/desk-delete'
 import { openBinRecordIds } from '@/server/desk-delete'
 import { TalkDetail, TalkFinder } from './library-talks'
@@ -270,6 +271,7 @@ export async function MasterQuestions(ctx: MasterCtx) {
     <MasterFrame ctx={ctx} active="questions" title="Placing questions" intro="Asked once when someone joins, so their first talk is a gentle place to start. Each answer points to a door of Hadith Jibril; the door with most answers chooses the first course." testId="master-questions">
       <div className="grid" style={{ gridTemplateColumns: 'minmax(0, 1.7fr) minmax(320px, 1fr)', alignItems: 'start' }}>
         <section className="panel">
+          <QuestionSearch row="[data-testid=placing-row]" />
           <DeleteMany kind="placing" next="/master/questions" formId="bulk-placing" />
           <div className="table-wrap">
             <table className="data">

@@ -618,10 +618,24 @@ html[data-theme] .app-stage.shell-modern .app[data-testid='course'] .player-card
   background: var(--hh-video);
 }
 
+html[data-theme] .app-stage.shell-modern .rings,
+html[data-theme] .app-stage.shell-modern .ring-stat {
+  color: var(--hh-ink);
+}
+
 html[data-theme] .app-stage.shell-modern .rings .r {
   border-color: var(--portal-accent, var(--hh-accent)) !important;
   color: var(--hh-ink);
   background: var(--hh-surface);
+}
+
+html[data-theme] .app-stage.shell-modern .workbook-open {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hh-tap-min);
+  min-width: var(--hh-tap-min);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  color: var(--hh-accent);
 }
 
 html[data-theme] .app-stage.shell-modern .flash.notice {
