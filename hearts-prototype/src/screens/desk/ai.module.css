@@ -12,7 +12,7 @@
   color: var(--ink);
 }
 .banner b,
-.banner .quiet { color: var(--hh-on-accent); }
+.banner .quiet { color: var(--hh-ink); }
 .list { display: grid; gap: 10px; }
 .row {
   display: grid;
@@ -31,10 +31,10 @@
   color: var(--ink);
 }
 .row:hover { border-color: #e0d3b4; }
-.row h2 { margin: 0 0 4px; font-size: 16px; color: var(--hh-on-accent); }
+.row h2 { margin: 0 0 4px; font-size: 16px; color: var(--hh-ink); }
 /* Theme sets every desk h2 to cream at 26px. These titles sit on white cards. */
 :global(html[data-theme]) :global(.desk) .row h2 {
-  color: var(--hh-on-accent);
+  color: var(--hh-ink);
   font-size: 16px;
   line-height: 1.3;
 }
@@ -49,22 +49,22 @@
   font-size: 12px;
   font-weight: 700;
   line-height: 1.35;
-  background: #f4efe4;
-  color: var(--hh-on-accent);
+  background: var(--hh-surface);
+  color: var(--hh-ink);
   text-align: center;
   white-space: normal;
   max-width: 16rem;
 }
 .mark[data-tone='rose'] { background: #f8e4e8; color: #6e2434; }
-.mark[data-tone='teal'] { background: #e5f3ea; color: var(--hh-on-accent); }
+.mark[data-tone='teal'] { background: var(--hh-accent-fill); color: var(--hh-ink); }
 .layout { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(280px, 0.8fr); gap: 18px; align-items: start; }
 .schema { font: 12.5px/1.45 ui-monospace, monospace; white-space: pre-wrap; background: var(--field); color: var(--ink); border-radius: 12px; padding: 12px; margin: 0; }
 .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .compare pre { margin: 0; max-height: 420px; overflow: auto; }
 .diff { font: 12.5px/1.5 ui-monospace, monospace; background: var(--field); color: var(--ink); border: 1px solid var(--line); border-radius: 12px; overflow: auto; max-height: 480px; }
 .diff div { padding: 1px 12px; white-space: pre-wrap; }
-.add { background: #e5f6ec; color: var(--hh-on-accent); }
-.del { background: #f6efe4; color: var(--hh-on-accent); }
+.add { background: var(--hh-accent-fill); color: var(--hh-ink); }
+.del { background: var(--hh-surface); color: var(--hh-ink); }
 .pipe { display: grid; gap: 8px; }
 .pipe article {
   display: grid;
@@ -102,22 +102,22 @@
   border: 1px solid var(--line);
   border-radius: 16px;
   padding: 16px 18px 18px;
-  color: var(--hh-on-accent);
+  color: var(--hh-ink);
 }
 .activity h2,
-.activity h3 { color: var(--hh-on-accent); margin: 0 0 8px; }
+.activity h3 { color: var(--hh-ink); margin: 0 0 8px; }
 .activity h3 { font-size: 16px; margin-top: 16px; }
 .activity p { margin: 0 0 10px; line-height: 1.45; }
 :global(html[data-theme]) :global(.desk) .activity h2,
-:global(html[data-theme]) :global(.desk) .activity h3 { color: var(--hh-on-accent); font-size: 18px; line-height: 1.3; }
-.activity .quiet { color: var(--hh-on-accent); }
+:global(html[data-theme]) :global(.desk) .activity h3 { color: var(--hh-ink); font-size: 18px; line-height: 1.3; }
+.activity .quiet { color: var(--hh-ink-2); }
 .filters { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin: 8px 0 16px; }
 .filters label { display: grid; gap: 4px; font-size: 14px; font-weight: 700; }
 .filters select,
 .filters input { font: inherit; font-weight: 500; min-width: 0; }
 .group { border: 1px solid var(--line); border-radius: 14px; margin: 0 0 12px; background: #fffaf1; }
 .group summary { cursor: pointer; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; padding: 12px 14px; }
-.group summary b { color: var(--hh-on-accent); }
+.group summary b { color: var(--hh-ink); }
 .groupBody { padding: 0 14px 14px; }
 .change { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 12px; margin: 0 0 10px; }
 .change p { margin: 0 0 6px; }

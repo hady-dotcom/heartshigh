@@ -937,7 +937,7 @@ table.data th [data-testid='desk-help'] { margin-left: 4px; vertical-align: midd
   font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
 }
 
-.desk .main-head {
+html[data-theme] .desk .main-head {
   position: fixed;
   top: 0;
   right: 0;
@@ -982,6 +982,9 @@ html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, input, textar
 .desk-menu > summary { display: none; }
 
 @media (max-width: 899px) {
+  .desk.desk-phone { padding-top: var(--hh-header); }
+  html[data-theme] .desk.desk-phone .main-head,
+  html[data-theme].desk-collapsed .desk.desk-phone .main-head { left: 0; right: 0; }
   .desk.desk-phone .main { padding: var(--hh-space-3); padding-top: calc(var(--hh-header) + var(--hh-space-5)); }
   .desk.desk-phone .desk-menu > summary {
     display: flex;

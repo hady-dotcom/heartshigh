@@ -200,42 +200,36 @@ html[data-theme] .live-now {
   color: var(--hh-ink);
 }
 
-.desk[data-testid="desk-live"],
-.desk[data-testid="master-live"] {
-  --paper: #efe3c8;
-  --card: #e8d5a8;
-  --g-page: #efe3c8;
-  --g-card: #e8d5a8;
-  --g-field: #fbf6e8;
-  --desk-page: #efe3c8;
-  --desk-card: #e8d5a8;
-  background: #efe3c8;
-  color: #1f2a2a;
+html[data-theme] :is(.desk[data-testid="desk-live"], .desk[data-testid="master-live"]) {
+  --paper: var(--hh-canvas);
+  --card: var(--hh-paper);
+  --g-page: var(--hh-canvas);
+  --g-card: var(--hh-paper);
+  --g-field: var(--hh-paper);
+  --desk-page: var(--hh-canvas);
+  --desk-card: var(--hh-paper);
+  --desk-ink: var(--hh-ink);
+  --parchment: var(--hh-ink);
+  --on-light: var(--hh-ink);
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
 }
-.desk[data-testid="desk-live"] .main,
-.desk[data-testid="master-live"] .main {
-  background: #efe3c8;
+html[data-theme] :is(.desk[data-testid="desk-live"], .desk[data-testid="master-live"]) .main {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
 }
-.desk[data-testid="desk-live"] .panel,
-.desk[data-testid="master-live"] .panel {
-  background: #e8d5a8;
+html[data-theme] :is(.desk[data-testid="desk-live"], .desk[data-testid="master-live"]) .panel {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
 }
-.desk[data-testid="desk-live"] .panel > header,
-.desk[data-testid="desk-live"] .stat-chip,
-.desk[data-testid="master-live"] .panel > header,
-.desk[data-testid="master-live"] .stat-chip {
+html[data-theme] :is(.desk[data-testid="desk-live"], .desk[data-testid="master-live"]) :is(.panel > header, .stat-chip, .stat-chip b, .stat-chip span) {
   background: var(--hh-surface);
   color: var(--hh-ink);
 }
-.desk[data-testid="desk-live"] .main-head h1,
-.desk[data-testid="desk-live"] .main-head p,
-.desk[data-testid="master-live"] .main-head h1,
-.desk[data-testid="master-live"] .main-head p {
-  color: var(--hh-surface);
+html[data-theme] :is(.desk[data-testid="desk-live"], .desk[data-testid="master-live"]) :is(.main-head, .main-head h1, .main-head p, .btn.ghost) {
+  color: var(--hh-ink);
 }
-.desk[data-testid="desk-live"] .form input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
-.desk[data-testid="desk-live"] .form select,
-.desk[data-testid="desk-live"] .form textarea {
-  background: #fbf6e8;
-  color: #1f2a2a;
+html[data-theme] .desk[data-testid="desk-live"] .form :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']) {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
 }

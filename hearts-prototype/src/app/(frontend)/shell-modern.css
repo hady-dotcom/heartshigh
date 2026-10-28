@@ -473,12 +473,12 @@ html[data-theme] .app-stage.shell-modern .garden-card .eyebrow {
   color: var(--portal-accent, var(--hh-accent));
 }
 
-html[data-theme] .app-stage.shell-modern :is(.journey.phase-opener, .journey.phase-scene, .journey.phase-handoff) {
+html[data-theme] .app-stage.shell-modern :is(.journey.phase-opener, .journey.phase-scene) {
   background-color: var(--hh-video);
   background-image: none;
 }
 
-html[data-theme] .app-stage.shell-modern :is(.journey.phase-feed, .journey.phase-help, .journey.phase-feed .j-slot, .journey.phase-feed .j-clip, .journey.phase-feed .j-peek, .journey.phase-feed .j-poster, .journey.phase-feed .j-film-band, .journey.phase-feed .j-board, .journey.phase-help .j-slot) {
+html[data-theme] .app-stage.shell-modern :is(.journey.phase-feed, .journey.phase-help, .journey.phase-handoff, .journey.phase-feed .j-slot, .journey.phase-feed .j-clip, .journey.phase-feed .j-peek, .journey.phase-feed .j-poster, .journey.phase-feed .j-film-band, .journey.phase-feed .j-board, .journey.phase-help .j-slot, .journey.phase-handoff .j-slot) {
   background-color: var(--hh-canvas);
   background-image: none;
   color: var(--hh-ink);
@@ -748,8 +748,8 @@ html[data-theme] .desk.desk-modern .example-in-use {
 }
 
 html[data-theme] .desk.desk-modern .example-kicker {
-  background: var(--hh-accent-fill);
-  color: var(--hh-ink);
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
 }
 
 html[data-theme] .desk.desk-modern .example-sample {
@@ -2455,7 +2455,13 @@ html[data-theme] :is(.public-gather, .demo-stage, .demo-stage-entry, .splash) {
   color: var(--hh-ink);
   color-scheme: light;
 }
-html[data-theme] :is(.demo-bar, .demo-stage-entry-card, .public-gather .gather-card) {
+html[data-theme] .demo-bar {
+  background: var(--hh-glass);
+  color: var(--hh-ink);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+html[data-theme] :is(.demo-stage-entry-card, .public-gather .gather-card) {
   background: var(--hh-paper);
   color: var(--hh-ink);
 }

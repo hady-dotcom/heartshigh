@@ -210,6 +210,8 @@ html .field-label .required {
   color: #9f1239;
 }
 
+html .step-nav__home,
+html .app-header__account,
 html .step-nav a,
 html .step-nav button,
 html .app-header a,

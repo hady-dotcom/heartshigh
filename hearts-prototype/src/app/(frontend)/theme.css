@@ -813,7 +813,11 @@ html[data-theme] .desk .count-tile,
 html[data-theme] .desk .address,
 html[data-theme] .desk table.data th { background: var(--desk-page); color: var(--desk-ink); }
 html[data-theme] .desk table.data td { border-bottom-color: var(--desk-line); color: var(--desk-ink); }
-html[data-theme] .desk .pill.ink,
+html[data-theme] .desk .pill.ink {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: transparent;
+}
 html[data-theme] .desk .mini-btn { color: var(--desk-ink); border-color: var(--desk-gold); }
 html[data-theme] .desk .input,
 html[data-theme] .desk select,
@@ -1060,11 +1064,11 @@ html[data-theme] .desk input[type='password'] {
    Placeholders on those surfaces are fainter than typed text and still clear of AA. */
 html[data-theme='evening'],
 html[data-theme='dawn'] {
-  --on-light: var(--hh-on-accent);
-  --on-light-2: #2a241c;
-  --on-light-muted: #3e362c;
-  --on-light-heading: var(--hh-paper);
-  --on-light-placeholder: #5c5348;
+  --on-light: var(--hh-ink);
+  --on-light-2: var(--hh-ink-2);
+  --on-light-muted: var(--hh-muted);
+  --on-light-heading: var(--hh-ink);
+  --on-light-placeholder: var(--hh-muted);
   --text-body: 15px;
 }
 html[data-theme] :is(
@@ -1122,9 +1126,10 @@ html[data-theme] .panel > header p { opacity: 1; }
    Gather paints panel paragraphs with color: var(--g-ink), so the token
    has to change on the element itself. */
 :is(html, html[data-theme]) .example-kicker {
-  --g-ink: var(--gold-ink, var(--hh-on-accent));
-  --ink: var(--gold-ink, var(--hh-on-accent));
-  color: var(--gold-ink, var(--hh-on-accent));
+  --g-ink: var(--hh-on-accent);
+  --ink: var(--hh-on-accent);
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
 }
 :is(html, html[data-theme]) .example-sample {
   --ink: var(--hh-ink);

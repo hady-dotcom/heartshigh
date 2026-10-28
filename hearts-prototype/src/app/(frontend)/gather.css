@@ -6,10 +6,10 @@
   --g-gold-ink: var(--desk-gold-ink, var(--hh-on-accent));
   --g-card: var(--desk-card, var(--hh-paper));
   --g-card-end: var(--desk-card, var(--hh-paper));
-  --g-heading: var(--desk-header, var(--hh-surface));
-  --g-page: var(--desk-page, var(--hh-canvas));
-  --g-sidebar: var(--desk-sidebar, var(--hh-surface));
-  --g-on-dark: var(--desk-on-dark, var(--hh-ink));
+  --g-heading: var(--hh-surface);
+  --g-page: var(--hh-canvas);
+  --g-sidebar: var(--hh-surface);
+  --g-on-dark: var(--hh-ink);
   --g-field: var(--desk-field, var(--hh-paper));
   --g-line: var(--desk-line, var(--hh-accent-deep));
   --g-ivy: var(--desk-teal, var(--hh-accent));

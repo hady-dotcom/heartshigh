@@ -540,7 +540,7 @@ export interface AccessCode {
   createdAt: string;
 }
 /**
- * Hidden. The desk picks courses on each code. This list stays so older codes can still be read.
+ * Older codes still point here. The desk picks courses on each code. The rows stay.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "packs".
@@ -2000,6 +2000,8 @@ export interface OpeningAnswer {
   createdAt: string;
 }
 /**
+ * Weekly trend rows. The account is not stored on the row.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "heart-contributions".
  */
@@ -3056,6 +3058,8 @@ export interface AnnouncementDismissal {
   createdAt: string;
 }
 /**
+ * How often a limit was reached. The app writes these rows.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "rate-hits".
  */
