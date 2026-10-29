@@ -61,12 +61,12 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const door = await brandForDoor(safeNext(query.next), (await cookies()).get('hh_door')?.value)
   if (door.name) return brandIcons(door.name, door.logo)
   return {
-    title: `${invite.line} to HEARTS`,
-    description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
+    title: `${invite.line} to Hady`,
+    description: 'Short films, a few minutes a day, and a place to come back to.',
     openGraph: {
-      title: `${invite.line} to HEARTS`,
-      description: 'Short talks from real lectures, a few minutes a day, and a circle that meets in person.',
-      images: [{ url: '/theme/evening-courtyard.jpg', width: 1200, height: 630, alt: 'The HEARTS garden courtyard' }],
+      title: `${invite.line} to Hady`,
+      description: 'Short films, a few minutes a day, and a place to come back to.',
+      images: [{ url: '/theme/evening-courtyard.jpg', width: 1200, height: 630, alt: 'A quiet courtyard' }],
     },
   }
 }

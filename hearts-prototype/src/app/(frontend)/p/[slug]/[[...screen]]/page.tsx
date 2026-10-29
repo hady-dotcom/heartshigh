@@ -74,6 +74,9 @@ const OPEN_TO_ALL = new Set(['start', 'help', 'feed'])
 const HEARTS_META = {
   title: 'HEARTS',
   description: 'Short clips from real talks, full courses, and a circle that meets in person.',
+  applicationName: 'HEARTS',
+  manifest: '/hearts.webmanifest',
+  appleWebApp: { capable: true, title: 'HEARTS', statusBarStyle: 'black-translucent' as const },
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {

@@ -9,12 +9,12 @@ export function BrandMark({ size = 40 }: { size?: number }) {
   )
 }
 
-/** HEARTS with the gold arch. Join, sign-in and the door use this. */
-export function BrandLockup({ size = 72 }: { size?: number }) {
+/** The door wordmark. The site itself is Hady. A HEARTS portal passes its own name. */
+export function BrandLockup({ size = 72, name = 'Hady' }: { size?: number; name?: string }) {
   return (
     <div className="brand-lockup">
       <BrandMark size={size} />
-      <p className="brand-word">HEARTS</p>
+      <p className="brand-word">{name}</p>
     </div>
   )
 }

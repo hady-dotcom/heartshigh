@@ -37,8 +37,13 @@ export async function brandForDoor(next: string, remembered?: string | null): Pr
     if (!portal) return EMPTY_DOOR
     if (!picked.explicit && shellOf(portal) !== 'modern') return EMPTY_DOOR
     const name = String(portal.brandName || '').trim()
-    if (!name) return EMPTY_DOOR
-    return { name, logo: portalLogo(portal.logoUrl), home: `/p/${picked.slug}` }
+    const logo = portalLogo(portal.logoUrl)
+    const home = `/p/${picked.slug}`
+    if (!name) {
+      if (shellOf(portal) === 'hearts') return { name: 'HEARTS', logo, home }
+      return EMPTY_DOOR
+    }
+    return { name, logo, home }
   } catch {
     return EMPTY_DOOR
   }

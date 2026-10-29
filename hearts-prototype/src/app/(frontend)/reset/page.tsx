@@ -10,7 +10,7 @@ import { brandForDoor, nextQuery, safeNext } from '@/lib/door-brand'
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ next?: string }> }): Promise<Metadata> {
   const query = await searchParams
   const door = await brandForDoor(safeNext(query.next), (await cookies()).get('hh_door')?.value)
-  if (!door.name) return { title: 'HEARTS' }
+  if (!door.name) return { title: 'Hady' }
   return { title: door.name, description: `${door.name}. Watch the films in order.`, applicationName: door.name }
 }
 

@@ -44,7 +44,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: '· HEARTS',
+      titleSuffix: '· Hady',
     },
     components: {
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner', '/components/admin/apple-chrome#AppleAdminChrome'],

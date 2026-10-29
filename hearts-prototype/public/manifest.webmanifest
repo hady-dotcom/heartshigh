@@ -1,7 +1,7 @@
 {
-  "name": "HEARTS",
-  "short_name": "HEARTS",
-  "description": "Short clips from real talks, full courses, and a circle that meets in person.",
+  "name": "Hady",
+  "short_name": "Hady",
+  "description": "Short films, a few questions, and a place to come back to.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

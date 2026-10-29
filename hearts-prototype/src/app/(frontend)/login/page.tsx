@@ -34,8 +34,8 @@ export async function generateMetadata({ searchParams }: { searchParams: Promise
   const brand = await brandForDoor(safeNext(query.next), (await cookies()).get('hh_door')?.value)
   if (brand.name) return brandIcons(brand.name, brand.logo)
   return {
-    title: 'HEARTS',
-    description: 'Short clips from real talks, full courses, and a circle that meets in person.',
+    title: 'Hady',
+    description: 'Short films, a few questions, and a place to come back to.',
   }
 }
 
