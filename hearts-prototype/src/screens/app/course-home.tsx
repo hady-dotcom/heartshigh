@@ -13,6 +13,7 @@ import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
 import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
+import { TvHome } from '@/components/app/tv-home'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, clock, ref, rows, str } from '../common'
@@ -146,6 +147,49 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
     sheetTitle: str(card.course.sheetTitle),
     sheetOrder: Number(card.course.sheetOrder || 0),
   })))
+  if (tint) {
+    const slides = sections.map((section) => section.cards[0]).filter(Boolean).slice(0, 5).map((card) => ({
+      id: card.course.id,
+      image: coverPath('course', card.course.id, 'wide'),
+      kicker: card.finished > 0 ? 'Continue' : 'New',
+      title: str(card.course.title),
+      line: coverLine(str(card.course.title)),
+      playHref: card.next ? `${base}/course/${card.course.id}?part=${card.next.id}` : `${base}/course/${card.course.id}`,
+      moreHref: `${base}/course/${card.course.id}`,
+    }))
+    const watching = cards.filter((card) => card.finished > 0 && card.next).map((card) => {
+      const seconds = Number(card.next?.durationSeconds || 0)
+      const left = Math.max(60, Math.round(seconds * (1 - percent(card.finished, card.own.length) / 100)))
+      return {
+        id: card.next!.id,
+        title: str(card.next?.title),
+        href: `${base}/course/${card.course.id}?part=${card.next!.id}`,
+        image: coverPath('film', card.next!.id, 'wide'),
+        left: clock(left),
+        progress: percent(card.finished, card.own.length),
+      }
+    })
+    const shelves = sections.map((section) => ({
+      title: section.title,
+      id: sectionAnchor(section.title),
+      cards: section.cards.map((card) => ({
+        id: card.course.id,
+        title: str(card.course.title),
+        section: section.title,
+        href: `${base}/course/${card.course.id}`,
+        image: coverPath('course', card.course.id, 'tall'),
+      })),
+    }))
+    return (
+      <AppFrame testId="garden" brand={learnerBrand(portal)}>
+        <div className="app-scroll" data-testid="course-home">
+          <Flash error={query.error} notice={query.notice} />
+          <TvHome workbookHref={`${base}/workbook`} slides={slides} watching={watching} shelves={shelves} />
+        </div>
+        <LearnerTabBar base={base} active="garden" portal={portal} />
+      </AppFrame>
+    )
+  }
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">

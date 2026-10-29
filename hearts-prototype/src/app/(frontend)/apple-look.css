@@ -37,7 +37,57 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar {
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern:has(.glass-bar) .app {
-  padding-top: calc(var(--hh-header) + var(--hh-tap-min) + var(--hh-space-4));
+  padding-top: calc(var(--hh-header) + var(--hh-space-3));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .app-search {
+  position: absolute;
+  top: calc(var(--hh-space-1) + env(safe-area-inset-top, 0px));
+  right: calc(var(--hh-space-3) + var(--hh-tap-min) + var(--hh-space-2));
+  z-index: 5;
+  width: var(--hh-tap-min);
+  min-height: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .app-search.is-open {
+  left: var(--hh-space-3);
+  right: var(--hh-space-3);
+  width: auto;
+  height: auto;
+  padding: 0 var(--hh-space-3);
+  border-radius: var(--hh-radius-control);
+  background: color-mix(in srgb, var(--hh-paper) 94%, transparent);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search:not(.is-open) > svg,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search:not(.is-open) > input {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .search-open {
+  display: grid;
+  place-items: center;
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 72%, transparent);
+  background: color-mix(in srgb, var(--hh-paper) 58%, transparent);
+  color: var(--hh-ink);
+  box-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 14%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search.is-open .search-open {
+  display: none;
 }
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .page-help {
@@ -645,4 +695,296 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-line {
 
 html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-solid {
   display: inline;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-title {
+  margin: 0 0 var(--hh-space-3);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero {
+  position: relative;
+  margin: 0 calc(var(--hh-space-4) * -1) var(--hh-space-4);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-row {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 60dvh;
+  scroll-snap-align: start;
+  overflow: hidden;
+  background: var(--hh-video);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 62%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 88%, transparent) 100%);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy {
+  position: absolute;
+  left: var(--hh-space-4);
+  right: var(--hh-space-4);
+  bottom: var(--hh-space-5);
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: var(--hh-space-2);
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy h2 {
+  margin: 0;
+  color: var(--hh-on-accent);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy p {
+  margin: 0;
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hh-space-5);
+  padding: 0 var(--hh-space-2);
+  border-radius: var(--hh-radius-pill);
+  background: color-mix(in srgb, var(--hh-paper) 18%, transparent);
+  color: var(--hh-on-accent);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hh-tap-min);
+  padding: 0 var(--hh-space-5);
+  border-radius: var(--hh-radius-pill);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-more {
+  display: grid;
+  place-items: center;
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hh-paper) 28%, transparent);
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 55%, transparent);
+  color: var(--hh-on-accent);
+  font-size: var(--hh-font-size-title);
+  text-decoration: none;
+  backdrop-filter: blur(var(--hh-glass-blur));
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur));
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--hh-space-1);
+  margin-top: var(--hh-space-2);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-dots i {
+  width: var(--hh-space-1);
+  height: var(--hh-space-1);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hh-ink) 25%, transparent);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-dots i[data-on='yes'] {
+  background: var(--hh-ink);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-workbook {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 var(--hh-space-4);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  box-shadow: var(--hh-shadow-card);
+  text-decoration: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-workbook small {
+  display: block;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-caption);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-workbook-mark {
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  flex: none;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.2c2.6-.8 5-.4 7.5.8 2.5-1.2 4.9-1.6 7.5-.8'/%3E%3Cpath d='M12 7v12'/%3E%3Cpath d='M4.5 6.2V17c2.6-.6 5-.2 7.5 1'/%3E%3Cpath d='M19.5 6.2V17c-2.6-.6-5-.2-7.5 1'/%3E%3C/svg%3E") center / var(--hh-space-4) no-repeat;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-shelf {
+  margin: 0 0 var(--hh-space-4);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-shelf h2 {
+  margin: 0 0 var(--hh-space-2);
+  font-size: var(--hh-font-size-title);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-shelf h2 a {
+  color: var(--hh-ink);
+  text-decoration: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-row {
+  display: flex;
+  gap: var(--hh-space-2);
+  margin-right: calc(var(--hh-space-4) * -1);
+  padding-right: var(--hh-space-4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster {
+  position: relative;
+  flex: 0 0 42%;
+  aspect-ratio: 2 / 3;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-video);
+  text-decoration: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster img,
+html[data-look='apple'][data-look-surface='courses'] .tv-watch img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-3);
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--hh-space-1);
+  text-align: center;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy b {
+  color: var(--hh-on-accent);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-h3);
+  font-weight: 800;
+  font-stretch: condensed;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  text-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 55%, transparent);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy small {
+  color: color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-poster::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hh-ink) 72%, transparent));
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-watch {
+  position: relative;
+  flex: 0 0 78%;
+  aspect-ratio: 16 / 9;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-video);
+  color: var(--hh-on-accent);
+  text-decoration: none;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-watch-bar {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-2);
+  height: var(--hh-space-1);
+  border-radius: var(--hh-radius-pill);
+  background: color-mix(in srgb, var(--hh-paper) 35%, transparent);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-watch-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--hh-paper);
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-watch-meta {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-3);
+  display: grid;
+}
+
+html[data-look='apple'][data-look-surface='courses'] .tv-watch-meta small {
+  color: color-mix(in srgb, var(--hh-on-accent) 80%, transparent);
+  font-size: var(--hh-font-size-caption);
 }

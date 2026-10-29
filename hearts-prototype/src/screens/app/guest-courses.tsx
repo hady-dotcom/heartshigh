@@ -17,6 +17,7 @@ import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
 import { coverColor, coverLine, coverPath, filmFrameStyle } from '@/lib/cover-art'
 import { coverPaint } from '@/lib/cover-tone'
+import { TvHome } from '@/components/app/tv-home'
 import { GuestCourseResume, GuestDone, GuestMeBody, GuestWeekBody } from '@/components/app/guest-places'
 import { WeekLibrary } from '@/components/app/week-library'
 import { guestWeekSections } from '@/server/week-library'
@@ -32,6 +33,37 @@ import { clock, ref, rows, str, type Row } from '../common'
 export async function GuestCoursesScreen({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
   const library = await guestLibrary(payload, portal.id, base)
   const tint = await appleLookOnServer()
+  if (tint) {
+    const sections = librarySections(library.courses)
+    const slides = sections.map((section) => section.cards[0]).filter(Boolean).slice(0, 5).map((course) => ({
+      id: course.id,
+      image: coverPath('course', course.id, 'wide'),
+      kicker: 'New',
+      title: course.title,
+      line: coverLine(course.title),
+      playHref: course.href,
+      moreHref: course.listHref,
+    }))
+    const shelves = sections.map((section) => ({
+      title: section.title,
+      id: sectionAnchor(section.title),
+      cards: section.cards.map((course) => ({
+        id: course.id,
+        title: course.title,
+        section: section.title,
+        href: course.listHref,
+        image: coverPath('course', course.id, 'tall'),
+      })),
+    }))
+    return (
+      <AppFrame testId="garden" brand={learnerBrand(portal)}>
+        <div className="app-scroll" data-testid="course-home">
+          <TvHome workbookHref={`${base}/workbook`} slides={slides} watching={[]} shelves={shelves} />
+        </div>
+        <LearnerTabBar base={base} active="garden" portal={portal} />
+      </AppFrame>
+    )
+  }
   return (
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">

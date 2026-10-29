@@ -27,6 +27,7 @@ export function AppleSearch() {
   const router = useRouter()
   const listId = useId()
   const box = useRef<HTMLDivElement>(null)
+  const field = useRef<HTMLInputElement>(null)
   const [query, setQuery] = useState('')
   const [open, setOpen] = useState(false)
   const [items, setItems] = useState<Hit[]>([])
@@ -69,12 +70,29 @@ export function AppleSearch() {
   }
 
   return (
-    <div className="app-search" ref={box}>
+    <div className={`app-search${open ? ' is-open' : ''}`} ref={box}>
+      <button
+        type="button"
+        className="search-open"
+        aria-label="Search"
+        data-testid="search-open"
+        onClick={() => {
+          setRecent(readRecent())
+          setOpen(true)
+          window.setTimeout(() => field.current?.focus(), 0)
+        }}
+      >
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" aria-hidden>
+          <circle cx="11" cy="11" r="6.5" />
+          <path d="M16 16.5 20.5 21" />
+        </svg>
+      </button>
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" aria-hidden>
         <circle cx="11" cy="11" r="6.5" />
         <path d="M16 16.5 20.5 21" />
       </svg>
       <input
+        ref={field}
         type="search"
         role="combobox"
         value={query}
