@@ -1,8 +1,8 @@
-/** Preview-only colour pass. Default pages stay as they are until ?look=apple. */
+/** Learner look. On for every portal unless the address asks for ?look=off. The desk and CMS stay as they are. */
 
 import { coverIcon, iconDataUri } from '@/lib/cover-art'
 
-export type AppleSurface = '' | 'home' | 'courses' | 'course' | 'player' | 'master' | 'cms'
+export type AppleSurface = '' | 'home' | 'courses' | 'course' | 'player' | 'week' | 'me' | 'signin'
 
 const TILES = [
   '--hh-look-blue',
@@ -23,37 +23,38 @@ const TILE_HEX = ['#0070eb', '#23873d', '#ad6500', '#a54dd1', '#e0284b', '#237f8
 
 export function appleSurface(pathname: string, search = ''): AppleSurface {
   const path = pathname.length > 1 ? pathname.replace(/\/$/, '') : pathname
-  if (path === '/master') return 'master'
-  if (path === '/admin') return 'cms'
-  const match = path.match(/^\/p\/parenting(\/.*)?$/)
+  if (path === '/admin' || path.startsWith('/admin/') || path === '/master' || path.startsWith('/master/')) return ''
+  if (path === '/login' || path === '/join' || path === '/forgot' || path === '/reset') return 'signin'
+  const match = path.match(/^\/p\/[a-z0-9-]+(\/.*)?$/i)
   if (!match) return ''
   const rest = (match[1] || '/').replace(/\/$/, '') || '/'
-  if (rest === '/') return 'home'
-  if (rest === '/courses') return 'courses'
-  if (!/^\/course\/\d+$/.test(rest)) return ''
-  const query = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
-  return query.get('part') ? 'player' : 'course'
+  if (rest === '/' || rest === '/home') return 'home'
+  if (rest === '/courses' || rest === '/lanes') return 'courses'
+  if (rest === '/week') return 'week'
+  if (rest === '/me' || rest.startsWith('/me/')) return 'me'
+  if (rest === '/start' || rest === '/welcome') return 'signin'
+  if (/^\/course\/\d+$/.test(rest)) {
+    const query = new URLSearchParams(search.startsWith('?') ? search.slice(1) : search)
+    return query.get('part') ? 'player' : 'course'
+  }
+  return 'home'
 }
 
+/** On unless this visit, or a saved ?look=off, asks for the previous pages. */
 export function appleLookEnabled(lookParam: string | null, cookie: string) {
   if (lookParam === 'off') return false
   if (lookParam === 'apple') return true
-  return /(?:^|; )hh_look=apple(?:;|$)/.test(cookie)
+  return !/(?:^|; )hh_look=off(?:;|$)/.test(cookie)
 }
 
-export const APPLE_LOOK_BOOT = `(function(){try{var q=new URLSearchParams(location.search).get('look');if(q==='apple')document.cookie='hh_look=apple; Path=/; Max-Age=1209600; SameSite=Lax';if(q==='off')document.cookie='hh_look=; Path=/; Max-Age=0; SameSite=Lax';var on=q==='apple'||(q!=='off'&&/(?:^|; )hh_look=apple(?:;|$)/.test(document.cookie));var root=document.documentElement;if(!on){delete root.dataset.look;delete root.dataset.lookSurface;return;}var path=(location.pathname.length>1?location.pathname.replace(/\\/$/,''):location.pathname);var surface='';if(path==='/master')surface='master';else if(path==='/admin')surface='cms';else{var m=path.match(/^\\/p\\/parenting(\\/.*)?$/);if(m){var rest=(m[1]||'/').replace(/\\/$/,'')||'/';if(rest==='/')surface='home';else if(rest==='/courses')surface='courses';else if(/^\\/course\\/\\d+$/.test(rest))surface=/(?:^|[?&])part=/.test(location.search)?'player':'course';}}if(!surface){delete root.dataset.look;delete root.dataset.lookSurface;return;}root.dataset.look='apple';root.dataset.lookSurface=surface;}catch(e){}})();`
-
-function cookieOn() {
-  return appleLookEnabled(null, document.cookie)
-}
+export const APPLE_LOOK_BOOT = `(function(){try{var q=new URLSearchParams(location.search).get('look');if(q==='apple')document.cookie='hh_look=; Path=/; Max-Age=0; SameSite=Lax';if(q==='off')document.cookie='hh_look=off; Path=/; Max-Age=1209600; SameSite=Lax';var root=document.documentElement;var off=q==='off'||(q!=='apple'&&/(?:^|; )hh_look=off(?:;|$)/.test(document.cookie));if(off){delete root.dataset.look;delete root.dataset.lookSurface;return;}var path=(location.pathname.length>1?location.pathname.replace(/\\/$/,''):location.pathname);if(path==='/admin'||path.indexOf('/admin/')===0||path==='/master'||path.indexOf('/master/')===0){delete root.dataset.look;delete root.dataset.lookSurface;return;}var surface='';if(path==='/login'||path==='/join'||path==='/forgot'||path==='/reset')surface='signin';else{var m=path.match(/^\\/p\\/[a-z0-9-]+(\\/.*)?$/i);if(m){var rest=(m[1]||'/').replace(/\\/$/,'')||'/';if(rest==='/'||rest==='/home')surface='home';else if(rest==='/courses'||rest==='/lanes')surface='courses';else if(rest==='/week')surface='week';else if(rest==='/me'||rest.indexOf('/me/')===0)surface='me';else if(rest==='/start'||rest==='/welcome')surface='signin';else if(/^\\/course\\/\\d+$/.test(rest))surface=/(?:^|[?&])part=/.test(location.search)?'player':'course';else surface='home';}}if(!surface){delete root.dataset.look;delete root.dataset.lookSurface;return;}root.dataset.look='apple';root.dataset.lookSurface=surface;}catch(e){}})();`
 
 export function applyAppleLook() {
   const url = new URL(window.location.href)
   const look = url.searchParams.get('look')
-  if (look === 'apple') document.cookie = 'hh_look=apple; Path=/; Max-Age=1209600; SameSite=Lax'
-  if (look === 'off') document.cookie = 'hh_look=; Path=/; Max-Age=0; SameSite=Lax'
-  const on = look === 'off' ? false : look === 'apple' || cookieOn()
-  const surface = on ? appleSurface(url.pathname, url.search) : ''
+  if (look === 'apple') document.cookie = 'hh_look=; Path=/; Max-Age=0; SameSite=Lax'
+  if (look === 'off') document.cookie = 'hh_look=off; Path=/; Max-Age=1209600; SameSite=Lax'
+  const surface = appleLookEnabled(look, document.cookie) ? appleSurface(url.pathname, url.search) : ''
   const root = document.documentElement
   if (!surface) {
     delete root.dataset.look
@@ -63,10 +64,6 @@ export function applyAppleLook() {
   root.dataset.look = 'apple'
   root.dataset.lookSurface = surface
   paintTiles()
-  if (surface === 'master' && window.innerWidth < 900) {
-    const menu = document.querySelector<HTMLDetailsElement>('.desk-menu')
-    if (menu && !menu.open) menu.open = true
-  }
 }
 
 function tileColor(index: number) {

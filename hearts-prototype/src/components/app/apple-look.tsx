@@ -4,7 +4,7 @@ import { useLayoutEffect } from 'react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { applyAppleLook, watchArtwork } from '@/lib/apple-look'
 
-/** Turns the colour preview on for this URL only. It does not change saves or fields. */
+/** Paints the learner look for this URL. It does not change saves or fields. */
 export function AppleLook() {
   const path = usePathname()
   const search = useSearchParams()
