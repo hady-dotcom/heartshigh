@@ -17,6 +17,46 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern:not(:has(.journey-fr
   background-repeat: no-repeat;
 }
 
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern:not(:has(.journey-frame)) {
+  background-color: var(--hh-canvas);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern :is(.card, .list-link, .guest-catalog, .note, .prefs) {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: var(--hh-space-2);
+  box-sizing: border-box;
+  border-radius: var(--hh-radius-group);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern :is(.app-scroll, .guest-week-form) > .eyebrow {
+  margin: var(--hh-space-4) 0 var(--hh-space-2);
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-footnote) !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .guest-film-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--hh-space-1);
+  min-width: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .guest-film-copy small {
+  display: block;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-footnote);
+}
+
 html[data-look='apple'][data-theme] .app-stage.shell-modern:not(:has(.journey-frame)) :is(.app, .app-scroll) {
   background-color: transparent;
   background-image: none;

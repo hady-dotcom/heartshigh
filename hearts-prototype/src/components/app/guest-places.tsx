@@ -135,13 +135,13 @@ export function GuestMeBody({ base, portal }: { base: string; portal: string }) 
       <p data-testid="guest-opening">{opening} opening answer{opening === 1 ? '' : 's'} saved</p>
       {state?.progress.length ? state.progress.slice(0, 8).map((row) => (
         <a key={row.lessonId} className="guest-catalog" href={`${base}/course/${row.courseId}?part=${row.lessonId}`} data-testid="guest-progress">
-          <span><b>{row.title}</b><small>{row.done ? 'Watched' : 'In progress'} · Film {row.place}</small></span>
+          <span className="guest-film-copy"><b>{row.title}</b><small>{row.done ? 'Watched' : 'In progress'} · Film {row.place}</small></span>
           <span aria-hidden>›</span>
         </a>
       )) : <p className="card">Press play on a film and it will be listed here.</p>}
       {state?.answers.length ? (
         <>
-          <p className="eyebrow">Workbook</p>
+          <p className="eyebrow">Your answers</p>
           {state.answers.map((row) => (
             <article key={`${row.lessonId}-${row.pointId || row.at}`} className="card" data-testid="guest-saved-answer">
               <b>{row.title}</b>
