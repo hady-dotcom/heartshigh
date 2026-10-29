@@ -209,9 +209,9 @@ html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell
   border-color: transparent;
   border-radius: var(--hh-radius-pill);
 }
-html[data-look='apple'][data-look-surface='courses'] .app-head h1,
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .app-head h1,
 html[data-look='apple'][data-look-surface='course'] .app-head h1,
-html[data-look='apple'][data-look-surface='courses'] .library-section > h2,
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .library-section > h2,
 html[data-look='apple'][data-look-surface='course'] .sequence-module > h2 {
   color: var(--hh-ink);
 }
@@ -735,23 +735,23 @@ html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-solid {
   display: inline;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-title {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-title {
   margin: 0 0 var(--hh-space-3);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero {
   position: relative;
   margin: 0 calc(var(--hh-space-4) * -1) var(--hh-space-4);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-row {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-row {
   display: flex;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-slide {
   position: relative;
   flex: 0 0 100%;
   height: 60dvh;
@@ -760,7 +760,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide {
   background: var(--hh-video);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide img {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-slide img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -768,7 +768,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-hero-slide img {
   object-fit: cover;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-hero-slide::after {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-hero-slide::after {
   content: '';
   position: absolute;
   left: 0;
@@ -778,7 +778,7 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 70%, transparent) 100%);
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-hero-copy h2 {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-hero-copy h2 {
   margin: 0;
   color: var(--hh-on-accent) !important;
   font-family: var(--hh-font-display);
@@ -788,7 +788,7 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   line-height: 1.05;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-pill {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-pill {
   display: inline-flex;
   align-items: center;
   min-height: var(--hh-space-4);
@@ -802,7 +802,7 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   text-transform: uppercase;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-dots {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots {
   position: absolute;
   right: var(--hh-space-4);
   bottom: var(--hh-space-3);
@@ -813,26 +813,26 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   margin: 0;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-dots i {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots i {
   background: color-mix(in srgb, var(--hh-on-accent) 45%, transparent);
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-dots i[data-on='yes'] {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots i[data-on='yes'] {
   background: var(--hh-on-accent);
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-workbook {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-workbook {
   width: 100%;
   max-width: none;
   box-sizing: border-box;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-poster::after {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster::after {
   height: 58%;
   background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 62%, transparent) 42%, color-mix(in srgb, var(--hh-ink) 88%, transparent) 100%);
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-poster-copy {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy {
   top: auto;
   bottom: var(--hh-space-2);
   display: block;
@@ -840,7 +840,7 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   overflow: hidden;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-poster-copy b {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy b {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -849,14 +849,14 @@ html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shel
   overflow: hidden;
 }
 
-html[data-look='apple'][data-theme][data-look-surface='courses'] .app-stage.shell-modern .tv-poster-copy small {
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy small {
   display: block;
   color: color-mix(in srgb, var(--hh-on-accent) 70%, transparent) !important;
   font-size: var(--hh-font-size-caption) !important;
   line-height: 1.2;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy {
   position: absolute;
   left: var(--hh-space-4);
   right: var(--hh-space-4);
@@ -868,7 +868,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy {
   color: var(--hh-on-accent);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy h2 {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy h2 {
   margin: 0;
   color: var(--hh-on-accent);
   font-family: var(--hh-font-display);
@@ -878,13 +878,13 @@ html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy h2 {
   line-height: 1.05;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-copy p {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy p {
   margin: 0;
   color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
   font-size: var(--hh-font-size-body);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-pill {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-pill {
   display: inline-flex;
   align-items: center;
   min-height: var(--hh-space-5);
@@ -898,13 +898,13 @@ html[data-look='apple'][data-look-surface='courses'] .tv-pill {
   text-transform: uppercase;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-hero-actions {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-actions {
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-play {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-play {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -917,7 +917,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-play {
   text-decoration: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-more {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-more {
   display: grid;
   place-items: center;
   width: var(--hh-tap-min);
@@ -932,25 +932,25 @@ html[data-look='apple'][data-look-surface='courses'] .tv-more {
   -webkit-backdrop-filter: blur(var(--hh-glass-blur));
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-dots {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots {
   display: flex;
   justify-content: center;
   gap: var(--hh-space-1);
   margin-top: var(--hh-space-2);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-dots i {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots i {
   width: var(--hh-space-1);
   height: var(--hh-space-1);
   border-radius: 50%;
   background: color-mix(in srgb, var(--hh-ink) 25%, transparent);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-dots i[data-on='yes'] {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots i[data-on='yes'] {
   background: var(--hh-ink);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-workbook {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook {
   display: flex;
   align-items: center;
   gap: var(--hh-space-2);
@@ -965,13 +965,13 @@ html[data-look='apple'][data-look-surface='courses'] .tv-workbook {
   text-decoration: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-workbook small {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook small {
   display: block;
   color: var(--hh-muted);
   font-size: var(--hh-font-size-caption);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-workbook-mark {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook-mark {
   width: var(--hh-tap-min);
   height: var(--hh-tap-min);
   flex: none;
@@ -979,21 +979,21 @@ html[data-look='apple'][data-look-surface='courses'] .tv-workbook-mark {
   background: var(--hh-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.2c2.6-.8 5-.4 7.5.8 2.5-1.2 4.9-1.6 7.5-.8'/%3E%3Cpath d='M12 7v12'/%3E%3Cpath d='M4.5 6.2V17c2.6-.6 5-.2 7.5 1'/%3E%3Cpath d='M19.5 6.2V17c-2.6-.6-5-.2-7.5 1'/%3E%3C/svg%3E") center / var(--hh-space-4) no-repeat;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-shelf {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf {
   margin: 0 0 var(--hh-space-4);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-shelf h2 {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf h2 {
   margin: 0 0 var(--hh-space-2);
   font-size: var(--hh-font-size-title);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-shelf h2 a {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf h2 a {
   color: var(--hh-ink);
   text-decoration: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-row {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-row {
   display: flex;
   gap: var(--hh-space-2);
   margin-right: calc(var(--hh-space-4) * -1);
@@ -1003,7 +1003,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-row {
   scrollbar-width: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster {
   position: relative;
   flex: 0 0 42%;
   aspect-ratio: 2 / 3;
@@ -1014,8 +1014,8 @@ html[data-look='apple'][data-look-surface='courses'] .tv-poster {
   text-decoration: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster img,
-html[data-look='apple'][data-look-surface='courses'] .tv-watch img {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster img,
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -1023,7 +1023,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-watch img {
   object-fit: cover;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy {
   position: absolute;
   left: var(--hh-space-2);
   right: var(--hh-space-2);
@@ -1035,7 +1035,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy {
   text-align: center;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy b {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy b {
   color: var(--hh-on-accent);
   font-family: var(--hh-font-display);
   font-size: var(--hh-font-size-h3);
@@ -1046,14 +1046,14 @@ html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy b {
   text-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 55%, transparent);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster-copy small {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy small {
   color: color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
   font-size: var(--hh-font-size-caption);
   font-weight: 500;
   letter-spacing: 0.02em;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-poster::after {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster::after {
   content: '';
   position: absolute;
   left: 0;
@@ -1063,7 +1063,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-poster::after {
   background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hh-ink) 72%, transparent));
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-watch {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch {
   position: relative;
   flex: 0 0 78%;
   aspect-ratio: 16 / 9;
@@ -1075,7 +1075,7 @@ html[data-look='apple'][data-look-surface='courses'] .tv-watch {
   text-decoration: none;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-watch-bar {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-bar {
   position: absolute;
   left: var(--hh-space-2);
   right: var(--hh-space-2);
@@ -1085,14 +1085,14 @@ html[data-look='apple'][data-look-surface='courses'] .tv-watch-bar {
   background: color-mix(in srgb, var(--hh-paper) 35%, transparent);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-watch-bar i {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-bar i {
   display: block;
   height: 100%;
   border-radius: inherit;
   background: var(--hh-paper);
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-watch-meta {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-meta {
   position: absolute;
   left: var(--hh-space-2);
   right: var(--hh-space-2);
@@ -1100,7 +1100,40 @@ html[data-look='apple'][data-look-surface='courses'] .tv-watch-meta {
   display: grid;
 }
 
-html[data-look='apple'][data-look-surface='courses'] .tv-watch-meta small {
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-meta small {
   color: color-mix(in srgb, var(--hh-on-accent) 80%, transparent);
   font-size: var(--hh-font-size-caption);
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch {
+  display: block;
+  width: 100%;
+  flex: none;
+  margin: 0 0 var(--hh-space-4);
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 55%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hh-ink) 78%, transparent));
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta,
+html[data-look='apple'][data-look-surface='week'] .tv-watch-meta {
+  z-index: 1;
+  bottom: var(--hh-space-4);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta b {
+  color: var(--hh-on-accent) !important;
+  font-size: var(--hh-font-size-h3) !important;
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch-bar {
+  z-index: 1;
+  background: color-mix(in srgb, var(--hh-ink) 45%, transparent);
 }

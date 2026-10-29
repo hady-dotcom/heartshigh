@@ -279,12 +279,12 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
 }
 
 export async function GuestWeekScreen({ payload, portal, base }: { payload: Payload; portal: PortalDoc; base: string }) {
-  const sections = await guestWeekSections(payload, portal.id, base)
+  const [sections, photos] = await Promise.all([guestWeekSections(payload, portal.id, base), appleLookOnServer()])
   return (
     <AppFrame testId="plan" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head"><h1>My week</h1></div>
-        <WeekLibrary sections={sections} guest />
+        <WeekLibrary sections={sections} guest photos={photos} />
         <GuestWeekBody />
       </div>
       <LearnerTabBar base={base} active="week" portal={portal} />
