@@ -1118,14 +1118,14 @@ html[data-look='apple'][data-look-surface='week'] .tv-watch::after {
   left: 0;
   right: 0;
   bottom: 0;
-  height: 55%;
-  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hh-ink) 78%, transparent));
+  height: 72%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 42%, transparent) 38%, color-mix(in srgb, var(--hh-ink) 88%, transparent) 100%);
 }
 
 html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta,
 html[data-look='apple'][data-look-surface='week'] .tv-watch-meta {
   z-index: 1;
-  bottom: var(--hh-space-4);
+  bottom: calc(var(--hh-space-3) + var(--hh-space-2));
 }
 
 html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta b {
@@ -1133,7 +1133,18 @@ html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-m
   font-size: var(--hh-font-size-h3) !important;
 }
 
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta .tv-kicker {
+  color: color-mix(in srgb, var(--hh-on-accent) 80%, transparent) !important;
+  font-size: var(--hh-font-size-caption) !important;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta .tv-meta {
+  color: color-mix(in srgb, var(--hh-on-accent) 70%, transparent) !important;
+  font-size: var(--hh-font-size-caption) !important;
+}
+
 html[data-look='apple'][data-look-surface='week'] .tv-watch-bar {
-  z-index: 1;
-  background: color-mix(in srgb, var(--hh-ink) 45%, transparent);
+  z-index: 2;
+  bottom: var(--hh-space-2);
+  background: color-mix(in srgb, var(--hh-on-accent) 42%, transparent);
 }

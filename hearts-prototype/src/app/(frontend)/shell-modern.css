@@ -1717,8 +1717,13 @@ html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene
 html[data-theme] .app-stage.shell-modern .journey:is(.phase-opener, .phase-scene) .j-body {
   margin: var(--hh-space-4) var(--hh-space-4) 0;
   padding: var(--hh-space-4);
-  background: var(--hh-surface);
-  border-radius: var(--hh-radius-card);
+  background: var(--hh-paper);
+  border-radius: var(--hh-radius-group);
+  box-shadow: var(--hh-shadow-card);
+}
+
+html[data-theme] .app-stage.shell-modern .j-opener > .j-arch {
+  display: none;
 }
 
 html[data-theme] .app-stage.shell-modern .name-edit summary {

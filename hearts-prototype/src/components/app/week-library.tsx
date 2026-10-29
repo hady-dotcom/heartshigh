@@ -21,9 +21,8 @@ function Thumb({ src, place, title }: { src: string | null; place: number; title
   )
 }
 
-function filmLine(course: WeekCourse, finished: number) {
-  const pct = progressPercent(finished, course.count)
-  return `${finished} of ${course.count} film${course.count === 1 ? '' : 's'}${course.lengthLabel} · ${pct}%`
+function countLine(course: WeekCourse, finished: number) {
+  return `${finished} of ${course.count} film${course.count === 1 ? '' : 's'}`
 }
 
 /** Course cards and a carry-on film. A signed-out parent’s ticks are read on this phone. */
@@ -47,9 +46,9 @@ export function WeekLibrary({ sections, guest, photos = false }: { sections: Wee
             <img src={coverPath('course', carry.course.id, 'wide')} alt="" />
             <span className="tv-watch-bar" data-testid="carry-bar"><i style={{ width: `${progressPercent(carry.finished, carry.course.count)}%` }} /></span>
             <span className="tv-watch-meta">
-              <small>Carry on</small>
+              <small className="tv-kicker">Carry on</small>
               <b>{carry.film.place}. {carry.film.title}</b>
-              <small>{carry.course.title} · {filmLine(carry.course, carry.finished)}</small>
+              <small className="tv-meta">{carry.course.title} · {countLine(carry.course, carry.finished)}</small>
             </span>
           </a>
         ) : null}
@@ -62,7 +61,7 @@ export function WeekLibrary({ sections, guest, photos = false }: { sections: Wee
                   <img src={coverPath('course', course.id, 'tall')} alt="" />
                   <span className="tv-poster-copy">
                     <b>{course.title}</b>
-                    <small data-testid="week-progress">{filmLine(course, course.finished)}</small>
+                    <small data-testid="week-progress">{countLine(course, course.finished)}</small>
                   </span>
                 </a>
               ))}
