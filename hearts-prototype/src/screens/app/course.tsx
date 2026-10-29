@@ -28,7 +28,8 @@ import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { partTitle, tidyTalkTitle } from '@/lib/talk-title'
 import { courseCards, filmPoster, portraitFor, posterFor, shownPoster, slugify, talkStill } from '@/server/learner'
 import { appleLookOnServer } from '@/server/swatch'
-import { coverColor, coverLine, coverPage, coverPath, coverVivid, filmFrameStyle } from '@/lib/cover-art'
+import { coverLine, coverPath, filmFrameStyle } from '@/lib/cover-art'
+import { coverPaint } from '@/lib/cover-tone'
 import { speakerPage } from '@/server/speakers'
 import { learnerClips, pointVisibleWhere } from '@/server/opening'
 import { countsTowardProgress, pieceLevel } from '@/lib/progress'
@@ -157,8 +158,9 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
   const seconds = lessons.reduce((sum, lesson) => sum + Number(lesson.durationSeconds || 0), 0)
   const title = tidyTalkTitle(str(course.title))
   const tint = await appleLookOnServer()
+  const paint = tint ? await coverPaint(course.id, title) : null
   return (
-    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={tint ? coverColor(course.id) : null} wash={tint ? coverPage(course.id) : null} btn={tint ? coverVivid(course.id) : null}>
+    <AppFrame testId="course-overview" brand={learnerBrand(portal)} art={paint?.tone || null} wash={paint?.wash || null} btn={paint?.tone || null}>
       <div className="app-scroll">
         {sequence ? null : <Back href={`${base}/lanes`} label="Lanes" />}
         <Flash error={query.error} notice={query.notice} />
@@ -506,9 +508,9 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   }))
 
   const playerLook = await appleLookOnServer()
-  const playerArt = playerLook ? coverColor(courseId, lesson.id) : ''
+  const playerPaint = playerLook ? await coverPaint(courseId, tidyTalkTitle(str(course.title))) : null
   return (
-    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerArt || null} wash={playerLook ? coverPage(courseId, lesson.id) : null} btn={playerLook ? coverVivid(courseId, lesson.id) : null}>
+    <AppFrame testId="course" evening help={sequence ? 'sequence-course' : undefined} brand={learnerBrand(portal)} art={playerPaint?.tone || null} wash={playerPaint?.wash || null} btn={playerPaint?.tone || null}>
       <div className="app-scroll">
         {ctx.demo ? <DemoFrameTools token={ctx.demo.token} role={ctx.demo.role} cast={ctx.demo.cast} seq={ctx.demo.state.seq} /> : null}
         <Flash error={query.error} notice={query.notice} />

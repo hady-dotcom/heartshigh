@@ -12,7 +12,7 @@ import { sortParts } from '@/lib/part-order'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { filmPoster, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import type { SessionUser } from '@/server/context'
 import { type Ctx, clock, ref, rows, str } from '../common'
@@ -147,7 +147,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
     sheetOrder: Number(card.course.sheetOrder || 0),
   })))
   return (
-    <AppFrame testId="garden" brand={learnerBrand(portal)} art={tint && cards[0] ? coverColor(cards[0].course.id) : null} wash={tint && cards[0] ? coverPage(cards[0].course.id) : null} btn={tint && cards[0] ? coverVivid(cards[0].course.id) : null}>
+    <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1>Courses</h1></div>

@@ -17,7 +17,7 @@ import { learnerWords } from '@/lib/tidy-caption'
 import { asLessonVisibility, learnerLessonVisible } from '@/lib/publish-state'
 import { courseCards, dayNumber, filmPoster, portalName, shownPoster } from '@/server/learner'
 import { appleLookOnServer, artStyle } from '@/server/swatch'
-import { coverColor, coverLine, coverPage, coverPath, coverVivid } from '@/lib/cover-art'
+import { coverColor, coverLine, coverPath } from '@/lib/cover-art'
 import { visibleCourseIds } from '@/server/context'
 import { ensureMonthNote, recalibrationDueFor } from '@/server/compass'
 import { learnerClips } from '@/server/opening'
@@ -144,7 +144,7 @@ export async function HomeScreen({ payload, user, portal, base, query, demo }: C
     if (local[0] && firstLesson) demoContinue = `${base}/course/${local[0].id}?part=${firstLesson.id}`
   }
   return (
-    <AppFrame testId="home" brand={learnerBrand(portal)} art={tint && carryOn[0] ? coverColor(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null} wash={tint && carryOn[0] ? coverPage(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null} btn={tint && carryOn[0] ? coverVivid(Number(carryOn[0].href.match(/\/course\/(\d+)/)?.[1] || 0), carryOn[0].id) : null}>
+    <AppFrame testId="home" brand={learnerBrand(portal)}>
       <div className="app-scroll">
         <div className="app-head">
           <h1>Home</h1>
