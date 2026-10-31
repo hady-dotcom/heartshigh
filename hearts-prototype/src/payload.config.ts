@@ -37,6 +37,12 @@ if (kind === 'sqlite' && databaseUrl.startsWith('file:')) {
 const origins = serverOrigins()
 const s3 = readS3()
 
+const slsFavicon =
+  'data:image/svg+xml,' +
+  encodeURIComponent(
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><text x="16" y="21" text-anchor="middle" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="11" font-weight="600" fill="#1d1d1f">SLS</text></svg>',
+  )
+
 export default buildConfig({
   admin: {
     user: 'users',
@@ -44,9 +50,20 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: '· Hady',
+      // Payload already inserts one space before this suffix.
+      titleSuffix: '- Social Learning System',
+      description: 'Social Learning System',
+      icons: [{ rel: 'icon', type: 'image/svg+xml', url: slsFavicon }],
+      openGraph: {
+        description: 'Social Learning System',
+        siteName: 'Social Learning System',
+      },
     },
     components: {
+      graphics: {
+        Logo: '/components/admin/brand#Logo',
+        Icon: '/components/admin/brand#Icon',
+      },
       header: ['/components/viewas-admin-banner#ViewAsAdminBanner', '/components/admin/apple-chrome#AppleAdminChrome'],
       beforeDashboard: ['/components/admin/large-title#AdminDashboardTitle'],
       beforeLogin: ['/components/admin/large-title#AdminLoginTitle'],
