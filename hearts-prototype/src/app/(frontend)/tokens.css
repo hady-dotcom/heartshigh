@@ -1,0 +1,99 @@
+/*
+ * Design tokens for the white learner shell and for new screens.
+ * House style: Apple Human Interface Guidelines, iOS 26 Liquid Glass.
+ * System type by default (SF Pro where the phone has it, otherwise Inter).
+ * Large Title 34/41, Title, Headline, Body 17, Caption. 8pt spacing.
+ * Continuous-corner cards, translucent bars, portal accent as the only tint.
+ * HEARTS evening colours stay in theme.css and are not these tokens.
+ * Learner and admin CSS outside this file must not hard-code colours or font sizes.
+ * See tests/unit/design-tokens.test.ts and AGENTS.md.
+ */
+
+:root {
+  --hh-paper: #ffffff;
+  --hh-canvas: #f2f2f7;
+  --hh-ink: #111827;
+  --hh-ink-2: #374151;
+  --hh-muted: #4b5563;
+  --hh-line: #e5e7eb;
+  --hh-surface: #f3f4f6;
+  --hh-accent: #2563eb;
+  --hh-accent-deep: #1d4ed8;
+  --hh-accent-fill: #eff6ff;
+  --hh-on-accent: #ffffff;
+  --hh-video: #111827;
+  --hh-scene-wash: rgba(255, 255, 255, 0.94);
+  --hh-scene-wash-deep: rgba(255, 255, 255, 0.97);
+
+  --hh-font-size-h1: 28px;
+  --hh-font-size-h2: 20px;
+  --hh-font-size-h3: 18px;
+  --hh-font-size-body: 16px;
+  --hh-font-size-small: 14px;
+  --hh-font-size-display: 34px;
+  --hh-line-large-title: 41px;
+  --hh-font-size-title1: 28px;
+  --hh-font-size-title: 22px;
+  --hh-font-size-headline: 17px;
+  --hh-font-size-body-lg: 17px;
+  --hh-font-size-caption: 12px;
+  --hh-font-size-footnote: 13px;
+  --hh-font-system: -apple-system, 'SF Pro Text', 'SF Pro', 'Inter', system-ui, sans-serif;
+  --hh-font-display: -apple-system, 'SF Pro Display', 'SF Pro Text', 'SF Pro', 'Inter', system-ui, sans-serif;
+
+  --hh-space-1: 4px;
+  --hh-space-2: 8px;
+  --hh-space-3: 16px;
+  --hh-space-4: 24px;
+  --hh-space-5: 32px;
+  --hh-space-6: 48px;
+  --hh-line-width: 1px;
+  --hh-bar: 4px;
+
+  --hh-radius-card: 28px;
+  --hh-radius-group: 16px;
+  --hh-radius-control: 12px;
+  --hh-radius-pill: 99px;
+
+  --hh-shadow-none: none;
+  --hh-shadow-card: 0 1px 2px rgba(17, 24, 39, 0.06);
+  --hh-shadow-lift: 0 12px 32px rgba(17, 24, 39, 0.08);
+
+  --hh-glass: rgba(255, 255, 255, 0.72);
+  --hh-glass-edge: rgba(255, 255, 255, 0.9);
+  --hh-glass-line: rgba(60, 60, 67, 0.18);
+  --hh-glass-blur: 28px;
+  --hh-hero-scrim: linear-gradient(180deg, rgba(17, 24, 39, 0.05) 0%, rgba(17, 24, 39, 0.28) 46%, rgba(17, 24, 39, 0.72) 100%);
+  --hh-hero-track: rgba(255, 255, 255, 0.35);
+  --hh-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --hh-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --hh-press: 0.97;
+  --hh-hero: 248px;
+  --hh-header: 60px;
+  --hh-chrome: 112px;
+  --hh-wash-size: 220px;
+  --hh-thumb-w: 120px;
+  --hh-ring: 48px;
+
+  --hh-tap-min: 44px;
+
+  /* Apple look preview. Deepened so a white glyph clears WCAG AA.
+     Soft washes stay light so dark text on the page still clears AA. */
+  --hh-look-red: #db3329;
+  --hh-look-orange: #ad6500;
+  --hh-look-yellow: #ffcc00;
+  --hh-look-on-yellow: #111827;
+  --hh-look-green: #23873d;
+  --hh-look-mint: #00837d;
+  --hh-look-teal: #237f8f;
+  --hh-look-cyan: #247da6;
+  --hh-look-blue: #0070eb;
+  --hh-look-indigo: #5856d6;
+  --hh-look-purple: #a54dd1;
+  --hh-look-pink: #e0284b;
+  --hh-look-brown: #8b7251;
+  --hh-look-sky: #64d2ff;
+  --hh-look-peach: #ffb340;
+  --hh-look-lilac: #d6b0ff;
+  --hh-look-dawn: #9fd4ff;
+}

@@ -1,0 +1,548 @@
+/* Compass only. Learner pages: deep teal, lantern gold, stone and ivy.
+   Desk pages: evening garden, same as the rest of the desk. */
+
+.app[data-testid="learner-path"],
+.app[data-testid="recalibrate"] {
+  background: #123836;
+  color: #F4EBD4;
+}
+.app-stage:has(.app[data-testid="learner-path"]),
+.app-stage:has(.app[data-testid="recalibrate"]) {
+  background: var(--hh-canvas);
+}
+.app[data-testid="learner-path"] h1,
+.app[data-testid="recalibrate"] h1,
+.app[data-testid="learner-path"] .lead,
+.app[data-testid="recalibrate"] .lead {
+  color: #F6E7C1;
+}
+.app[data-testid="learner-path"] .app-head,
+.app[data-testid="recalibrate"] .app-head {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 0;
+}
+.app[data-testid="learner-path"] .app-head h1,
+.app[data-testid="recalibrate"] .app-head h1 {
+  text-align: left;
+  width: 100%;
+}
+.app[data-testid="learner-path"] {
+  --nav-h: 96px;
+}
+.app[data-testid="learner-path"] .app-scroll {
+  padding-bottom: calc(var(--nav-h) + var(--safe-bottom, 0px) + 24px);
+}
+.app[data-testid="learner-path"] .back,
+.app[data-testid="recalibrate"] .back,
+.app[data-testid="learner-path"] .muted,
+.app[data-testid="recalibrate"] .muted {
+  color: #D7CBB0;
+}
+.app[data-testid="learner-path"] .eyebrow,
+.app[data-testid="recalibrate"] .eyebrow {
+  display: block;
+  position: static;
+  color: var(--hh-accent);
+  margin: 22px 0 0;
+}
+.app[data-testid="learner-path"] a.next-step,
+.app[data-testid="learner-path"] .next-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  position: static;
+  text-decoration: none;
+  color: #F4EBD4;
+}
+.app[data-testid="learner-path"] .step-mark {
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--hh-canvas);
+  color: var(--hh-accent);
+}
+.app[data-testid="learner-path"] .step-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.app[data-testid="learner-path"] .step-copy b {
+  font-size: 16px;
+  line-height: 1.35;
+}
+.app[data-testid="learner-path"] .step-detail {
+  font-size: 14.5px;
+  line-height: 1.45;
+  color: var(--hh-ink-2);
+}
+.app[data-testid="learner-path"] .card,
+.app[data-testid="recalibrate"] .card {
+  background: #1C3F3A;
+  color: #F4EBD4;
+  border: 1px solid #2F5C54;
+  margin-top: 12px;
+}
+.app[data-testid="learner-path"] .card p,
+.app[data-testid="recalibrate"] .card p,
+.app[data-testid="learner-path"] .card b,
+.app[data-testid="learner-path"] [data-testid="movement"] {
+  color: #F4EBD4;
+}
+.app[data-testid="learner-path"] .focus-card {
+  font-size: 18px;
+  border-color: var(--hh-accent);
+}
+.app[data-testid="learner-path"] .area-row,
+.app[data-testid="recalibrate"] .choice {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  align-items: flex-start;
+  text-align: left;
+}
+.app[data-testid="learner-path"] .chip,
+.app[data-testid="recalibrate"] .chip {
+  background: var(--hh-canvas);
+  color: #F6E7C1;
+  border: 1px solid var(--hh-accent);
+  border-radius: 999px;
+  padding: 2px 10px;
+  font-size: 13px;
+}
+.app[data-testid="learner-path"] .list-link,
+.app[data-testid="recalibrate"] .list-link {
+  color: #F4EBD4;
+  background: transparent;
+}
+.app[data-testid="learner-path"] .pill.gold,
+.app[data-testid="recalibrate"] .pill.gold,
+.app[data-testid="learner-path"] button.pill,
+.app[data-testid="recalibrate"] button.pill {
+  background: var(--hh-accent);
+  color: #1A1814;
+  border: 0;
+  margin-top: 16px;
+}
+.app[data-testid="recalibrate"] fieldset {
+  border: 0;
+  margin: 12px 0 0;
+  padding: 0;
+}
+.app[data-testid="recalibrate"] legend {
+  font-weight: 700;
+  padding: 0;
+}
+.app[data-testid="recalibrate"] input {
+  accent-color: var(--hh-accent);
+}
+.app[data-testid="recalibrate"] textarea {
+  width: 100%;
+  margin-top: 8px;
+  background: var(--hh-canvas);
+  color: #F4EBD4;
+  border: 1px solid var(--hh-accent);
+  border-radius: 12px;
+  padding: 10px 12px;
+  font: inherit;
+}
+.app[data-testid="recalibrate"] .note-label {
+  display: block;
+  margin-top: 12px;
+}
+/* The life check-in is its own screen, and the whole of it sits above the tab bar. */
+[data-testid="life-check"].card { padding: 12px 12px 8px; }
+[data-testid="life-check"] .choice { padding: 6px 10px; min-height: 0; margin-bottom: 6px; border-radius: 12px; }
+[data-testid="life-check"] .muted { margin: 2px 0 8px; }
+[data-testid="life-check"] textarea { min-height: 44px; margin-top: 4px; }
+[data-testid="life-check"] .note-label { margin-top: 6px; }
+[data-testid="life-check"] .pill { margin-top: 8px; }
+[data-testid="life-check"] .text-back { margin-top: 4px; }
+.compass-learner { position: relative; }
+.app[data-testid="learner-path"] .tabbar,
+.app[data-testid="recalibrate"] .tabbar {
+  background: var(--hh-canvas);
+  border-top-color: rgba(37, 99, 235, 0.45);
+}
+.app[data-testid="learner-path"] .tab,
+.app[data-testid="recalibrate"] .tab {
+  color: var(--hh-ink-2);
+}
+.app[data-testid="learner-path"] .tab.on,
+.app[data-testid="recalibrate"] .tab.on {
+  color: var(--hh-accent);
+}
+.app[data-testid="learner-path"] .flash.notice,
+.app[data-testid="recalibrate"] .flash.notice,
+[data-testid="recalibrate-card"] {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.55);
+}
+[data-testid="recalibrate-open"] {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+.month-look { padding-bottom: 24px; }
+.month-progress { display: flex; align-items: center; gap: 10px; margin: 2px 0 12px; }
+.month-stage { position: relative; margin-top: 12px; }
+.app[data-testid="recalibrate"] .month-stage > fieldset.month-card { margin: 0; }
+.month-card { animation: month-enter 350ms ease; }
+.month-card.back { animation-name: month-enter-back; }
+.month-card.leave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  margin: 0;
+  animation: month-exit 350ms ease forwards;
+  pointer-events: none;
+  z-index: 2;
+}
+.month-card.leave.back { animation-name: month-exit-back; }
+.app[data-testid="recalibrate"] .month-progress .progress {
+  height: auto;
+  width: auto;
+  overflow: visible;
+  margin: 0;
+  background: none;
+  color: var(--hh-ink);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.progress-line { flex: 1; display: block; height: 5px; border-radius: 99px; background: rgba(37, 99, 235, 0.28); margin: 0; overflow: hidden; }
+.progress-line i { display: block; height: 100%; background: var(--hh-accent); }
+button.month-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 12px;
+  background: none;
+  border: 0;
+  padding: 0;
+  min-height: 44px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  font-size: 16px;
+  color: #F6E7C1;
+}
+.app[data-testid="recalibrate"] .choice input { margin-top: 3px; accent-color: var(--hh-accent); }
+@keyframes month-enter { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: none; } }
+@keyframes month-enter-back { from { opacity: 0; transform: translateX(-40px); } to { opacity: 1; transform: none; } }
+@keyframes month-exit { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-40px); } }
+@keyframes month-exit-back { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(40px); } }
+.route-fade { min-height: 100dvh; display: flex; flex-direction: column; animation: route-in 320ms ease; }
+@keyframes route-in { from { opacity: 0.35; } to { opacity: 1; } }
+.desk-fade { animation: desk-fade 200ms ease; }
+@keyframes desk-fade { from { opacity: 0.45; } to { opacity: 1; } }
+/* Headless Chromium may prefer reduced motion. These moves stay, so a question change is still a slide. */
+@media (prefers-reduced-motion: reduce) {
+  .month-card { animation: month-enter 350ms ease; }
+  .month-card.back { animation-name: month-enter-back; }
+  .month-card.leave { animation: month-exit 350ms ease forwards; }
+  .month-card.leave.back { animation-name: month-exit-back; }
+  .route-fade { animation: route-in 320ms ease; }
+  .desk-fade { animation: desk-fade 200ms ease; }
+}
+
+.desk[data-testid="compass-portal"],
+.desk[data-testid="compass-learner"] {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] .side,
+.desk[data-testid="compass-learner"] .side {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  border-right-color: var(--hh-surface);
+  z-index: 2;
+}
+.desk[data-testid="compass-portal"] .side a.nav,
+.desk[data-testid="compass-learner"] .side a.nav,
+.desk[data-testid="compass-portal"] .side-brand,
+.desk[data-testid="compass-learner"] .side-brand,
+.desk[data-testid="compass-portal"] .side-foot button,
+.desk[data-testid="compass-learner"] .side-foot button {
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] .side a.nav.on,
+.desk[data-testid="compass-learner"] .side a.nav.on {
+  background: var(--hh-accent);
+  color: #1A1814;
+}
+.desk[data-testid="compass-portal"] .side .group,
+.desk[data-testid="compass-learner"] .side .group,
+.desk[data-testid="compass-portal"] .side-brand small,
+.desk[data-testid="compass-learner"] .side-brand small {
+  color: var(--hh-muted);
+}
+.desk[data-testid="compass-portal"] .main-head h1,
+.desk[data-testid="compass-learner"] .main-head h1 {
+  color: var(--hh-ink);
+  font-size: 40px;
+  line-height: 1.1;
+}
+.desk[data-testid="compass-portal"] .panel,
+.desk[data-testid="compass-learner"] .panel {
+  background: var(--hh-paper);
+  border-color: var(--hh-accent-deep);
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] .panel > header,
+.desk[data-testid="compass-learner"] .panel > header {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] .panel > header h2,
+.desk[data-testid="compass-learner"] .panel > header h2,
+.desk[data-testid="compass-portal"] .panel > header .hint,
+.desk[data-testid="compass-learner"] .panel > header .hint {
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] .btn.gold,
+.desk[data-testid="compass-learner"] .btn.gold {
+  background: var(--hh-accent);
+  color: #1A1814;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font-weight: 700;
+}
+.desk[data-testid="compass-portal"] .chip,
+.desk[data-testid="compass-learner"] .chip {
+  display: inline-block;
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  margin-left: 6px;
+}
+.desk[data-testid="compass-portal"] .bell .count,
+.desk[data-testid="compass-learner"] .bell .count {
+  background: var(--hh-accent);
+  color: #1A1814;
+}
+.desk[data-testid="compass-portal"] a,
+.desk[data-testid="compass-learner"] a {
+  color: var(--desk-heading, var(--hh-ink));
+}
+.cohort { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; }
+.cohort-row { display: grid; grid-template-columns: minmax(140px, 1fr) minmax(80px, 2fr) 32px; gap: 10px; align-items: center; margin: 6px 0; }
+.cohort-row .bar { height: 10px; background: #E7D7B4; border-radius: 999px; overflow: hidden; }
+.cohort-row .bar i { display: block; height: 100%; background: var(--hh-surface); }
+.mix-form { display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; }
+.mix-form label { display: grid; gap: 6px; font-weight: 650; color: var(--hh-ink); }
+.mix-form input { width: 88px; background: var(--hh-paper); color: var(--hh-ink); border: 1px solid var(--hh-accent-deep); border-radius: 8px; padding: 8px; }
+.sparks { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.spark-card { background: var(--hh-paper); border: 1px solid var(--hh-accent-deep); border-radius: 14px; padding: 12px 12px 8px; color: var(--hh-ink); }
+.spark-card header { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; background: transparent; color: var(--hh-ink); padding: 0; }
+.spark-card header b { font-size: 16px; }
+.spark-card .latest { font-variant-numeric: tabular-nums; font-weight: 700; }
+.spark-card .latest.up { color: #14564C; }
+.spark-card .latest.down { color: #8C4A55; }
+.spark { width: 100%; height: 120px; }
+.spark path { fill: none; stroke-width: 2.4; }
+.spark path.up { stroke: #14564C; }
+.spark path.down { stroke: #8C4A55; }
+.spark path.flat { stroke: var(--hh-surface); }
+.spark circle { fill: var(--hh-accent); stroke: var(--hh-surface); }
+.spark text { fill: #3A4E48; font-size: 11px; font-family: inherit; }
+.spark-zero { stroke: #C4B089; stroke-dasharray: 3 3; }
+.spark-legend { display: flex; gap: 16px; margin: 0; color: #3A4E48; font-size: 13px; }
+.spark-legend i { display: inline-block; width: 18px; height: 3px; margin-right: 6px; vertical-align: middle; border-radius: 99px; }
+.spark-legend .up { background: #14564C; }
+.spark-legend .down { background: #8C4A55; }
+.desk .panel > header .spark-legend { margin: 0; color: var(--hh-ink); opacity: 1; font-size: 14px; font-weight: 650; white-space: nowrap; }
+.desk .panel > header .spark-legend .up { background: #9ED4C4; }
+.desk .panel > header .spark-legend .down { background: #E7A8B4; }
+.desk .side .brand-mark {
+  background: var(--hh-canvas);
+  color: var(--hh-accent);
+  border: 1.5px solid var(--hh-accent);
+  flex: none;
+}
+.desk .side .brand-mark svg { color: var(--hh-accent); }
+.desk .side .brand-mark svg path { stroke-width: 2.6; }
+.desk .side .side-logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 1.5px solid var(--hh-accent);
+  background: var(--hh-canvas);
+  flex: none;
+}
+.persona-line { margin: 0 0 10px; font-size: 18px; color: var(--hh-surface); }
+.persona-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.desk[data-testid="compass-learner"] .persona-chips .chip,
+.desk[data-testid="compass-portal"] .persona-chips .chip {
+  background: #E7D7B4;
+  color: #1A1814;
+  margin: 0;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 700;
+}
+.desk[data-testid="compass-learner"] .persona-chips .chip.on,
+.desk[data-testid="compass-portal"] .persona-chips .chip.on {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+.desk[data-testid="compass-portal"] table.data th.num,
+.desk[data-testid="compass-learner"] table.data th.num,
+.desk[data-testid="compass-portal"] table.data td.num,
+.desk[data-testid="compass-learner"] table.data td.num { text-align: right; }
+[data-testid="serve-row"] { display: block; padding-bottom: 8px; }
+[data-testid="serve-row"] .hint { display: block; margin-top: 8px; }
+/* The course player already uses .timeline for a film scrub bar. These lists must stay in the card. */
+.desk[data-testid="compass-portal"] .timeline,
+.desk[data-testid="compass-learner"] .timeline {
+  position: static;
+  inset: auto;
+  z-index: auto;
+  height: auto;
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.desk[data-testid="compass-portal"] .timeline li,
+.desk[data-testid="compass-learner"] .timeline li {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.timeline time { color: var(--hh-surface); font-weight: 700; margin-right: 8px; }
+@media (max-width: 800px) {
+  .cohort { grid-template-columns: 1fr; }
+}
+
+/* Evening garden. Learner screens sit on the courtyard; cards are rich parchment, not pale cream.
+   These selectors beat html[data-theme] .app / .desk, so dawn does not wash them back to mint. */
+:is(html, html[data-theme]) .app[data-testid="learner-path"],
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] {
+  position: relative;
+  isolation: isolate;
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .app-stage:has(.app[data-testid="learner-path"]),
+:is(html, html[data-theme]) .app-stage:has(.app[data-testid="recalibrate"]) {
+  background: var(--hh-canvas);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .app-scroll,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .app-scroll {
+  background:
+    linear-gradient(180deg, rgba(10, 40, 40, 0.5), rgba(7, 28, 28, 0.78)),
+    url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] h1,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] h1,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .lead,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .lead,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .back,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .back {
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .card,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] {
+  background: linear-gradient(180deg, var(--hh-paper), var(--hh-surface));
+  color: var(--hh-surface);
+  border: 1px solid rgba(37, 99, 235, 0.75);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card p,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .card p,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .card b,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] a.next-step,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .next-step,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .step-detail,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] legend,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .choice,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] h2,
+:is(html, html[data-theme]) [data-testid="recalibrate-card"] p {
+  color: var(--hh-surface);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .step-mark {
+  background: var(--hh-surface);
+  color: var(--hh-accent);
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .chip,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .chip {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border-color: var(--hh-accent);
+}
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] textarea,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .field {
+  background: #fbf3e0;
+  color: var(--hh-surface);
+  border: 1.5px solid #14564c;
+}
+:is(html, html[data-theme]) .app[data-testid="learner-path"] .pill.gold,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .pill.gold,
+:is(html, html[data-theme]) .app[data-testid="learner-path"] button.pill,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] button.pill,
+:is(html, html[data-theme]) [data-testid="recalibrate-open"] {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] .month-progress .progress,
+:is(html, html[data-theme]) .app[data-testid="recalibrate"] button.month-back {
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"],
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] {
+  background: var(--desk-page, var(--hh-canvas));
+  color: var(--desk-ink, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .side,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .side {
+  background: var(--desk-sidebar, var(--hh-surface));
+  color: var(--desk-on-dark, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .persona-line,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .persona-line,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .mix-form label,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .mix-form label {
+  color: var(--desk-heading, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel {
+  background: var(--desk-card, var(--hh-paper));
+  border-color: var(--desk-line, var(--hh-accent-deep));
+  color: var(--desk-ink, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header {
+  background: var(--desk-header, var(--hh-surface));
+  color: var(--desk-on-dark, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header h2,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header h2,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .hint,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .hint,
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .panel > header .spark-legend,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .panel > header .spark-legend {
+  color: var(--desk-on-dark, var(--hh-ink));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .spark-card,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .spark-card {
+  background: var(--desk-field, var(--hh-paper));
+  border-color: var(--desk-line, var(--hh-accent-deep));
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-portal"] .cohort-row .bar,
+:is(html, html[data-theme]) .desk[data-testid="compass-learner"] .cohort-row .bar {
+  background: var(--desk-page, var(--hh-canvas));
+}

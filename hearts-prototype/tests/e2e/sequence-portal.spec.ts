@@ -1,0 +1,284 @@
+import { expect, test, type Page } from '@playwright/test'
+import { mkdirSync } from 'node:fs'
+import { E2E_BASE } from '../env'
+
+const PHONE = { width: 390, height: 844 }
+const SHOTS = '/opt/cursor/artifacts/screenshots'
+
+async function hideDevBadge(page: Page) {
+  await page.addStyleTag({ content: 'nextjs-portal, [data-nextjs-toast], [data-next-badge-root] { display: none !important; }' }).catch(() => undefined)
+}
+
+async function shot(page: Page, name: string) {
+  mkdirSync(SHOTS, { recursive: true })
+  await hideDevBadge(page)
+  await page.waitForTimeout(300)
+  await page.screenshot({ path: `${SHOTS}/${name}.png`, caret: 'initial' })
+}
+
+async function signIn(page: Page, email: string, password: string, next: string) {
+  await page.goto(`/login?next=${encodeURIComponent(next)}`)
+  await page.getByTestId('login-email').fill(email)
+  await page.getByTestId('login-password').fill(password)
+  await page.getByTestId('login-submit').click()
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'))
+}
+
+test.describe.configure({ mode: 'serial' })
+
+test('parenting course is a sequenced list with no hearts doors', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await page.goto(`${E2E_BASE}/p/parenting`)
+  await expect(page.getByTestId('opener')).toBeVisible()
+  await expect(page.getByTestId('portal-brand')).toHaveText('Hady Home')
+  await expect(page.locator('body')).not.toContainText(/\bHEARTS\b/)
+  await shot(page, 'sequence-gate')
+
+  await page.goto('/p/parenting/courses')
+  await expect(page.getByTestId('library-collection').filter({ hasText: 'Guiding Home Learning' })).toBeVisible()
+  await expect(page.getByTestId('library-collection').filter({ hasText: 'Book Summaries' })).toBeVisible()
+  await page.getByTestId('course-card').filter({ hasText: 'Raising calm, happy children' }).click()
+  await expect(page.getByTestId('course-title')).toHaveText('Raising calm, happy children')
+  await expect(page.getByTestId('sequence-module').filter({ hasText: 'The Whole-Brain Child' })).toBeVisible()
+  await expect(page.getByTestId('play-next')).toBeVisible()
+  await page.getByTestId('buffet-talk').filter({ hasText: 'The Whole-Brain Child 2' }).click()
+  await page.getByTestId('guest-play').click()
+  await expect(page.getByTestId('vimeo-player')).toBeVisible()
+  await page.getByTestId('answer-point').click()
+  await expect(page.getByTestId('popup-prompt')).toContainText('more knowledgeable')
+  await page.goto('/p/parenting')
+
+  await signIn(page, 'parenting-learner@hearts.test', 'portal-learner', '/p/parenting')
+  await expect(page.getByTestId('home')).toBeVisible()
+  await expect(page.getByTestId('tab-home')).toBeVisible()
+  await expect(page.getByTestId('tab-lanes')).toHaveCount(0)
+  await expect(page.getByTestId('tab-week')).toBeVisible()
+  await expect(page.getByTestId('tab-garden')).toBeVisible()
+  await expect(page.getByTestId('tab-me')).toBeVisible()
+  const collectionOnHome = page.getByText('Guiding Home Learning').first()
+  if (await collectionOnHome.count()) await expect(collectionOnHome).toBeVisible()
+  else await expect(page.getByTestId('continue-row').or(page.getByTestId('feed-film')).first()).toBeVisible()
+  await shot(page, 'sequence-home')
+
+  await page.getByTestId('tab-garden').click()
+  await expect(page.getByTestId('garden')).toBeVisible()
+  await expect(page.getByTestId('course-home')).toBeVisible()
+  await expect(page).toHaveURL(/\/courses$/)
+  const coursesLook = await page.locator('.app-stage').evaluate((el) => {
+    const stage = el as HTMLElement
+    const heading = stage.querySelector('h1')
+    return {
+      shell: stage.getAttribute('data-shell'),
+      font: stage.getAttribute('data-font'),
+      bg: getComputedStyle(stage.querySelector('.app') || stage).backgroundColor,
+      heading: heading ? getComputedStyle(heading).fontFamily : '',
+    }
+  })
+  expect(coursesLook.shell).toBe('modern')
+  expect(coursesLook.font).toBe('system')
+  expect(coursesLook.bg).toBe('rgb(242, 242, 247)')
+  expect(coursesLook.heading.toLowerCase()).toMatch(/inter|sf pro|system/)
+  await expect(page.getByTestId('carry-on').locator('.progress-ring')).toBeVisible()
+  await shot(page, 'hady-courses-phone')
+
+  await expect(page.getByTestId('library-collection').filter({ hasText: 'Guiding Home Learning' })).toBeVisible()
+  await page.getByTestId('course-card').filter({ hasText: 'Welcome' }).first().click()
+  await expect(page.getByTestId('course-overview')).toBeVisible()
+  const overview = page.url()
+  await expect(page.getByTestId('start-part')).toContainText('Start film 1')
+  await expect(page.getByTestId('buffet-talk').first()).toContainText('Film 1')
+  await page.evaluate(() => window.scrollTo(0, 900))
+  await expect.poll(async () => page.locator('.app-stage').evaluate((el) => {
+    const bar = el.querySelector('.glass-bar') as HTMLElement | null
+    return {
+      collapsed: el.classList.contains('title-collapsed'),
+      top: bar ? Math.round(bar.getBoundingClientRect().top) : -1,
+      title: (bar?.querySelector('.bar-title')?.textContent || '').trim(),
+    }
+  })).toMatchObject({ collapsed: true, top: 0 })
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await shot(page, 'hady-course-phone')
+  const stacked = await page.locator('.course-head').evaluate((el) => {
+    const back = el.querySelector('[data-testid="back"]')
+    const title = el.querySelector('[data-testid="course-title"]')
+    if (!back || !title) return { column: false, clear: false }
+    const backBox = back.getBoundingClientRect()
+    const titleBox = title.getBoundingClientRect()
+    return { column: getComputedStyle(el).flexDirection === 'column', clear: backBox.bottom <= titleBox.top + 1 }
+  })
+  expect(stacked).toEqual({ column: true, clear: true })
+  await page.goto('/p/parenting/courses')
+  await page.getByTestId('course-card').filter({ hasText: 'Working with your Child' }).click()
+  await expect(page.getByTestId('course-card')).toHaveCount(0)
+  await expect(page.getByTestId('buffet-talk').first()).not.toContainText('Length not known yet')
+  const longTitle = await page.locator('.course-head').evaluate((el) => {
+    const back = el.querySelector('[data-testid="back"]')!.getBoundingClientRect()
+    const title = el.querySelector('[data-testid="course-title"]')!.getBoundingClientRect()
+    return back.bottom <= title.top + 1
+  })
+  expect(longTitle).toBe(true)
+  await page.goto(overview)
+  await page.getByTestId('start-part').click()
+  await expect(page.getByTestId('course')).toBeVisible()
+  await expect(page.getByTestId('vimeo-player')).toBeVisible()
+  await expect(page.getByTestId('vimeo-player')).toHaveAttribute('src', /player\.vimeo\.com\/video\/1239173362\?.*playsinline=1/)
+  await expect(page.getByTestId('vimeo-player')).toHaveAttribute('referrerpolicy', 'strict-origin-when-cross-origin')
+  const transport = await page.locator('[data-testid="player"] .j-board.course-board').evaluate((el) => {
+    const cs = getComputedStyle(el)
+    const time = el.querySelector('.time-read')
+    const timeCs = time ? getComputedStyle(time) : null
+    return { board: cs.backgroundColor, time: timeCs?.color || '', label: (time?.textContent || '').trim() }
+  })
+  expect(transport.board).toBe('rgb(243, 244, 246)')
+  expect(transport.time).not.toBe('rgb(255, 255, 255)')
+  expect(transport.label.length).toBeGreaterThan(0)
+  await expect(page.getByTestId('part-label')).toHaveText(/^1\. /)
+  await expect(page.getByTestId('part-link').first().locator('.grow')).toContainText(/^1\. /)
+  const firstThumb = page.getByTestId('part-link').first().locator('.thumb')
+  if (await firstThumb.locator('.thumb-title').count()) await expect(firstThumb.locator('.thumb-title')).toContainText('Film 1')
+  else await expect(firstThumb.locator('img')).toBeVisible()
+  await expect(page.getByTestId('sequence-question')).toContainText('further guidance')
+  const progressLine = await page.getByTestId('sequence-progress-line').innerText()
+  await expect(page.getByTestId('fruit-count')).toHaveText(progressLine)
+  expect(progressLine).toMatch(/of 2 films/)
+  await page.getByTestId('sequence-question').scrollIntoViewIfNeeded()
+  await shot(page, 'hady-question-phone')
+  await expect(page.getByTestId('kinetic-clip')).toHaveCount(0)
+  await expect(page.getByTestId('video-coming')).toHaveCount(0)
+  await expect(page.getByTestId('up-next')).toBeVisible()
+  await expect(page.getByTestId('garden-next')).toContainText('Film 2 · Next')
+  await expect(page.getByTestId('course-garden')).toBeVisible()
+  await expect(page.getByTestId('tab-home')).toBeVisible()
+  await expect(page.getByTestId('tab-lanes')).toHaveCount(0)
+  await expect(page.getByTestId('tab-week')).toBeVisible()
+  await expect(page.getByTestId('tab-garden')).toBeVisible()
+  await expect(page.getByTestId('tab-me')).toBeVisible()
+  await expect(page.locator('[data-testid="level-minutes"]')).toHaveCount(0)
+  await expect(page.locator('body')).not.toContainText(/appetiser|appetizer/i)
+  await shot(page, 'sequence-video')
+
+  const part = new URL(page.url()).searchParams.get('part')
+  expect(part).toBeTruthy()
+  const watch = await page.request.post('/api/hearts', {
+    form: { action: 'watch', lesson: part || '', seconds: '30', at: '42' },
+    headers: { accept: 'application/json' },
+  })
+  expect(watch.ok()).toBeTruthy()
+  await page.reload()
+  await expect(page.getByTestId('play-start')).toHaveAttribute('data-at', '42')
+
+  await page.goto(overview)
+  await page.getByTestId('buffet-talk').nth(1).click()
+  await expect(page.getByTestId('home')).toBeVisible()
+  await expect(page.getByTestId('error')).toContainText('Watch the previous one first.')
+})
+
+test('admin can paste, retitle, reorder and export', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/settings')
+  await expect(page.getByTestId('shell-look')).toHaveValue('modern')
+  await expect(page.getByTestId('font-pair')).toHaveValue('system')
+  await expect(page.getByTestId('course-home')).toHaveValue('cards')
+  await expect(page.getByTestId('accent-colour')).toHaveValue(/#2563eb/i)
+  await page.getByTestId('save-settings').click()
+  await expect(page.getByTestId('notice')).toContainText('Portal settings saved')
+  await page.goto('/p/parenting/admin/sequence')
+  await expect(page.getByTestId('sequence-desk')).toBeVisible()
+  await expect(page.getByTestId('film-title').first()).toBeVisible()
+  const before = await page.getByTestId('film-title').first().inputValue()
+  await page.getByTestId('move-up').nth(1).click()
+  await page.getByTestId('film-title').first().fill('Example film, moved up')
+  await page.getByTestId('sequence-save-order').click()
+  await expect(page.getByTestId('notice')).toContainText('Order saved')
+  await expect(page.getByTestId('film-title').first()).toHaveValue('Example film, moved up')
+  expect(before).not.toBe('Example film, moved up')
+
+  await page.getByTestId('sequence-paste').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ')
+  await page.getByTestId('sequence-import').click()
+  await expect(page.getByTestId('notice')).toContainText(/Added 1 film/)
+  await expect(page.getByTestId('film-title')).toHaveCount(3)
+
+  const csv = 'title,url\nA short csv film,https://www.youtube.com/watch?v=jNQXAC9IVRw\n'
+  await page.getByTestId('sequence-sheet').setInputFiles({ name: 'films.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
+  await page.getByTestId('sequence-paste').fill('')
+  await page.getByTestId('sequence-import').click()
+  await expect(page.getByTestId('notice')).toContainText(/Added 1 film/)
+  await expect(page.getByTestId('film-title')).toHaveCount(4)
+  await shot(page, 'sequence-admin')
+
+  const response = await page.request.get('/api/hearts/export-app?portal=parenting')
+  expect(response.ok()).toBeTruthy()
+  expect(response.headers()['content-type']).toContain('zip')
+  const body = Buffer.from(await response.body())
+  expect(body.readUInt32LE(0)).toBe(0x04034b50)
+  const text = body.toString('utf8')
+  expect(text).toContain('README.md')
+  expect(text).toContain('Open index.html')
+  expect(text).not.toMatch(/portal-learner|password|api[_-]?key/i)
+
+  await page.goto('/p/parenting/admin/features')
+  await expect(page.getByTestId('sequence-features')).toBeVisible()
+  await expect(page.getByTestId('feature-kinetic')).toBeChecked()
+  await expect(page.getByTestId('feature-garden')).toBeChecked()
+  await expect(page.getByText('Progress', { exact: true })).toBeVisible()
+  await expect(page.getByTestId('feature-playback')).toContainText('Watch in order')
+  await expect(page.locator('body')).not.toContainText(/\bGarden\b|appetiser|appetizer|jibril|hadith|ghunya|masjid|mosque/i)
+  await shot(page, 'sequence-features')
+
+  await page.goto('/p/parenting/admin/library')
+  await expect(page.getByTestId('sequence-features')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/main HEARTS library|Hadith|Jibril|Ghunya/i)
+
+  await page.goto('/p/parenting/admin')
+  await expect(page.getByTestId('sequence-overview')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/Maryam|Jibril|Ghunya|mosque|linked from the library/i)
+
+  await page.goto('/p/parenting/admin/teach')
+  await expect(page.getByTestId('sequence-learners')).toBeVisible()
+  await expect(page.locator('body')).not.toContainText(/Maryam|mosque|Jibril|Ghunya/i)
+})
+
+test('uploading the course sheet again updates films in place', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'parenting-admin@hearts.test', 'portal-admin', '/p/parenting/admin/sequence')
+  const csv = [
+    'order,module,title,public_title,vimeo_id,vimeo_link,final_video_drive,transcript,callouts',
+    '1,Welcome,1) Internal,Public one,496862893,https://vimeo.com/496862893,,,"[12 freetype] What is one thing you noticed?"',
+    '2,Welcome,2) Missing,Public two,,,,,"[end freetype] What would you try?"',
+  ].join('\n')
+  await page.getByTestId('sequence-sheet').setInputFiles({ name: 'videos.csv', mimeType: 'text/csv', buffer: Buffer.from(csv) })
+  await page.getByTestId('sequence-paste').fill('')
+  await page.getByTestId('sequence-import').click()
+  await expect(page.getByTestId('notice')).toContainText('Updated Guiding Home Learning. 2 films.')
+  await expect(page.getByTestId('film-title')).toHaveCount(2)
+  await expect(page.getByTestId('film-title').first()).toHaveValue('Public one')
+
+  await page.goto('/p/parenting/courses')
+  await page.getByTestId('course-card').filter({ hasText: 'Welcome' }).first().click()
+  await expect(page.getByTestId('course-overview')).toBeVisible()
+  await expect(page.getByTestId('buffet-talk')).toHaveCount(2)
+  const secondFilm = page.getByTestId('buffet-talk').nth(1)
+  await expect(secondFilm).toContainText('Public two')
+  const first = new URL(page.url())
+  const part = await page.getByTestId('buffet-talk').first().getAttribute('href')
+  const lesson = new URL(part || '', first.origin).searchParams.get('part')
+  const done = await page.request.post('/api/hearts', {
+    form: { action: 'complete', lesson: lesson || '', seconds: '30', ended: 'yes', level: 'talk' },
+    headers: { accept: 'application/json' },
+  })
+  expect(done.ok()).toBeTruthy()
+  await secondFilm.click()
+  await expect(page.getByTestId('video-coming')).toBeVisible()
+  await expect(page.getByTestId('video-coming')).toContainText('This film is coming soon')
+  await expect(page.getByTestId('vimeo-player')).toHaveCount(0)
+  await expect(page.getByTestId('sequence-question')).toContainText('What would you try?')
+  await shot(page, 'sequence-coming')
+})
+
+test('an existing hearts portal still has the garden tab', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await signIn(page, 'elm-learner@hearts.test', 'portal-learner', '/p/east-london')
+  await expect(page.getByTestId('tab-garden')).toBeVisible()
+  await expect(page.getByTestId('tab-lanes')).toBeVisible()
+  await expect(page.getByTestId('tab-week')).toBeVisible()
+})

@@ -1,0 +1,102 @@
+.demo-stage-entry {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: calc(32px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+  font-family: var(--hh-font-system);
+}
+
+.demo-stage-entry-card {
+  width: min(640px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 18px;
+  text-align: center;
+}
+
+.demo-stage-dots {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: center;
+}
+
+.demo-stage-dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px var(--hh-accent-fill);
+}
+
+.demo-stage-kicker {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--hh-accent);
+}
+
+.demo-stage-entry h1 {
+  margin: 0;
+  font-family: var(--hh-font-display);
+  font-size: clamp(40px, 6vw, 64px);
+  font-weight: 600;
+  line-height: 0.95;
+  color: var(--hh-ink);
+}
+
+.demo-stage-entry-line {
+  margin: 0;
+  max-width: 38rem;
+  color: var(--hh-ink-2);
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+.demo-stage-entry form {
+  width: min(420px, 100%);
+}
+
+.demo-stage-entry-go {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  font: inherit;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.demo-stage-entry-go:hover { background: var(--hh-accent-deep); }
+.demo-stage-entry-go:focus-visible { outline: 3px solid var(--hh-ink); outline-offset: 3px; }
+
+.demo-stage-entry-form {
+  display: grid;
+  gap: 12px;
+  text-align: left;
+}
+
+.demo-stage-entry-form label {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--hh-ink);
+}
+
+html[data-theme] .demo-stage-entry .demo-stage-entry-form .field,
+.demo-stage-entry .demo-stage-entry-form .field {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+
+html[data-theme] .demo-stage-entry .demo-stage-entry-form .field::placeholder,
+.demo-stage-entry .demo-stage-entry-form .field::placeholder { color: var(--hh-muted); }

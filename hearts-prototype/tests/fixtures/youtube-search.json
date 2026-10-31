@@ -1,0 +1,32 @@
+[
+  {
+    "provider": "youtube",
+    "id": "ccccccccccc",
+    "title": "The light of the name",
+    "channel": "Mikaeel Smith",
+    "durationSeconds": 640,
+    "thumbnail": "https://i.ytimg.com/vi/ccccccccccc/hqdefault.jpg",
+    "captions": "yes",
+    "url": "https://www.youtube.com/watch?v=ccccccccccc"
+  },
+  {
+    "provider": "youtube",
+    "id": "ddddddddddd",
+    "title": "A short clip",
+    "channel": "Other",
+    "durationSeconds": 20,
+    "thumbnail": null,
+    "captions": "no",
+    "url": "https://www.youtube.com/watch?v=ddddddddddd"
+  },
+  {
+    "provider": "youtube",
+    "id": "eeeeeeeeeee",
+    "title": "A long sitting",
+    "channel": "Other",
+    "durationSeconds": 5000,
+    "thumbnail": null,
+    "captions": "unknown",
+    "url": "https://www.youtube.com/watch?v=eeeeeeeeeee"
+  }
+]

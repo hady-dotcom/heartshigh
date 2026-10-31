@@ -1,0 +1,668 @@
+{
+  "version": 1,
+  "youtubeId": "9gwe-HMwZv0",
+  "start": 1005.2,
+  "end": 1028.9,
+  "requestedStart": 1005,
+  "requestedEnd": 1030,
+  "segments": [
+    {
+      "start": 1005.2,
+      "end": 1028.9,
+      "mode": "D",
+      "confidence": 0.876,
+      "focus": {
+        "x": 0.28,
+        "y": 0.38
+      },
+      "crop": {
+        "x": 0.12179687500000003,
+        "y": 0,
+        "w": 0.31640625,
+        "h": 1
+      }
+    }
+  ],
+  "sentences": [
+    {
+      "text": "Also, like the idea of: where do you derive your ʿizzah from?",
+      "s": 1005.2,
+      "e": 1009.4,
+      "key": "ʿizzah",
+      "words": [
+        {
+          "w": "Also,",
+          "t": 1005.2,
+          "key": false
+        },
+        {
+          "w": "like",
+          "t": 1005.55,
+          "key": false
+        },
+        {
+          "w": "the",
+          "t": 1005.9,
+          "key": false
+        },
+        {
+          "w": "idea",
+          "t": 1006.25,
+          "key": false
+        },
+        {
+          "w": "of:",
+          "t": 1006.6,
+          "key": false
+        },
+        {
+          "w": "where",
+          "t": 1006.95,
+          "key": false
+        },
+        {
+          "w": "do",
+          "t": 1007.3,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 1007.65,
+          "key": false
+        },
+        {
+          "w": "derive",
+          "t": 1008,
+          "key": false
+        },
+        {
+          "w": "your",
+          "t": 1008.35,
+          "key": false
+        },
+        {
+          "w": "ʿizzah",
+          "t": 1008.7,
+          "key": true
+        },
+        {
+          "w": "from?",
+          "t": 1009.05,
+          "key": false
+        }
+      ]
+    },
+    {
+      "text": "Where do you derive your honour from?",
+      "s": 1009.4,
+      "e": 1012.1,
+      "key": "honour",
+      "words": [
+        {
+          "w": "Where",
+          "t": 1009.4,
+          "key": false
+        },
+        {
+          "w": "do",
+          "t": 1009.786,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 1010.171,
+          "key": false
+        },
+        {
+          "w": "derive",
+          "t": 1010.557,
+          "key": false
+        },
+        {
+          "w": "your",
+          "t": 1010.943,
+          "key": false
+        },
+        {
+          "w": "honour",
+          "t": 1011.329,
+          "key": true
+        },
+        {
+          "w": "from?",
+          "t": 1011.714,
+          "key": false
+        }
+      ]
+    },
+    {
+      "text": "Your dignity, your sense of worth?",
+      "s": 1012.1,
+      "e": 1015.2,
+      "key": "worth",
+      "words": [
+        {
+          "w": "Your",
+          "t": 1012.1,
+          "key": false
+        },
+        {
+          "w": "dignity,",
+          "t": 1012.617,
+          "key": false
+        },
+        {
+          "w": "your",
+          "t": 1013.133,
+          "key": false
+        },
+        {
+          "w": "sense",
+          "t": 1013.65,
+          "key": false
+        },
+        {
+          "w": "of",
+          "t": 1014.167,
+          "key": false
+        },
+        {
+          "w": "worth?",
+          "t": 1014.683,
+          "key": true
+        }
+      ]
+    },
+    {
+      "text": "Like, when someone tells you you're crazy for believing in this, you know, like, you're delusional, basically.",
+      "s": 1015.2,
+      "e": 1022,
+      "key": "delusional",
+      "words": [
+        {
+          "w": "Like,",
+          "t": 1015.2,
+          "key": false
+        },
+        {
+          "w": "when",
+          "t": 1015.6,
+          "key": false
+        },
+        {
+          "w": "someone",
+          "t": 1016,
+          "key": false
+        },
+        {
+          "w": "tells",
+          "t": 1016.4,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 1016.8,
+          "key": false
+        },
+        {
+          "w": "you're",
+          "t": 1017.2,
+          "key": false
+        },
+        {
+          "w": "crazy",
+          "t": 1017.6,
+          "key": false
+        },
+        {
+          "w": "for",
+          "t": 1018,
+          "key": false
+        },
+        {
+          "w": "believing",
+          "t": 1018.4,
+          "key": false
+        },
+        {
+          "w": "in",
+          "t": 1018.8,
+          "key": false
+        },
+        {
+          "w": "this,",
+          "t": 1019.2,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 1019.6,
+          "key": false
+        },
+        {
+          "w": "know,",
+          "t": 1020,
+          "key": false
+        },
+        {
+          "w": "like,",
+          "t": 1020.4,
+          "key": false
+        },
+        {
+          "w": "you're",
+          "t": 1020.8,
+          "key": false
+        },
+        {
+          "w": "delusional,",
+          "t": 1021.2,
+          "key": true
+        },
+        {
+          "w": "basically.",
+          "t": 1021.6,
+          "key": false
+        }
+      ]
+    },
+    {
+      "text": "And they seem to be winning as well.",
+      "s": 1022,
+      "e": 1024.6,
+      "key": "winning",
+      "words": [
+        {
+          "w": "And",
+          "t": 1022,
+          "key": false
+        },
+        {
+          "w": "they",
+          "t": 1022.325,
+          "key": false
+        },
+        {
+          "w": "seem",
+          "t": 1022.65,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 1022.975,
+          "key": false
+        },
+        {
+          "w": "be",
+          "t": 1023.3,
+          "key": false
+        },
+        {
+          "w": "winning",
+          "t": 1023.625,
+          "key": true
+        },
+        {
+          "w": "as",
+          "t": 1023.95,
+          "key": false
+        },
+        {
+          "w": "well.",
+          "t": 1024.275,
+          "key": false
+        }
+      ]
+    },
+    {
+      "text": "They seem to be overcoming you and overpowering you.",
+      "s": 1024.6,
+      "e": 1028.9,
+      "key": "overpowering",
+      "words": [
+        {
+          "w": "They",
+          "t": 1024.6,
+          "key": false
+        },
+        {
+          "w": "seem",
+          "t": 1025.078,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 1025.556,
+          "key": false
+        },
+        {
+          "w": "be",
+          "t": 1026.033,
+          "key": false
+        },
+        {
+          "w": "overcoming",
+          "t": 1026.511,
+          "key": true
+        },
+        {
+          "w": "you",
+          "t": 1026.989,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 1027.467,
+          "key": false
+        },
+        {
+          "w": "overpowering",
+          "t": 1027.944,
+          "key": true
+        },
+        {
+          "w": "you.",
+          "t": 1028.422,
+          "key": false
+        }
+      ]
+    }
+  ],
+  "words": [
+    {
+      "w": "Also,",
+      "t": 1005.2,
+      "key": false
+    },
+    {
+      "w": "like",
+      "t": 1005.55,
+      "key": false
+    },
+    {
+      "w": "the",
+      "t": 1005.9,
+      "key": false
+    },
+    {
+      "w": "idea",
+      "t": 1006.25,
+      "key": false
+    },
+    {
+      "w": "of:",
+      "t": 1006.6,
+      "key": false
+    },
+    {
+      "w": "where",
+      "t": 1006.95,
+      "key": false
+    },
+    {
+      "w": "do",
+      "t": 1007.3,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 1007.65,
+      "key": false
+    },
+    {
+      "w": "derive",
+      "t": 1008,
+      "key": false
+    },
+    {
+      "w": "your",
+      "t": 1008.35,
+      "key": false
+    },
+    {
+      "w": "ʿizzah",
+      "t": 1008.7,
+      "key": true
+    },
+    {
+      "w": "from?",
+      "t": 1009.05,
+      "key": false
+    },
+    {
+      "w": "Where",
+      "t": 1009.4,
+      "key": false
+    },
+    {
+      "w": "do",
+      "t": 1009.786,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 1010.171,
+      "key": false
+    },
+    {
+      "w": "derive",
+      "t": 1010.557,
+      "key": false
+    },
+    {
+      "w": "your",
+      "t": 1010.943,
+      "key": false
+    },
+    {
+      "w": "honour",
+      "t": 1011.329,
+      "key": true
+    },
+    {
+      "w": "from?",
+      "t": 1011.714,
+      "key": false
+    },
+    {
+      "w": "Your",
+      "t": 1012.1,
+      "key": false
+    },
+    {
+      "w": "dignity,",
+      "t": 1012.617,
+      "key": false
+    },
+    {
+      "w": "your",
+      "t": 1013.133,
+      "key": false
+    },
+    {
+      "w": "sense",
+      "t": 1013.65,
+      "key": false
+    },
+    {
+      "w": "of",
+      "t": 1014.167,
+      "key": false
+    },
+    {
+      "w": "worth?",
+      "t": 1014.683,
+      "key": true
+    },
+    {
+      "w": "Like,",
+      "t": 1015.2,
+      "key": false
+    },
+    {
+      "w": "when",
+      "t": 1015.6,
+      "key": false
+    },
+    {
+      "w": "someone",
+      "t": 1016,
+      "key": false
+    },
+    {
+      "w": "tells",
+      "t": 1016.4,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 1016.8,
+      "key": false
+    },
+    {
+      "w": "you're",
+      "t": 1017.2,
+      "key": false
+    },
+    {
+      "w": "crazy",
+      "t": 1017.6,
+      "key": false
+    },
+    {
+      "w": "for",
+      "t": 1018,
+      "key": false
+    },
+    {
+      "w": "believing",
+      "t": 1018.4,
+      "key": false
+    },
+    {
+      "w": "in",
+      "t": 1018.8,
+      "key": false
+    },
+    {
+      "w": "this,",
+      "t": 1019.2,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 1019.6,
+      "key": false
+    },
+    {
+      "w": "know,",
+      "t": 1020,
+      "key": false
+    },
+    {
+      "w": "like,",
+      "t": 1020.4,
+      "key": false
+    },
+    {
+      "w": "you're",
+      "t": 1020.8,
+      "key": false
+    },
+    {
+      "w": "delusional,",
+      "t": 1021.2,
+      "key": true
+    },
+    {
+      "w": "basically.",
+      "t": 1021.6,
+      "key": false
+    },
+    {
+      "w": "And",
+      "t": 1022,
+      "key": false
+    },
+    {
+      "w": "they",
+      "t": 1022.325,
+      "key": false
+    },
+    {
+      "w": "seem",
+      "t": 1022.65,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 1022.975,
+      "key": false
+    },
+    {
+      "w": "be",
+      "t": 1023.3,
+      "key": false
+    },
+    {
+      "w": "winning",
+      "t": 1023.625,
+      "key": true
+    },
+    {
+      "w": "as",
+      "t": 1023.95,
+      "key": false
+    },
+    {
+      "w": "well.",
+      "t": 1024.275,
+      "key": false
+    },
+    {
+      "w": "They",
+      "t": 1024.6,
+      "key": false
+    },
+    {
+      "w": "seem",
+      "t": 1025.078,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 1025.556,
+      "key": false
+    },
+    {
+      "w": "be",
+      "t": 1026.033,
+      "key": false
+    },
+    {
+      "w": "overcoming",
+      "t": 1026.511,
+      "key": true
+    },
+    {
+      "w": "you",
+      "t": 1026.989,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 1027.467,
+      "key": false
+    },
+    {
+      "w": "overpowering",
+      "t": 1027.944,
+      "key": true
+    },
+    {
+      "w": "you.",
+      "t": 1028.422,
+      "key": false
+    }
+  ]
+}

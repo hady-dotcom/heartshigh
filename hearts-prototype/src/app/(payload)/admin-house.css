@@ -1,0 +1,463 @@
+/*
+ * Payload data console, in the house look.
+ * Payload's own CSS lives in @layer payload-default. These rules are unlayered,
+ * so they win, including when the console is pinned to dark.
+ * Primary actions use the elevation-800 token, which Payload paints near-black.
+ * That token stays dark for type. Buttons are set to the house blue directly.
+ */
+
+html,
+html[data-theme='light'],
+html[data-theme='dark'] {
+  --theme-bg: #f2f2f7;
+  --theme-text: #111827;
+  --theme-input-bg: #ffffff;
+  --theme-overlay: rgba(17, 24, 39, 0.4);
+  --theme-elevation-0: #ffffff;
+  --theme-elevation-50: #f2f2f7;
+  --theme-elevation-100: #f3f4f6;
+  --theme-elevation-150: #e5e7eb;
+  --theme-elevation-200: #e5e7eb;
+  --theme-elevation-250: #e5e7eb;
+  --theme-elevation-300: #d1d5db;
+  --theme-elevation-800: #111827;
+  --theme-elevation-1000: #111827;
+  --theme-success-500: #2563eb;
+  --color-success-400: #3b82f6;
+  --color-success-500: #2563eb;
+  --color-success-600: #1d4ed8;
+  --color-blue-500: #2563eb;
+  --style-radius-s: 10px;
+  --style-radius-m: 16px;
+  --style-radius-l: 20px;
+  --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  color-scheme: light;
+  background: #f2f2f7;
+  color: #111827;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+html[data-theme='dark'] {
+  --theme-bg: #f2f2f7;
+  --theme-text: #111827;
+  --theme-input-bg: #ffffff;
+  color-scheme: light;
+}
+
+body,
+button,
+input,
+textarea,
+select {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+}
+
+/* Primary actions (Login, Save, Create) are the house blue, not Payload's black elevation. */
+html .btn.btn--style-primary:not(.btn--disabled) {
+  --bg-color: #2563eb;
+  --color: #ffffff;
+  --hover-bg: #1d4ed8;
+  --hover-color: #ffffff;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 12px;
+}
+
+html .btn.btn--style-primary:not(.btn--disabled):hover,
+html .btn.btn--style-primary:not(.btn--disabled):focus-visible {
+  background: #1d4ed8;
+  color: #ffffff;
+}
+
+html .btn.btn--style-secondary,
+html .btn.btn--style-pill {
+  border-radius: 12px;
+}
+
+html .card,
+html .collection-list__tables,
+html .table-wrap,
+html .list-controls,
+html .doc-controls,
+html .document-fields,
+html .render-fields,
+html .group-field,
+html .login__form {
+  background: #ffffff;
+  border-radius: 16px;
+}
+
+html .nav {
+  background: #ffffff;
+}
+
+html .nav__link.active,
+html .nav a.nav__link:hover {
+  color: #2563eb;
+}
+
+html .nav__link-indicator {
+  background: #2563eb;
+}
+
+html a:not(.btn) {
+  color: #2563eb;
+}
+
+html input,
+html textarea,
+html select,
+html .rs__control {
+  background: #ffffff;
+  color: #111827;
+  border-radius: 12px;
+}
+
+html ::selection {
+  background: #dbeafe;
+  color: #111827;
+}
+
+html body,
+html .template-default,
+html .app-header,
+html .nav,
+html button,
+html input,
+html textarea,
+html select,
+html h1,
+html h2,
+html p,
+html a,
+html td,
+html th,
+html label,
+html span,
+html li {
+  font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif !important;
+}
+
+html .app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background: rgba(242, 242, 247, 0.72);
+  backdrop-filter: blur(28px) saturate(1.8);
+  -webkit-backdrop-filter: blur(28px) saturate(1.8);
+  border-bottom: 1px solid rgba(60, 60, 67, 0.18);
+}
+
+html .template-default {
+  padding-top: 64px;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+html .template-default :is(h1, .list-header__title, .doc-header__title, .collection-list__header h1) {
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+html.hig-collapsed .template-default :is(h1, .list-header__title, .doc-header__title) {
+  position: fixed;
+  top: 14px;
+  left: 72px;
+  z-index: 41;
+  margin: 0;
+  font-size: 17px;
+  line-height: 22px;
+  max-width: 60vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+html .btn,
+html .app-header button,
+html .nav-toggler,
+html .hig-menu {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+html .nav__link {
+  min-height: 44px;
+}
+
+html .field-description,
+html .field-label,
+html .nav__label,
+html .list-controls__toggle,
+html .table a,
+html .row-label,
+html .paginator,
+html .paginator button,
+html .file-field__filename,
+html .upload-field,
+html .step-nav,
+html .step-nav a,
+html .monaco-editor .line-numbers {
+  color: #1c1c1e;
+}
+
+html .required,
+html .field-label .required {
+  color: #9f1239;
+}
+
+html .step-nav__home,
+html .app-header__account,
+html .step-nav a,
+html .step-nav button,
+html .app-header a,
+html .app-header button,
+html .list-controls button,
+html .list-controls a,
+html .paginator button,
+html .pill,
+html .relationship-add-new__add-button,
+html .sort-column__button,
+html .per-page__base-button,
+html .per-page button,
+html .checkbox-input__input {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+html .search-filter input,
+html .search-filter__input,
+html .field-type input:not([type='checkbox']):not([type='radio']):not([type='hidden']),
+html .field-type textarea,
+html .field-type select,
+html .per-page select {
+  min-height: 44px;
+}
+
+html .checkbox-input__input {
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+}
+
+html .doc-controls__label,
+html .doc-controls__title,
+html .upload__dragAndDropText,
+html .upload__dropzoneContent__orText,
+html .file-field__dragAndDropText,
+html .file-field__orText,
+html .file-field__filename,
+html .paginator__separator,
+html .paginator__page {
+  color: #1c1c1e;
+}
+
+html .btn:not(.btn--style-primary) .btn__label {
+  color: #1c1c1e;
+}
+
+html .btn.btn--style-primary,
+html .btn.btn--style-primary .btn__label,
+html .btn.btn--style-primary .btn__content,
+html .btn.btn--style-primary .btn__icon {
+  color: #ffffff !important;
+}
+
+html .monaco-editor .line-numbers,
+html .monaco-editor .line-numbers.active-line-number {
+  color: #1c1c1e !important;
+}
+
+html .table a,
+html td a,
+html .row-label,
+html .cell-id a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+html .hig-large-title {
+  margin: 12px 0 8px;
+  font-size: 34px;
+  line-height: 41px;
+  letter-spacing: -0.02em;
+  color: #111827;
+}
+
+html .hig-menu {
+  display: none;
+  align-items: center;
+  margin-left: 8px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 12px;
+  background: #2563eb;
+  color: #ffffff;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  html .hig-menu { display: inline-flex; }
+}
+
+html.hig-nav-open .template-default {
+  grid-template-columns: min(280px, 85vw) minmax(0, 1fr);
+}
+
+html .template-default__wrap {
+  min-width: 0;
+}
+
+html .tenantField__debug-pill { display: none; }
+
+html .render-fields,
+html .document-fields,
+html .gutter,
+html .collection-list {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+html a[href$="/insight-events/create"],
+html a[href$="/insight-sessions/create"],
+html a[href$="/experiment-events/create"],
+html a[href$="/experiment-assignments/create"],
+html a[href$="/opening-answers/create"],
+html a[href$="/view-as-sessions/create"],
+html a[href$="/compass-attempts/create"],
+html a[href$="/compass-serves/create"],
+html a[href$="/compass-mixes/create"],
+html a[href$="/heart-contributions/create"],
+html a[href$="/audit-log/create"] {
+  display: none;
+}
+
+html .hig-readonly {
+  max-width: 36rem;
+  margin: 24px auto;
+  padding: 24px;
+  background: #ffffff;
+  border-radius: 16px;
+  color: #111827;
+}
+
+html .hig-readonly h1 {
+  margin: 0 0 8px;
+  font-size: 34px;
+  line-height: 41px;
+}
+
+html .hig-readonly p { color: #3a3a3c; }
+
+html .hig-readonly .btn {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 16px;
+  background: #2563eb;
+  color: #ffffff;
+  border-radius: 12px;
+  text-decoration: none;
+}
+
+/* Colour preview, dashboard only. Other console routes stay as they are. */
+html[data-look='apple'][data-look-surface='cms'],
+html[data-look='apple'][data-look-surface='cms'] body,
+html[data-look='apple'][data-look-surface='cms'] .template-default {
+  background:
+    radial-gradient(90% 42% at 0% 0%, #b6e7ff 0%, transparent 62%),
+    radial-gradient(80% 40% at 100% 0%, #ffd7a8 0%, transparent 58%),
+    radial-gradient(70% 36% at 60% 100%, #ead6ff 0%, transparent 64%),
+    #f2f2f7;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .template-default {
+  display: block;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav {
+  display: flex !important;
+  flex-flow: row wrap !important;
+  align-content: flex-start;
+  position: relative !important;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none;
+  inset: auto;
+  transform: none !important;
+  opacity: 1 !important;
+  background: transparent;
+  padding: 12px 12px 0;
+  gap: 4px 0;
+}
+
+html[data-look='apple'][data-look-surface='cms'] :is(.nav__scroll, .nav__wrap, .nav-group, .nav-group__content, .rah-static) {
+  display: contents !important;
+}
+
+html[data-look='apple'][data-look-surface='cms'] :is(.nav__header, .nav__controls, .nav-group__toggle, .nav-group__indicator) {
+  display: none !important;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .template-default__wrap {
+  width: 100%;
+  max-width: 100%;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav-group {
+  margin: 0 0 8px;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  width: 84px;
+  min-height: 44px;
+  margin: 0 8px 8px 0;
+  padding: 4px;
+  color: #111827;
+  text-align: center;
+  vertical-align: top;
+  background: transparent;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link::before {
+  content: '';
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background-color: var(--ico, #0070eb);
+  background-image: var(--mark);
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 22px;
+  flex: none;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .nav__link .nav__link-label,
+html[data-look='apple'][data-look-surface='cms'] .nav__link span {
+  color: #111827;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .dashboard,
+html[data-look='apple'][data-look-surface='cms'] .modular-dashboard,
+html[data-look='apple'][data-look-surface='cms'] .widget {
+  background: #ffffff;
+  border-radius: 20px;
+  color: #111827;
+}
+
+html[data-look='apple'][data-look-surface='cms'] .hig-large-title {
+  color: #111827;
+}

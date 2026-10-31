@@ -1,0 +1,38 @@
+.btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--hh-paper);
+  border: 1px solid var(--line, #8A6D32);
+  color: var(--hh-accent);
+  font: 750 20px/1 var(--sans, inherit);
+  cursor: pointer;
+}
+.btn:hover { border-color: var(--gold, var(--hh-accent)); }
+.back {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 59, 58, 0.28);
+  display: grid;
+  place-items: center;
+  z-index: 40;
+  padding: 24px;
+}
+.card {
+  width: min(520px, 100%);
+  background: var(--hh-paper);
+  border: 1.5px solid var(--hh-accent-deep);
+  border-radius: 18px;
+  padding: 22px 24px 20px;
+  box-shadow: 0 24px 60px rgba(255, 255, 255, 0.45);
+  color: var(--hh-ink);
+}
+.card h2 {
+  margin: 0 0 12px;
+  font-family: var(--serif, Georgia, serif);
+  font-size: 26px;
+  color: var(--hh-accent);
+}
+.body { display: grid; gap: 10px; margin-bottom: 16px; }
+.body p { margin: 0; font-size: 15px; line-height: 1.5; color: var(--hh-ink); }
+.body b { color: var(--hh-accent); }

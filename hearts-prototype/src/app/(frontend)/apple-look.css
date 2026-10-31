@@ -1,0 +1,1150 @@
+/*
+ * Learner look for every portal. The desk and CMS never set data-look.
+ * ?look=off removes it. Colours come from tokens.css. Artwork sets --art.
+ */
+
+html[data-look='apple'] .app-stage {
+  --look-wash: none;
+}
+
+html[data-look='apple'][data-look-surface='course'] .app-stage {
+  --look-wash: linear-gradient(180deg, var(--page, var(--hh-paper)) 0%, var(--hh-paper) 42%);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern:not(:has(.journey-frame)) {
+  background-color: var(--hh-paper);
+  background-image: var(--look-wash);
+  background-repeat: no-repeat;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern:not(:has(.journey-frame)) {
+  background-color: var(--hh-canvas);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern :is(.card, .list-link, .guest-catalog, .note, .prefs) {
+  width: 100%;
+  max-width: none;
+  margin-left: 0;
+  margin-right: 0;
+  margin-bottom: var(--hh-space-2);
+  box-sizing: border-box;
+  border-radius: var(--hh-radius-group);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='home'], [data-look-surface='week'], [data-look-surface='me']) .app-stage.shell-modern :is(.app-scroll, .guest-week-form) > .eyebrow {
+  margin: var(--hh-space-4) 0 var(--hh-space-2);
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-footnote) !important;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .guest-film-copy {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--hh-space-1);
+  min-width: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .guest-film-copy small {
+  display: block;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-footnote);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern:not(:has(.journey-frame)) :is(.app, .app-scroll) {
+  background-color: transparent;
+  background-image: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.pill.gold, .pill.ink, .pill.teal) {
+  border-radius: var(--hh-radius-pill);
+  background: var(--btn, var(--portal-accent, var(--hh-accent)));
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar {
+  background: color-mix(in srgb, var(--hh-paper) 62%, transparent);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern:has(.glass-bar) .app {
+  padding-top: calc(var(--hh-header) + var(--hh-space-3));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .app-search {
+  position: absolute;
+  top: calc(var(--hh-space-1) + env(safe-area-inset-top, 0px));
+  right: calc(var(--hh-space-3) + var(--hh-tap-min) + var(--hh-space-2));
+  z-index: 5;
+  width: var(--hh-tap-min);
+  min-height: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  padding: 0;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .app-search.is-open {
+  left: var(--hh-space-3);
+  right: var(--hh-space-3);
+  width: auto;
+  height: auto;
+  padding: 0 var(--hh-space-3);
+  border-radius: var(--hh-radius-control);
+  background: color-mix(in srgb, var(--hh-paper) 94%, transparent);
+  border: var(--hh-line-width) solid var(--hh-line);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search:not(.is-open) > svg,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search:not(.is-open) > input {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .search-open {
+  display: grid;
+  place-items: center;
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  margin: 0;
+  padding: 0;
+  border-radius: 50%;
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 72%, transparent);
+  background: color-mix(in srgb, var(--hh-paper) 58%, transparent);
+  color: var(--hh-ink);
+  box-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 14%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .app-search.is-open .search-open {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .page-help {
+  position: static;
+  top: auto;
+  right: auto;
+  left: auto;
+  width: auto;
+  min-height: 0;
+  padding: 0;
+  z-index: 2;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .glass-bar .page-help-btn,
+html[data-look='apple'][data-theme] .app-stage.shell-modern[data-portal-brand] .page-help-btn {
+  position: relative;
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  border-radius: 50%;
+  color: transparent;
+  background: color-mix(in srgb, var(--hh-paper) 58%, transparent);
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 72%, transparent);
+  box-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 14%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .page-help-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: var(--hh-space-4);
+  height: var(--hh-space-4);
+  background: var(--hh-ink);
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M9.6 9.4a2.4 2.4 0 1 1 3.3 2.2c-.8.4-1.3.9-1.3 1.8'/%3E%3Cpath d='M12 16.8h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.7' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='8.5'/%3E%3Cpath d='M9.6 9.4a2.4 2.4 0 1 1 3.3 2.2c-.8.4-1.3.9-1.3 1.8'/%3E%3Cpath d='M12 16.8h.01'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) .cover-line {
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
+  font-size: var(--hh-font-size-small);
+  font-weight: 600;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .film-shelf .cover-line {
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-small);
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-panel {
+  display: grid;
+  gap: var(--hh-space-3);
+  margin: 0 0 var(--hh-space-3);
+  padding: var(--hh-space-4);
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-paper);
+  box-shadow: var(--hh-shadow-card);
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-panel .progress-ring {
+  box-shadow: inset 0 0 0 var(--hh-space-1) color-mix(in srgb, var(--btn, var(--hh-accent)) 28%, var(--hh-paper));
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-3);
+}
+
+html[data-look='apple'][data-look-surface='course'] .play-meter .eyebrow,
+html[data-look='apple'][data-look-surface='course'] .play-count,
+html[data-look='apple'][data-look-surface='course'] .play-panel [data-testid='sequence-progress'] {
+  color: var(--hh-ink);
+  margin: 0;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .play-panel :is(.pill.gold, [data-testid='start-part']) {
+  background: var(--btn, var(--hh-accent));
+  color: var(--hh-on-accent);
+  border-color: transparent;
+  border-radius: var(--hh-radius-pill);
+}
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .app-head h1,
+html[data-look='apple'][data-look-surface='course'] .app-head h1,
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .library-section > h2,
+html[data-look='apple'][data-look-surface='course'] .sequence-module > h2 {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  margin: 0 0 var(--hh-space-3);
+  padding: 0;
+  overflow: hidden;
+  border: none;
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-video);
+  box-shadow: 0 var(--hh-space-3) var(--hh-space-5) color-mix(in srgb, var(--art, var(--hh-ink)) 22%, transparent);
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) .thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .course-cards {
+  gap: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on)::after,
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72%;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(180deg, transparent 0%, transparent 30%, color-mix(in srgb, var(--hh-ink) 58%, transparent) 68%, color-mix(in srgb, var(--hh-ink) 90%, transparent) 100%);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row) .t,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .carry-on .carry-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--hh-space-1);
+  margin: 0;
+  padding: var(--hh-space-3);
+  background: transparent;
+  text-align: left;
+}
+
+html[data-look='apple'][data-theme] .cover-kicker {
+  margin: 0;
+  font-size: var(--hh-font-size-caption);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--hh-on-accent) 88%, transparent);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row, .carry-on) :is(b, h2, small, .muted, p, .eyebrow) {
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .continue-row) .t b,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .carry-on h2,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .course-top .app-head h1 {
+  font-size: var(--hh-font-size-title1) !important;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+html[data-look='apple'][data-look-surface='course'] .film-shelf {
+  display: flex;
+  gap: var(--hh-space-3);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding: 0 0 var(--hh-space-3);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row {
+  display: flex;
+  flex: 0 0 42%;
+  flex-direction: column;
+  gap: var(--hh-space-2);
+  margin: 0;
+  padding: 0;
+  scroll-snap-align: start;
+  background: transparent;
+  box-shadow: none;
+  color: transparent;
+  font-size: 0;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row .thumb {
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  height: auto;
+  border-radius: var(--hh-radius-control);
+  overflow: hidden;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row .t,
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row .t :is(b, small) {
+  position: static;
+  color: var(--hh-ink);
+  background: transparent;
+  font-size: var(--hh-font-size-small);
+  font-weight: 500;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .buffet-row .t b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .cover-line {
+  display: none;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .thumb {
+  position: relative;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.55);
+  transform-origin: var(--crop-x, 50%) var(--crop-y, 40%);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .thumb::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--hh-ink) 6%, transparent);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .film-shelf .duration-chip {
+  background: color-mix(in srgb, var(--btn, var(--hh-ink)) 10%, var(--hh-paper));
+  color: var(--btn, var(--hh-ink));
+  box-shadow: none;
+  font-weight: 600;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .list-link {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-3);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  box-shadow: var(--hh-shadow-card);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .list-link::before {
+  content: '';
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  flex: none;
+  border-radius: var(--hh-radius-control);
+  background-color: var(--btn, var(--hh-accent));
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.2c2.6-.8 5-.4 7.5.8 2.5-1.2 4.9-1.6 7.5-.8'/%3E%3Cpath d='M12 7v12'/%3E%3Cpath d='M4.5 6.2V17c2.6-.6 5-.2 7.5 1'/%3E%3Cpath d='M19.5 6.2V17c-2.6-.6-5-.2-7.5 1'/%3E%3C/svg%3E"), linear-gradient(145deg, color-mix(in srgb, var(--hh-paper) 24%, var(--btn, var(--hh-accent))), color-mix(in srgb, var(--btn, var(--hh-accent)) 72%, var(--hh-ink)));
+  background-repeat: no-repeat, no-repeat;
+  background-position: center, center;
+  background-size: var(--hh-space-4), cover;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .carry-on, .continue-row) .bar {
+  background: color-mix(in srgb, var(--art, var(--hh-accent)) 18%, var(--hh-paper));
+  height: var(--hh-space-2);
+  border-radius: var(--hh-radius-pill);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.course-card, .carry-on) .bar > i,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .progress-ring {
+  background: var(--btn, var(--hh-accent));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .progress-ring {
+  background: conic-gradient(var(--btn, var(--hh-accent)) var(--progress, 0%), var(--hh-paper) 0);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .duration-chip {
+  background: color-mix(in srgb, var(--art, var(--hh-accent)) 22%, var(--hh-paper));
+  color: var(--hh-ink);
+  box-shadow: inset 0 0 0 var(--hh-line-width) color-mix(in srgb, var(--art, var(--hh-accent)) 55%, var(--hh-paper));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .done-check {
+  background: color-mix(in srgb, var(--art, var(--hh-look-green)) 72%, var(--hh-ink));
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.library-section, .sequence-module) > h2::before {
+  content: '';
+  display: inline-block;
+  width: var(--hh-space-4);
+  height: var(--hh-space-4);
+  margin-right: var(--hh-space-2);
+  border-radius: var(--hh-radius-control);
+  vertical-align: calc(var(--hh-space-1) * -1);
+  background: var(--btn, var(--hh-accent));
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab .tab-icon,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  background: transparent;
+  color: var(--hh-ink-2);
+  stroke: currentColor;
+  filter: none;
+  border-radius: 0;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-home'] { --ico: var(--hh-look-blue); }
+html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-week'] { --ico: var(--hh-look-orange); }
+html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-garden'] { --ico: var(--hh-look-green); }
+html[data-look='apple'][data-theme] .app-stage.shell-modern [data-testid='tab-me'] { --ico: var(--hh-look-purple); }
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top {
+  display: block;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  min-height: 0;
+  margin: var(--hh-space-2) 0 var(--hh-space-3);
+  border-radius: var(--hh-radius-card);
+  overflow: hidden;
+  box-shadow: 0 var(--hh-space-3) var(--hh-space-5) color-mix(in srgb, var(--art, var(--hh-ink)) 20%, transparent);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-hero[data-look-only] {
+  display: block;
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  min-height: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-hero-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  aspect-ratio: auto;
+  object-fit: cover;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='course'] .app-stage.shell-modern .course-top .app-head {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  align-items: flex-start;
+  margin: 0;
+  padding: var(--hh-space-4);
+  background: transparent;
+  text-align: left;
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-top .cover-line {
+  margin: 0;
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-hero[data-look-only] {
+  display: block;
+  grid-area: 1 / 1;
+  margin: 0;
+  min-height: 420px;
+  border-radius: var(--hh-radius-card);
+  overflow: hidden;
+  background: var(--hh-video);
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-hero-still {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-top .app-head {
+  grid-area: 1 / 1;
+  z-index: 1;
+  align-self: end;
+  margin: 0;
+  padding: var(--hh-space-4);
+  background: transparent;
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-top .app-head :is(h1, a, .back) {
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-look-surface='course'] .course-top .app-head h1 {
+  font-size: var(--hh-font-size-display);
+  letter-spacing: -0.03em;
+}
+
+html[data-look='apple'][data-look-surface='player'] .course-body {
+  background: color-mix(in srgb, var(--hh-paper) 92%, var(--art, var(--hh-look-blue)));
+  color: var(--hh-ink);
+  border-radius: var(--hh-radius-card) var(--hh-radius-card) 0 0;
+}
+
+html[data-look='apple'][data-look-surface='player'] :is(.fill, .j-hairline i, .track + .fill) {
+  background: color-mix(in srgb, var(--art, var(--hh-accent)) 68%, var(--hh-ink));
+}
+
+html[data-look='apple'][data-look-surface='player'] .part-chip,
+html[data-look='apple'][data-look-surface='player'] .time-read {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk {
+  background:
+    radial-gradient(90% 42% at 0% 0%, color-mix(in srgb, var(--hh-look-sky) 70%, var(--hh-paper)) 0%, transparent 62%),
+    radial-gradient(76% 38% at 100% 0%, color-mix(in srgb, var(--hh-look-lilac) 48%, var(--hh-paper)) 0%, transparent 58%),
+    radial-gradient(70% 32% at 40% 100%, color-mix(in srgb, var(--hh-look-peach) 36%, var(--hh-paper)) 0%, transparent 64%),
+    var(--hh-canvas);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .side {
+  background: color-mix(in srgb, var(--hh-paper) 86%, var(--hh-look-sky));
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .side :is(a.nav, .group, .side-brand, .side-brand b, .who, .who b) {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .side a.nav.on {
+  background: color-mix(in srgb, var(--ico, var(--hh-look-blue)) 16%, var(--hh-paper));
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .side a.nav svg {
+  width: var(--hh-space-5);
+  height: var(--hh-space-5);
+  padding: var(--hh-space-1);
+  box-sizing: border-box;
+  border-radius: var(--hh-radius-control);
+  background: var(--ico, var(--hh-look-blue));
+  color: var(--hh-on-accent);
+  stroke: var(--hh-on-accent);
+  opacity: 1;
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk tr[data-testid='portal-card'] {
+  background: color-mix(in srgb, var(--art, var(--hh-look-blue)) 10%, var(--hh-paper));
+  box-shadow: inset var(--hh-space-1) 0 0 var(--art, var(--hh-look-blue));
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .badge.teal {
+  background: var(--hh-look-green);
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .badge.rose {
+  background: var(--hh-look-red);
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-look-surface='master'] .desk .panel {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+}
+
+@media (max-width: 899px) {
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .desk-menu .side-nav-wrap {
+    display: block;
+    max-height: calc(var(--hh-space-5) + var(--hh-space-5) + var(--hh-space-2));
+    overflow: hidden;
+  }
+
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .side-nav {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: var(--hh-space-2);
+    max-height: calc(var(--hh-space-6) + var(--hh-space-4));
+  }
+
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .nav-group {
+    display: contents;
+  }
+
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .side-nav-more {
+    display: none;
+  }
+
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .nav-group > .group,
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .group-desc {
+    display: none;
+  }
+
+  html[data-look='apple'][data-look-surface='master'] .desk.desk-phone .side a.nav {
+    flex: 0 0 auto;
+    flex-direction: column;
+    width: calc(var(--hh-space-6) + var(--hh-space-4));
+    gap: var(--hh-space-1);
+    padding: var(--hh-space-1);
+    text-align: center;
+    font-size: var(--hh-font-size-caption);
+    line-height: 1.2;
+  }
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.tabbar, .tabbar.dark, .tabbar.evening) {
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  width: min(398px, calc(100% - var(--hh-space-5)));
+  bottom: max(var(--hh-space-2), env(safe-area-inset-bottom, 0px));
+  border-radius: var(--hh-radius-pill);
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 70%, transparent);
+  border-bottom: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 70%, transparent);
+  padding: var(--hh-space-1) var(--hh-space-2);
+  background: color-mix(in srgb, var(--hh-paper) 52%, transparent);
+  box-shadow: 0 var(--hh-space-2) var(--hh-space-4) color-mix(in srgb, var(--hh-ink) 16%, transparent), inset 0 1px 0 color-mix(in srgb, var(--hh-on-accent) 85%, transparent);
+  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tabbar::before {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab-book {
+  display: inline;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab-plant {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab {
+  min-height: var(--hh-tap-min);
+  gap: 1px;
+  padding: var(--hh-space-1) var(--hh-space-1) 0;
+  border-radius: var(--hh-radius-pill);
+  background: transparent;
+  color: var(--hh-ink-2);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 500;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern :is(.tab.on, .tabbar.dark .tab.on, .tabbar.evening .tab.on) {
+  background: color-mix(in srgb, var(--hh-ink) 7%, var(--hh-paper));
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab .tab-icon,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon,
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on[data-testid='tab-garden'] .tab-icon {
+  width: var(--hh-space-4);
+  height: var(--hh-space-4);
+  padding: 0;
+  background: transparent;
+  color: var(--hh-ink-2);
+  stroke: currentColor;
+  stroke-width: 1.6;
+  filter: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-icon {
+  color: var(--hh-ink);
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-line {
+  display: none;
+}
+
+html[data-look='apple'][data-theme] .app-stage.shell-modern .tab.on .tab-solid {
+  display: inline;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-title {
+  margin: 0 0 var(--hh-space-3);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero {
+  position: relative;
+  margin: 0 calc(var(--hh-space-4) * -1) var(--hh-space-4);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-row {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-slide {
+  position: relative;
+  flex: 0 0 100%;
+  height: 60dvh;
+  scroll-snap-align: start;
+  overflow: hidden;
+  background: var(--hh-video);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-slide img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-hero-slide::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 45%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 70%, transparent) 100%);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-hero-copy h2 {
+  margin: 0;
+  color: var(--hh-on-accent) !important;
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-display) !important;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hh-space-4);
+  padding: 0 var(--hh-space-2);
+  border-radius: var(--hh-radius-pill);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots {
+  position: absolute;
+  right: var(--hh-space-4);
+  bottom: var(--hh-space-3);
+  z-index: 2;
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--hh-space-1);
+  margin: 0;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots i {
+  background: color-mix(in srgb, var(--hh-on-accent) 45%, transparent);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-dots i[data-on='yes'] {
+  background: var(--hh-on-accent);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-workbook {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster::after {
+  height: 58%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 62%, transparent) 42%, color-mix(in srgb, var(--hh-ink) 88%, transparent) 100%);
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy {
+  top: auto;
+  bottom: var(--hh-space-2);
+  display: block;
+  max-height: 34%;
+  overflow: hidden;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy b {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  width: 100%;
+  overflow: hidden;
+}
+
+html[data-look='apple'][data-theme]:is([data-look-surface='courses'], [data-look-surface='week']) .app-stage.shell-modern .tv-poster-copy small {
+  display: block;
+  color: color-mix(in srgb, var(--hh-on-accent) 70%, transparent) !important;
+  font-size: var(--hh-font-size-caption) !important;
+  line-height: 1.2;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy {
+  position: absolute;
+  left: var(--hh-space-4);
+  right: var(--hh-space-4);
+  bottom: var(--hh-space-5);
+  z-index: 1;
+  display: grid;
+  justify-items: start;
+  gap: var(--hh-space-2);
+  color: var(--hh-on-accent);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy h2 {
+  margin: 0;
+  color: var(--hh-on-accent);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-display);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-copy p {
+  margin: 0;
+  color: color-mix(in srgb, var(--hh-on-accent) 86%, transparent);
+  font-size: var(--hh-font-size-body);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-pill {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--hh-space-5);
+  padding: 0 var(--hh-space-2);
+  border-radius: var(--hh-radius-pill);
+  background: color-mix(in srgb, var(--hh-paper) 18%, transparent);
+  color: var(--hh-on-accent);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-play {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--hh-tap-min);
+  padding: 0 var(--hh-space-5);
+  border-radius: var(--hh-radius-pill);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  font-weight: 650;
+  text-decoration: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-more {
+  display: grid;
+  place-items: center;
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hh-paper) 28%, transparent);
+  border: var(--hh-line-width) solid color-mix(in srgb, var(--hh-on-accent) 55%, transparent);
+  color: var(--hh-on-accent);
+  font-size: var(--hh-font-size-title);
+  text-decoration: none;
+  backdrop-filter: blur(var(--hh-glass-blur));
+  -webkit-backdrop-filter: blur(var(--hh-glass-blur));
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots {
+  display: flex;
+  justify-content: center;
+  gap: var(--hh-space-1);
+  margin-top: var(--hh-space-2);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots i {
+  width: var(--hh-space-1);
+  height: var(--hh-space-1);
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--hh-ink) 25%, transparent);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-dots i[data-on='yes'] {
+  background: var(--hh-ink);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook {
+  display: flex;
+  align-items: center;
+  gap: var(--hh-space-2);
+  width: max-content;
+  max-width: 100%;
+  margin: 0 0 var(--hh-space-4);
+  padding: var(--hh-space-2) var(--hh-space-3);
+  border-radius: var(--hh-radius-card);
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  box-shadow: var(--hh-shadow-card);
+  text-decoration: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook small {
+  display: block;
+  color: var(--hh-muted);
+  font-size: var(--hh-font-size-caption);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-workbook-mark {
+  width: var(--hh-tap-min);
+  height: var(--hh-tap-min);
+  flex: none;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4.5 6.2c2.6-.8 5-.4 7.5.8 2.5-1.2 4.9-1.6 7.5-.8'/%3E%3Cpath d='M12 7v12'/%3E%3Cpath d='M4.5 6.2V17c2.6-.6 5-.2 7.5 1'/%3E%3Cpath d='M19.5 6.2V17c-2.6-.6-5-.2-7.5 1'/%3E%3C/svg%3E") center / var(--hh-space-4) no-repeat;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf {
+  margin: 0 0 var(--hh-space-4);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf h2 {
+  margin: 0 0 var(--hh-space-2);
+  font-size: var(--hh-font-size-title);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-shelf h2 a {
+  color: var(--hh-ink);
+  text-decoration: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-row {
+  display: flex;
+  gap: var(--hh-space-2);
+  margin-right: calc(var(--hh-space-4) * -1);
+  padding-right: var(--hh-space-4);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster {
+  position: relative;
+  flex: 0 0 42%;
+  aspect-ratio: 2 / 3;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-video);
+  text-decoration: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster img,
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-3);
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: var(--hh-space-1);
+  text-align: center;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy b {
+  color: var(--hh-on-accent);
+  font-family: var(--hh-font-display);
+  font-size: var(--hh-font-size-h3);
+  font-weight: 800;
+  font-stretch: condensed;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+  text-shadow: 0 var(--hh-space-1) var(--hh-space-3) color-mix(in srgb, var(--hh-ink) 55%, transparent);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster-copy small {
+  color: color-mix(in srgb, var(--hh-on-accent) 82%, transparent);
+  font-size: var(--hh-font-size-caption);
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-poster::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 46%;
+  background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--hh-ink) 72%, transparent));
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch {
+  position: relative;
+  flex: 0 0 78%;
+  aspect-ratio: 16 / 9;
+  scroll-snap-align: start;
+  overflow: hidden;
+  border-radius: var(--hh-radius-control);
+  background: var(--hh-video);
+  color: var(--hh-on-accent);
+  text-decoration: none;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-bar {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-2);
+  height: var(--hh-space-1);
+  border-radius: var(--hh-radius-pill);
+  background: color-mix(in srgb, var(--hh-paper) 35%, transparent);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--hh-paper);
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-meta {
+  position: absolute;
+  left: var(--hh-space-2);
+  right: var(--hh-space-2);
+  bottom: var(--hh-space-3);
+  display: grid;
+}
+
+html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-watch-meta small {
+  color: color-mix(in srgb, var(--hh-on-accent) 80%, transparent);
+  font-size: var(--hh-font-size-caption);
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch {
+  display: block;
+  width: 100%;
+  flex: none;
+  margin: 0 0 var(--hh-space-4);
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 72%;
+  background: linear-gradient(180deg, transparent 0%, color-mix(in srgb, var(--hh-ink) 42%, transparent) 38%, color-mix(in srgb, var(--hh-ink) 88%, transparent) 100%);
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta,
+html[data-look='apple'][data-look-surface='week'] .tv-watch-meta {
+  z-index: 1;
+  bottom: calc(var(--hh-space-3) + var(--hh-space-2));
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta b {
+  color: var(--hh-on-accent) !important;
+  font-size: var(--hh-font-size-h3) !important;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta .tv-kicker {
+  color: color-mix(in srgb, var(--hh-on-accent) 80%, transparent) !important;
+  font-size: var(--hh-font-size-caption) !important;
+}
+
+html[data-look='apple'][data-theme][data-look-surface='week'] .app-stage.shell-modern .tv-watch-meta .tv-meta {
+  color: color-mix(in srgb, var(--hh-on-accent) 70%, transparent) !important;
+  font-size: var(--hh-font-size-caption) !important;
+}
+
+html[data-look='apple'][data-look-surface='week'] .tv-watch-bar {
+  z-index: 2;
+  bottom: var(--hh-space-2);
+  background: color-mix(in srgb, var(--hh-on-accent) 42%, transparent);
+}
