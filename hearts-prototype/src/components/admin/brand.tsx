@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useRef } from 'react'
+
 /** Admin wordmark and monogram. Text only, in the system font. No image files. */
 /** Inline styles only. A style tag inside the step nav is shown, because that bar sets every element to display:block. */
 
@@ -25,8 +29,14 @@ export function Logo() {
 }
 
 export function Icon() {
+  const ref = useRef<SVGSVGElement>(null)
+  useEffect(() => {
+    const home = ref.current?.closest('a')
+    if (home) home.href = '/admin/cms'
+  }, [])
   return (
     <svg
+      ref={ref}
       aria-label="Social Learning System"
       className="sls-icon graphic-icon"
       height="18"
