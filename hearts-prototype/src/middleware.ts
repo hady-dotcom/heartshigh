@@ -3,6 +3,44 @@ import { demoWriteBlocked } from '@/lib/parenting-demo'
 import { helperTokenFlash } from '@/lib/helper-token-flash'
 import { stageFlagRedirect, stageWriteBlocked } from '@/lib/stage-readonly'
 
+/** Role saved on the admin session cookie. Unverified: the desk still checks the account. */
+function tokenRole(token: string) {
+  const part = token.split('.')[1]
+  if (!part) return ''
+  try {
+    const padded = part.replace(/-/g, '+').replace(/_/g, '/') + '='.repeat((4 - (part.length % 4)) % 4)
+    const json = JSON.parse(atob(padded)) as { role?: unknown }
+    return typeof json.role === 'string' ? json.role : ''
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * Masters never land on Payload's collections list. /admin/cms is the custom desk.
+ * Collection edit pages and everyone else's sign-in stay where they are.
+ */
+function adminLanding(request: NextRequest) {
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null
+  const { pathname } = request.nextUrl
+  const dashboard = pathname === '/admin' || pathname === '/admin/'
+  const cms = pathname === '/admin/cms' || pathname === '/admin/cms/'
+  if (!dashboard && !cms) return null
+  const role = tokenRole(request.cookies.get('payload-token')?.value || '')
+  if (role !== 'master') {
+    if (!cms) return null
+    const back = new URL('/admin', request.url)
+    back.search = ''
+    return NextResponse.redirect(back)
+  }
+  if (dashboard) return NextResponse.redirect(new URL(`/admin/cms${request.nextUrl.search}`, request.url))
+  const headers = new Headers(request.headers)
+  const cookie = request.cookies.getAll().map((item) => `${item.name}=${item.value}`).join('; ')
+  if (cookie) headers.set('cookie', cookie)
+  headers.set('x-hearts-path', `${pathname}${request.nextUrl.search}`)
+  return NextResponse.rewrite(new URL(`/master${request.nextUrl.search}`, request.url), { request: { headers } })
+}
+
 // Payload's "create the first user" screen and endpoint. The first account comes only from `npm run bootstrap`
 // (or the seed on a development machine), so both are closed everywhere.
 const FIRST_USER_PATHS = [/^\/admin\/create-first-user\/?$/, /^\/api\/users\/first-register\/?$/]
@@ -36,6 +74,8 @@ export function middleware(request: NextRequest) {
     url.pathname = '/join'
     return NextResponse.redirect(url)
   }
+  const landing = adminLanding(request)
+  if (landing) return landing
   const headers = new Headers(request.headers)
   headers.set('x-hearts-path', `${pathname}${search}`)
   const lookParam = searchParams.get('look')
@@ -69,4 +109,4 @@ export function middleware(request: NextRequest) {
   return response
 }
 
-export const config = { matcher: ['/', '/demo', '/change-password', '/p/:path*', '/master', '/master/:path*', '/api/:path*', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
+export const config = { matcher: ['/', '/demo', '/change-password', '/p/:path*', '/master', '/master/:path*', '/api/:path*', '/admin', '/admin/', '/admin/cms', '/admin/cms/', '/admin/create-first-user', '/admin/create-first-user/', '/api/users/first-register', '/api/users/first-register/'] }
