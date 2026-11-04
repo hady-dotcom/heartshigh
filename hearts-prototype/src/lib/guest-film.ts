@@ -1,4 +1,5 @@
 import { vimeoPlayerSrc } from './vimeo'
+import { learnerEmbedSrc } from './yt'
 
 /** One film in the "Up next" row. */
 export type GuestNext = {
@@ -108,10 +109,6 @@ export function guestPlayerSrc(film: Pick<GuestFilm, 'vimeoId' | 'vimeoHash' | '
   const extra: Record<string, string> = { playsinline: '1', autopause: '0' }
   if (autoplay) extra.autoplay = '1'
   if (film.vimeoId) return vimeoPlayerSrc(film.vimeoId, film.vimeoHash, extra)
-  if (film.youtubeId) {
-    const params = new URLSearchParams({ playsinline: '1', rel: '0' })
-    if (autoplay) params.set('autoplay', '1')
-    return `https://www.youtube-nocookie.com/embed/${film.youtubeId}?${params.toString()}`
-  }
+  if (film.youtubeId) return learnerEmbedSrc(film.youtubeId, { autoplay: autoplay ? 1 : 0, rel: '0', playsinline: '1' })
   return ''
 }

@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
 
 type Hit = { kind: 'course' | 'film'; title: string; detail: string; href: string }
 
@@ -24,7 +23,6 @@ function remember(query: string) {
 }
 
 export function AppleSearch() {
-  const router = useRouter()
   const listId = useId()
   const box = useRef<HTMLDivElement>(null)
   const field = useRef<HTMLInputElement>(null)
@@ -66,7 +64,7 @@ export function AppleSearch() {
   const go = (href: string) => {
     remember(query)
     setOpen(false)
-    router.push(href)
+    window.location.assign(href)
   }
 
   return (

@@ -77,6 +77,7 @@ export const SEE_HOW_SKIPPED: Record<string, string> = {
   'sequence-codes': 'Codes for a sequenced course. The filmed demo is a HEARTS portal.',
   'sequence-learners': 'Learners on a sequenced course. The filmed demo is a HEARTS portal.',
   'sequence-features': 'Feature switches for a sequenced course. The filmed demo is a HEARTS portal.',
+  'parent-workbook': 'A parent workbook. The filmed demo is a HEARTS portal, not the parenting course.',
 }
 
 /**

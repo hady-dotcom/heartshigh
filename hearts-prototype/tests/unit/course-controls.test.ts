@@ -128,7 +128,7 @@ test('play and pause stay on the lecture while it is playing', () => {
   const pauseFn = player.slice(pauseAt, player.indexOf('const timer = window.setInterval', pauseAt))
   assert.equal(pauseFn.includes('.mute('), false)
   assert.match(pauseFn, /pauseKeepingSound/)
-  assert.match(courseScreen, /className="part-row"/)
+  assert.match(courseScreen, /className=\{`part-row/)
   assert.match(courseScreen, /className="part-status"/)
   assert.equal(courseScreen.includes('var(--purple)'), false)
   const css = readFileSync(new URL('../../src/app/(frontend)/app.css', import.meta.url), 'utf8')
