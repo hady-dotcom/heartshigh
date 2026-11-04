@@ -89,13 +89,15 @@ export async function MasterPortals(ctx: MasterCtx) {
                         return admin ? <ViewAsButton targetId={admin.id} name={str(admin.name) || 'the portal admin'} landing={`/p/${str(portal.slug)}/admin`} /> : null
                       })()}
                       <details className="danger-zone" data-testid="danger-zone">
-                        <summary>Danger zone</summary>
-                        <form action="/api/hearts" method="post">
-                          <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
-                          {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
-                          <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
-                        </form>
-                        <DeleteInline kind="portal" id={portal.id} next="/master" testId={`delete-portal-${portal.id}`} title={portalDisplayName(portal)} label="Delete portal" />
+                        <summary aria-label="Danger zone"><span aria-hidden="true">…</span></summary>
+                        <div className="danger-menu">
+                          <form action="/api/hearts" method="post">
+                            <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
+                            {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
+                            <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
+                          </form>
+                          <DeleteInline kind="portal" id={portal.id} next="/master" testId={`delete-portal-${portal.id}`} title={portalDisplayName(portal)} label="Delete portal" />
+                        </div>
                       </details>
                     </div>
                   </td>

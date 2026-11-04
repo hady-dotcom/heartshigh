@@ -300,11 +300,13 @@ test('r5d desk proof shots', async ({ page, browser }) => {
   await shot(page, 'overview-linked-library')
   const cue = page.getByTestId('nav-scroll-cue')
   await expect(cue).toBeVisible()
+  await expect(cue).toHaveText('')
   const navBox = await page.getByTestId('side-nav').boundingBox()
   const cueBox = await cue.boundingBox()
-  expect(navBox && cueBox, 'More below sits under the scrolling nav').toBeTruthy()
+  expect(navBox && cueBox, 'a fade marks more links').toBeTruthy()
   if (navBox && cueBox) {
-    expect(cueBox.y, 'More below does not overlap the nav').toBeGreaterThanOrEqual(navBox.y + navBox.height - 1)
+    expect(cueBox.y + cueBox.height, 'the fade sits on the bottom of the list').toBeGreaterThanOrEqual(navBox.y + navBox.height - 4)
+    expect(cueBox.y, 'the fade covers the end of the list').toBeLessThan(navBox.y + navBox.height)
   }
   await shot(page, 'sidebar-scroll-1366x700')
 

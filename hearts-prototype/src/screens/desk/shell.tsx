@@ -250,9 +250,12 @@ export async function DeskFrame({
           {extraLinks.map((link) => (
             <Link key={link.href} className="nav" href={link.href}>{link.label}</Link>
           ))}
-          <div className="who">
+          <div className="who" data-testid="desk-user">
             <span className="initial">{(user.name || user.email).slice(0, 1).toUpperCase()}</span>
-            <span><b style={{ display: 'block', fontSize: 13 }}>{user.name || user.email}</b><small className="muted">{roleLabel(user.role)}</small></span>
+            <span className="who-lines">
+              <b className="who-name">{user.name || user.email}</b>
+              <small className="who-role">{footerRole(user.name, user.email, user.role)}</small>
+            </span>
           </div>
           <form action="/api/hearts" method="post">
             <Hidden fields={{ action: 'logout' }} />
@@ -301,4 +304,12 @@ export async function DeskFrame({
 
 function roleLabel(role: SessionUser['role']) {
   return role === 'master' ? 'Master desk' : role === 'portal-admin' ? 'Portal admin' : role === 'teacher' ? 'Teacher' : 'Learner'
+}
+
+/** Name on the first line, role on the second. When the account name is the same words as the role, the role reads “Master” so the card does not say it twice. */
+function footerRole(name: string | null | undefined, email: string, role: SessionUser['role']) {
+  const label = roleLabel(role)
+  const shown = (name || email).trim()
+  if (role === 'master' && shown.localeCompare(label, undefined, { sensitivity: 'accent' }) === 0) return 'Master'
+  return label
 }
