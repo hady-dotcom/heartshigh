@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-/** Scrolls the desk links on a short laptop, with a visible “More below” cue. */
+/** Scrolls the desk links on a short laptop. A fade at the bottom of the list means more links are below. */
 export function SideNav({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null)
   const [overflow, setOverflow] = useState(false)
@@ -54,9 +54,7 @@ export function SideNav({ children }: { children: ReactNode }) {
         <nav ref={ref} className="side-nav" aria-label="Desk" data-testid="side-nav">
           {children}
         </nav>
-        {overflow && !atEnd ? (
-          <p className="side-nav-more" data-testid="nav-scroll-cue">More below</p>
-        ) : null}
+        {overflow && !atEnd ? <div className="side-nav-more" data-testid="nav-scroll-cue" aria-hidden="true" /> : null}
       </div>
     </details>
   )
