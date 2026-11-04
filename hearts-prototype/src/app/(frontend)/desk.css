@@ -24,7 +24,22 @@
 .side-brand { flex: none; }
 /* The nav scrolls on a short screen; the brand and the footer (learner app, who, Sign out) always stay in view. */
 .side-nav-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-.side-nav { flex: 1 1 auto; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; scrollbar-width: thin; }
+/* The open menu is the flexible middle of the rail. Without this it grows past the window and the lower links are clipped. */
+.desk-menu[open] { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+.desk-menu[open] > summary { flex: none; }
+.side-nav {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: 100dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  scrollbar-width: thin;
+}
 .side-nav-wrap.overflow:not(.at-end)::after {
   content: '';
   position: absolute;
