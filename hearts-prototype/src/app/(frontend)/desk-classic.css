@@ -1,0 +1,56 @@
+/*
+ * Desk look: evening garden for the master and portal desks (as on 14 Oct 2026).
+ * Scoped to .desk so learner screens keep the white and blue house look.
+ * Values match the :root --desk-* set in theme.css before the house-look restyle.
+ */
+:is(html, html[data-theme]) .desk[data-modern='no']:not(.gather-desk) {
+  --desk-page: var(--hh-evening-1);
+  --desk-card: var(--hh-evening-2);
+  --desk-ink: var(--hh-evening-3);
+  --desk-heading: var(--hh-evening-3);
+  --desk-sidebar: var(--hh-evening-4);
+  --desk-header: var(--hh-evening-5);
+  --desk-on-dark: var(--hh-evening-3);
+  --desk-gold: var(--hh-evening-6);
+  --desk-gold-ink: var(--hh-evening-7);
+  --desk-teal: var(--hh-evening-8);
+  --desk-muted: var(--hh-evening-9);
+  --desk-line: var(--hh-evening-10);
+  --desk-field: var(--hh-evening-11);
+  --cream: var(--hh-evening-12);
+  --paper: var(--hh-evening-13);
+  --card: var(--hh-evening-2);
+  --ink: var(--hh-evening-14);
+  --ink-2: var(--hh-evening-15);
+  --muted: var(--hh-evening-16);
+  --line: var(--hh-evening-17);
+  --gold: var(--hh-evening-18);
+  --gold-deep: var(--hh-evening-19);
+  --gold-ink: var(--hh-evening-20);
+  --heading: var(--hh-evening-14);
+  --glass: var(--hh-evening-21);
+  --glass-solid: var(--hh-evening-2);
+  --field: var(--hh-evening-22);
+  --focus: var(--hh-evening-23);
+  --hh-paper: var(--hh-evening-2);
+  --hh-canvas: var(--hh-evening-12);
+  --hh-ink: var(--hh-evening-14);
+  --hh-ink-2: var(--hh-evening-15);
+  --hh-muted: var(--hh-evening-16);
+  --hh-line: var(--hh-evening-17);
+  --hh-surface: var(--hh-evening-13);
+  --hh-accent: var(--hh-evening-18);
+  --hh-accent-deep: var(--hh-evening-19);
+  --hh-accent-fill: var(--hh-evening-24);
+  --hh-on-accent: var(--hh-evening-20);
+  --hh-glass: var(--hh-evening-25);
+  --hh-glass-line: var(--hh-evening-17);
+  --hh-scene-wash: var(--hh-evening-26);
+  --hh-scene-wash-deep: var(--hh-evening-27);
+  color: var(--hh-ink);
+  background: var(--hh-canvas);
+  color-scheme: dark;
+}
+
+.pipeline-explainer .pipeline-steps { margin: 8px 0 12px; padding-left: 20px; display: grid; gap: 6px; line-height: 1.45; }
+.pipeline-explainer .pipeline-ai-note { margin: 0; color: var(--hh-ink-2); }

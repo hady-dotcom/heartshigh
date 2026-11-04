@@ -1,3 +1,4 @@
+import { BringInExplainer } from '@/components/desk/pipeline-explainer'
 import Link from 'next/link'
 import { ExampleInUse } from '@/components/app/care'
 import { headers } from 'next/headers'
@@ -69,6 +70,7 @@ export async function BringInBody({
   for (const talk of otherDrafts) if (talk.courseId && talk.courseTitle) offerTitles.set(talk.courseId, talk.courseTitle)
   return (
     <div data-testid="bring-in">
+      <BringInExplainer />
       {portal ? offerIds.map((courseId) => (
         <CourseOnCodes
           key={courseId}

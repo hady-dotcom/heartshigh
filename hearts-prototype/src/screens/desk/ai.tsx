@@ -17,6 +17,7 @@ import { shellOf } from '@/lib/portal-look'
 import { AdminFrame } from './overview'
 import styles from './ai.module.css'
 import { DeskFrame, masterNav } from './shell'
+import { AiStepsExplainer } from '@/components/desk/pipeline-explainer'
 
 type Query = Record<string, string | undefined>
 type Doc = Record<string, unknown> & { id: number; createdAt?: string }
@@ -141,6 +142,7 @@ async function Registry({ ctx, master, base, desk }: { ctx: Ctx | null; master: 
     : null
   return (
     <Frame ctx={ctx} master={master} title="AI steps" intro="Each row is one job that runs after a talk comes in. Open it to see what it does, try one talk, then mark a version live." testId="ai-registry" showOnPhone={isMaster}>
+      <AiStepsExplainer />
       <Banner desk={desk} />
       <Grant base={base} desk={desk} master={(ctx?.user || master?.user)?.role === 'master'} />
       <div className="actions" style={{ marginBottom: 14 }}>

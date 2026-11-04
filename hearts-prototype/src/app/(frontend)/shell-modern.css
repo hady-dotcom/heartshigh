@@ -2487,31 +2487,21 @@ html[data-theme] .page-help-sheet.help-plain .pill.gold {
 }
 
 /* Surfaces outside the learner stage: same white canvas and blue accent. */
-html[data-theme] :is(.public-gather, .demo-stage, .demo-stage-entry, .splash) {
+html[data-theme] :is(.public-gather, .splash) {
   background: var(--hh-canvas);
   color: var(--hh-ink);
   color-scheme: light;
 }
-html[data-theme] .demo-bar {
-  background: var(--hh-glass);
-  color: var(--hh-ink);
-  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
-  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
-}
-html[data-theme] :is(.demo-stage-entry-card, .public-gather .gather-card) {
+/* The demo stage keeps its own evening board colours (demo-stage.css). */
+html[data-theme] .public-gather .gather-card {
   background: var(--hh-paper);
   color: var(--hh-ink);
-}
-html[data-theme] .demo-kicker,
-html[data-theme] .demo-stage-entry-go {
-  color: var(--hh-accent);
 }
 html[data-theme] .sheet {
   background: var(--hh-paper);
   color: var(--hh-ink);
 }
-html[data-theme] .share-btn,
-html[data-theme] .demo-stage-entry-go {
+html[data-theme] .share-btn {
   background: var(--hh-accent);
   color: var(--hh-on-accent);
 }
