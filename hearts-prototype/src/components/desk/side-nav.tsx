@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState, type ReactNode } from 'react'
 
-/** Scrolls the desk links on a short laptop. A fade at the bottom of the list means more links are below. */
+/** Scrolls the desk links on a short laptop. A thin fade at the bottom of the list means more links are below. */
 export function SideNav({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null)
   const [overflow, setOverflow] = useState(false)
   const [atEnd, setAtEnd] = useState(true)
   const menuRef = useRef<HTMLDetailsElement>(null)
+  // Open in the first HTML so the list is painted before the effect runs. A closed <details> clips the list to nothing.
+  const [menuOpen, setMenuOpen] = useState(true)
 
   // Desktop keeps the rail open. The Menu button is for phones only.
   useEffect(() => {
@@ -15,10 +17,10 @@ export function SideNav({ children }: { children: ReactNode }) {
     if (!menu || typeof window.matchMedia !== 'function') return
     const mq = window.matchMedia('(min-width: 900px)')
     const framed = window.self !== window.top
-    const sync = () => { if (mq.matches || framed) menu.open = true }
+    const sync = () => setMenuOpen(mq.matches || framed)
     sync()
     mq.addEventListener?.('change', sync)
-    const onToggle = () => { if (mq.matches && !framed && !menu.open) menu.open = true }
+    const onToggle = () => { if (mq.matches && !framed && !menu.open) setMenuOpen(true) }
     menu.addEventListener('toggle', onToggle)
     return () => { mq.removeEventListener?.('change', sync); menu.removeEventListener('toggle', onToggle) }
   }, [])
@@ -48,7 +50,7 @@ export function SideNav({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <details ref={menuRef} className="desk-menu">
+    <details ref={menuRef} className="desk-menu" open={menuOpen}>
       <summary className="desk-menu-button" data-testid="desk-menu">Menu</summary>
       <div className={`side-nav-wrap${overflow ? ' overflow' : ''}${atEnd ? ' at-end' : ''}`}>
         <nav ref={ref} className="side-nav" aria-label="Desk" data-testid="side-nav">
