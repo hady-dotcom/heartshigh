@@ -45,12 +45,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 36px;
+  z-index: 1;
+  height: 12px;
+  max-height: 12px;
   margin: 0;
   padding: 0;
   border: 0;
   pointer-events: none;
-  background: linear-gradient(180deg, transparent, var(--desk-sidebar, var(--hh-surface)) 88%);
+  background: linear-gradient(180deg, transparent, var(--desk-sidebar, var(--hh-surface)));
 }
 .side-brand { display: flex; align-items: center; gap: 12px; padding: 4px 8px 20px; text-decoration: none; color: var(--hh-ink); }
 .side-brand span { min-width: 0; }
