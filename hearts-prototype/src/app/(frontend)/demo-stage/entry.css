@@ -44,21 +44,21 @@
   color: #dca643;
 }
 
-.demo-stage-entry h1 {
+html[data-theme] .demo-stage-entry h1 {
   margin: 0;
   font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: clamp(40px, 6vw, 64px);
+  font-size: clamp(40px, 6vw, 64px) !important;
   font-weight: 600;
-  line-height: 0.95;
+  line-height: 0.95 !important;
   color: #f6f0e4;
 }
 
-.demo-stage-entry-line {
+html[data-theme] .demo-stage-entry .demo-stage-entry-line {
   margin: 0;
   max-width: 38rem;
   color: rgba(246, 240, 228, 0.86);
-  font-size: 17px;
-  line-height: 1.5;
+  font-size: 17px !important;
+  line-height: 1.5 !important;
 }
 
 .demo-stage-entry form {

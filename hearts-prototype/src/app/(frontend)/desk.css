@@ -334,8 +334,12 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk-narrow { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-height: 100vh; padding: 48px 24px; background: var(--desk-page, var(--hh-canvas)); color: var(--desk-ink, var(--hh-ink)); }
   .desk-narrow h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 0; }
   .desk-narrow p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 32rem; }
-  .desk.desk-phone { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .desk.desk-phone .side { position: relative; height: auto; max-height: none; }
+  .desk.desk-phone { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .desk.desk-phone .side { position: relative; height: auto; max-height: none; align-self: start; }
+  /* An open phone menu is only as tall as its links. The grid's min-height must not stretch a blank band under them. */
+  .desk.desk-phone .desk-menu,
+  .desk.desk-phone .desk-menu[open] .side-nav-wrap,
+  .desk.desk-phone .side-nav { flex: 0 0 auto; height: auto; }
   .desk.desk-phone .main { min-width: 0; }
   .desk.desk-phone .grid,
   .desk.desk-phone .cols,
