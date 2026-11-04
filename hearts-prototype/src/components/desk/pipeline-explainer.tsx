@@ -1,12 +1,12 @@
 /** Plain-English notes on what happens to a talk after it comes in. Only steps this desk really does. */
 
 const BRING_IN_STEPS: { name: string; line: string }[] = [
-  { name: '1. Add video', line: 'Paste a YouTube or Vimeo link, a playlist or a channel. Each tick becomes a draft talk with a title, a speaker and a course. Google Drive links are not taken here.' },
-  { name: '2. Store', line: 'The film itself is not downloaded. The desk keeps the link and plays the film from YouTube or Vimeo.' },
-  { name: '3. Transcript', line: 'The desk fetches the caption track. It tries yt-dlp, then the captions on the YouTube page, then the caption helper on a home computer. It does not transcribe the audio. If all three fail, upload a .vtt, .srt or .txt file on the talk.' },
-  { name: '4. Checks', line: 'Talks with no transcript, no timings or under 5 minutes are marked so you can see them on the Transcripts page.' },
-  { name: '5. Clips and extraction', line: 'The AI steps draft the short clip, the hook, turn and land, the pop-up questions, and the Qur’an and hadith quotes. Each draft is marked as needing a human check.' },
-  { name: '6. Review', line: 'Nothing reaches learners until someone approves the draft on Review. Approved talks show in the library straight away. There is no drip schedule.' },
+  { name: 'Add video', line: 'Paste a YouTube or Vimeo link, a playlist or a channel. Each tick becomes a draft talk with a title, a speaker and a course. Google Drive links are not taken here.' },
+  { name: 'Store', line: 'The film itself is not downloaded. The desk keeps the link and plays the film from YouTube or Vimeo.' },
+  { name: 'Transcript', line: 'The desk fetches the caption track. It tries yt-dlp, then the captions on the YouTube page, then the caption helper on a home computer. It does not transcribe the audio. If all three fail, upload a .vtt, .srt or .txt file on the talk.' },
+  { name: 'Checks', line: 'Talks with no transcript, no timings or under 5 minutes are marked so you can see them on the Transcripts page.' },
+  { name: 'Clips and extraction', line: 'The AI steps draft the short clip, the hook, turn and land, the pop-up questions, and the Qur’an and hadith quotes. Each draft is marked as needing a human check.' },
+  { name: 'Review', line: 'Nothing reaches learners until someone approves the draft on Review. Approved talks show in the library straight away. There is no drip schedule.' },
 ]
 
 export function BringInExplainer() {
