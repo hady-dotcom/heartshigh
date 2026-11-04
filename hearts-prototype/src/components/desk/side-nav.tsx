@@ -29,7 +29,7 @@ export function SideNav({ children }: { children: ReactNode }) {
     const check = () => {
       const extra = el.scrollHeight - el.clientHeight
       setOverflow(extra > 8)
-      setAtEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 12)
+      setAtEnd(el.scrollTop + el.clientHeight >= el.scrollHeight - 24)
     }
     check()
     el.addEventListener('scroll', check, { passive: true })

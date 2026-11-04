@@ -1,9 +1,22 @@
+.parenting-demo,
+.parenting-cast {
+  --demo-night: #17151f;
+  --demo-cream: #f6f0e4;
+  --demo-gold: #dca643;
+  --demo-button: #d4a84b;
+  --demo-ink: #1a1408;
+  --demo-card: #fffdf8;
+  --demo-text: #1f1d36;
+  --demo-muted: #48455e;
+  --demo-blush: #f3e6df;
+  --demo-phone: #111018;
+}
 .parenting-demo {
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: #f6f1e8;
-  color: #1c2430;
+  background: var(--demo-night);
+  color: var(--demo-cream);
   overflow: hidden;
 }
 .parenting-demo-bar,
@@ -14,22 +27,25 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background: #1f3a5f;
-  color: #fff;
+  background: transparent;
+  color: var(--demo-gold);
 }
-.parenting-demo-kicker { margin: 0; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
-.parenting-demo-bar h1 { margin: 0; font-size: 28px; font-family: Georgia, serif; }
+.parenting-cast-bar { padding: 0 0 8px; }
+.parenting-demo-kicker { margin: 0; font-size: 12px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--demo-gold); }
+.parenting-demo-bar h1,
+.parenting-cast h1 { margin: 8px 0; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 36px; font-weight: 600; line-height: 1; }
 .parenting-demo-switch, .parenting-cast-picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .parenting-demo-switch button, .parenting-demo-reset, .parenting-cast button {
   border: 0;
   border-radius: 999px;
   padding: 8px 12px;
-  background: #e07a5f;
-  color: #fff;
+  background: var(--demo-button);
+  color: var(--demo-ink);
   font: inherit;
+  font-weight: 700;
   cursor: pointer;
 }
-.parenting-demo-switch button[aria-pressed="true"] { background: #fff; color: #1f3a5f; }
+.parenting-demo-switch button[aria-pressed="true"] { background: var(--demo-card); color: var(--demo-text); }
 .parenting-demo-board {
   flex: 1;
   display: grid;
@@ -41,23 +57,49 @@
 .parenting-demo-cell {
   min-width: 0;
   min-height: 0;
-  background: #fff;
+  background: var(--demo-card);
   border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 8px 24px rgba(31, 58, 95, 0.08);
 }
 .parenting-demo-cell[hidden] { display: none; }
-.parenting-demo-caption { margin: 0; padding: 8px 10px; background: #f3e6df; font-size: 14px; }
-.parenting-demo-phone, .parenting-demo-desk { flex: 1; min-height: 0; overflow: auto; background: #111; }
-.parenting-demo-phone { display: flex; justify-content: center; padding: 8px 0 16px; background: #1c2430; }
+.parenting-demo-caption { margin: 0; padding: 8px 10px; background: var(--demo-blush); color: var(--demo-text); }
+.parenting-demo-phone, .parenting-demo-desk { flex: 1; min-height: 0; overflow: auto; background: var(--demo-phone); }
+.parenting-demo-phone { display: flex; justify-content: center; padding: 8px 0 16px; background: var(--demo-text); }
 .parenting-demo-phone iframe { border-radius: 24px; }
-.parenting-cast { max-width: 640px; margin: 24px auto; padding: 0 16px 32px; }
-.parenting-cast h1 { font-family: Georgia, serif; font-size: 36px; margin-bottom: 8px; }
-.parenting-cast label { display: grid; gap: 4px; margin: 12px 0; }
-.parenting-cast input { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid #d5cbbd; }
+.parenting-cast {
+  min-height: 100vh;
+  max-width: none;
+  margin: 0;
+  padding: 48px 20px 64px;
+  background: var(--demo-night);
+  color: var(--demo-cream);
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
+}
+.parenting-cast-card {
+  width: min(640px, 100%);
+  margin: 0 auto;
+  padding: 28px 28px 22px;
+  border-radius: 22px;
+  background: var(--demo-card);
+  color: var(--demo-text);
+}
+.parenting-cast-card p { color: var(--demo-muted); }
+.parenting-cast label { display: grid; gap: 4px; margin: 12px 0; font-weight: 650; }
+html[data-theme] .parenting-cast input,
+.parenting-cast input {
+  font: inherit;
+  width: 100%;
+  padding: 10px 2px;
+  border: 0;
+  border-bottom: 2px solid currentColor;
+  border-radius: 0;
+  background: var(--demo-card);
+  color: var(--demo-text);
+  color-scheme: light;
+}
+.parenting-cast input:focus { outline: none; border-bottom-color: var(--demo-button); }
 @media (max-width: 1100px) {
   .parenting-demo-board { grid-template-columns: 1fr; }
 }
-

@@ -20,17 +20,15 @@
   color: var(--ink);
 }
 .desk .body.grid.two { align-items: start; }
-.side { position: sticky; top: 0; height: 100vh; height: 100dvh; overflow: hidden; background: var(--teal-deep); color: var(--hh-ink); border-right: 0; padding: 22px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
-.side-brand { flex: none; }
-/* The nav scrolls on a short screen; the brand and the footer (learner app, who, Sign out) always stay in view. */
+.side { position: sticky; top: 0; height: 100vh; height: 100dvh; max-height: 100dvh; overflow: hidden; background: var(--teal-deep); color: var(--hh-ink); border-right: 0; padding: 22px 16px 14px; display: flex; flex-direction: column; gap: 4px; }
+.side-brand { flex: 0 0 auto; }
+/* Brand stays at the top, the link list scrolls in the middle, the user card stays at the bottom and does not cover the list. */
 .side-nav-wrap { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden; }
-/* The open menu is the flexible middle of the rail. Without this it grows past the window and the lower links are clipped. */
 .desk-menu[open] { flex: 1 1 auto; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
-.desk-menu[open] > summary { flex: none; }
+.desk-menu[open] > summary { flex: 0 0 auto; }
 .side-nav {
   flex: 1 1 auto;
   min-height: 0;
-  max-height: 100dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
@@ -39,6 +37,8 @@
   flex-direction: column;
   gap: 4px;
   scrollbar-width: thin;
+  padding-bottom: 16px;
+  box-sizing: border-box;
 }
 .side-nav-wrap.overflow:not(.at-end)::after {
   content: '';
@@ -88,7 +88,7 @@
 .side details.nav-group[open] > summary.group::after { transform: rotate(45deg); }
 .side .group { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: #e7d7b4; font-weight: 700; padding: 8px 12px 2px; }
 .side .group-desc { margin: 0 12px 4px; font-size: 11px; line-height: 1.35; letter-spacing: 0; text-transform: none; font-weight: 500; color: var(--hh-muted); }
-.side-foot { flex: none; margin-top: auto; border-top: 1px solid rgba(247, 238, 219, 0.2); padding-top: 10px; display: grid; gap: 4px; font-size: 13px; }
+.side-foot { flex: 0 0 auto; position: relative; z-index: 2; margin-top: 0; border-top: 1px solid rgba(247, 238, 219, 0.2); padding-top: 10px; display: grid; gap: 4px; font-size: 13px; background: var(--teal-deep); }
 .side-foot .group { padding-top: 6px; }
 .side-foot .who { display: flex; gap: 10px; align-items: center; padding: 0 8px; }
 .side-foot .who .initial { width: 34px; height: 34px; border-radius: 50%; background: var(--gold); color: var(--gold-ink); display: grid; place-items: center; font-weight: 800; }
@@ -286,7 +286,26 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .desk table.data th,
 .desk table.data td { vertical-align: top; }
 .desk table.data td.course-cell { min-width: 16rem; white-space: normal; }
-.desk table.data td.portal-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; max-width: 22rem; }
+.desk table.portals { table-layout: fixed; width: 100%; }
+.desk table.portals td:first-child,
+.desk table.portals th:first-child { min-width: 0; width: 14%; }
+.desk table.portals th:nth-child(2),
+.desk table.data td.portal-address { min-width: 0; width: 17%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, monospace; }
+.desk table.portals th:nth-child(3),
+.desk table.portals td:nth-child(3) { width: 11%; white-space: nowrap; }
+.desk table.portals th:nth-child(4),
+.desk table.portals td:nth-child(4) { width: 11%; white-space: nowrap; }
+.desk table.portals th:nth-child(5),
+.desk table.portals td:nth-child(5),
+.desk table.portals th:nth-child(6),
+.desk table.portals td:nth-child(6) { width: 6%; }
+.desk table.portals td.portal-actions { width: 35%; }
+.desk .portal-action-bar { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; align-items: center; }
+.desk .portal-action-bar .btn { white-space: nowrap; flex: none; padding-inline: 10px; }
+.desk .portal-action-bar .danger-zone { margin: 0; padding: 0; border: 0; background: transparent; width: auto; flex: none; }
+.desk .portal-action-bar .danger-zone > summary { list-style: none; cursor: pointer; border: 1px solid rgba(196, 92, 92, 0.7); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 700; white-space: nowrap; width: max-content; }
+.desk .portal-action-bar .danger-zone > summary::-webkit-details-marker { display: none; }
+.desk .portal-action-bar .danger-zone[open] { flex: 1 1 100%; margin-top: 8px; padding: 12px; border: 1px solid #c45c5c; border-radius: 14px; background: rgba(196, 92, 92, 0.12); }
 .view-as-ask { display: grid; gap: 8px; min-width: 260px; text-align: left; }
 .sim-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); gap: 18px; align-items: start; }
 .sim-scale { display: grid; gap: 6px; font-size: 14px; }
@@ -1144,5 +1163,18 @@ html[data-theme] .desk[data-evening='yes'] :is(.panel, .stat-chip, input, textar
 }
 
 @media (min-width: 900px) {
-  .desk-menu .side-nav-wrap { display: block !important; }
+  /* The middle grid row is the only spare height. The list is taken out of flow so a closed or open <details> cannot grow past that row, and the nav itself scrolls. */
+  .side { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; }
+  .desk-menu,
+  .desk-menu[open] { position: relative; min-height: 0; overflow: hidden; }
+  .desk-menu .side-nav-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex !important;
+    flex-direction: column;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+  }
+  .desk-menu .side-nav { flex: 1 1 auto; min-height: 0; max-height: none; height: auto; overflow-y: auto; }
 }

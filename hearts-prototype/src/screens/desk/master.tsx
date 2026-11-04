@@ -69,33 +69,35 @@ export async function MasterPortals(ctx: MasterCtx) {
       </section>
       <section className="panel" style={{ marginBottom: 18 }}>
         <div className="table-wrap">
-          <table className="data">
+          <table className="data portals">
             <thead><tr><th>Portal</th><th>Address</th><th>Kind</th><th>Status</th><th className="num">People</th><th className="num">Codes</th><th /></tr></thead>
             <tbody>
               {openPortals.map((portal) => (
                 <tr key={portal.id} data-testid="portal-card">
                   <td><b>{portalDisplayName(portal)}</b></td>
-                  <td style={{ fontFamily: 'ui-monospace, monospace' }}>/p/{str(portal.slug)}</td>
+                  <td className="portal-address" title={`/p/${str(portal.slug)}`}>/p/{str(portal.slug)}</td>
                   <td>{kindLabel(portal.kind)}</td>
                   <td>{portal.closed ? <span className="badge rose">Deactivated</span> : <span className="badge teal">Active</span>}</td>
                   <td className="num">{people.filter((person) => inPortal(person, portal.id)).length}</td>
                   <td className="num">{codes.filter((code) => ref(code.portal) === portal.id).length}</td>
                   <td className="portal-actions">
-                    <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
-                    <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`} data-testid="run-portal">Run this portal</Link>
-                    {(() => {
-                      const admin = people.find((person) => person.role === 'portal-admin' && inPortal(person, portal.id))
-                      return admin ? <ViewAsButton targetId={admin.id} name={str(admin.name) || 'the portal admin'} landing={`/p/${str(portal.slug)}/admin`} /> : null
-                    })()}
-                    <details className="danger-zone" data-testid="danger-zone">
-                      <summary>Danger zone</summary>
-                      <form action="/api/hearts" method="post">
-                        <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
-                        {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
-                        <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
-                      </form>
-                      <DeleteInline kind="portal" id={portal.id} next="/master" testId={`delete-portal-${portal.id}`} title={portalDisplayName(portal)} label="Delete portal" />
-                    </details>
+                    <div className="portal-action-bar">
+                      <Link className="btn ghost small" href={`/master/portals/${str(portal.slug)}`} data-testid="edit-portal">Features</Link>
+                      <Link className="btn ghost small" href={`/p/${str(portal.slug)}/admin`} data-testid="run-portal">Run this portal</Link>
+                      {(() => {
+                        const admin = people.find((person) => person.role === 'portal-admin' && inPortal(person, portal.id))
+                        return admin ? <ViewAsButton targetId={admin.id} name={str(admin.name) || 'the portal admin'} landing={`/p/${str(portal.slug)}/admin`} /> : null
+                      })()}
+                      <details className="danger-zone" data-testid="danger-zone">
+                        <summary>Danger zone</summary>
+                        <form action="/api/hearts" method="post">
+                          <Hidden fields={{ action: 'deactivate', portalSlug: str(portal.slug), closed: portal.closed ? 'no' : 'yes', next: '/master' }} />
+                          {portal.closed ? null : <label className="check"><input type="checkbox" name="confirm" value="yes" required data-testid="deactivate-confirm" /> I understand learners cannot sign in</label>}
+                          <button className={`btn ${portal.closed ? 'teal' : 'danger'} small`} data-testid="deactivate-portal" type="submit">{portal.closed ? 'Activate' : 'Deactivate'}</button>
+                        </form>
+                        <DeleteInline kind="portal" id={portal.id} next="/master" testId={`delete-portal-${portal.id}`} title={portalDisplayName(portal)} label="Delete portal" />
+                      </details>
+                    </div>
                   </td>
                 </tr>
               ))}
