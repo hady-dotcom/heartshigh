@@ -100,7 +100,8 @@
 .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .grid.over { grid-template-columns: 1.15fr 1fr 1fr; }
 .panel { background: var(--card); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; min-width: 0; }
-.panel > header { background: var(--teal-deep); color: var(--hh-ink); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.panel > header { background: var(--teal-deep); color: var(--hh-ink); padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.panel > header > form { min-width: 0; max-width: 100%; }
 .panel > header.light { background: #fff; color: var(--ink); border-bottom: 1px solid var(--line); }
 .panel > header h2 { margin: 0; font-size: 16px; font-weight: 700; }
 .panel > header p { margin: 2px 0 0; font-size: 12.5px; opacity: 0.75; }
@@ -129,11 +130,11 @@
 .desk .address.address-full { white-space: normal; overflow: visible; text-overflow: unset; overflow-wrap: anywhere; word-break: break-word; }
 .qr svg { width: 128px; height: 128px; display: block; }
 .big-number { font-size: 44px; font-weight: 800; }
-.chart { display: grid; grid-template-columns: repeat(14, 1fr); gap: 8px; align-items: end; height: 150px; padding-top: 10px; }
-.chart .col { display: grid; grid-template-rows: 1fr auto; gap: 6px; height: 100%; }
+.chart { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 8px; align-items: end; height: 150px; padding-top: 10px; max-width: 100%; }
+.chart .col { display: grid; grid-template-rows: 1fr auto; gap: 6px; height: 100%; min-width: 0; overflow: hidden; }
 .chart .slot { background: #f3ede1; border-radius: 8px; position: relative; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 0; padding: 0; border-bottom: 0; min-width: 0; }
 .chart .slot i { display: block; width: 100%; background: var(--gold); border-radius: 8px 8px 0 0; }
-.chart .col small { text-align: center; font-size: 11px; color: var(--muted); }
+.chart .col small { text-align: center; font-size: 11px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .chart-legend { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); margin-top: 8px; }
 
 .stats-strip { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; margin-bottom: 18px; }
@@ -334,8 +335,12 @@ table.data td.num { text-align: right; font-variant-numeric: tabular-nums; }
   .desk-narrow { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-height: 100vh; padding: 48px 24px; background: var(--desk-page, var(--hh-canvas)); color: var(--desk-ink, var(--hh-ink)); }
   .desk-narrow h1 { font-size: 24px; line-height: 1.25; margin: 8px 0 0; }
   .desk-narrow p { margin: 0; font-size: 16px; line-height: 1.5; max-width: 32rem; }
-  .desk.desk-phone { display: grid; grid-template-columns: minmax(0, 1fr); }
-  .desk.desk-phone .side { position: relative; height: auto; max-height: none; }
+  .desk.desk-phone { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; }
+  .desk.desk-phone .side { position: relative; height: auto; max-height: none; align-self: start; }
+  /* An open phone menu is only as tall as its links. The grid's min-height must not stretch a blank band under them. */
+  .desk.desk-phone .desk-menu,
+  .desk.desk-phone .desk-menu[open] .side-nav-wrap,
+  .desk.desk-phone .side-nav { flex: 0 0 auto; height: auto; }
   .desk.desk-phone .main { min-width: 0; }
   .desk.desk-phone .grid,
   .desk.desk-phone .cols,

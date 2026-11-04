@@ -3,9 +3,14 @@
   display: grid;
   place-items: center;
   padding: calc(32px + env(safe-area-inset-top, 0px)) 20px calc(32px + env(safe-area-inset-bottom, 0px));
-  background: var(--hh-canvas);
-  color: var(--hh-ink);
-  font-family: var(--hh-font-system);
+  background-color: #121018;
+  background-image:
+    radial-gradient(1000px 420px at 12% -8%, rgba(37, 33, 74, 0.95), transparent 58%),
+    radial-gradient(820px 360px at 100% 0%, rgba(122, 79, 168, 0.38), transparent 52%),
+    radial-gradient(720px 320px at 78% 110%, rgba(31, 138, 120, 0.28), transparent 50%),
+    radial-gradient(640px 260px at 0% 100%, rgba(196, 143, 44, 0.18), transparent 48%);
+  color: #f6f0e4;
+  font-family: Inter, 'Segoe UI', system-ui, sans-serif;
 }
 
 .demo-stage-entry-card {
@@ -27,7 +32,7 @@
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  box-shadow: 0 0 0 3px var(--hh-accent-fill);
+  box-shadow: 0 0 0 3px rgba(246, 240, 228, 0.34);
 }
 
 .demo-stage-kicker {
@@ -36,24 +41,24 @@
   font-weight: 700;
   letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--hh-accent);
+  color: #dca643;
 }
 
-.demo-stage-entry h1 {
+html[data-theme] .demo-stage-entry h1 {
   margin: 0;
-  font-family: var(--hh-font-display);
-  font-size: clamp(40px, 6vw, 64px);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: clamp(40px, 6vw, 64px) !important;
   font-weight: 600;
-  line-height: 0.95;
-  color: var(--hh-ink);
+  line-height: 0.95 !important;
+  color: #f6f0e4;
 }
 
-.demo-stage-entry-line {
+html[data-theme] .demo-stage-entry .demo-stage-entry-line {
   margin: 0;
   max-width: 38rem;
-  color: var(--hh-ink-2);
-  font-size: 17px;
-  line-height: 1.5;
+  color: rgba(246, 240, 228, 0.86);
+  font-size: 17px !important;
+  line-height: 1.5 !important;
 }
 
 .demo-stage-entry form {
@@ -66,16 +71,16 @@
   padding: 0 22px;
   border: 0;
   border-radius: 999px;
-  background: var(--hh-accent);
-  color: var(--hh-on-accent);
+  background: #d4a84b;
+  color: #1a1408;
   font: inherit;
   font-size: 16px;
   font-weight: 700;
   cursor: pointer;
 }
 
-.demo-stage-entry-go:hover { background: var(--hh-accent-deep); }
-.demo-stage-entry-go:focus-visible { outline: 3px solid var(--hh-ink); outline-offset: 3px; }
+.demo-stage-entry-go:hover { background: #e0b65d; }
+.demo-stage-entry-go:focus-visible { outline: 3px solid #f6f0e4; outline-offset: 3px; }
 
 .demo-stage-entry-form {
   display: grid;
@@ -88,15 +93,15 @@
   gap: 6px;
   font-size: 14px;
   font-weight: 650;
-  color: var(--hh-ink);
+  color: #f6f0e4;
 }
 
 html[data-theme] .demo-stage-entry .demo-stage-entry-form .field,
 .demo-stage-entry .demo-stage-entry-form .field {
-  background: var(--hh-paper);
-  color: var(--hh-ink);
-  border-color: var(--hh-line);
+  background: #1c1a26;
+  color: #f6f0e4;
+  border-color: rgba(246, 240, 228, 0.28);
 }
 
 html[data-theme] .demo-stage-entry .demo-stage-entry-form .field::placeholder,
-.demo-stage-entry .demo-stage-entry-form .field::placeholder { color: var(--hh-muted); }
+.demo-stage-entry .demo-stage-entry-form .field::placeholder { color: rgba(246, 240, 228, 0.45); }

@@ -2,48 +2,34 @@
   height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--hh-canvas);
-  color: var(--hh-ink);
+  background: #f6f1e8;
+  color: #1c2430;
   overflow: hidden;
-  font-family: var(--hh-font-system);
 }
 .parenting-demo-bar,
 .parenting-cast-bar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 40;
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   justify-content: space-between;
-  min-height: var(--hh-tap-min);
   padding: 12px 16px;
-  background: var(--hh-glass);
-  color: var(--hh-ink);
-  border-bottom: var(--hh-line-width) solid var(--hh-glass-line);
-  backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
-  -webkit-backdrop-filter: blur(var(--hh-glass-blur)) saturate(1.8);
+  background: #1f3a5f;
+  color: #fff;
 }
-
-.parenting-demo,
-.parenting-cast { padding-top: calc(var(--hh-header) + var(--hh-space-4)); }
-.parenting-demo-kicker { margin: 0; font-size: var(--hh-font-size-caption); letter-spacing: 0.04em; text-transform: uppercase; color: var(--hh-accent); }
-.parenting-demo-bar h1 { margin: 0; font-size: var(--hh-font-size-h1); font-family: var(--hh-font-display); color: var(--hh-ink); }
+.parenting-demo-kicker { margin: 0; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; }
+.parenting-demo-bar h1 { margin: 0; font-size: 28px; font-family: Georgia, serif; }
 .parenting-demo-switch, .parenting-cast-picks { display: flex; flex-wrap: wrap; gap: 6px; }
-.parenting-demo-switch button, .parenting-demo-reset, .parenting-cast button,
-.parenting-cast-picks button {
+.parenting-demo-switch button, .parenting-demo-reset, .parenting-cast button {
   border: 0;
-  border-radius: var(--hh-radius-pill);
+  border-radius: 999px;
   padding: 8px 12px;
-  background: var(--hh-accent);
-  color: var(--hh-on-accent);
+  background: #e07a5f;
+  color: #fff;
   font: inherit;
   cursor: pointer;
 }
-.parenting-demo-switch button[aria-pressed="true"] { background: var(--hh-paper); color: var(--hh-accent); box-shadow: inset 0 0 0 1px var(--hh-accent); }
+.parenting-demo-switch button[aria-pressed="true"] { background: #fff; color: #1f3a5f; }
 .parenting-demo-board {
   flex: 1;
   display: grid;
@@ -51,34 +37,27 @@
   gap: 8px;
   padding: 8px;
   min-height: 0;
-  background: var(--hh-canvas);
 }
 .parenting-demo-cell {
   min-width: 0;
   min-height: 0;
-  background: var(--hh-paper);
-  border-radius: var(--hh-radius-control);
+  background: #fff;
+  border-radius: 16px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  box-shadow: var(--hh-shadow-card);
+  box-shadow: 0 8px 24px rgba(31, 58, 95, 0.08);
 }
 .parenting-demo-cell[hidden] { display: none; }
-.parenting-demo-caption { margin: 0; padding: 8px 10px; background: var(--hh-surface); color: var(--hh-ink); font-size: var(--hh-font-size-small); }
-.parenting-demo-phone, .parenting-demo-desk { flex: 1; min-height: 0; overflow: auto; background: var(--hh-canvas); }
-.parenting-demo-phone { display: flex; justify-content: center; padding: 8px 0 16px; background: var(--hh-surface); }
-.parenting-demo-phone iframe { border-radius: 24px; background: var(--hh-paper); }
-.parenting-cast { max-width: 640px; margin: 24px auto; padding: 0 16px 32px; color: var(--hh-ink); font-family: var(--hh-font-system); }
-.parenting-cast h1 { font-family: var(--hh-font-display); font-size: var(--hh-font-size-display); margin-bottom: 8px; color: var(--hh-ink); }
-.parenting-cast label { display: grid; gap: 4px; margin: 12px 0; color: var(--hh-ink); }
-.parenting-cast input {
-  font: inherit;
-  padding: 10px 12px;
-  border-radius: var(--hh-radius-control);
-  border: 1px solid var(--hh-line);
-  background: var(--hh-paper);
-  color: var(--hh-ink);
-}
+.parenting-demo-caption { margin: 0; padding: 8px 10px; background: #f3e6df; font-size: 14px; }
+.parenting-demo-phone, .parenting-demo-desk { flex: 1; min-height: 0; overflow: auto; background: #111; }
+.parenting-demo-phone { display: flex; justify-content: center; padding: 8px 0 16px; background: #1c2430; }
+.parenting-demo-phone iframe { border-radius: 24px; }
+.parenting-cast { max-width: 640px; margin: 24px auto; padding: 0 16px 32px; }
+.parenting-cast h1 { font-family: Georgia, serif; font-size: 36px; margin-bottom: 8px; }
+.parenting-cast label { display: grid; gap: 4px; margin: 12px 0; }
+.parenting-cast input { font: inherit; padding: 10px 12px; border-radius: 10px; border: 1px solid #d5cbbd; }
 @media (max-width: 1100px) {
   .parenting-demo-board { grid-template-columns: 1fr; }
 }
+

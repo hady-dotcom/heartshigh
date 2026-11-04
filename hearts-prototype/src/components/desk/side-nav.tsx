@@ -7,6 +7,21 @@ export function SideNav({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLElement>(null)
   const [overflow, setOverflow] = useState(false)
   const [atEnd, setAtEnd] = useState(true)
+  const menuRef = useRef<HTMLDetailsElement>(null)
+
+  // Desktop keeps the rail open. The Menu button is for phones only.
+  useEffect(() => {
+    const menu = menuRef.current
+    if (!menu || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(min-width: 900px)')
+    const framed = window.self !== window.top
+    const sync = () => { if (mq.matches || framed) menu.open = true }
+    sync()
+    mq.addEventListener?.('change', sync)
+    const onToggle = () => { if (mq.matches && !framed && !menu.open) menu.open = true }
+    menu.addEventListener('toggle', onToggle)
+    return () => { mq.removeEventListener?.('change', sync); menu.removeEventListener('toggle', onToggle) }
+  }, [])
 
   useEffect(() => {
     const el = ref.current
@@ -33,7 +48,7 @@ export function SideNav({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <details className="desk-menu">
+    <details ref={menuRef} className="desk-menu">
       <summary className="desk-menu-button" data-testid="desk-menu">Menu</summary>
       <div className={`side-nav-wrap${overflow ? ' overflow' : ''}${atEnd ? ' at-end' : ''}`}>
         <nav ref={ref} className="side-nav" aria-label="Desk" data-testid="side-nav">
