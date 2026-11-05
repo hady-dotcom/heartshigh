@@ -6,7 +6,7 @@ import { FilmFallback } from '@/components/app/film-fallback'
 import { LearnerTabBar } from '@/components/app/learner-bar'
 import { CoursePlayer, type PointView } from '@/components/app/course-player'
 import { learnerBrand } from '@/lib/learner-brand'
-import { shownCalloutSecond } from '@/lib/portal-look'
+import { placeQuestionTimes, workbookCardHref } from '@/lib/content-sanity'
 import { filmCanPlay } from '@/lib/film-availability'
 import { shownQuestionPrompt } from '@/lib/question-prompt'
 import { kineticMomentsOn, librarySections, sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
@@ -58,7 +58,7 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
     return (
       <AppFrame testId="garden" brand={learnerBrand(portal)}>
         <div className="app-scroll" data-testid="course-home">
-          <TvHome workbookHref={`${base}/workbook`} slides={slides} watching={[]} shelves={shelves} />
+          <TvHome workbookHref={workbookCardHref(base)} slides={slides} watching={[]} shelves={shelves} />
         </div>
         <LearnerTabBar base={base} active="garden" portal={portal} />
       </AppFrame>
@@ -68,7 +68,7 @@ export async function GuestCoursesScreen({ payload, portal, base }: { payload: P
     <AppFrame testId="garden" brand={learnerBrand(portal)}>
       <div className="app-scroll" data-testid="course-home">
         <div className="app-head"><h1>Courses</h1></div>
-        <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+        <a className="list-link workbook-card" href={workbookCardHref(base)} data-testid="open-workbook">
           <span className="grow">Workbook<small>The first ten films</small></span>
           <span aria-hidden>›</span>
         </a>
@@ -121,18 +121,29 @@ function playableLesson(lesson: Row) {
 }
 
 function pointViews(points: Row[], lesson: Row): PointView[] {
-  return points.filter((point) => ref(point.lesson) === lesson.id && str(point.family) !== 'workbook').map((point, index) => ({
+  const filmPoints = points.filter((point) => ref(point.lesson) === lesson.id && str(point.family) !== 'workbook')
+  const placed = placeQuestionTimes(
+    filmPoints.map((point) => ({ id: point.id, second: Number(point.second || 0), prompt: str(point.prompt) })),
+    Number(lesson.durationSeconds || 0),
+    { pullLate: false },
+  )
+  const placedById = new Map(placed.map((row, index) => [row.id, { second: row.second, number: index + 1 }]))
+  return filmPoints.flatMap((point) => {
+    const slot = placedById.get(point.id)
+    if (!slot) return []
+    return [{
     id: point.id,
-    number: index + 1,
-    second: shownCalloutSecond(Number(point.second || 0), Number(lesson.durationSeconds || 0), true),
-    prompt: shownQuestionPrompt(str(point.prompt), { sheet: true, index }),
+    number: slot.number,
+    second: slot.second,
+    prompt: shownQuestionPrompt(str(point.prompt), { sheet: true, index: slot.number - 1 }),
     kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
     options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
     state: 'open' as const,
     unlocksAt: null,
     answered: false,
     timeLimitSec: Number(point.timeLimitSec || 0) || null,
-  })).filter((view) => view.prompt)
+    }]
+  }).filter((view) => view.prompt)
 }
 
 /** The same course player a signed-in parent uses. Answers stay on this phone until an account sends them. */
@@ -172,7 +183,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
             <GuestCourseResume base={base} courseId={course.id} total={lessons.length} firstId={first?.id ?? null} firstPlace={first ? firstAt + 1 : 1} />
           </div>
           <p className="muted">Questions appear inside each film, once you open it. Answers stay on this phone.</p>
-          <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+          <a className="list-link workbook-card" href={workbookCardHref(base)} data-testid="open-workbook">
             <span className="grow">Workbook<small>Your answer and a few from other parents</small></span>
             <span aria-hidden>›</span>
           </a>
@@ -262,7 +273,7 @@ export async function GuestCourseScreen({ payload, portal, base, courseId, part,
             gardenHref: `${base}/courses`,
             nextPart: nextLesson ? { label: `Film ${nextAt + 1} · Next`, href: `${base}/course/${course.id}?part=${nextLesson.id}` } : null,
             prevPart: prevLesson ? { label: `Film ${prevAt + 1} · Previous`, href: `${base}/course/${course.id}?part=${prevLesson.id}` } : null,
-            links: [{ label: 'Workbook', href: `${base}/workbook` }],
+            links: [{ label: 'Workbook', href: workbookCardHref(base) }],
           }}
         />
         {kineticTier ? (

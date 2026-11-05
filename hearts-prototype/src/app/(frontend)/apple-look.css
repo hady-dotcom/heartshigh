@@ -741,6 +741,8 @@ html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='we
 
 html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero {
   position: relative;
+  z-index: 1;
+  overflow: hidden;
   margin: 0 calc(var(--hh-space-4) * -1) var(--hh-space-4);
 }
 

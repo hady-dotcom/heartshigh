@@ -35,10 +35,10 @@ export function TvHome({
     <div className="tv-home" data-testid="tv-home">
       <div className="app-head"><h1 className="tv-title">{title}</h1></div>
       {slides.length ? <TvHero slides={slides} /> : null}
-      <Link className="tv-workbook" href={workbookHref} data-testid="open-workbook">
+      <a className="tv-workbook workbook-card" href={workbookHref} data-testid="open-workbook">
         <span className="tv-workbook-mark" aria-hidden />
         <span>Workbook<small>The first ten films</small></span>
-      </Link>
+      </a>
       {watching.length ? (
         <section className="tv-shelf" data-testid="tv-continue">
           <h2>Continue Watching</h2>
