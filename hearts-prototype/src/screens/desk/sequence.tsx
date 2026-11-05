@@ -94,13 +94,13 @@ export async function SequenceOverview(ctx: Ctx) {
   const [lessons, codes, people] = await Promise.all([
     courseIds.length ? rows(payload, 'lessons', { course: { in: courseIds } }) : Promise.resolve([]),
     rows(payload, 'access-codes', { portal: { equals: portal.id } }),
-    portalPeople(payload, portal.id),
+    payload.count({ collection: 'users', overrideAccess: true, where: { 'tenants.tenant': { equals: portal.id } } }),
   ])
   return (
     <AdminFrame ctx={ctx} active="overview" title="Overview" intro="Films, people, and codes for this course." testId="sequence-overview" showOnPhone>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
         <div className="count-tile"><span>Films</span><b data-testid="sequence-film-count">{lessons.length}</b></div>
-        <div className="count-tile"><span>People</span><b data-testid="sequence-people-count">{people.length}</b></div>
+        <div className="count-tile"><span>People</span><b data-testid="sequence-people-count">{people.totalDocs}</b></div>
         <div className="count-tile"><span>Codes</span><b data-testid="sequence-code-count">{codes.length}</b></div>
       </div>
       <p style={{ marginTop: 16 }}><Link className="pill ink" href={`${base}/admin/sequence`}>Course films</Link></p>

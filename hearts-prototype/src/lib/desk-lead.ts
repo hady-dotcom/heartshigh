@@ -297,6 +297,7 @@ const SKIP = new Set(['ai', 'codes'])
 
 /** Header lines for a modern portal desk. The master desk and HEARTS keep PORTAL. */
 const PLAIN_LEAD: Partial<Record<string, string>> = {
+  overview: 'Films, people, and codes for this course. The portal team sees this.',
   gather: 'Gatherings for this group. Learners see a date once you publish it.',
   calendar: 'Dates this group wants people to see. Learners see a line only after you approve it.',
 }

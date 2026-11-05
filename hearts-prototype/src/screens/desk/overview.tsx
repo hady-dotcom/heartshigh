@@ -43,7 +43,8 @@ export async function AdminFrame({ ctx, active, title, intro, tools, help, child
     ...group,
     items: group.items.map((item) => ({ ...item, href: stamp(item.href) })),
   }))
-  const brand = demo ? demo.cast.portalName : portalName(portal)
+  const seen = String(portal.brandName || '').trim()
+  const brand = demo ? demo.cast.portalName : (seen || portalName(portal))
   const modern = shellOf(portal) === 'modern'
   return (
     <DeskFrame
