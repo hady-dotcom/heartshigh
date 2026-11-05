@@ -63,3 +63,8 @@ export function staffDeskHref(
   if (portalIdOf(user) !== portal.id) return null
   return user.role === 'teacher' ? teacherDeskPath(portal.slug) : portalDeskPath(portal.slug)
 }
+
+/** The return chip in the learner app. A portal admin does not go back to a teacher desk. */
+export function staffDeskLabel(role: string | null | undefined) {
+  return role === 'teacher' ? 'Back to teacher desk' : 'Back to the portal desk'
+}
