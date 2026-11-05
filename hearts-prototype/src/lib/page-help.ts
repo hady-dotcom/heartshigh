@@ -233,7 +233,7 @@ const PAGES: Record<string, HelpCopy> = {
     title: 'How to use the Workbook',
     body: [
       'Each film has one question. Write your answer under it.',
-      'Save keeps it on this phone until you have an account. A few answers from other parents sit underneath.',
+      'Save keeps your answer with you. A few answers from other parents sit underneath.',
     ],
   },
   'shaped-page': {

@@ -38,7 +38,7 @@ export function ParentWorkbookBoard({ films, signedIn, next }: { films: Workbook
             {film.href ? <a className="workbook-open" href={film.href}>Open this film</a> : null}
             <p className="workbook-question" data-testid="workbook-question">{film.prompt}</p>
             <p className="eyebrow">Your answer</p>
-            {own ? <p className="workbook-own" data-testid="workbook-own">{own}</p> : null}
+            {own && !film.pointId ? <p className="workbook-own" data-testid="workbook-own">{own}</p> : null}
             {film.pointId && !signedIn ? (
               <form
                 key={own || 'new'}

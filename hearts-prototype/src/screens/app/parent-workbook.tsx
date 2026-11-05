@@ -65,7 +65,7 @@ export async function ParentWorkbookScreen({ payload, portal, base, userId }: { 
       <div className="app-scroll parent-workbook">
         <a className="back" href={`${base}/courses`} data-testid="back">‹ Courses</a>
         <div className="app-head"><h1>Workbook</h1></div>
-        <p className="lead">The first ten films in Guiding Home Learning. Your answer stays on this phone until you have an account.</p>
+        <p className="lead" data-testid="workbook-lead">{userId ? 'The first ten films in Guiding Home Learning. Your answers stay with your account.' : 'The first ten films in Guiding Home Learning. Your answer stays on this phone until you have an account.'}</p>
         <ParentWorkbookBoard films={films} signedIn={userId != null} next={`${base}/workbook`} />
       </div>
       <LearnerTabBar base={base} active="me" portal={portal} />

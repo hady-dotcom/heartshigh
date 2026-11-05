@@ -756,7 +756,9 @@ html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='we
 html[data-look='apple']:is([data-look-surface='courses'], [data-look-surface='week']) .tv-hero-slide {
   position: relative;
   flex: 0 0 100%;
-  height: 60dvh;
+  /* Leave the workbook card and the first course title above the tab bar. */
+  height: min(52dvh, calc(100dvh - 380px));
+  min-height: 240px;
   scroll-snap-align: start;
   overflow: hidden;
   background: var(--hh-video);
