@@ -77,7 +77,7 @@ test('a learner does not see Back to teacher desk', async ({ page }) => {
   await expect(page.getByTestId('back-to-desk')).toHaveCount(0)
 })
 
-test('a portal admin gets Back to teacher desk on the learner home and the feed', async ({ page }) => {
+test('a portal admin gets Back to the portal desk on the learner home and the feed', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 })
   await page.goto('/login?next=/p/east-london')
   await page.getByTestId('login-email').fill('elm-admin@hearts.test')
@@ -85,6 +85,7 @@ test('a portal admin gets Back to teacher desk on the learner home and the feed'
   await page.getByTestId('login-submit').click()
   await expect(page.getByTestId('home')).toBeVisible({ timeout: 30_000 })
   const desk = page.getByTestId('back-to-desk')
+  await expect(desk).toHaveText('Back to the portal desk')
   await expect(desk).toHaveAttribute('href', '/p/east-london/admin')
   await page.goto('/p/east-london/feed')
   await expect(page.getByTestId('back-to-desk')).toBeVisible()

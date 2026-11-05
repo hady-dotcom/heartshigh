@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { afterJoinPath, deskAppHref, portalHomePath, staffDeskHref } from './landing'
+import { afterJoinPath, deskAppHref, portalHomePath, staffDeskHref, staffDeskLabel } from './landing'
 
 test('teachers land on Teach, learners stay in the app, portal admins keep the desk', () => {
   assert.equal(portalHomePath('hearts-demo', 'teacher'), '/p/hearts-demo/admin/teach')
@@ -16,7 +16,9 @@ test('teachers land on Teach, learners stay in the app, portal admins keep the d
   assert.equal(deskAppHref('/master'), null)
   const here = { id: 4, slug: 'hearts-demo' }
   assert.equal(staffDeskHref({ role: 'teacher', tenants: [{ tenant: 4 }] }, here), '/p/hearts-demo/admin/teach')
+  assert.equal(staffDeskLabel('teacher'), 'Back to teacher desk')
   assert.equal(staffDeskHref({ role: 'portal-admin', tenants: [{ tenant: 4 }] }, here), '/p/hearts-demo/admin')
+  assert.equal(staffDeskLabel('portal-admin'), 'Back to the portal desk')
   assert.equal(staffDeskHref({ role: 'learner', tenants: [{ tenant: 4 }] }, here), null)
   assert.equal(staffDeskHref({ role: 'teacher', tenants: [{ tenant: 4 }] }, { id: 9, slug: 'other' }), null)
   assert.equal(staffDeskHref({ role: 'master' }, here), null)
