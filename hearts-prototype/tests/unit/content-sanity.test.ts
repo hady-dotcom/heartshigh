@@ -109,6 +109,7 @@ test('a signed-in parent is not told they still need an account', () => {
   assert.match(desk, /seen \|\| portalName\(portal\)/)
   const sequence = readFileSync(new URL('../../src/screens/desk/sequence.tsx', import.meta.url), 'utf8')
   const leads = readFileSync(new URL('../../src/lib/desk-lead.ts', import.meta.url), 'utf8')
-  assert.match(sequence, /people\.totalDocs/)
+  assert.match(sequence, /tallyPortalPeople/)
+  assert.doesNotMatch(sequence, /people\.totalDocs/)
   assert.match(leads, /Films, people, and codes for this course/)
 })

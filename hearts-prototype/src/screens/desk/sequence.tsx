@@ -12,6 +12,7 @@ import { portalWithDemoFeatures } from '@/server/parenting-demo'
 import { KINETIC_COPY, PLAYBACK_COPY, SEQUENCE_FEATURE_COPY } from '@/lib/sequence-features'
 import { sortParts } from '@/lib/part-order'
 import { needsCover } from '@/lib/supplied-cover'
+import { loadPortalPeople, portalPeopleNote, tallyPortalPeople } from '@/lib/portal-people'
 import { portalPeople, ref, rows, str, type Ctx } from '../common'
 
 export async function SequenceDesk(ctx: Ctx) {
@@ -91,18 +92,21 @@ export async function SequenceOverview(ctx: Ctx) {
   const { payload, portal, base } = ctx
   const courses = await rows(payload, 'courses', { and: [{ origin: { equals: 'local' } }, { portal: { equals: portal.id } }] })
   const courseIds = courses.map((row) => row.id)
-  const [lessons, codes, people] = await Promise.all([
+  const [lessons, codes, members] = await Promise.all([
     courseIds.length ? rows(payload, 'lessons', { course: { in: courseIds } }) : Promise.resolve([]),
     rows(payload, 'access-codes', { portal: { equals: portal.id } }),
-    payload.count({ collection: 'users', overrideAccess: true, where: { 'tenants.tenant': { equals: portal.id } } }),
+    loadPortalPeople(payload, portal.id),
   ])
+  const people = tallyPortalPeople(members)
+  const peopleNote = portalPeopleNote(people)
   return (
     <AdminFrame ctx={ctx} active="overview" title="Overview" intro="Films, people, and codes for this course." testId="sequence-overview" showOnPhone>
       <div className="grid" style={{ gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: 10 }}>
         <div className="count-tile"><span>Films</span><b data-testid="sequence-film-count">{lessons.length}</b></div>
-        <div className="count-tile"><span>People</span><b data-testid="sequence-people-count">{people.totalDocs}</b></div>
+        <div className="count-tile"><span>People</span><b data-testid="sequence-people-count">{people.joined}</b></div>
         <div className="count-tile"><span>Codes</span><b data-testid="sequence-code-count">{codes.length}</b></div>
       </div>
+      {peopleNote ? <p className="hint" data-testid="sequence-people-note">{peopleNote}</p> : null}
       <p style={{ marginTop: 16 }}><Link className="pill ink" href={`${base}/admin/sequence`}>Course films</Link></p>
     </AdminFrame>
   )
