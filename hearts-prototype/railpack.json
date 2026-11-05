@@ -1,0 +1,16 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "provider": "node",
+  "packages": {
+    "node": "22"
+  },
+  "steps": {
+    "build": {
+      "commands": ["node scripts/get-yt-dlp.mjs", "HEARTS_BUILD=1 NODE_OPTIONS=--max-old-space-size=3072 npm run build"]
+    }
+  },
+  "deploy": {
+    "startCommand": "node --import tsx scripts/start-production.ts",
+    "aptPackages": ["...", "ca-certificates"]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "playlistTitle": "Round two sitting",
+  "playlist": ["short000001", "nocaps00001", "fresh000001", "B4KtRL_2aXY"],
+  "playlists": {
+    "PLheartsready": {
+      "title": "Round two sitting",
+      "ids": ["ready000001", "readywait01"]
+    }
+  },
+  "videos": [
+    { "id": "B4KtRL_2aXY", "title": "Goals for the month", "duration": 427, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "UUTnGXyCHZI", "title": "A long sitting", "duration": 3897, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "gEqJgd0zB8Q", "title": "With Hani", "duration": 1497, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "kM7LVppIMl0", "title": "Quiet hour", "duration": 639, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "yl7DBZGnhNo", "title": "Evening lesson", "duration": 1283, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "short000001", "title": "A short clip", "duration": 89, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "nocaps00001", "title": "No captions film", "duration": 719, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "no" },
+    { "id": "fresh000001", "title": "Fresh film", "duration": 899, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "bulk0000001", "title": "One more film", "duration": 640, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "race0000001", "title": "Race film", "duration": 610, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "ready000001", "title": "Ready film", "duration": 640, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "yes" },
+    { "id": "readywait01", "title": "Waiting film", "duration": 720, "channel": "HEARTS channel", "channelId": "UCheartsround", "captions": "no" }
+  ]
+}

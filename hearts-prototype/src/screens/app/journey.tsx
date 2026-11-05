@@ -1,0 +1,149 @@
+import { cookies } from 'next/headers'
+import type { CSSProperties } from 'react'
+import type { Payload } from 'payload'
+import { InsightTracker } from '@/components/app/insight-tracker'
+import { JourneyErrorBoundary } from '@/components/app/error-boundary'
+import { Journey } from '@/components/journey/journey'
+import { resolveSlots, subjectFrom } from '@/server/experiments'
+import { OPENER } from '@/lib/opening-data'
+
+const OWN_OPENER = {
+  caption: 'A few questions, then the films.',
+  subline: 'Go with your first thought.',
+  handOff: 'Here is where we will start.',
+  justShow: 'Show me the films.',
+}
+import { now } from '@/lib/clock'
+import { idOf } from '@/lib/ids'
+import { portalTimeZone } from '@/lib/zone-time'
+import type { PortalDoc, SessionUser } from '@/server/context'
+import { partTitle } from '@/lib/talk-title'
+import { posterFor, shownPoster } from '@/server/learner'
+import { loadOpening } from '@/server/opening'
+import { loadDoors } from '@/server/doors'
+import { DOORS, doorNumberOfClause } from '@/lib/doors'
+import { contextAt, popularTalkIds, resolveContextLabel } from '@/server/calendar'
+import { nudgeTalks } from '@/lib/calendar-context'
+import { activeMissionCard } from './mission'
+import { unreadCount } from '../common'
+import { FeedLiveBanner } from '@/components/app/live-banner'
+import { homeLive } from '@/server/live'
+import { featureOn, featuresOf } from '@/lib/features'
+import { feedBackHref } from '@/lib/lane-progress'
+import { appNameOf } from '@/lib/learner-brand'
+import { fontPairOf, sceneCssOf, shellOf } from '@/lib/portal-look'
+import { nextCourseFilms } from './course-home'
+import { firstGuestFilm } from '@/server/guest-films'
+import { readOr, retryRead } from '@/server/db-retry'
+import { fallbackPayload, type VariantView } from '@/lib/experiment-slots'
+
+export async function masterFlags(payload: Payload) {
+  const flags = (await payload.findGlobal({ slug: 'master-flags', overrideAccess: true }).catch(() => null)) as { popupOverPlayer?: boolean; chromeOverPlayer?: boolean; showUnchecked?: boolean } | null
+  return { popupOverPlayer: flags?.popupOverPlayer !== false, chromeOverPlayer: flags?.chromeOverPlayer !== false, showUnchecked: Boolean(flags?.showUnchecked) }
+}
+
+async function mainsShelf(payload: Payload) {
+  const lanes = await payload.find({ collection: 'lanes', overrideAccess: true, depth: 0, limit: 50 })
+  const lessonIds = lanes.docs.flatMap((lane) => ((lane as { starters?: { lesson?: unknown; role?: string }[] }).starters || []).filter((row) => row.role === 'mains').map((row) => idOf(row.lesson))).filter((id): id is number => Boolean(id))
+  const lessons = lessonIds.length ? (await payload.find({ collection: 'lessons', overrideAccess: true, depth: 0, limit: 50, where: { id: { in: lessonIds } } })).docs : []
+  const shelf: Record<string, { courseId: number; lessonId: number; title: string; poster: string | null }> = {}
+  for (const lane of lanes.docs as { key?: string; starters?: { lesson?: unknown; role?: string }[] }[]) {
+    const lessonId = idOf((lane.starters || []).find((row) => row.role === 'mains')?.lesson)
+    const lesson = lessons.find((row) => row.id === lessonId) as { id: number; course?: unknown; title?: string; sourceTitle?: string; order?: number; youtubeId?: string; vimeoId?: string } | undefined
+    const courseId = idOf(lesson?.course)
+    if (lane.key && lesson && courseId) shelf[lane.key] = { courseId, lessonId: lesson.id, title: partTitle(lesson), poster: shownPoster(posterFor(lesson.youtubeId)) }
+  }
+  return shelf
+}
+
+const FEED_SLOTS = ['feed-cta-label', 'full-talk-cta-label', 'wide-video-framing']
+
+function quietVariants(): Record<string, VariantView> {
+  const out: Record<string, VariantView> = {}
+  for (const slot of FEED_SLOTS) {
+    const payload = fallbackPayload(slot)
+    out[slot] = {
+      slot,
+      experimentKey: null,
+      variantKey: null,
+      payload,
+      label: String(payload.label || ''),
+      framing: typeof payload.framing === 'string' ? payload.framing : undefined,
+      running: false,
+    }
+  }
+  return out
+}
+
+/** The one continuous learner surface: opener, scenes, the door, and the feed (spec 7 and 7A). */
+export async function JourneyScreen({ payload, portal, user, base, initial, viewAs, query = {} }: { payload: Payload; portal: PortalDoc; user: SessionUser | null; base: string; initial: 'opener' | 'help' | 'feed'; viewAs: boolean; query?: Record<string, string | undefined> }) {
+  const deviceId = (await cookies()).get('hearts_device')?.value
+  const emptyLive = { live: null, upcoming: [], pollMs: 12_000 }
+  const [opening, flags, mains, unread, doors, live, variants] = await Promise.all([
+    retryRead(() => loadOpening(payload, portal, user)),
+    readOr('flags', () => masterFlags(payload), { popupOverPlayer: true, chromeOverPlayer: true, showUnchecked: false }),
+    readOr('mains', () => mainsShelf(payload), {}),
+    user ? readOr('unread', () => unreadCount(payload, user), 0) : Promise.resolve(0),
+    readOr('doors', () => loadDoors(payload), DOORS),
+    user ? readOr('live', () => homeLive(payload, portal, user), emptyLive) : Promise.resolve(emptyLive),
+    readOr('variants', () => resolveSlots(payload, FEED_SLOTS, subjectFrom(user, deviceId, portal.id)), quietVariants()),
+  ])
+  const context = await readOr('context', () => contextAt(payload, now(), undefined, undefined, portalTimeZone(portal)), null)
+  if (context) {
+    for (const slot of Object.keys(variants)) {
+      const view = variants[slot]
+      if (!view || (view.running && view.label && !/^learn more\b/i.test(view.label))) continue
+      const label = await readOr(`label ${slot}`, () => resolveContextLabel(payload, slot, view.payload, context), '')
+      if (label) variants[slot] = { ...view, label, payload: { ...view.payload, label } }
+    }
+  }
+  const popular = context ? await readOr('popular', () => popularTalkIds(payload), []) : []
+  const titled = opening.route.cuts.map((cut) => ({
+    ...cut,
+    title: opening.clips[String(cut.id)]?.lessonTitle || opening.clips[String(cut.id)]?.courseTitle || '',
+  }))
+  if (context) opening.route.cuts = nudgeTalks(titled, context, popular, true)
+  const mission = user ? await readOr('mission', () => activeMissionCard(payload, portal.id, base, appNameOf(portal)), null) : null
+  const modern = shellOf(portal) === 'modern'
+  const sceneCss = modern ? sceneCssOf(portal) : null
+  const courseFilms = user && Object.keys(opening.clips || {}).length === 0 ? await readOr('course films', () => nextCourseFilms(payload, user, base, 4, portal.id), []) : []
+  const guestFilm = modern && !user ? await readOr('guest film', () => firstGuestFilm(payload, portal.id, base), null) : null
+  return (
+    <div className={`app-stage shell-modern${sceneCss && sceneCss !== 'none' ? ' has-scene' : ''}`} data-shell={modern ? 'modern' : undefined} data-font={modern ? fontPairOf(portal) : 'system'} style={sceneCss ? ({ '--scene': sceneCss } as CSSProperties) : undefined}>
+      {initial === 'feed' && user && featureOn(portal, 'live') ? <FeedLiveBanner portal={String(portal.slug)} base={base} session={live.live} /> : null}
+      <main className="app journey-frame" data-testid={initial === 'feed' ? 'feed-screen' : 'start-screen'}>
+        <InsightTracker trendsOptIn={Boolean(user?.trendsOptIn)} />
+        {mission && initial === 'feed' && featureOn(portal, 'missions') ? <div className="feed-mission" data-testid="feed-mission">{mission}</div> : null}
+        <JourneyErrorBoundary homeHref={base}>
+          <Journey
+            base={base}
+            opening={opening}
+            opener={modern || opening.ownQuestions ? OWN_OPENER : OPENER}
+            plain={modern}
+            initial={initial}
+            signedIn={Boolean(user)}
+            learner={user?.role === 'learner'}
+            viewAs={viewAs}
+            keepPlace={Boolean(user?.keepPlace)}
+            trendsOptIn={Boolean(user?.trendsOptIn)}
+            startingDoor={doorNumberOfClause(user?.startingClause, doors)}
+            flags={flags}
+            mains={mains}
+            unread={unread}
+            lane={typeof query.lane === 'string' && /^[a-z-]{2,40}$/.test(query.lane) ? query.lane : null}
+            backHref={feedBackHref(base, { from: query.from, lane: query.lane })}
+            clip={Number(query.clip) || null}
+            play={portal.shape === 'sequence' ? null : query.play === 'appetiser' ? 'appetiser' : null}
+            appetisers={portal.shape !== 'sequence'}
+            brand={String(portal.brandName || '').trim()}
+            afterPlacing={query.after === 'placing'}
+            variants={variants}
+            features={featuresOf(portal)}
+            courseFilms={courseFilms}
+            guestFilm={guestFilm}
+          />
+        </JourneyErrorBoundary>
+      </main>
+    </div>
+  )
+}

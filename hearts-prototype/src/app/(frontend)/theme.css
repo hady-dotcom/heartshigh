@@ -1,0 +1,1311 @@
+/*
+ * House look: bright white and blue on every shell.
+ * Components read the tokens. Screens do not restyle themselves.
+ * Portal names stay as stored (HEARTS still says HEARTS).
+ * Garden rings stay a gradient with white figures (the path layout is untouched).
+ * The appetiser's next-talk card stays an opaque colour.
+ */
+
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 22px;
+  --space-6: 28px;
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 26px;
+  --radius-arch: 36px 36px 18px 18px;
+  --shadow-soft: 0 12px 32px rgba(14, 28, 26, 0.16);
+  --shadow-glow: 0 0 18px rgba(37, 99, 235, 0.45);
+  --hairline: 1px solid var(--line);
+  --glass-blur: 16px;
+  --ease-rise: cubic-bezier(0.16, 1, 0.3, 1);
+  --t-lantern: 3.4s;
+  --blossom-quran: #f6eedc;
+  --blossom-hadith: #e2a07a;
+  --blossom-character: #e8a15a;
+  --blossom-society: #c4a6e0;
+  --blossom-spirit: #8fa36a;
+  --scene: none;
+  --lattice: none;
+  /* Shared desk tokens. Same values in src/lib/desk-tokens.ts. White and blue. */
+  --desk-page: #F2F2F7;
+  --desk-card: #FFFFFF;
+  --desk-ink: #111827;
+  --desk-heading: #111827;
+  --desk-sidebar: #F3F4F6;
+  --desk-header: #FFFFFF;
+  --desk-on-dark: #111827;
+  --desk-gold: #2563EB;
+  --desk-gold-ink: #FFFFFF;
+  --desk-teal: #1D4ED8;
+  --desk-muted: #4B5563;
+  --desk-line: #E5E7EB;
+  --desk-field: #F3F4F6;
+}
+
+/* —— House: white canvas, blue accent, dark type. Dawn uses the same tokens. —— */
+html[data-theme='evening'] {
+  --cream: var(--hh-paper);
+  --paper: var(--hh-paper);
+  --card: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-ink-2);
+  --muted: var(--hh-muted);
+  --line: var(--hh-line);
+  --gold: var(--hh-accent);
+  --gold-deep: var(--hh-accent-deep);
+  --gold-glow: var(--hh-accent);
+  --gold-ink: var(--hh-on-accent);
+  --teal: var(--hh-accent);
+  --teal-deep: var(--hh-accent-deep);
+  --teal-fill: var(--hh-accent-fill);
+  --mint: var(--hh-surface);
+  --purple: var(--hh-accent);
+  --lavender: var(--hh-accent-fill);
+  --orange: var(--hh-accent);
+  --rose: #9f1239;
+  --rose-bg: #fdecef;
+  --indigo: var(--hh-ink);
+  --night: var(--hh-canvas);
+  --red-clause: #9f1239;
+  --bg-solid: var(--hh-canvas);
+  --scrim: var(--hh-scene-wash);
+  --scrim-deep: var(--hh-scene-wash-deep);
+  --glass: var(--hh-glass);
+  --glass-solid: var(--hh-paper);
+  --field: var(--hh-paper);
+  --ring-from: var(--hh-accent-fill);
+  --ring-to: var(--hh-paper);
+  --scene: none;
+  --lattice: none;
+  --focus: var(--hh-accent);
+  color: var(--ink);
+  background: var(--bg-solid);
+  color-scheme: light;
+}
+
+/* Dawn is retired. A leftover data-theme="dawn" still uses the house tokens. */
+html[data-theme='dawn'] {
+  --cream: var(--hh-paper);
+  --paper: var(--hh-paper);
+  --card: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-ink-2);
+  --muted: var(--hh-muted);
+  --line: var(--hh-line);
+  --gold: var(--hh-accent);
+  --gold-deep: var(--hh-accent-deep);
+  --gold-glow: var(--hh-accent);
+  --gold-ink: var(--hh-on-accent);
+  --teal: var(--hh-accent);
+  --teal-deep: var(--hh-accent-deep);
+  --teal-fill: var(--hh-accent-fill);
+  --mint: var(--hh-surface);
+  --purple: var(--hh-accent);
+  --lavender: var(--hh-accent-fill);
+  --orange: var(--hh-accent);
+  --rose: #9f1239;
+  --rose-bg: #fdecef;
+  --indigo: var(--hh-ink);
+  --night: var(--hh-canvas);
+  --red-clause: #9f1239;
+  --bg-solid: var(--hh-canvas);
+  --scrim: var(--hh-scene-wash);
+  --scrim-deep: var(--hh-scene-wash-deep);
+  --glass: var(--hh-glass);
+  --glass-solid: var(--hh-paper);
+  --field: var(--hh-paper);
+  --ring-from: var(--hh-accent-fill);
+  --ring-to: var(--hh-paper);
+  --scene: none;
+  --lattice: none;
+  --focus: var(--hh-accent);
+  color: var(--ink);
+  background: var(--bg-solid);
+  color-scheme: light;
+}
+
+/* Scenic wash. The star lattice stays off the page itself: 7% in the file, and only on headers and empty states. */
+html[data-theme] body {
+  background: var(--bg-solid);
+  color: var(--ink);
+}
+
+html[data-theme] .app-stage {
+  background-color: var(--bg-solid);
+  background-image: var(--scene);
+  background-size: cover;
+  background-position: center;
+}
+
+html[data-theme] .app {
+  background-color: var(--bg-solid);
+  background-image: linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: cover, cover;
+  background-position: center, center top;
+  color: var(--ink);
+}
+
+html[data-theme] .app.dark {
+  background-color: var(--hh-canvas);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.88)), var(--scene);
+  color: var(--hh-ink);
+}
+
+html[data-theme] .app-head,
+html[data-theme] .main-head {
+  background-color: var(--paper);
+  background-image: var(--lattice);
+  background-size: 140px;
+  background-repeat: repeat;
+  border-radius: 12px;
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Door, join, sign-in */
+html[data-theme] .door,
+html[data-theme] .splash {
+  background-color: var(--bg-solid);
+  background-image: linear-gradient(180deg, var(--scrim), var(--scrim-deep)), var(--scene);
+  background-size: cover, cover;
+  background-position: center;
+  color: var(--ink);
+}
+
+html[data-theme] .door-card {
+  background: var(--glass);
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: 28px 22px 26px;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(37, 99, 235, 0.18);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+html[data-theme] .door-card h1,
+html[data-theme] .splash h1,
+html[data-theme] .app h1,
+html[data-theme] .app h2,
+html[data-theme] .q-card h2,
+html[data-theme] .sheet h2,
+html[data-theme] .grow-banner h2,
+html[data-theme] .main-head h1,
+html[data-theme] .j-caption,
+html[data-theme] .j-sheet h2 {
+  font-family: var(--serif);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+html[data-theme] .app h1 { font-size: 32px; line-height: 1.05; }
+html[data-theme] .eyebrow {
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-family: var(--serif);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--gold);
+}
+html[data-theme='dawn'] .eyebrow { color: var(--gold-deep); }
+html[data-theme] .clause-card .lbl { text-transform: none; }
+
+/* Glass cards, lists, empty states. Garden rings are excluded so their gradient stays. */
+html[data-theme] .card:not(.garden-rings),
+html[data-theme] .q-card,
+html[data-theme] .note,
+html[data-theme] .ticket,
+html[data-theme] .harvest-card,
+html[data-theme] .wb-entry,
+html[data-theme] .wb-start,
+html[data-theme] .wb-open,
+html[data-theme] .stat-box,
+html[data-theme] .grow-tile,
+html[data-theme] .course-row,
+html[data-theme] .continue-row,
+html[data-theme] .door-cell,
+html[data-theme] .clause-card,
+html[data-theme] .summary-card,
+html[data-theme] .days-card,
+html[data-theme] .gesture-card,
+html[data-theme] .window-card {
+  background: var(--glass);
+  color: var(--ink);
+  border: var(--hairline);
+  border-radius: var(--radius-md);
+  box-shadow: inset 0 1px 0 rgba(37, 99, 235, 0.12), var(--shadow-soft);
+  backdrop-filter: blur(var(--glass-blur));
+}
+
+html[data-theme] .card h3,
+html[data-theme] .card p,
+html[data-theme] .note p,
+html[data-theme] .clause-card p,
+html[data-theme] .summary-card p { color: var(--ink-2); }
+html[data-theme] .harvest-card small,
+html[data-theme] .drawn-meta { color: var(--ink-2); font-size: 15px; font-weight: 600; line-height: 1.45; }
+html[data-theme] .card h3,
+html[data-theme] .days-card h3,
+html[data-theme] .theme-pin h3 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+html[data-theme] .install-card h2 { color: var(--ink); font-family: var(--serif); font-weight: 600; }
+html[data-theme] .install-card .install-lead,
+html[data-theme] .install-card .install-note,
+html[data-theme] .install-card .install-manual { color: var(--ink-2); font-size: 16px; line-height: 1.45; }
+html[data-theme] .install-card .install-step p,
+html[data-theme] .install-card .install-caption { color: var(--ink); font-size: 15px; font-weight: 650; line-height: 1.35; }
+html[data-theme] .install-nav > button { color: var(--ink); }
+html[data-theme] .install-again { color: var(--ink-2); }
+html[data-theme] .install-skip { color: var(--ink-2); }
+
+html[data-theme] .empty-state,
+html[data-theme] .feed-empty,
+html[data-theme] .desk .empty {
+  background-color: var(--glass);
+  background-image: var(--lattice);
+  background-size: 180px;
+  border: var(--hairline);
+  border-radius: var(--radius-lg);
+  color: var(--ink-2);
+}
+
+html[data-theme] .list-link { color: var(--ink); border-bottom-color: var(--line); }
+html[data-theme] .list-link small { color: var(--muted); }
+
+/* Fields, chips, toggles */
+html[data-theme] .field,
+html[data-theme] .app select.field,
+html[data-theme] .app textarea.field,
+html[data-theme] .compose {
+  background: var(--field);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+/* Placeholders stay fainter than typed text, and still clear enough to read (WCAG AA on the field). */
+html[data-theme] :is(input, textarea)::placeholder,
+html[data-theme] .field::placeholder,
+html[data-theme] textarea::placeholder {
+  color: #a89878;
+  opacity: 1;
+}
+html[data-theme] .desk textarea.paste-example::placeholder {
+  color: #a89878;
+  opacity: 1;
+}
+html[data-theme] .field:focus,
+html[data-theme] .desk input:focus,
+html[data-theme] .desk select:focus,
+html[data-theme] .desk textarea:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.28);
+}
+html[data-theme] :focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+html[data-theme] .page-help-btn {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .page-help-card {
+  background: var(--card);
+  color: var(--ink);
+}
+html[data-theme] .swarm-tools .chip {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .swarm-tools .chip.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+html[data-theme] .chip {
+  border: 1px solid transparent;
+}
+html[data-theme] .chip.white { background: var(--glass-solid); color: var(--ink); border-color: var(--line); }
+html[data-theme] .chip.gold { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .theme-pin-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+html[data-theme] .theme-choice {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--gold);
+  min-height: 40px;
+}
+html[data-theme] .theme-choice.on {
+  background: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: var(--shadow-glow);
+}
+html[data-theme] .theme-now { margin: 10px 0 0; font-size: 15px; }
+
+/* Buttons */
+html[data-theme] .pill.gold,
+html[data-theme] .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light) {
+  background: var(--gold);
+  color: var(--gold-ink);
+  box-shadow: 0 8px 22px rgba(196, 143, 44, 0.28);
+}
+html[data-theme] .pill.outline,
+html[data-theme] .pill.outline-light {
+  background: transparent;
+  color: var(--gold-glow, var(--gold));
+  border: 1.5px solid var(--gold);
+}
+html[data-theme='dawn'] .pill.outline,
+html[data-theme='dawn'] .pill.outline-light { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .pill.ink {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border: 1.5px solid var(--line);
+}
+html[data-theme='evening'] .pill.ink { background: var(--hh-ink); color: #142e2c; border-color: transparent; }
+html[data-theme] .pill.teal,
+html[data-theme] .start.teal,
+html[data-theme] .follow.teal,
+html[data-theme] .btn.teal {
+  background: var(--teal-fill);
+  color: var(--hh-ink);
+  border-color: transparent;
+}
+html[data-theme] .pill.purple,
+html[data-theme] .answer-btn,
+html[data-theme] .share-btn {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+html[data-theme] .answer-btn[disabled] { background: var(--hh-muted); color: var(--hh-on-accent); }
+html[data-theme] .mini-btn {
+  background: transparent;
+  color: var(--gold-glow, var(--gold));
+  border-color: var(--gold);
+}
+html[data-theme='dawn'] .mini-btn { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .link-btn,
+html[data-theme] .garden-link,
+html[data-theme] .harvest-actions a,
+html[data-theme] .scholar-choices a,
+html[data-theme] .harvest-panel > a,
+html[data-theme] .ask {
+  color: var(--gold-glow, var(--gold));
+  border-color: var(--gold);
+  background: transparent;
+}
+html[data-theme='dawn'] .link-btn,
+html[data-theme='dawn'] .garden-link,
+html[data-theme='dawn'] .harvest-actions a,
+html[data-theme='dawn'] .scholar-choices a,
+html[data-theme='dawn'] .harvest-panel > a,
+html[data-theme='dawn'] .ask { color: var(--teal-deep); border-color: var(--teal); }
+html[data-theme] .harvest-actions a.on { background: var(--teal-fill); color: var(--hh-ink); border-color: transparent; }
+
+/* Tab bar: glassy, with a gold ring on the active tab */
+html[data-theme] .tabbar,
+html[data-theme] .tabbar.dark {
+  background: rgba(255, 255, 255, 0.82);
+  border-top: 1px solid rgba(37, 99, 235, 0.4);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.18);
+}
+html[data-theme='dawn'] .tabbar:not(.dark) {
+  background: rgba(220, 236, 232, 0.92);
+  border-top-color: rgba(196, 122, 69, 0.55);
+}
+html[data-theme] .tab { color: var(--hh-muted); position: relative; }
+html[data-theme] .tabbar.dark .tab,
+html[data-theme] .tabbar.evening .tab { color: var(--hh-muted); }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab { color: #2a4a46; }
+html[data-theme] .tab.on { color: var(--hh-accent); }
+html[data-theme='dawn'] .tabbar:not(.dark) .tab.on { color: #7a3f28; }
+html[data-theme] .tab .tab-icon { position: relative; z-index: 1; }
+html[data-theme] .tab.on .tab-icon {
+  filter: drop-shadow(0 0 6px rgba(37, 99, 235, 0.85));
+}
+html[data-theme] .tab.on::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1.5px solid var(--hh-accent);
+  box-shadow: 0 0 12px rgba(37, 99, 235, 0.55);
+  animation: lantern var(--t-lantern) var(--ease-rise) infinite;
+}
+@keyframes lantern {
+  50% { box-shadow: 0 0 18px rgba(37, 99, 235, 0.85); }
+}
+
+/* Sheets and pop-ups */
+html[data-theme] .sheet,
+html[data-theme] .j-sheet {
+  background: var(--glass-solid);
+  color: var(--ink);
+  border: var(--hairline);
+  border-bottom: 0;
+  box-shadow: 0 -18px 50px rgba(0, 0, 0, 0.28);
+}
+html[data-theme='evening'] .sheet,
+html[data-theme='evening'] .j-sheet {
+  background: #0F2E2C;
+}
+html[data-theme] .sheet .handle,
+html[data-theme] .j-sheet .handle { background: var(--gold); opacity: 0.7; }
+html[data-theme] .sheet-close {
+  background: var(--field);
+  color: var(--ink);
+}
+html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .choice {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .choice:has(input:checked) {
+  border-color: var(--gold);
+  background: rgba(37, 99, 235, 0.16);
+}
+html[data-theme] .other {
+  background: var(--field);
+  color: var(--ink);
+}
+html[data-theme] .compose textarea { color: var(--ink); }
+html[data-theme] .toggle input { background: var(--hh-muted); }
+html[data-theme] .toggle input:checked { background: var(--gold); }
+html[data-theme] .weekdays span {
+  background: var(--field);
+  color: var(--ink);
+  border-color: var(--line);
+}
+html[data-theme] .weekdays input:checked + span {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+html[data-theme] .q-list li.done { color: var(--hh-accent); border-color: var(--hh-accent); }
+html[data-theme] .q-list li.open { color: var(--hh-ink); }
+html[data-theme] .q-list li.coming { color: var(--hh-muted); }
+html[data-theme] .flash.error { background: var(--rose-bg); color: var(--red-clause); border-color: transparent; }
+html[data-theme] .flash.notice { background: var(--mint); color: var(--teal-deep); border-color: transparent; }
+html[data-theme='evening'] .flash.error { color: var(--red-clause); }
+html[data-theme='evening'] .flash.notice { color: var(--hh-ink); }
+html[data-theme] .j-sheet-error { color: var(--red-clause) !important; }
+html[data-theme='dawn'] .j-sheet-error { color: #7a2430 !important; }
+
+/* Home growth banner and lanes, framed like an arch. Rings stay white. */
+html[data-theme] .grow-banner,
+html[data-theme] .time-card,
+html[data-theme] .forest {
+  background-color: var(--hh-canvas);
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.9)), var(--scene);
+  background-size: cover;
+  background-position: center 30%;
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.45);
+  border-radius: var(--radius-arch);
+  box-shadow: inset 0 1px 0 rgba(37, 99, 235, 0.2);
+}
+html[data-theme='dawn'] .grow-banner,
+html[data-theme='dawn'] .time-card {
+  background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.84), rgba(255, 255, 255, 0.92)), var(--scene);
+}
+html[data-theme='dawn'] .grow-banner .tree-art,
+html[data-theme='dawn'] .continue-row .thumb,
+html[data-theme='dawn'] .feed-door .mini,
+html[data-theme='dawn'] .course-tree,
+html[data-theme='dawn'] .course-row .thumb,
+html[data-theme='dawn'] .player-card .poster.scenic,
+html[data-theme='dawn'] .clip-bg,
+html[data-theme='dawn'] .bio-cover,
+html[data-theme='dawn'] .lane-card {
+  background-image: url('/theme/dawn-courtyard.jpg');
+}
+html[data-theme] .grow-banner .eyebrow,
+html[data-theme] .time-card .eyebrow,
+html[data-theme] .forest .eyebrow { color: var(--hh-accent); }
+html[data-theme] .time-card .big,
+html[data-theme] .forest .big { color: var(--hh-accent); font-family: var(--serif); font-weight: 600; }
+html[data-theme] .lane-card { border-radius: var(--radius-arch); border: 1px solid rgba(37, 99, 235, 0.35); }
+html[data-theme] .lane-card::after {
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.82), rgba(255, 255, 255, 0.15));
+}
+html[data-theme] .player-card {
+  border-radius: var(--radius-arch);
+  border: 1px solid rgba(37, 99, 235, 0.35);
+}
+
+/* Garden rings: gradient plus white figures, in both themes. Do not flatten this. */
+html[data-theme] .garden-rings.card {
+  background-color: var(--ring-to);
+  background-image: linear-gradient(165deg, var(--ring-from), var(--ring-to));
+  color: #fff;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+}
+html[data-theme] .garden-rings .eyebrow { color: var(--hh-accent); }
+html[data-theme] .ring-stat { color: rgba(255, 255, 255, 0.92); }
+html[data-theme] .ring-stat .r { color: #fff; }
+
+/* Path dots pick up the theme colours without moving. */
+html[data-theme='evening'] .gp-dot { background: var(--hh-paper); border-color: rgba(37, 99, 235, 0.45); color: var(--hh-muted); }
+html[data-theme='evening'] .gp-node.done .gp-dot { background: var(--hh-surface); border-color: var(--hh-accent); color: var(--hh-ink); }
+html[data-theme] .gp-node.active .gp-dot { background: var(--gold); border-color: var(--gold); color: var(--gold-ink); }
+html[data-theme] .garden-path ol::before { border-left-color: rgba(37, 99, 235, 0.45); }
+
+/* Blossom tags for the five areas */
+html[data-theme] .tag.quran { background: var(--blossom-quran); color: #1a1408; }
+html[data-theme] .tag.hadith { background: var(--blossom-hadith); color: #1a1408; }
+html[data-theme] .tag.character { background: var(--blossom-character); color: #1a1408; }
+html[data-theme] .tag.society { background: var(--blossom-society); color: #1a1408; }
+html[data-theme] .tag.spirituality,
+html[data-theme] .tag.spirit { background: var(--blossom-spirit); color: #1a1408; }
+
+html[data-theme] .summary-card.gold { background: rgba(37, 99, 235, 0.16); border-color: var(--gold); }
+html[data-theme] .summary-card.mint { background: var(--mint); border-color: transparent; }
+html[data-theme] .summary-card.rose { background: rgba(37, 99, 235, 0.12); border-color: var(--gold); }
+html[data-theme] .door-cell[data-lit='yes'] { border-color: var(--gold); background: rgba(37, 99, 235, 0.12); }
+html[data-theme] .note.unread { border-color: var(--gold); background: rgba(37, 99, 235, 0.12); }
+html[data-theme] .wb-entry .from-lesson { background: var(--field); color: var(--ink); }
+html[data-theme] .wb-entry .from-lesson small { color: var(--gold); }
+html[data-theme='dawn'] .wb-entry .from-lesson small { color: var(--teal-deep); }
+html[data-theme] .door-chip { background: var(--field); color: var(--ink-2); }
+html[data-theme] .gesture-grid div { background: var(--field); color: var(--ink); border-color: var(--line); }
+html[data-theme='evening'] .clause-card,
+html[data-theme='evening'] .clause-card .clause-num,
+html[data-theme='evening'] .clause-card .lbl,
+html[data-theme='evening'] .clause-card .door-words { color: var(--hh-ink); }
+html[data-theme] .wb-entry .reply { background: var(--mint); color: var(--ink); }
+html[data-theme] .wb-entry .reply b { color: var(--teal-deep); }
+html[data-theme] .harvest-ayah,
+html[data-theme] .tafsir-text,
+html[data-theme] .context-ayah.focus { background: var(--field); color: var(--ink); }
+/* Filter chips: gold hairline, parchment or ink type, gold when chosen. Not the old rose wash. */
+html[data-theme] .chip-row a,
+html[data-theme] .chip-row span {
+  background: transparent;
+  color: var(--ink);
+  border: 1.5px solid var(--gold);
+}
+html[data-theme='dawn'] .chip-row a,
+html[data-theme='dawn'] .chip-row span { color: var(--gold-deep); border-color: var(--gold-deep); }
+html[data-theme] .chip-row .on,
+html[data-theme] .chip-row a.on,
+html[data-theme] .chip-row span.on,
+html[data-theme] .chip-row a.on .count,
+html[data-theme] .chip-row span.on .count {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border-color: var(--gold);
+}
+html[data-theme] .harvest-new {
+  background: var(--gold);
+  color: var(--gold-ink);
+}
+html[data-theme] .chip-row.soft a,
+html[data-theme] .chip-row.soft span {
+  background: transparent;
+  color: var(--teal);
+  border-color: var(--teal-fill);
+}
+html[data-theme='dawn'] .chip-row.soft a,
+html[data-theme='dawn'] .chip-row.soft span { color: var(--teal-deep); }
+html[data-theme] .chip-row.soft .on,
+html[data-theme] .chip-row.soft a.on {
+  background: var(--teal-fill);
+  color: var(--hh-ink);
+  border-color: var(--teal-fill);
+}
+html[data-theme] .kind-tabs span {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+html[data-theme] .kind-tabs span.on { background: var(--gold); color: var(--gold-ink); border-color: var(--gold); }
+html[data-theme] .slot .date { background: var(--teal-fill); color: var(--hh-ink); }
+html[data-theme] .start.soft { background: transparent; color: var(--gold-deep, var(--gold)); border: 1.5px solid var(--gold); }
+html[data-theme] .desk .badge.rose,
+html[data-theme] .desk .badge.gold { background: var(--desk-gold); color: var(--desk-gold-ink); }
+html[data-theme] .wb-entry .asked { color: var(--gold-glow); }
+html[data-theme='dawn'] .wb-entry .asked { color: var(--gold-deep); }
+html[data-theme] .answer-btn,
+html[data-theme] .share-btn { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .answer-btn[disabled] { background: rgba(37, 99, 235, 0.35); color: var(--muted); }
+html[data-theme] .tab .badge { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .part-chip,
+html[data-theme] .chip.dark {
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+html[data-theme] .consent-chip.quiet {
+  background: transparent;
+  color: var(--ink-2);
+  border: 1px solid var(--line);
+}
+html[data-theme] .desk .badge.purple,
+html[data-theme] .desk .badge.grey,
+html[data-theme] .desk .badge.teal { background: var(--desk-teal); color: var(--desk-on-dark); }
+html[data-theme] .consent-chip { background: var(--mint); color: var(--teal-deep); }
+html[data-theme] .mic { background: var(--gold); color: var(--gold-ink); }
+html[data-theme] .mic.on { background: var(--gold-deep); color: var(--hh-ink); }
+html[data-theme] .other .heart { color: var(--gold); }
+/* Empty states carry the lattice only. They do not depend on an illustration. */
+html[data-theme] .empty-state p { margin-top: 0; }
+html[data-theme] .speaker-card {
+  background: #0F2E2C;
+  color: #F1E4C6;
+  border: 1px solid rgba(37, 99, 235, 0.42);
+}
+html[data-theme='evening'] .speaker-card small { color: var(--hh-accent); }
+html[data-theme] .follow { border-color: var(--hh-ink); color: var(--hh-ink); }
+html[data-theme] .follow[aria-pressed='true'] { background: var(--hh-ink); color: #142e2c; }
+html[data-theme] .step-bar span { background: rgba(37, 99, 235, 0.28); }
+html[data-theme] .step-bar span.on { background: var(--gold); }
+html[data-theme] .back { color: var(--ink-2); }
+html[data-theme] .profile .avatar { background: var(--indigo); color: var(--hh-ink); }
+
+/* Opening sky, retinted toward the courtyard. White type stays, so the feed caption is untouched. */
+html[data-theme='evening'] .j-sky-layer.s0 { background: radial-gradient(120% 70% at 50% 0%, var(--hh-accent-fill) 0%, var(--hh-canvas) 70%); }
+html[data-theme='evening'] .j-sky-layer.s1 { background: radial-gradient(120% 70% at 50% 100%, var(--hh-accent-fill) 0%, transparent 70%), linear-gradient(180deg, var(--hh-canvas), var(--hh-surface)); }
+html[data-theme='evening'] .j-sky-layer.s2 { background: radial-gradient(120% 70% at 50% 100%, #3a4a32 0%, transparent 70%), linear-gradient(180deg, var(--hh-paper), #1b3b38); }
+html[data-theme='evening'] .j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #6a4a32 0%, transparent 70%), linear-gradient(180deg, var(--hh-surface), #1b3b38); }
+html[data-theme='evening'] .j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, var(--hh-accent-deep) 0%, transparent 70%), linear-gradient(180deg, #143230, #3a3428); }
+html[data-theme='evening'] .j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, #e2b56a 0%, transparent 72%), linear-gradient(180deg, #16322e, #5a4630); }
+html[data-theme='evening'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, var(--hh-accent) 0%, transparent 72%), linear-gradient(180deg, #1b3b38, #6a5438); }
+html[data-theme='evening'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, var(--hh-ink) 0%, transparent 74%), linear-gradient(180deg, #1b3b38, #8a6a40); }
+html[data-theme='dawn'] .j-sky-layer.s0 { background: radial-gradient(120% 70% at 50% 0%, #8a5048 0%, #1e3c3a 72%); }
+html[data-theme='dawn'] .j-sky-layer.s1 { background: radial-gradient(120% 70% at 50% 100%, #a86858 0%, transparent 70%), linear-gradient(180deg, #2a403e, #4a3038); }
+html[data-theme='dawn'] .j-sky-layer.s2 { background: radial-gradient(120% 70% at 50% 100%, #c4886a 0%, transparent 70%), linear-gradient(180deg, #2c4542, #5a3838); }
+html[data-theme='dawn'] .j-sky-layer.s3 { background: radial-gradient(120% 65% at 50% 105%, #e2a07a 0%, transparent 70%), linear-gradient(180deg, #2e4844, #6a4038); }
+html[data-theme='dawn'] .j-sky-layer.s4 { background: radial-gradient(120% 60% at 50% 105%, #e2b56a 0%, transparent 70%), linear-gradient(180deg, #34504c, #7a5040); }
+html[data-theme='dawn'] .j-sky-layer.s5 { background: radial-gradient(120% 60% at 50% 108%, var(--hh-accent) 0%, transparent 72%), linear-gradient(180deg, #3a5854, #8a5848); }
+html[data-theme='dawn'] .j-sky-layer.s6 { background: radial-gradient(120% 60% at 50% 110%, #e8b089 0%, transparent 72%), linear-gradient(180deg, #1e3c3a, #6a4038); }
+html[data-theme='dawn'] .j-sky-layer.s7 { background: radial-gradient(130% 62% at 50% 112%, #e8b089 0%, transparent 74%), linear-gradient(180deg, #24524c, #6a4038); }
+html[data-theme='dawn'] .j-tile {
+  background: rgba(220, 236, 232, 0.2);
+  border-color: rgba(196, 122, 69, 0.55);
+}
+html[data-theme] .j-caption em { color: var(--hh-accent); }
+
+/* Appetiser next-talk card stays opaque in both themes. */
+html[data-theme] .journey[data-mode='appetiser'] .j-mains {
+  background-color: #1b3b38;
+  background-image: none;
+  color: var(--hh-ink);
+}
+html[data-theme='dawn'] .journey[data-mode='appetiser'] .j-mains {
+  background-color: #24524c;
+  color: var(--hh-ink);
+}
+
+/* Desk. Evening garden: deep teal page and panels, warm dark gold, cream type. */
+html[data-theme] .desk {
+  --cream: var(--desk-page);
+  --paper: var(--desk-page);
+  --card: var(--desk-card);
+  --ink: var(--desk-ink);
+  --ink-2: var(--desk-ink);
+  --muted: var(--desk-muted);
+  --line: var(--desk-line);
+  --gold: var(--desk-gold);
+  --gold-deep: var(--desk-line);
+  --gold-glow: var(--desk-gold);
+  --gold-ink: var(--desk-gold-ink);
+  --teal: var(--desk-teal);
+  --teal-deep: var(--desk-header);
+  --teal-fill: var(--desk-header);
+  --mint: var(--desk-field);
+  --heading: var(--desk-heading);
+  --focus: var(--desk-gold);
+  --glass: var(--desk-card);
+  --glass-solid: var(--desk-card);
+  --field: var(--desk-field);
+  color: var(--desk-ink);
+  background-color: var(--desk-page);
+  background-image: none;
+  color-scheme: dark;
+}
+html[data-theme] .desk h1,
+html[data-theme] .desk h2,
+html[data-theme] .desk h3 {
+  color: var(--desk-heading);
+  font-family: var(--serif);
+  font-weight: 600;
+}
+html[data-theme] .desk .phoneTitle,
+html[data-theme] .desk .phone h3 { color: var(--hh-accent); }
+html[data-theme] .desk h1 { font-size: 40px; line-height: 1.1; }
+html[data-theme] .desk h2 { font-size: 26px; line-height: 1.2; }
+html[data-theme] .desk .side {
+  background: var(--desk-sidebar);
+  color: var(--desk-on-dark);
+  border-right: 1px solid rgba(37, 99, 235, 0.28);
+}
+html[data-theme] .desk .side-brand,
+html[data-theme] .desk .side-brand b,
+html[data-theme] .desk .side-foot .who { color: var(--desk-on-dark); }
+html[data-theme] .desk .side-brand small,
+html[data-theme] .desk .side .group,
+html[data-theme] .desk .side a.nav,
+html[data-theme] .desk .side-foot button { color: var(--desk-on-dark); }
+html[data-theme] .desk .side-foot { border-top-color: rgba(37, 99, 235, 0.28); }
+html[data-theme] .desk .side a.nav:hover,
+html[data-theme] .desk .side-foot button:hover { background: rgba(37, 99, 235, 0.16); color: var(--desk-on-dark); }
+html[data-theme] .desk .side a.nav.on { background: var(--desk-gold); color: var(--desk-gold-ink); }
+html[data-theme] .desk .side-brand b { font-family: var(--serif); font-size: 18px; font-weight: 600; }
+html[data-theme] .desk .main-head h1 { font-size: 40px; }
+html[data-theme] .desk .panel {
+  background: var(--desk-card);
+  border-color: var(--desk-line);
+  box-shadow: var(--shadow-soft);
+}
+html[data-theme] .desk .panel > header {
+  background: var(--desk-header);
+  color: var(--desk-on-dark);
+}
+html[data-theme] .desk .panel > header h2,
+html[data-theme] .desk .panel > header p {
+  color: var(--desk-on-dark);
+  font-size: 18px;
+}
+html[data-theme] .desk .panel > header.light {
+  background: var(--desk-card);
+  color: var(--desk-heading);
+}
+html[data-theme] .desk .panel > header.light h2,
+html[data-theme] .desk .panel > header.light p { color: var(--desk-heading); }
+html[data-theme] .desk .org-band {
+  background: var(--desk-card);
+  color: var(--desk-ink);
+}
+html[data-theme] .desk .org-band h2 { color: var(--desk-heading); font-size: 28px; }
+html[data-theme] .desk .org-band .lbl { color: var(--desk-muted); opacity: 1; }
+html[data-theme] .desk .org-band .status {
+  background: var(--desk-teal);
+  color: var(--desk-on-dark);
+}
+html[data-theme] .desk .stat-chip {
+  background: var(--desk-teal);
+  color: var(--desk-on-dark);
+}
+html[data-theme] .desk .stat-chip span,
+html[data-theme] .desk .stat-chip b {
+  background: transparent;
+  color: var(--desk-on-dark);
+  opacity: 1;
+}
+html[data-theme] .desk .badge.ink { background: var(--desk-teal); color: var(--desk-on-dark); }
+html[data-theme] .desk .btn.ink,
+html[data-theme] .desk .btn.teal,
+html[data-theme] .desk .btn:not(.ghost):not(.ink):not(.teal):not(.danger):not(.line-light),
+html[data-theme] .desk .pill.gold {
+  background: var(--desk-gold);
+  color: var(--desk-gold-ink);
+}
+html[data-theme] .desk .btn.ghost { background: transparent; color: var(--desk-ink); border-color: var(--desk-gold); }
+html[data-theme] .desk .btn.danger { background: transparent; color: var(--hh-ink); border-color: var(--hh-ink); }
+html[data-theme] .desk .bell .count { background: var(--desk-gold); color: var(--desk-gold-ink); }
+html[data-theme] .desk .count-tile,
+html[data-theme] .desk .address,
+html[data-theme] .desk table.data th { background: var(--desk-page); color: var(--desk-ink); }
+html[data-theme] .desk table.data td { border-bottom-color: var(--desk-line); color: var(--desk-ink); }
+html[data-theme] .desk .pill.ink {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: transparent;
+}
+html[data-theme] .desk .mini-btn { color: var(--desk-ink); border-color: var(--desk-gold); }
+html[data-theme] .desk .input,
+html[data-theme] .desk select,
+html[data-theme] .desk textarea,
+html[data-theme] .desk input[type='text'],
+html[data-theme] .desk input[type='number'],
+html[data-theme] .desk input[type='date'],
+html[data-theme] .desk input[type='datetime-local'],
+html[data-theme] .desk input[type='url'],
+html[data-theme] .desk input[type='email'],
+html[data-theme] .desk input[type='password'] {
+  background: var(--desk-field);
+  color: var(--desk-ink);
+  border-color: var(--desk-line);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .tab.on::before { animation: none; }
+}
+
+.hady-door {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  padding: 24px 16px;
+}
+.hady-door .door-card { width: min(420px, 100%); text-align: center; }
+:is(html, html[data-theme]) .hady-door .pill.gold { background: #e07a5f; color: var(--hh-on-accent); }
+/* The evening door card is dark green. Paper ink (#1f3a5f / #2a211c) disappears on it.
+   Cream matches the field labels. The same colours cover a Hady sign-in card. */
+:is(html, html[data-theme]) .hady-door .door-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .hady-door .brand-word,
+:is(html, html[data-theme]) .hady-door .door-card h1,
+:is(html, html[data-theme]) .hady-door .door-card p,
+:is(html, html[data-theme]) .hady-door .door-links,
+:is(html, html[data-theme]) .hady-door .door-links a,
+:is(html, html[data-theme]) .hady-door .door-hint {
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .hady-door .door-card p.lede,
+:is(html, html[data-theme]) .hady-door .door-form label {
+  color: var(--hh-muted);
+}
+:is(html, html[data-theme]) .hady-door .field {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-accent-deep);
+}
+:is(html, html[data-theme]) .hady-door .field::placeholder { color: #a89878; opacity: 1; }
+:is(html, html[data-theme]) .hady-door .page-help-btn,
+:is(html, html[data-theme]) [data-portal-brand] .page-help-btn {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: 1.5px solid var(--hh-ink);
+}
+
+/* Door, join and sign-in: always the evening garden, whichever theme the clock picked. */
+:is(html, html[data-theme]) .garden-door {
+  --gd-teal: #0e2f2e;
+  --gd-teal-line: #1f6b60;
+  --gd-gold: var(--hh-accent);
+  --gd-gold-deep: #a8791f;
+  --gd-ink: var(--hh-ink);
+  --ink: var(--gd-ink);
+  --ink-2: var(--hh-muted);
+  --muted: var(--hh-muted);
+  --line: rgba(37, 99, 235, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 100dvh;
+  position: relative;
+  isolation: isolate;
+  background: var(--gd-teal);
+  color: var(--gd-ink);
+}
+:is(html, html[data-theme]) .garden-door::before,
+:is(html, html[data-theme]) .garden-door::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+}
+:is(html, html[data-theme]) .garden-door::before {
+  inset: -48px;
+  z-index: -2;
+  background: url('/theme/evening-courtyard.jpg') center / cover no-repeat;
+  filter: blur(14px) saturate(1.1);
+}
+:is(html, html[data-theme]) .garden-door::after {
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(70% 45% at 50% 12%, rgba(37, 99, 235, 0.16), transparent 70%),
+    linear-gradient(180deg, rgba(10, 40, 40, 0.58), rgba(7, 28, 28, 0.84));
+}
+:is(html, html[data-theme]) .garden-door .door-card {
+  background: linear-gradient(180deg, #f5ecd6, #ebdcbb);
+  color: #1b2a27;
+  border: 1px solid rgba(37, 99, 235, 0.7);
+  border-radius: 26px;
+  padding: 30px 24px 26px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  backdrop-filter: none;
+}
+:is(html, html[data-theme]) .garden-door .door-card h1 { color: #123f3a; }
+:is(html, html[data-theme]) .garden-door .door-card p.lede { color: #3c4b47; }
+:is(html, html[data-theme]) .garden-door .brand-mark {
+  background: radial-gradient(circle at 50% 35%, #17504a, var(--gd-teal) 70%);
+  color: var(--gd-gold);
+  box-shadow: 0 0 0 2px var(--gd-gold), 0 10px 26px rgba(14, 47, 46, 0.35);
+}
+:is(html, html[data-theme]) .garden-door .brand-word { color: #5c3f10; font-weight: 700; }
+:is(html, html[data-theme]) .garden-door .door-form label { color: #23443f; }
+:is(html, html[data-theme]) .garden-door .field {
+  background: #fbf5e6;
+  color: #1b2a27;
+  border: 1.5px solid var(--gd-teal-line);
+  border-radius: 14px;
+}
+:is(html, html[data-theme]) .garden-door .field::placeholder { color: #5c5348; opacity: 1; }
+:is(html, html[data-theme]) .garden-door .field:focus {
+  border-color: var(--gd-gold-deep);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+}
+:is(html, html[data-theme]) .garden-door .pill.gold {
+  background: var(--gd-gold);
+  color: var(--hh-on-accent);
+  box-shadow: 0 10px 24px rgba(168, 121, 31, 0.35);
+}
+:is(html, html[data-theme]) .garden-door .pill.outline {
+  background: transparent;
+  color: #14564c;
+  border: 1.5px solid var(--gd-teal-line);
+}
+:is(html, html[data-theme]) .garden-door .door-links { color: #14564c; }
+:is(html, html[data-theme]) .garden-door .door-links a { border-bottom-color: rgba(168, 121, 31, 0.6); }
+:is(html, html[data-theme]) .garden-door .door-hint { color: #3a332c; }
+:is(html, html[data-theme]) .garden-door .flash.notice {
+  background: var(--hh-ink);
+  color: #14564c;
+  border: 1px solid #9ecfb8;
+}
+:is(html, html[data-theme]) .garden-door .flash.error {
+  background: #fdecef;
+  color: #8a2335;
+  border: 1px solid #f4c4cd;
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card {
+  width: min(360px, calc(100% - 36px));
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 12px auto 28px;
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.55);
+  border-radius: 20px;
+  padding: 22px 20px 18px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card h1 { color: var(--hh-ink); }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-card p.lede { color: var(--hh-muted); }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .brand-word { color: var(--hh-ink); }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-form label { color: var(--hh-muted); }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-accent-deep);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .field::placeholder { color: #a89878; opacity: 1; }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .flash.notice {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+  border: 1px solid rgba(37, 99, 235, 0.55);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .flash.error {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+  border: 1px solid rgba(231, 160, 180, 0.55);
+}
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-links { color: var(--hh-ink); }
+:is(html, html[data-theme]) .garden-door[data-testid="join"] .door-hint { color: var(--hh-muted); }
+
+/* Proposed Compass mock: evening-garden desk (deep teal, warm gold, cream type). Live Compass stays parchment. */
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"],
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"].gather-desk {
+  --desk-page: var(--hh-canvas);
+  --desk-card: var(--hh-paper);
+  --desk-ink: var(--hh-ink);
+  --desk-heading: var(--hh-ink);
+  --desk-muted: var(--hh-muted);
+  --desk-line: var(--hh-accent-deep);
+  --desk-gold: var(--hh-accent);
+  --desk-gold-ink: var(--hh-on-accent);
+  --desk-field: var(--hh-paper);
+  --cream: var(--hh-canvas);
+  --paper: var(--hh-canvas);
+  --card: var(--hh-paper);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-muted);
+  --muted: var(--hh-muted);
+  --line: var(--hh-accent-deep);
+  --gold: var(--hh-accent);
+  --gold-ink: var(--hh-on-accent);
+  --heading: var(--hh-ink);
+  --field: var(--hh-paper);
+  --g-page: var(--hh-canvas);
+  --g-card: var(--hh-paper);
+  --g-heading: var(--hh-ink);
+  --parchment: var(--hh-ink);
+  color: var(--hh-ink);
+  background: var(--hh-canvas);
+  color-scheme: dark;
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head h1,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .main-head p,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .hint {
+  background: var(--hh-canvas);
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-accent-deep);
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel > header {
+  background: var(--hh-surface);
+  color: var(--hh-ink);
+}
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel .body,
+:is(html, html[data-theme]) .desk[data-testid="compass-proposed"] .panel p {
+  color: var(--hh-ink);
+}
+
+/* Evening cream (--ink) is for the dark teal only. A light card, parchment page or white
+   row rebinds these tokens so headings, hints and ghost buttons stay dark.
+   Placeholders on those surfaces are fainter than typed text and still clear of AA. */
+html[data-theme='evening'],
+html[data-theme='dawn'] {
+  --on-light: var(--hh-ink);
+  --on-light-2: var(--hh-ink-2);
+  --on-light-muted: var(--hh-muted);
+  --on-light-heading: var(--hh-ink);
+  --on-light-placeholder: var(--hh-muted);
+  --text-body: 15px;
+}
+html[data-theme] :is(
+  .demo-note,
+  .desk-help-pop,
+  .row-menu-drop,
+  .view-as-ask,
+  .garden-door:not([data-testid='join']) .door-card,
+  .desk[data-testid='desk-live'] .main,
+  .desk[data-testid='master-live'] .main
+) {
+  --ink: var(--on-light);
+  --ink-2: var(--on-light-2);
+  --muted: var(--on-light-muted);
+  --desk-ink: var(--on-light);
+  --desk-heading: var(--on-light-heading);
+  --desk-muted: var(--on-light-muted);
+  --heading: var(--on-light-heading);
+  --parchment: var(--on-light);
+  --g-ink: var(--on-light);
+  --g-heading: var(--on-light-heading);
+  --g-muted: var(--on-light-muted);
+  color: var(--on-light);
+}
+html[data-theme] :is(
+  .demo-note,
+  .desk-help-pop,
+  .garden-door:not([data-testid='join']) .door-card
+) :is(input, textarea)::placeholder {
+  color: var(--on-light-placeholder);
+  opacity: 1;
+}
+/* The live page is parchment, but its fields stay the dark evening field. */
+html[data-theme] :is(.desk[data-testid='desk-live'], .desk[data-testid='master-live']) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']) {
+  --ink: var(--hh-ink);
+  --desk-ink: var(--hh-ink);
+  --g-ink: var(--hh-ink);
+  color: var(--hh-ink);
+  background-color: var(--hh-paper);
+}
+html[data-theme] :is(.desk[data-testid='desk-live'], .desk[data-testid='master-live']) :is(input, textarea)::placeholder {
+  color: #c8b88a;
+  opacity: 1;
+}
+html[data-theme] .desk :is(p, .hint, label.stack, legend) {
+  font-size: var(--text-body);
+  line-height: 1.45;
+}
+html[data-theme] .desk table :is(p, label, legend) {
+  font-size: inherit;
+}
+html[data-theme] .panel > header p { opacity: 1; }
+
+/* Gold chips are a light surface. The dark sample card stays cream.
+   Gather paints panel paragraphs with color: var(--g-ink), so the token
+   has to change on the element itself. */
+:is(html, html[data-theme]) .example-kicker {
+  --g-ink: var(--hh-on-accent);
+  --ink: var(--hh-on-accent);
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+}
+:is(html, html[data-theme]) .example-sample {
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-muted);
+  --muted: var(--hh-muted);
+  --g-ink: var(--hh-ink);
+  --g-heading: var(--hh-ink);
+  --g-muted: var(--hh-muted);
+  --desk-ink: var(--hh-ink);
+  --desk-heading: var(--hh-ink);
+  --desk-muted: var(--hh-muted);
+  color: var(--hh-ink);
+  background-color: var(--hh-paper);
+}
+:is(html, html[data-theme]) .desk .example-sample { background-color: var(--hh-paper); }
+
+/* Keep the 16px floor after later theme and gather rules, so iOS does not zoom on focus. */
+:is(html, html[data-theme]) :is(.app, .door, .splash, .journey, .public-gather) :is(input, select, textarea):not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='image']) {
+  font-size: 16px;
+}
+
+/* A sequenced course paints only its own screen. HEARTS evening colours stay on every other portal.
+   The page behind it is the evening garden, so the ink stays cream. Light-paper ink vanished on that green. */
+[data-portal-brand] {
+  --gold: var(--portal-accent, #e07a5f);
+  --gold-deep: var(--portal-accent, #e07a5f);
+  --green: var(--portal-colour, #1f3a5f);
+  --ink: var(--hh-ink);
+  --ink-2: var(--hh-muted);
+  --muted: var(--hh-muted);
+  --paper: var(--hh-paper);
+  color: var(--hh-ink);
+}
+[data-portal-brand] .app {
+  color: var(--hh-ink);
+}
+[data-portal-brand] .brand-word,
+[data-portal-brand] .shell-brand {
+  color: var(--hh-ink);
+}
+.shell-brand { margin: 10px 18px 0; }
+[data-portal-brand] .pill.gold {
+  background: var(--portal-accent, #e07a5f);
+  color: var(--hh-on-accent);
+}
+.sequence-head { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+.portal-mark, .portal-logo { width: 48px; height: 48px; border-radius: 12px; object-fit: cover; }
+.portal-mark { display: grid; place-items: center; background: var(--portal-colour, #1f3a5f); color: #fff; font-weight: 700; }
+.sequence-module { margin-top: 18px; }
+.sequence-module h2 { font-size: 16px; margin: 0; }
+.garden-course, .garden-area {
+  display: block;
+  background: #fff;
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin: 12px 0;
+  color: #1c2430;
+  text-decoration: none;
+}
+.garden-course h2, .garden-area strong { display: block; margin: 0 0 4px; color: #1c2430; }
+.garden-area small, .garden-course p { color: #5c3f32; }
+.video-coming-label { margin-left: auto; color: var(--hh-muted); font-size: 12px; }
+.video-coming {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 6px;
+  padding: 16px;
+  background: #1f3a5f;
+  color: #fff;
+  text-align: center;
+}
+.video-coming strong { font-size: 22px; }
+.video-coming p { margin: 0; font-size: 14px; }
+
+/* apple-door-start. Auth screens share the white and blue learner tokens. The evening courtyard stays off these doors. */
+html[data-theme] .door.apple-door {
+  background: var(--hh-canvas);
+  background-image: none;
+  color: var(--hh-ink);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door::before,
+html[data-theme] .door.apple-door::after {
+  content: none;
+  background: none;
+}
+html[data-theme] .door.apple-door .door-card {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border: var(--hh-line-width) solid var(--hh-line);
+  border-radius: var(--hh-radius-card);
+  box-shadow: var(--hh-shadow-card);
+  backdrop-filter: none;
+}
+html[data-theme] .door.apple-door .door-card h1,
+html[data-theme] .door.apple-door .brand-word {
+  font-family: var(--hh-font-display);
+  color: var(--hh-ink);
+  font-size: var(--hh-font-size-title1);
+  font-weight: 700;
+  letter-spacing: 0;
+}
+html[data-theme] .door.apple-door .door-card p,
+html[data-theme] .door.apple-door .door-card p.lede,
+html[data-theme] .door.apple-door .door-form label,
+html[data-theme] .door.apple-door .door-hint,
+html[data-theme] .door.apple-door .door-links,
+html[data-theme] .door.apple-door .door-links a {
+  font-family: var(--hh-font-system);
+  color: var(--hh-ink-2);
+}
+html[data-theme] .door.apple-door .field {
+  background: var(--hh-paper);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .field::placeholder { color: var(--hh-muted); opacity: 1; }
+html[data-theme] .door.apple-door .field:focus {
+  border-color: var(--hh-accent);
+  box-shadow: var(--hh-shadow-none);
+}
+html[data-theme] .door.apple-door .pill.gold,
+html[data-theme] .door.apple-door .pill.gold.block {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border-color: var(--hh-accent);
+  box-shadow: var(--hh-shadow-none);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .pill.outline {
+  background: var(--hh-paper);
+  color: var(--hh-accent-deep);
+  border-color: var(--hh-accent);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .page-help-btn {
+  background: var(--hh-accent);
+  color: var(--hh-on-accent);
+  border: var(--hh-line-width) solid var(--hh-accent);
+  font-family: var(--hh-font-system);
+}
+html[data-theme] .door.apple-door .brand-mark {
+  background: var(--hh-accent-fill);
+  color: var(--hh-accent);
+}
+html[data-theme] .door.apple-door .brand-mark .arch {
+  color: var(--hh-accent);
+}
+html[data-theme] .door.apple-door .example-sample {
+  background-color: var(--hh-surface);
+  color: var(--hh-ink);
+}
+html[data-theme] .door.apple-door .example-sample :is(h3, p, .hint) {
+  color: var(--hh-ink-2);
+}
+html[data-theme] .door.apple-door .example-kicker,
+html[data-theme] .door.apple-door .example-note {
+  color: var(--hh-muted);
+}
+html[data-theme] .door.apple-door .flash.notice,
+html[data-theme] .door.apple-door .flash.error {
+  background: var(--hh-accent-fill);
+  color: var(--hh-ink);
+  border-color: var(--hh-line);
+}
+/* apple-door-end */
+.sequence-list, .sequence-edit { list-style: none; padding: 0; margin: 12px 0; }
+.sequence-list li, .sequence-edit li { display: flex; gap: 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid #e4dccd; }
+.sequence-list a { display: flex; gap: 8px; align-items: center; color: inherit; text-decoration: none; flex: 1; }
+.sequence-num { width: 28px; font-weight: 700; color: var(--portal-accent, #e07a5f); }
+.sequence-lock { margin: 0 0 0 36px; color: var(--hh-muted); font-size: 14px; }
+.sequence-edit input { flex: 1; min-width: 0; }
+.sequence-edit button { font-size: 13px; }
+.sequence-actions { display: grid; gap: 8px; margin-top: 16px; }

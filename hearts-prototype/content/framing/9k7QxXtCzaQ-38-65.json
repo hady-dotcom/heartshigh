@@ -1,0 +1,1365 @@
+{
+  "version": 1,
+  "youtubeId": "9k7QxXtCzaQ",
+  "start": 38,
+  "end": 65,
+  "requestedStart": 38,
+  "requestedEnd": 63,
+  "segments": [
+    {
+      "start": 38,
+      "end": 65,
+      "mode": "B",
+      "confidence": 1,
+      "focus": {
+        "x": 0.5,
+        "y": 0.42
+      }
+    }
+  ],
+  "sentences": [
+    {
+      "text": "during times of hardship for example you are holding yourself back and refraining from saying or doing that which is displeasing to Allah as for complaining there are two different types of complaints there is complaining to Allah subhana WA Ta'ala and the example that we have is from the Quran nama ash kuba 'they were hosni in allah yahoo bali he said i'm said i complained of my grief and my hardship to allah subhanho wa taala so you are asking upon allah subhanaw taala are you allowed to say oh Allah I call upon you and I am weak and I'm complaining to you of my weakness it is",
+      "s": 31,
+      "e": 65,
+      "key": "displeasing",
+      "words": [
+        {
+          "w": "during",
+          "t": 31,
+          "e": 31.313,
+          "key": false
+        },
+        {
+          "w": "times",
+          "t": 31.313,
+          "e": 31.625,
+          "key": false
+        },
+        {
+          "w": "of",
+          "t": 31.625,
+          "e": 31.938,
+          "key": false
+        },
+        {
+          "w": "hardship",
+          "t": 31.938,
+          "e": 32.25,
+          "key": false
+        },
+        {
+          "w": "for",
+          "t": 32.25,
+          "e": 32.563,
+          "key": false
+        },
+        {
+          "w": "example",
+          "t": 32.563,
+          "e": 32.875,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 32.875,
+          "e": 33.188,
+          "key": false
+        },
+        {
+          "w": "are",
+          "t": 33.188,
+          "e": 33.5,
+          "key": false
+        },
+        {
+          "w": "holding",
+          "t": 33.5,
+          "e": 33.813,
+          "key": false
+        },
+        {
+          "w": "yourself",
+          "t": 33.813,
+          "e": 34.125,
+          "key": false
+        },
+        {
+          "w": "back",
+          "t": 34.125,
+          "e": 34.438,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 34.438,
+          "e": 34.75,
+          "key": false
+        },
+        {
+          "w": "refraining",
+          "t": 34.75,
+          "e": 35.063,
+          "key": false
+        },
+        {
+          "w": "from",
+          "t": 35.063,
+          "e": 35.375,
+          "key": false
+        },
+        {
+          "w": "saying",
+          "t": 35.375,
+          "e": 35.688,
+          "key": false
+        },
+        {
+          "w": "or",
+          "t": 35.688,
+          "e": 36,
+          "key": false
+        },
+        {
+          "w": "doing",
+          "t": 36,
+          "e": 36.313,
+          "key": false
+        },
+        {
+          "w": "that",
+          "t": 36.313,
+          "e": 36.625,
+          "key": false
+        },
+        {
+          "w": "which",
+          "t": 36.625,
+          "e": 36.938,
+          "key": false
+        },
+        {
+          "w": "is",
+          "t": 36.938,
+          "e": 37.25,
+          "key": false
+        },
+        {
+          "w": "displeasing",
+          "t": 37.25,
+          "e": 37.563,
+          "key": true
+        },
+        {
+          "w": "to",
+          "t": 37.563,
+          "e": 37.875,
+          "key": false
+        },
+        {
+          "w": "Allah",
+          "t": 37.875,
+          "e": 38.188,
+          "key": false
+        },
+        {
+          "w": "as",
+          "t": 38.188,
+          "e": 38.5,
+          "key": false
+        },
+        {
+          "w": "for",
+          "t": 38.5,
+          "e": 38.813,
+          "key": false
+        },
+        {
+          "w": "complaining",
+          "t": 38.813,
+          "e": 39.125,
+          "key": false
+        },
+        {
+          "w": "there",
+          "t": 39.125,
+          "e": 39.438,
+          "key": false
+        },
+        {
+          "w": "are",
+          "t": 39.438,
+          "e": 39.75,
+          "key": false
+        },
+        {
+          "w": "two",
+          "t": 39.75,
+          "e": 40.063,
+          "key": false
+        },
+        {
+          "w": "different",
+          "t": 40.063,
+          "e": 40.375,
+          "key": false
+        },
+        {
+          "w": "types",
+          "t": 40.375,
+          "e": 40.688,
+          "key": false
+        },
+        {
+          "w": "of",
+          "t": 40.688,
+          "e": 41,
+          "key": false
+        },
+        {
+          "w": "complaints",
+          "t": 41,
+          "e": 41.375,
+          "key": false
+        },
+        {
+          "w": "there",
+          "t": 41.375,
+          "e": 41.75,
+          "key": false
+        },
+        {
+          "w": "is",
+          "t": 41.75,
+          "e": 42.125,
+          "key": false
+        },
+        {
+          "w": "complaining",
+          "t": 42.125,
+          "e": 42.5,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 42.5,
+          "e": 42.875,
+          "key": false
+        },
+        {
+          "w": "Allah",
+          "t": 42.875,
+          "e": 43.25,
+          "key": false
+        },
+        {
+          "w": "subhana",
+          "t": 43.25,
+          "e": 43.625,
+          "key": false
+        },
+        {
+          "w": "WA",
+          "t": 43.625,
+          "e": 44,
+          "key": false
+        },
+        {
+          "w": "Ta'ala",
+          "t": 44,
+          "e": 44.375,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 44.375,
+          "e": 44.75,
+          "key": false
+        },
+        {
+          "w": "the",
+          "t": 44.75,
+          "e": 45.125,
+          "key": false
+        },
+        {
+          "w": "example",
+          "t": 45.125,
+          "e": 45.5,
+          "key": false
+        },
+        {
+          "w": "that",
+          "t": 45.5,
+          "e": 45.875,
+          "key": false
+        },
+        {
+          "w": "we",
+          "t": 45.875,
+          "e": 46.25,
+          "key": false
+        },
+        {
+          "w": "have",
+          "t": 46.25,
+          "e": 46.625,
+          "key": false
+        },
+        {
+          "w": "is",
+          "t": 46.625,
+          "e": 47,
+          "key": false
+        },
+        {
+          "w": "from",
+          "t": 47,
+          "e": 47.25,
+          "key": false
+        },
+        {
+          "w": "the",
+          "t": 47.25,
+          "e": 47.5,
+          "key": false
+        },
+        {
+          "w": "Quran",
+          "t": 47.5,
+          "e": 47.75,
+          "key": false
+        },
+        {
+          "w": "nama",
+          "t": 47.75,
+          "e": 48,
+          "key": false
+        },
+        {
+          "w": "ash",
+          "t": 49,
+          "e": 49.313,
+          "key": false
+        },
+        {
+          "w": "kuba",
+          "t": 49.313,
+          "e": 49.625,
+          "key": false
+        },
+        {
+          "w": "'they",
+          "t": 49.625,
+          "e": 49.938,
+          "key": false
+        },
+        {
+          "w": "were",
+          "t": 49.938,
+          "e": 50.25,
+          "key": false
+        },
+        {
+          "w": "hosni",
+          "t": 50.25,
+          "e": 50.563,
+          "key": false
+        },
+        {
+          "w": "in",
+          "t": 50.563,
+          "e": 50.875,
+          "key": false
+        },
+        {
+          "w": "allah",
+          "t": 50.875,
+          "e": 51.188,
+          "key": false
+        },
+        {
+          "w": "yahoo",
+          "t": 51.188,
+          "e": 51.5,
+          "key": false
+        },
+        {
+          "w": "bali",
+          "t": 51.5,
+          "e": 51.813,
+          "key": false
+        },
+        {
+          "w": "he",
+          "t": 51.813,
+          "e": 52.125,
+          "key": false
+        },
+        {
+          "w": "said",
+          "t": 52.125,
+          "e": 52.438,
+          "key": false
+        },
+        {
+          "w": "i'm",
+          "t": 52.438,
+          "e": 52.75,
+          "key": false
+        },
+        {
+          "w": "said",
+          "t": 52.75,
+          "e": 53.063,
+          "key": false
+        },
+        {
+          "w": "i",
+          "t": 53.063,
+          "e": 53.375,
+          "key": false
+        },
+        {
+          "w": "complained",
+          "t": 53.375,
+          "e": 53.688,
+          "key": false
+        },
+        {
+          "w": "of",
+          "t": 53.688,
+          "e": 54,
+          "key": false
+        },
+        {
+          "w": "my",
+          "t": 54,
+          "e": 54.273,
+          "key": false
+        },
+        {
+          "w": "grief",
+          "t": 54.273,
+          "e": 54.545,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 54.545,
+          "e": 54.818,
+          "key": false
+        },
+        {
+          "w": "my",
+          "t": 54.818,
+          "e": 55.091,
+          "key": false
+        },
+        {
+          "w": "hardship",
+          "t": 55.091,
+          "e": 55.364,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 55.364,
+          "e": 55.636,
+          "key": false
+        },
+        {
+          "w": "allah",
+          "t": 55.636,
+          "e": 55.909,
+          "key": false
+        },
+        {
+          "w": "subhanho",
+          "t": 55.909,
+          "e": 56.182,
+          "key": false
+        },
+        {
+          "w": "wa",
+          "t": 56.182,
+          "e": 56.455,
+          "key": false
+        },
+        {
+          "w": "taala",
+          "t": 56.455,
+          "e": 56.727,
+          "key": false
+        },
+        {
+          "w": "so",
+          "t": 56.727,
+          "e": 57,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 57,
+          "e": 57.313,
+          "key": false
+        },
+        {
+          "w": "are",
+          "t": 57.313,
+          "e": 57.625,
+          "key": false
+        },
+        {
+          "w": "asking",
+          "t": 57.625,
+          "e": 57.938,
+          "key": false
+        },
+        {
+          "w": "upon",
+          "t": 57.938,
+          "e": 58.25,
+          "key": false
+        },
+        {
+          "w": "allah",
+          "t": 58.25,
+          "e": 58.563,
+          "key": false
+        },
+        {
+          "w": "subhanaw",
+          "t": 58.563,
+          "e": 58.875,
+          "key": false
+        },
+        {
+          "w": "taala",
+          "t": 58.875,
+          "e": 59.188,
+          "key": false
+        },
+        {
+          "w": "are",
+          "t": 59.188,
+          "e": 59.5,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 59.5,
+          "e": 59.813,
+          "key": false
+        },
+        {
+          "w": "allowed",
+          "t": 59.813,
+          "e": 60.125,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 60.125,
+          "e": 60.438,
+          "key": false
+        },
+        {
+          "w": "say",
+          "t": 60.438,
+          "e": 60.75,
+          "key": false
+        },
+        {
+          "w": "oh",
+          "t": 60.75,
+          "e": 61.063,
+          "key": false
+        },
+        {
+          "w": "Allah",
+          "t": 61.063,
+          "e": 61.375,
+          "key": false
+        },
+        {
+          "w": "I",
+          "t": 61.375,
+          "e": 61.688,
+          "key": false
+        },
+        {
+          "w": "call",
+          "t": 61.688,
+          "e": 62,
+          "key": false
+        },
+        {
+          "w": "upon",
+          "t": 62,
+          "e": 62.25,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 62.25,
+          "e": 62.5,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 62.5,
+          "e": 62.75,
+          "key": false
+        },
+        {
+          "w": "I",
+          "t": 62.75,
+          "e": 63,
+          "key": false
+        },
+        {
+          "w": "am",
+          "t": 63,
+          "e": 63.25,
+          "key": false
+        },
+        {
+          "w": "weak",
+          "t": 63.25,
+          "e": 63.5,
+          "key": false
+        },
+        {
+          "w": "and",
+          "t": 63.5,
+          "e": 63.75,
+          "key": false
+        },
+        {
+          "w": "I'm",
+          "t": 63.75,
+          "e": 64,
+          "key": false
+        },
+        {
+          "w": "complaining",
+          "t": 64,
+          "e": 64.25,
+          "key": false
+        },
+        {
+          "w": "to",
+          "t": 64.25,
+          "e": 64.5,
+          "key": false
+        },
+        {
+          "w": "you",
+          "t": 64.5,
+          "e": 64.75,
+          "key": false
+        },
+        {
+          "w": "of",
+          "t": 64.75,
+          "e": 65,
+          "key": false
+        },
+        {
+          "w": "my",
+          "t": 65,
+          "e": 65.25,
+          "key": false
+        },
+        {
+          "w": "weakness",
+          "t": 65.25,
+          "e": 65.5,
+          "key": false
+        },
+        {
+          "w": "it",
+          "t": 65.5,
+          "e": 65.75,
+          "key": false
+        },
+        {
+          "w": "is",
+          "t": 65.75,
+          "e": 66,
+          "key": false
+        }
+      ],
+      "next": 65
+    }
+  ],
+  "words": [
+    {
+      "w": "during",
+      "t": 31,
+      "e": 31.313,
+      "key": false
+    },
+    {
+      "w": "times",
+      "t": 31.313,
+      "e": 31.625,
+      "key": false
+    },
+    {
+      "w": "of",
+      "t": 31.625,
+      "e": 31.938,
+      "key": false
+    },
+    {
+      "w": "hardship",
+      "t": 31.938,
+      "e": 32.25,
+      "key": false
+    },
+    {
+      "w": "for",
+      "t": 32.25,
+      "e": 32.563,
+      "key": false
+    },
+    {
+      "w": "example",
+      "t": 32.563,
+      "e": 32.875,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 32.875,
+      "e": 33.188,
+      "key": false
+    },
+    {
+      "w": "are",
+      "t": 33.188,
+      "e": 33.5,
+      "key": false
+    },
+    {
+      "w": "holding",
+      "t": 33.5,
+      "e": 33.813,
+      "key": false
+    },
+    {
+      "w": "yourself",
+      "t": 33.813,
+      "e": 34.125,
+      "key": false
+    },
+    {
+      "w": "back",
+      "t": 34.125,
+      "e": 34.438,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 34.438,
+      "e": 34.75,
+      "key": false
+    },
+    {
+      "w": "refraining",
+      "t": 34.75,
+      "e": 35.063,
+      "key": false
+    },
+    {
+      "w": "from",
+      "t": 35.063,
+      "e": 35.375,
+      "key": false
+    },
+    {
+      "w": "saying",
+      "t": 35.375,
+      "e": 35.688,
+      "key": false
+    },
+    {
+      "w": "or",
+      "t": 35.688,
+      "e": 36,
+      "key": false
+    },
+    {
+      "w": "doing",
+      "t": 36,
+      "e": 36.313,
+      "key": false
+    },
+    {
+      "w": "that",
+      "t": 36.313,
+      "e": 36.625,
+      "key": false
+    },
+    {
+      "w": "which",
+      "t": 36.625,
+      "e": 36.938,
+      "key": false
+    },
+    {
+      "w": "is",
+      "t": 36.938,
+      "e": 37.25,
+      "key": false
+    },
+    {
+      "w": "displeasing",
+      "t": 37.25,
+      "e": 37.563,
+      "key": true
+    },
+    {
+      "w": "to",
+      "t": 37.563,
+      "e": 37.875,
+      "key": false
+    },
+    {
+      "w": "Allah",
+      "t": 37.875,
+      "e": 38.188,
+      "key": false
+    },
+    {
+      "w": "as",
+      "t": 38.188,
+      "e": 38.5,
+      "key": false
+    },
+    {
+      "w": "for",
+      "t": 38.5,
+      "e": 38.813,
+      "key": false
+    },
+    {
+      "w": "complaining",
+      "t": 38.813,
+      "e": 39.125,
+      "key": false
+    },
+    {
+      "w": "there",
+      "t": 39.125,
+      "e": 39.438,
+      "key": false
+    },
+    {
+      "w": "are",
+      "t": 39.438,
+      "e": 39.75,
+      "key": false
+    },
+    {
+      "w": "two",
+      "t": 39.75,
+      "e": 40.063,
+      "key": false
+    },
+    {
+      "w": "different",
+      "t": 40.063,
+      "e": 40.375,
+      "key": false
+    },
+    {
+      "w": "types",
+      "t": 40.375,
+      "e": 40.688,
+      "key": false
+    },
+    {
+      "w": "of",
+      "t": 40.688,
+      "e": 41,
+      "key": false
+    },
+    {
+      "w": "complaints",
+      "t": 41,
+      "e": 41.375,
+      "key": false
+    },
+    {
+      "w": "there",
+      "t": 41.375,
+      "e": 41.75,
+      "key": false
+    },
+    {
+      "w": "is",
+      "t": 41.75,
+      "e": 42.125,
+      "key": false
+    },
+    {
+      "w": "complaining",
+      "t": 42.125,
+      "e": 42.5,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 42.5,
+      "e": 42.875,
+      "key": false
+    },
+    {
+      "w": "Allah",
+      "t": 42.875,
+      "e": 43.25,
+      "key": false
+    },
+    {
+      "w": "subhana",
+      "t": 43.25,
+      "e": 43.625,
+      "key": false
+    },
+    {
+      "w": "WA",
+      "t": 43.625,
+      "e": 44,
+      "key": false
+    },
+    {
+      "w": "Ta'ala",
+      "t": 44,
+      "e": 44.375,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 44.375,
+      "e": 44.75,
+      "key": false
+    },
+    {
+      "w": "the",
+      "t": 44.75,
+      "e": 45.125,
+      "key": false
+    },
+    {
+      "w": "example",
+      "t": 45.125,
+      "e": 45.5,
+      "key": false
+    },
+    {
+      "w": "that",
+      "t": 45.5,
+      "e": 45.875,
+      "key": false
+    },
+    {
+      "w": "we",
+      "t": 45.875,
+      "e": 46.25,
+      "key": false
+    },
+    {
+      "w": "have",
+      "t": 46.25,
+      "e": 46.625,
+      "key": false
+    },
+    {
+      "w": "is",
+      "t": 46.625,
+      "e": 47,
+      "key": false
+    },
+    {
+      "w": "from",
+      "t": 47,
+      "e": 47.25,
+      "key": false
+    },
+    {
+      "w": "the",
+      "t": 47.25,
+      "e": 47.5,
+      "key": false
+    },
+    {
+      "w": "Quran",
+      "t": 47.5,
+      "e": 47.75,
+      "key": false
+    },
+    {
+      "w": "nama",
+      "t": 47.75,
+      "e": 48,
+      "key": false
+    },
+    {
+      "w": "ash",
+      "t": 49,
+      "e": 49.313,
+      "key": false
+    },
+    {
+      "w": "kuba",
+      "t": 49.313,
+      "e": 49.625,
+      "key": false
+    },
+    {
+      "w": "'they",
+      "t": 49.625,
+      "e": 49.938,
+      "key": false
+    },
+    {
+      "w": "were",
+      "t": 49.938,
+      "e": 50.25,
+      "key": false
+    },
+    {
+      "w": "hosni",
+      "t": 50.25,
+      "e": 50.563,
+      "key": false
+    },
+    {
+      "w": "in",
+      "t": 50.563,
+      "e": 50.875,
+      "key": false
+    },
+    {
+      "w": "allah",
+      "t": 50.875,
+      "e": 51.188,
+      "key": false
+    },
+    {
+      "w": "yahoo",
+      "t": 51.188,
+      "e": 51.5,
+      "key": false
+    },
+    {
+      "w": "bali",
+      "t": 51.5,
+      "e": 51.813,
+      "key": false
+    },
+    {
+      "w": "he",
+      "t": 51.813,
+      "e": 52.125,
+      "key": false
+    },
+    {
+      "w": "said",
+      "t": 52.125,
+      "e": 52.438,
+      "key": false
+    },
+    {
+      "w": "i'm",
+      "t": 52.438,
+      "e": 52.75,
+      "key": false
+    },
+    {
+      "w": "said",
+      "t": 52.75,
+      "e": 53.063,
+      "key": false
+    },
+    {
+      "w": "i",
+      "t": 53.063,
+      "e": 53.375,
+      "key": false
+    },
+    {
+      "w": "complained",
+      "t": 53.375,
+      "e": 53.688,
+      "key": false
+    },
+    {
+      "w": "of",
+      "t": 53.688,
+      "e": 54,
+      "key": false
+    },
+    {
+      "w": "my",
+      "t": 54,
+      "e": 54.273,
+      "key": false
+    },
+    {
+      "w": "grief",
+      "t": 54.273,
+      "e": 54.545,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 54.545,
+      "e": 54.818,
+      "key": false
+    },
+    {
+      "w": "my",
+      "t": 54.818,
+      "e": 55.091,
+      "key": false
+    },
+    {
+      "w": "hardship",
+      "t": 55.091,
+      "e": 55.364,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 55.364,
+      "e": 55.636,
+      "key": false
+    },
+    {
+      "w": "allah",
+      "t": 55.636,
+      "e": 55.909,
+      "key": false
+    },
+    {
+      "w": "subhanho",
+      "t": 55.909,
+      "e": 56.182,
+      "key": false
+    },
+    {
+      "w": "wa",
+      "t": 56.182,
+      "e": 56.455,
+      "key": false
+    },
+    {
+      "w": "taala",
+      "t": 56.455,
+      "e": 56.727,
+      "key": false
+    },
+    {
+      "w": "so",
+      "t": 56.727,
+      "e": 57,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 57,
+      "e": 57.313,
+      "key": false
+    },
+    {
+      "w": "are",
+      "t": 57.313,
+      "e": 57.625,
+      "key": false
+    },
+    {
+      "w": "asking",
+      "t": 57.625,
+      "e": 57.938,
+      "key": false
+    },
+    {
+      "w": "upon",
+      "t": 57.938,
+      "e": 58.25,
+      "key": false
+    },
+    {
+      "w": "allah",
+      "t": 58.25,
+      "e": 58.563,
+      "key": false
+    },
+    {
+      "w": "subhanaw",
+      "t": 58.563,
+      "e": 58.875,
+      "key": false
+    },
+    {
+      "w": "taala",
+      "t": 58.875,
+      "e": 59.188,
+      "key": false
+    },
+    {
+      "w": "are",
+      "t": 59.188,
+      "e": 59.5,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 59.5,
+      "e": 59.813,
+      "key": false
+    },
+    {
+      "w": "allowed",
+      "t": 59.813,
+      "e": 60.125,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 60.125,
+      "e": 60.438,
+      "key": false
+    },
+    {
+      "w": "say",
+      "t": 60.438,
+      "e": 60.75,
+      "key": false
+    },
+    {
+      "w": "oh",
+      "t": 60.75,
+      "e": 61.063,
+      "key": false
+    },
+    {
+      "w": "Allah",
+      "t": 61.063,
+      "e": 61.375,
+      "key": false
+    },
+    {
+      "w": "I",
+      "t": 61.375,
+      "e": 61.688,
+      "key": false
+    },
+    {
+      "w": "call",
+      "t": 61.688,
+      "e": 62,
+      "key": false
+    },
+    {
+      "w": "upon",
+      "t": 62,
+      "e": 62.25,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 62.25,
+      "e": 62.5,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 62.5,
+      "e": 62.75,
+      "key": false
+    },
+    {
+      "w": "I",
+      "t": 62.75,
+      "e": 63,
+      "key": false
+    },
+    {
+      "w": "am",
+      "t": 63,
+      "e": 63.25,
+      "key": false
+    },
+    {
+      "w": "weak",
+      "t": 63.25,
+      "e": 63.5,
+      "key": false
+    },
+    {
+      "w": "and",
+      "t": 63.5,
+      "e": 63.75,
+      "key": false
+    },
+    {
+      "w": "I'm",
+      "t": 63.75,
+      "e": 64,
+      "key": false
+    },
+    {
+      "w": "complaining",
+      "t": 64,
+      "e": 64.25,
+      "key": false
+    },
+    {
+      "w": "to",
+      "t": 64.25,
+      "e": 64.5,
+      "key": false
+    },
+    {
+      "w": "you",
+      "t": 64.5,
+      "e": 64.75,
+      "key": false
+    },
+    {
+      "w": "of",
+      "t": 64.75,
+      "e": 65,
+      "key": false
+    },
+    {
+      "w": "my",
+      "t": 65,
+      "e": 65.25,
+      "key": false
+    },
+    {
+      "w": "weakness",
+      "t": 65.25,
+      "e": 65.5,
+      "key": false
+    },
+    {
+      "w": "it",
+      "t": 65.5,
+      "e": 65.75,
+      "key": false
+    },
+    {
+      "w": "is",
+      "t": 65.75,
+      "e": 66,
+      "key": false
+    }
+  ]
+}

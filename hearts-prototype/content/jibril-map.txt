@@ -1,0 +1,733 @@
+W O R K I N G C U R R I C U LU M M A P
+
+
+A Curriculum from One Sitting
+Forty-one units from Hadith Jibril. Three Ghunya seats under each. Thirty
+lecture series hung by heading. Videos in, around, and against.
+
+The hadith is still the course. The five-volume English Ghunya (Holland / Al-Baz, 2008) is
+still the provision. What has changed is the join: not one heading per clause, and not a thin
+line of forty-one lessons. Each clause now opens three seats in the book. The book’s pages
+are counted, then asked where they best sit. The thirty lecture series (standalone skipped)
+hang under a unit by the language of the heading. Transcripts come later for a bang-on fit.
+A series may sit under more than one clause when the title talks to both — Maryam under
+Books first, then angels and Jibril.
+
+ [Source] page numbers are the printed Al-Baz pagination from each volume’s contents. [Designer]
+ is the hang and the seating. Five English volumes are an editorial split, not year-groups. Key
+ Stages and hours are not al-Jīlānī’s.
+1. How long is the book
+You said about 700 pages. That is a useful round number. It is not the English we have in
+hand.
+
+ Volume                                          Body (printed)    PDF file pages    Last body page
+
+ 1. Door, adab, marriage, hisba, creed, sects               442               481    446 (author 447)
+
+ 2. Four Qur’an discourses                                  308               337    310 (author 311)
+
+ 3. Sacred months, days, ikhlas                             356               385    360 (author 361)
+
+ 4. Year-fast, five prayers, nawafil, dua                   398               425    402 (author 403)
+
+ 5. Seekers, shaykh, fellowship, Path                       156               177    160 (author 161)
+
+ Total                                                    1,660             1,805
+
+Body pages are counted from the author’s prologue or first chapter through the last page
+before “Concerning the Author.” Front matter and indexes sit in the PDF totals and are not
+in the 1,660.
+I have not counted an Arabic copy here. Many Arabic prints of the Ghunya sit nearer 700.
+Below, every English count is also scaled to 700 so you can think in your unit without
+pretending the Holland set is 700 pages. Scale is 700 ÷ 1,660.
+
+ The Door in Volume 1 is small: testimonies, wudu, prayer, zakat, fasting, i‘tikaf, and hajj together
+ are pages 7–52, about 46 English pages (about 19 on the 700-scale). The five daily prayers in full
+ live in Volume 4, pages 110–238 — 129 pages on one act. First grain and dense grain are not the
+ same pile of paper.
+2. Best sit, not the slope
+The earlier 41-unit map used a designer slope: Sitting leans Volume 1 adab; Islam leans the
+Door; Iman leans Chapter 4; Ihsan leans Volumes 2–3; Hour leans Volume 3; the trunk leans
+Volume 4 then 5. That is pacing. It is not where the pages actually live.
+If each Ghunya block is given one primary home — where the matter best sits, allowing
+later grain to return — the English pages fall like this. Overlap is refused in the totals so the
+book still adds to 1,660. A block can still be read again under a later unit; it is not counted
+twice.
+
+ Jibril core   Primary Ghunya blocks                                         English   of      on
+                                                                             pp        1,660   700
+
+ I. Sitting    Vol. 1 adab 53–111; hisba 151–170; App. 1 297–392; Vol.           261    16%    110
+               2 first discourse (isti‘adha) 5–46; Vol. 5 fellowship 43–86
+
+ II. Islam     Vol. 1 Door 7–52; Vol. 4 year-fast + five prayers + special       343    21%    145
+               prayers 5–301
+
+ III. Iman     Vol. 1 Ch. 4 171–280; attributes 281–296; sects 393–446           180    11%     76
+
+ IV. Ihsan     Vol. 2 Bismillah, tawba, taqwa 47–304; Vol. 3 ikhlas 326–         496    30%    209
+               350; Vol. 4 nawafil and dua 302–402; Vol. 5 seekers,
+               shaykh, mujahada, virtues 5–42 and 87–160
+
+ V. Hour       Vol. 3 sacred time 5–325 and days 351–360; Vol. 1                 370    22%    156
+               marriage 112–150
+
+ VI. Trunk     Vol. 1 prologue 5–6; Vol. 2 chapter opening 3–4; “Satanic          10     1%      4
+ (leftover)    verses” appendix 305–310
+
+What this does to the curriculum. Ihsan and the Hour (as lived time, not a signs
+syllabus) eat about half the book. Islam is a fifth, and most of that fifth is Volume 4’s prayer,
+not the Door. Iman is about a tenth. The sitting is larger than iman because there are two
+books of manners. The last line of the hadith, if it is only leftover pages, is almost nothing.
+The last line only becomes a trunk if you reassign Volume 4 and Volume 5 to it — which is
+the slope, not the best-sit. Both views are true; they answer different questions.
+Unit 41 cannot swallow Volume 4 then Volume 5 as one lesson (398 + 156 = 554 English
+pages, a third of the book). Three seats under each earlier clause is how that mass is
+already being read, so the trunk is a return, not a first dump.
+3. The blocks (so the seats have weight)
+
+Block                                                 Vol.   Printed   pp    on         Primary
+                                                                             700        core
+
+Prologue                                              1      5–6         2         1    Trunk
+
+Enter Islam (testimonies, ghusl, wudu, prayer grain   1      7–16       10         4    Islam
+1)
+
+Zakat                                                 1      17–20       4         2    Islam
+
+Fasting (incl. the tongue)                            1      21–23       3         1    Islam
+
+I‘tikaf                                               1      24–25       2         1    Islam
+
+Hajj, umra, Medina                                    1      26–52      27         11   Islam
+
+Book of Good Manners                                  1      53–111     59         25   Sitting
+
+Marriage                                              1      112–       39         16   Hour
+                                                             150
+
+Hisba                                                 1      151–       20         8    Sitting
+                                                             170
+
+Creed (quotes Hadith Jibril)                          1      171–      110         46   Iman
+                                                             280
+
+Attributes of the Maker                               1      281–       16         7    Iman
+                                                             296
+
+More adab (appendix 1)                                1      297–       96         40   Sitting
+                                                             392
+
+Sects (fence)                                         1      393–       54         23   Iman
+                                                             446
+
+Isti‘adha / Satan, six notions                        2      5–46       42         18   Sitting
+
+Bismillah / the Name                                  2      47–104     58         24   Ihsan
+
+Tawba                                                 2      105–      104         44   Ihsan
+                                                             208
+
+Taqwa                                                 2      209–       96         40   Ihsan
+                                                             304
+
+Rajab–Friday (sacred time)                            3      5–325     321     135      Hour
+
+Tawba, ikhlas, drop riya                              3      326–       25         11   Ihsan
+                                                             350
+
+Days of the week, white days                          3      351–       10         4    Hour
+                                                             360
+
+Year-fast                                             4      5–109     105         44   Islam
+
+Five daily prayers in full                            4      110–      129         54   Islam
+                                                             238
+ Jumua, Eids, rain, eclipse, fear, qasr, combining,   4   239–      63      27   Islam
+ janaza                                                   301
+
+ Nawafil, tasbih, istikhara, dua                      4   302–     101      43   Ihsan
+                                                          402
+
+ Seekers and the shaykh                               5   5–42      38      16   Ihsan
+
+ Fellowship (brothers, strangers, rich, poor)         5   43–86     44      19   Sitting
+
+ Mujahada and Path virtues (incl. murāqaba, sidq,     5   87–160    74      31   Ihsan
+ irada)
+
+Ramadan in Volume 3 is 70–165 (96 pp) and sits inside the 321 of sacred time. It is also a
+later grain of “fast Ramadan.” Arafa / Adha sit inside the same 321 and are a later grain of
+hajj. Those returns are the point of three seats.
+The thirty series
+Standalone / one-off talks are set aside. The other twenty-nine hang by the language of the
+heading, not by a forced one-for-one. Primary unit first. A second unit is named where the
+title clearly talks to another clause. Transcripts later for bang-on.
+
+ #    Series                                Primary unit                  Also
+
+  1   Seerah Studies: The Meccan Years      25 … His Messengers …         3 … With the
+                                                                          Messenger …
+
+  2   The Names                             22 … Believe in Allah …
+
+  3   Pursuing the Higher Self              29 … Tell Me about Ihsan …
+
+  4   In His Footsteps                      25 … His Messengers …         3 … With the
+                                                                          Messenger …
+
+  5   DUA: The Answered Prayer              15 … Establish the Prayer …
+
+  6   Stories of the Awliya                 29 … Tell Me about Ihsan …    10 knees; 40 It was
+                                                                          Jibril
+
+  7   Virtues of the Quran                  24 … His Books …
+
+  8   Hurdles — Pathway of the Servant to   26 … The Last Day …           29 ihsan
+      Jannah
+
+  9   Prophetic Dua                         15 … Establish the Prayer …   25 Messengers
+
+ 10   A Timeline of Eternity                26 … The Last Day …           32 the Hour
+
+ 11   Exploring the Quran for Women:        24 … His Books …
+      Surah Yusuf
+
+ 12   Habits To Win Here and Hereafter      29 … Tell Me about Ihsan …    30 as though you see
+                                                                          Him
+
+ 13   Paradise Series                       26 … The Last Day …
+
+ 14   The Blessing of Time                  1 … One Day …                 32 the Hour
+
+ 15   Faithful                              21 … Tell Me about Iman …
+
+ 16   Manners of the Salaf                  2 … We Were Sitting …
+
+ 17   Reflections on “My Dear Beloved       10 … Knees Against His        29 ihsan
+      Son”                                  Knees …
+
+ 18   Dear Muslim Sister                    2 … We Were Sitting …         heading only; content
+                                                                          later
+
+ 19   From Ritual to Revolution             13 … Tell Me about Islam …    29 ihsan
+
+ 20   Kingdom of the Heart                  31 … If You Do Not, He Sees
+                                            You …
+
+ 21   How to Live Like the Prophet          25 … His Messengers …         3 sitting with him; 30
+                                                                          ihsan
+22   The Refuge: Reflections on Surah        24 … His Books …                7 no signs of travel
+     Kahf
+
+23   Prophets & Demons                       25 … His Messengers …           23 angels; 7 the
+                                                                             enemy
+
+24   Our Character                           31 … If You Do Not, He Sees
+                                             You …
+
+25   Purification of the Heart               29 … Tell Me about Ihsan …      31 He sees you
+
+26   Dhikr & Fikr                            2 … We Were Sitting …           30 as though you see
+                                                                             Him
+
+27   In Good Company                         2 … We Were Sitting …           37 I stayed a while
+
+28   Know thy Enemy                          7 … No Signs of Travel …
+
+29   Ramadan Muslims                         17 … Fast Ramadan …
+
+30   Exploring the Quran for Women:          24 … His Books …                23 angels; 40 It was
+     Surah Maryam                                                            Jibril
+
+
+Empty units from this list are not a problem: white clothes, zakat, hajj, qadar, the two Hour signs,
+most of the aftermath. Those stay with the Ghunya until a transcript says otherwise.
+4. Three seats under each part
+Not one-for-one. Under every clause: the teaching (your hang), then three Ghunya seats,
+then the lecture series whose heading belongs here. A seat can be a later grain of the same
+act. “Thin” means the book has the idea, not a chapter of that name. IVF is your hang,
+labelled; the Ghunya has no such chapter.
+
+I. The sitting — units 1–12
+Primary weight: 261 English pages (110 on 700). Company, cleanliness, how knowledge is
+approached, the chain.
+1 · … O N E D AY …
+TEACHING. The day as the unit of time given; mechanics of time; what to do with it.
+
+THREE SEATS. (1) Vol. 1 prologue 5–6 — a circle already in ordinary days. (2) Vol. 3 days of
+the week and white days 351–360. (3) Vol. 3 Friday 295–325 — a known hour in a known
+week. Later grain of the same trust: the whole Vol. 3 calendar.
+FROM THE SERIES. The Blessing of Time
+
+
+2 · … WE WERE SITTING …
+TEACHING. Tadawur, contemplation. A we: Muslims as a collective, and creation in that
+collective.
+THREE SEATS. (1) Vol. 1 sitting, greeting, habits in company 53–111. (2) Vol. 1 hisba 151–
+170 — the circle that commands and forbids. (3) Vol. 5 fellowship of brothers 43–86.
+FROM THE SERIES. In Good Company. Manners of the Salaf. Dear Muslim Sister (the we /
+the sister in the collective). Dhikr & Fikr (fikr as tadawur in the sitting).
+
+
+3 · … WITH THE MESSENGER OF ALLAH            …
+TEACHING. Witnessing: ʿUmar seeing it; the Sahaba as deputies; the same as us. Presence
+of the praised one.
+THREE SEATS. (1) Vol. 1 visiting Medina and the tomb (end of the hajj book, inside 26–52).
+(2) Vol. 1 Ch. 4: follow the Sunna; respect due to his wives. (3) Vol. 5: Gabriel as the
+Prophet’s teacher.
+FROM THE SERIES. Seerah Studies: The Meccan Years. In His Footsteps. How to Live Like
+the Prophet.
+
+
+4 · … A MAN APPEARED …
+TEACHING. Angel in human form. Do not underrate anyone. Treatment and respect.
+
+THREE SEATS. (1) Vol. 1 seeking permission to enter. (2) Vol. 1 greeting with peace. (3) Vol.
+5 fellowship with strangers 43–86. Thin as a chapter title; strong as how a course receives a
+walk-in.
+FROM THE SERIES. None from this list on heading alone.
+5 · … C L O T H E S E X C E E D I N G LY W H I T E …
+TEACHING. Manners, cleanliness, hygiene.
+
+THREE SEATS. (1) Vol. 1 types of clothing, trailing clothes, covering. (2) Vol. 1 fitra (siwak,
+nails, purity of the body). (3) Vol. 1 mosque manners — how you look when you sit.
+FROM THE SERIES. None from this list on heading alone.
+
+
+6 · … H A I R E X C E E D I N G LY B L A C K …
+TEACHING. Perception. Full attention to people.
+
+THREE SEATS. (1) Vol. 1 fitra: kohl, comb, oil, beard. (2) Vol. 1 sitting: eyes and posture in
+company. (3) Vol. 5 ḥusn al-khuluq 126–131 — character as how you attend to someone.
+FROM THE SERIES. None from this list on heading alone.
+
+
+7 · … N O S I G N S O F T R AV E L …
+TEACHING. How you approach knowledge, and rumor.
+
+THREE SEATS. (1) Vol. 1 manners of travel. (2) Vol. 1 major and minor purity — arriving
+ṭahur. (3) Vol. 2 isti‘adha 5–46 — refuge from Satan when you take up a recitation; the six
+notions. Thin: “no dust” is not a title.
+FROM THE SERIES. Know thy Enemy. Prophets & Demons (the demons). The Refuge:
+Reflections on Surah Kahf also talks here (refuge).
+
+
+8 · … NONE OF US KNEW HIM …
+TEACHING. The unknown guest is still due the greeting. (This clause was skipped on the
+first hang; neighbouring hangs fill it.)
+THREE SEATS. (1) Vol. 1 names and surnames. (2) Vol. 1 greeting. (3) Vol. 5 strangers
+again, at Path grain.
+FROM THE SERIES. None from this list on heading alone.
+
+
+9 · … H E S AT D O W N B Y T H E P R O P H E T         …
+TEACHING. Taking a place in the circle. (Skipped first hang; filled from sitting / knees.)
+
+THREE SEATS. (1) Vol. 1 sitting. (2) Vol. 1 mosque and gathering manners. (3) Vol. 5 the
+murid with the shaykh 22–42 — later grain of the same closeness.
+FROM THE SERIES. None from this list on heading alone.
+
+
+10 · … KNEES AGAINST HIS KNEES …
+TEACHING. Connectivity, the chain, passing on, touch points.
+
+THREE SEATS. (1) Vol. 1 bodily adab of sitting. (2) Vol. 5 what is required of the shaykh:
+easy first, not beyond capacity, one thing at a time 22–42. (3) Vol. 5 must not profit from the
+murid’s wealth or service — the chain is not extraction.
+FROM THE SERIES. Reflections on “My Dear Beloved Son”. Stories of the Awliya.
+1 1 · … PA L M S O N H I S T H I G H S …
+TEACHING. The same body that will pray. (Skipped first hang.)
+
+THREE SEATS. (1) Vol. 1 what is best done with the right hand. (2) Vol. 1 hands on the
+knees in ruku‘ — prayer kit, same limbs. (3) Vol. 1 sitting, again. Thin, and meant to stay
+thin.
+FROM THE SERIES. None from this list on heading alone.
+
+
+12 · … O MUHAMMAD …
+TEACHING. Arabic: the praised one. Stop there.
+
+THREE SEATS. (1) Vol. 1 names and surnames. (2) Vol. 1 vocal expression. (3) Vol. 1 Ch. 4
+miracles of the Prophet — why the name is not ordinary. Visiting Medina (unit 3) is the
+same name in a city.
+FROM THE SERIES. None from this list on heading alone.
+
+
+
+II. Islam — units 13–20
+Primary weight: 343 English pages (145 on 700). The Door is 46 pages. Volume 4’s
+obligatory worship is 297. Classified, and it follows itself through — first grain then density,
+not two Islams.
+13 · … TELL ME ABOUT ISLAM …
+TEACHING. Classified. It follows itself through.
+
+THREE SEATS. (1) Vol. 1 Ch. 1, what is required of someone who wishes to enter, 7–16. (2)
+Vol. 1 hisba hinge: five acts then clothe inwardly with faith, 151–170. (3) Vol. 4 Ch. 7–9, 5–
+301 — the same classified acts at density.
+FROM THE SERIES. From Ritual to Revolution (ritual = the classified acts).
+
+
+14 · … TWO TESTIMONIES …
+TEACHING. The word is a claim. (Not hung first pass; kept because the answer named it.)
+
+THREE SEATS. (1) Vol. 1 the two declarations and ghusl after entering. (2) Vol. 1 “word is
+claim, deed is proof.” (3) Vol. 5 sidq 157–160 — later grain of the word matching.
+FROM THE SERIES. None from this list on heading alone.
+
+
+1 5 · … E S TA B L I S H T H E P R AY E R …
+TEACHING. Extra prayers too. Where you pray. Compass, horizon, east/west, relation to the
+Kaaba, miles and kilometres for which prayer.
+THREE SEATS. (1) Vol. 1 wudu 10+10 and prayer essentials, including qibla: the actual
+Kaaba if you are in Mecca; if at a distance, direction by ijtihad from stars, sun, winds. (2)
+Vol. 4 five daily prayers in full 110–238 (129 pp). (3) Vol. 4 qasr, combining, jumua 239–301
+— distance, travel, and where the body is.
+FROM THE SERIES. DUA: The Answered Prayer. Prophetic Dua.
+1 6 · … PAY Z A KAT …
+TEACHING. (Not hung first pass; kept because the answer named it.)
+
+THREE SEATS. (1) Vol. 1 Book of Zakat 17–20. (2) The eight beneficiaries and fitr, same
+pages. (3) Vol. 5 fellowship with the rich and the poor 43–86 — later grain of who wealth is
+for.
+FROM THE SERIES. None from this list on heading alone.
+
+
+1 7 · … FA S T R A M A D A N …
+TEACHING. Offset branches: fasting from bad language, and the other holds.
+
+THREE SEATS. (1) Vol. 1 fasting 21–23, including the tongue: backbiting, slander, lies,
+cursing. (2) Vol. 3 Ramadan 70–165 (96 pp). (3) Vol. 4 year-fast 5–109 (105 pp) — density,
+not a second obligation dumped on a child.
+FROM THE SERIES. Ramadan Muslims.
+
+
+1 8 · … H A J J I F Y O U F I N D A WAY …
+TEACHING. The same echo of steps: physical movement for good. The walk that helps the
+old lady is the same kind of step as the walk toward the House.
+THREE SEATS. (1) Vol. 1 hajj 26–52: ability, ihram, arkans, umra. (2) Vol. 3 Ten Days, ʿArafa,
+Adha 166–277. (3) Vol. 1 walking to the mosque, visiting the sick, travel manners — the
+echo of steps in ordinary adab. Thin as a hajj title; strong as your hang.
+FROM THE SERIES. None from this list on heading alone.
+
+
+1 9 · … Y O U H AV E S P O K E N T H E T R U T H …
+TEACHING. Unexpected reality meets what you thought you knew (Judgment Day).
+
+THREE SEATS. (1) Vol. 1 Ch. 4: faith as word and deed. (2) Vol. 1 Last Day — tomb,
+resurrection, Basin, Balance, Bridge. (3) Vol. 5 sidq. The confirmation is not a separate
+subject; it is the shock that the classified thing is real.
+FROM THE SERIES. None from this list on heading alone.
+
+
+20 · … AMAZED HE ASKED THEN CONFIRMED …
+TEACHING. No opinions, no backtalk; waited for the leader; nuanced respect.
+
+THREE SEATS. (1) Vol. 1 hisba: patience, not speaking from impulse. (2) Vol. 1 sitting: do
+not interrupt the assembly. (3) Vol. 5 tawadu. Thin as astonishment; strong as classroom
+adab.
+FROM THE SERIES. None from this list on heading alone.
+
+
+
+III. Iman — units 21–28
+Primary weight: 180 English pages (76 on 700). They are what they are. Last Day stays
+here. Sects are the fence, not the first syllabus. The book itself quotes this sitting in
+Chapter 4.
+21 · … TELL ME ABOUT IMAN …
+TEACHING. The six as they are. Islam is not iman.
+
+THREE SEATS. (1) Vol. 1 Ch. 4 quotes the sitting and distinguishes Islam from iman, 171–.
+(2) Word and deed; do not say “I am a believer, ḥaqqan.” (3) Appendix 2, the sects 393–446
+— fence only.
+FROM THE SERIES. Faithful.
+
+
+22 · … BELIEVE IN ALLAH …
+THREE SEATS. (1) Knowledge of the Creator, Ch. 4. (2) Attributes which may and may not
+be applied, 281–296. (3) Vol. 2 Bismillah / the Name 47–104 — later grain of the same Lord
+named.
+FROM THE SERIES. The Names.
+
+
+23 · … HIS ANGELS …
+THREE SEATS. No Book of Angels. Three threads, labelled thin: (1) Gabriel in this sitting,
+and in Vol. 5 as teacher. (2) Munkar and Nakir, Angel of Death, under Last Day. (3) Vol. 2
+“notion of the angel” among the six notions. Not a unit stuffed from nowhere.
+FROM THE SERIES. Prophets & Demons. Exploring the Quran for Women: Surah Maryam
+(Jibril to Maryam — first under Books).
+
+24 · … HIS BOOKS …
+THREE SEATS. (1) Qur’an as His speech, Ch. 4. (2) Letters, in that doctrine. (3) Vol. 2’s four
+recited-verse discourses 5–304 — the Book opened as lessons, later constellation.
+FROM THE SERIES. The width of Allah’s Books. Virtues of the Quran. Exploring the Quran
+for Women: Surah Yusuf. The Refuge: Reflections on Surah Kahf. Exploring the Quran for
+Women: Surah Maryam.
+
+
+25 · … HIS MESSENGERS …
+THREE SEATS. (1) Miracles of the Prophet, Ch. 4. (2) Isra: he saw his Lord with ordinary
+eyes — also talks to ihsan later. (3) Sitting next to this, not the article itself: caliphs, early
+believers, obeying leaders. Label the third as neighbour, not the article.
+FROM THE SERIES. Seerah Studies: The Meccan Years. In His Footsteps. How to Live Like
+the Prophet. Prophets & Demons. Prophetic Dua (the duas are his).
+
+
+2 6 · … T H E L A S T D AY …
+TEACHING. Stays in iman. Not moved to the Hour.
+
+THREE SEATS. (1) Tomb; interrogation. (2) Resurrection, Basin, Balance, Bridge,
+intercession. (3) Garden and Fire already made ready. Vol. 3 taqwa (Hell/Garden) is later
+grain of the same last things, not a signs syllabus.
+FROM THE SERIES. A Timeline of Eternity. Paradise Series. Hurdles — Pathway of the
+Servant to Jannah.
+27 · … QADAR, GOOD AND EVIL …
+THREE SEATS. (1) Actions created by Allah, acquired by servants (kasb). (2) Livelihood
+allotted; Tablet. (3) Vol. 5 tawakkul 114–125 — later grain of living under decree.
+FROM THE SERIES. None from this list on heading alone.
+
+
+2 8 · … Y O U H AV E S P O K E N T H E T R U T H …
+TEACHING. Same umbrella as after Islam unless a finer hang comes later.
+
+THREE SEATS. (1) Sidq of creed in Ch. 4. (2) Vol. 5 sidq as a Path foundation. (3) Word and
+deed again — the articles named are to be said as real.
+FROM THE SERIES. None from this list on heading alone.
+
+
+
+IV. Ihsan — units 29–31
+Primary weight: 496 English pages (209 on 700). Largest core by paper. Three spoken
+sentences. The book is not three pages here; it is tawba, the Name, ikhlas, extra prayer, the
+Path. Unit 29–31 are doors. Volume 5 murāqaba is later grain of unit 31, not a dump on first
+hearing.
+29 · … TELL ME ABOUT IHSAN …
+TEACHING. The knower still repeats, tests, and hears the basic thing. Lived, not only read.
+Respect for the learner. Do not read a lower rank in Muhammad . A shaykh still presents
+basics; never above their station.
+THREE SEATS. (1) Vol. 2 tawba 105–208 (104 pp). (2) Vol. 2 six notions (nafs, devil, ruh,
+angel, intellect, certainty) inside the first discourse. (3) Vol. 5: the shaykh trains easy then
+hard, one thing at a time, and still teaches the beginner who already has sound belief 22–
+42.
+FROM THE SERIES. Pursuing the Higher Self. Purification of the Heart. Stories of the
+Awliya. Reflections on “My Dear Beloved Son”. From Ritual to Revolution (revolution = the
+acts lived). Habits To Win Here and Hereafter. Hurdles — Pathway of the Servant to Jannah.
+
+
+30 · … WORSHIP AS THOUGH YOU SEE HIM …
+TEACHING. They do what they are supposed to do.
+
+THREE SEATS. (1) Vol. 2 Bismillah / seeking His countenance 47–104. (2) Vol. 4 five prayers
+in full — doing the act as seeing. (3) Vol. 5 irada, the spiritual search. Isra (unit 25) talks to
+this and is not moved here.
+FROM THE SERIES. Dhikr & Fikr. How to Live Like the Prophet. Habits To Win Here and
+Hereafter.
+3 1 · … I F Y O U D O N O T, H E S E E S Y O U …
+TEACHING. The inverse of the same act. The soul inside. Angels on the shoulders. The rest
+of reality will speak (Qur’an).
+THREE SEATS. (1) Vol. 3 ikhlas and dropping riya 326–350. (2) Vol. 5 murāqaba, defined
+from this exact sentence. (3) Angels who write and who question: Last Day tomb (unit 26)
+and the hisba of the heart. Not a second angel textbook.
+FROM THE SERIES. Kingdom of the Heart. Purification of the Heart. Our Character.
+
+
+
+V. The Hour — units 32–35
+Primary weight: 370 English pages (156 on 700). Almost all of Volume 3, plus marriage. Not
+a signs-of-the-Hour syllabus. The Hour in the hadith is not dated. The book teaches how a
+life is filled with known hours, and how a household turns while time runs.
+32 · … TELL ME ABOUT THE HOUR …
+TEACHING. How sāʿah is used: a time of knowledge; a time that will come; a culmination.
+
+THREE SEATS. (1) Vol. 3 sacred time as such, Rajab through Friday 5–325 (321 pp). (2) Vol.
+3 days of the week and white days 351–360. (3) Unit 1’s “one day” at year-grain. Thin as a
+chapter titled “the Hour”; strong as the volume’s job.
+FROM THE SERIES. The Blessing of Time. A Timeline of Eternity.
+
+
+33 · … THE ONE ASKED KNOWS NO MORE …
+TEACHING. Limits of knowledge, of the unseen, of what has been limited and said, and of
+the ways we may talk.
+THREE SEATS. (1) Vol. 1: do not say “I am a believer, ḥaqqan.” (2) Vol. 3: you do not know
+which hour is yours; ikhlas because display cannot certify the end. (3) Vol. 5 tawadu; not
+pretending to a state. Thin as a title; this is the method of the answer.
+FROM THE SERIES. None from this list on heading alone.
+
+
+3 4 · … S L AV E - G I R L G I V E S B I R T H T O H E R M I S T R E S S …
+TEACHING. Considerations, not a debate club. “Allah knows best.” Most pressing hang: IVF
+as this time, first literal sense. That hang is yours, contemporary, labelled. The Ghunya has
+no IVF chapter.
+THREE SEATS. (1) Vol. 1 marriage and household rights 112–150 (39 pp). (2) Vol. 1 adab of
+the home, parents, slaves — inversion as how a house can turn. (3) Unit 33 again: limits on
+how we talk. Do not force a signs chapter the book does not write.
+FROM THE SERIES. None from this list on heading alone.
+35 · … SHEPHERDS COMPETING IN BUILDINGS …
+TEACHING. Second in the hadith, first to show: Arabia’s tall buildings. First time both signs
+are physically real, in the most physically accessible way.
+THREE SEATS. (1) Vol. 1 lawful earning and marketplace speech. (2) Vol. 5 fellowship with
+the rich and the poor. (3) Vol. 3 the world running in known months — not a skyscraper
+chapter. Thin as a title; the book’s job here is how you live in a time, not a checklist of
+portents.
+FROM THE SERIES. None from this list on heading alone.
+
+
+
+VI. He came to teach you your religion — units 36–41
+If this core only keeps leftover pages, it is 10 English pages. If it is the trunk, it is the return
+of Volume 4 and Volume 5 (554 pp, 234 on 700) plus whatever of Volumes 1–3 was not a
+first lesson. The three seats under 1–35 are what make that return possible without a dump.
+36 · … HE LEFT …
+TEACHING. Knowing when something is done. Company, burden, intensity for the right
+amount of time.
+THREE SEATS. (1) Vol. 4: when a prayer is complete; dua after the farḍ. (2) Vol. 5: the
+shaykh does not keep the murid in intensity without measure. (3) Vol. 5: not beyond
+capacity; one thing at a time.
+FROM THE SERIES. None from this list on heading alone.
+
+
+3 7 · … I S TAY E D A W H I L E …
+TEACHING. To be around the blessed, a good moment, a good thing.
+
+THREE SEATS. (1) Vol. 5 ṣabr 140–144. (2) Vol. 4 night prayers / vigil 326–. (3) Vol. 5
+fellowship after the sitting 43–86.
+FROM THE SERIES. In Good Company.
+
+
+3 8 · … D O Y O U K N O W W H O T H E Q U E S T I O N E R WA S ? …
+TEACHING. Still show marvels. The questioner; the release.
+
+THREE SEATS. (1) Vol. 5: the shaykh names the lesson after the sitting. (2) Vol. 1 Ch. 4
+miracles. (3) Vol. 5 Gabriel as teacher — the answer coming in unit 40.
+FROM THE SERIES. None from this list on heading alone.
+
+
+39 · … ALLAH AND HIS MESSENGER KNOW BEST …
+TEACHING. Defer to authority, knowledge, rules; at least in the moment, show the deferral.
+
+THREE SEATS. (1) Vol. 5 tawadu and tawakkul. (2) Vol. 1 Ch. 4 obeying leaders. (3) Unit 33
+at Path grain — same posture, denser company.
+FROM THE SERIES. None from this list on heading alone.
+4 0 · … I T WA S J I B R I L …
+TEACHING. A blessing. Stay on the Path, show manners, things are revealed.
+
+THREE SEATS. (1) Vol. 5: Gabriel as the Prophet’s teacher / shaykh. (2) Adam as pupil to
+Gabriel. (3) Fellowship with strangers — the unseen guest was the lesson.
+FROM THE SERIES. Stories of the Awliya (the unseen teacher in the circle). Exploring the
+Quran for Women: Surah Maryam (Jibril as a well-proportioned man — same prop as the
+sitting).
+
+
+41 · … HE CAME TO TEACH YOU YOUR RELIGION …
+TEACHING. The trunk for everything else: trees and branches.
+
+THREE SEATS. (1) Vol. 4 in full, as later grain of the five acts already met. (2) Vol. 5 in full,
+as later grain of sitting, ihsan, and the chain. (3) Whatever of Vols. 1–3 was not first-pass:
+sects as fence, the four discourses as lived recitation, the calendar as a lived year. His
+order, not a kneecap. Do not teach 554 pages as session one of the trunk.
+FROM THE SERIES. Nothing forced from a heading. The trunk is the return of what already
+sat.
+5. Videos — in, around, against
+Looked for, not invented. “In” teaches with the clause. “Around” is adjacent (same author,
+same hadith, neighbouring adab). “Against” pulls the other way: a flattening, a checklist, a
+different book sold as this one, a method the Ghunya does not use. Watch against as a foil,
+not as the lesson. I did not find a dedicated English video series on this Ghunya; Jilani on
+video is almost always a different book. IVF: no matching video found; that hang stays
+yours.
+
+The whole sitting (use at the start, and again at the trunk)
+IN. Recitation of the hadith with English subtitles: Hadith Jabrail — Islam, Iman, Ihsan
+(YouTube). The spoken exchange, not a commentary.
+IN. Hamza Yusuf, Foundations of Islam (Dar al-Islam Teachers’ Institute, about nine hours),
+built on this hadith. Sessions: Qur’an compiled; Pillars of Practice 1–2; Articles of Faith 1–2;
+The Concept of Ihsan; Signs of the Last Day. Hosted at Islam On Demand, e.g. Concept of
+Ihsan and Signs of the Last Day. Classroom for non-Muslim teachers — useful, and not a
+Ghunya class.
+AROUND. Ibn Rajab’s commentary on the hadith (text, SeekersGuidance): Ibn Rajab on
+Hadith Jibril. Ibn Hajar from Fatḥ al-Bārī, trans. Gibril Haddad, on Archive.org.
+AGAINST. “The 3 Levels of Religion” (Dailymotion, Bukhārī 50). Treats the hadith as a table
+of contents for inner/outer/peak and parks the sitting. Use when you want learners to feel
+what is lost if the man never walks in.
+
+I. Sitting
+IN. SeekersGuidance, “The Etiquette of Seeking Knowledge,” uses this hadith’s knees-to-
+knees as the picture of how a student sits: article. Not a Ghunya reading; it is the same
+prop.
+AROUND. SeekersGuidance, student-to-teacher etiquette. Ghazālī’s student rules are often
+restated from Bidāyat al-hidāya (e.g. HaqIslam “Etiquettes of Students”). Different book,
+same classroom body.
+AGAINST. Any clip that starts at “Islam, iman, ihsan” and never shows the stranger, the
+white clothes, or the silence. The Dailymotion “3 levels” piece above is the type.
+
+II. Islam
+IN. Hamza Yusuf, Pillars of Practice (Foundations, parts 1–2), same series as above.
+Matches the classified five at first grain.
+AROUND. Qibla as a living compass, not a lecture: My Islam qibla finder. Put it next to
+Jīlānī’s stars, sun, and winds, and next to your miles/km hang — the app is a tool, not the
+fiqh.
+AGAINST. Reducing prayer-direction to “open the app.” Against also: stuffing Volume 4’s
+129 pages of prayer into the first hearing of “establish the prayer.” The video problem and
+the page problem are the same flattening.
+III. Iman
+IN. Hamza Yusuf, Articles of Faith 1–2, same Foundations series. The six as they are.
+
+AROUND. The book’s own Chapter 4 already recites this sitting. Read that before a video.
+Ibn Hajar (link above) for how Bukhārī titled Gabriel’s question.
+AGAINST. Teaching the 54 pages of sects (Vol. 1 App. 2) as a first iman syllabus. The fence
+is not the door. Also against: moving Last Day into a signs-of-the-Hour course. The hadith
+kept last things inside iman and gave the Hour two signs plus “I do not know.”
+
+IV. Ihsan
+IN. Hamza Yusuf, The Concept of Ihsan — defines ihsan, repentance, guarding the heart,
+backbiting, showing off. Sits with units 29–31 and with Vol. 3 ikhlas.
+AROUND. Ammar Alshukry, “Become your best self with Al-Muhsin”: YouTube — ihsan
+toward people and in the act; the seeing/He-sees sentence. Mufti Taqi Usmani on
+murāqaba-e-ihsan (waaz write-up, not a Ghunya class): Ashrafiya.
+AROUND, DIFFERENT BOOK. Shaykh Walead Mosaad’s classes on al-Fatḥ al-Rabbānī
+(Jīlānī’s discourses, not the Ghunya): Qadriyya Association. Friday readings from Holland’s
+other Jīlānī translations: Fatḥ al-Rabbānī, discourse 19; Jalā’ al-Khawāṭir, discourse 12.
+Same shaykh, not this provision.
+AGAINST. Guided visualisation that asks you to imagine watching God as a technique (e.g.
+KSARS “Station of Ihsaan”). Jīlānī defines murāqaba from the sentence; he does not set a
+timed imagination drill. Use the contrast so ihsan does not become a method from
+elsewhere wearing this hadith’s clothes.
+
+V. The Hour
+IN. Omar Suleiman, Yaqeen, Signs of the Hour ep. 1, “Everything You Must Know About the
+End of Times,” 14 April 2026: youtu.be/MQ26cRMV4lU. Walks Jibril’s “when is the Hour,”
+and pushes preparation rather than prediction. Sits with unit 33.
+AROUND. Hamza Yusuf, Signs of the Last Day (Foundations, last session). Broader than this
+hadith’s two signs (Dajjāl, and so on). Use as around, not as the Ghunya’s job. The Ghunya
+has no signs-of-the-Hour syllabus; Last Day stays in iman.
+AGAINST. “Every Minor Sign of Judgment Day Already Fulfilled” (14 minutes). Checklist
+eschatology; Burj Khalifa as tick-box. Useful foil to your hang that both signs are now
+physically real — the hang is about the time you are in, not about finishing a list. IVF: I
+found no video that carries that reading; leave it as your clause, labelled, not as a clip.
+
+VI. The trunk
+IN. The last minute of the recitation video above: “he came to teach you your religion.”
+Then stop. The trunk is the books, not another talk.
+AROUND. The Fatḥ al-Rabbānī series (Walead Mosaad) — how a Jīlānī circle actually
+sounds, while you keep the Ghunya as the provision.
+AGAINST. A 100-page English paperback sold as Al-Ghunya (e.g. Idara / Soltlane listing,
+“2020 Authentic Edition”). That is not the five-volume Holland you are mapping. Against
+also: treating Volume 5 as a first-year subject, or treating the Path as a new KS5 course
+instead of the same spines at specialist grain.
+6. What this means for the course
+Stop limiting one-for-one. Forty-one clauses stay. Each now has three furnishings, so a fat
+block (five prayers, Ramadan, tawba, the calendar) can sit under more than one hang
+without being a forced title.
+Think in paper. On the 700-scale, a “unit” is not 700 ÷ 41 ≈ 17 pages. Ihsan is about 209 of
+those 700. The Hour-as-lived-year is about 156. Islam is about 145, mostly Volume 4. The
+sitting is about 110. Iman is about 76. The trunk is either 4 leftover pages or the return of a
+third of the book. That choice is the curriculum.
+The slope is still the order you walk. Best-sit is where you send people into the book when a
+clause opens. Videos are a third room: in, around, against — so the course is not only Jīlānī,
+and not whatever YouTube flattened the hadith into.
+
+ Next, if you want it: a one-page visual of the six stacks (page-height, not a timeline), or a first
+ scheme that spends time in proportion to paper (ihsan and the year getting the hours they
+ actually occupy) while still walking ʿUmar’s order. I have not built hours or Key Stages into this
+ map.
+

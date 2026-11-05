@@ -1,0 +1,1469 @@
+{
+ "version": 1,
+ "about": "Hand-checked fixes for YouTube caption mishearings in the feed clips' Framing F words. scripts/clip-words-from-work.ts applies them when it cuts content/framing/clip-words, so a rerun keeps them. `fixes` are per video: `from` is matched word by word inside the clip window near `at` (seconds, the first word's caption clock, +-3 s; a pair [from, to] covers a stretch), case-insensitively; a word written with punctuation must match that punctuation, a bare word matches whatever punctuation the caption has and keeps it. `to` replaces the words over the same span, spread evenly; an empty `to` drops them. `global` applies the same way to every clip. Severity: offensive and jarring first, then mishearing, spelling, punctuation.",
+ "global": [
+  {
+   "from": "Sallallahu alaihi wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallallahu Alaih Wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallallahu Alai wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallallahaihi Wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallallahu Wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallai Wasallam",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Sallallahu Alaihi",
+   "to": "sallallahu alayhi wa sallam",
+   "reason": "honorific after the Prophet's name, one spelling everywhere"
+  },
+  {
+   "from": "Alisam",
+   "to": "alayhis salam",
+   "reason": "honorific, one spelling everywhere"
+  },
+  {
+   "from": "Pbuh",
+   "to": "peace be upon him",
+   "reason": "abbreviation written out as spoken"
+  },
+  {
+   "from": "Subhana wa Ta'ala",
+   "to": "subhanahu wa ta'ala",
+   "reason": "honorific after Allah's name, one spelling everywhere"
+  },
+  {
+   "from": "Subhana wa Tala",
+   "to": "subhanahu wa ta'ala",
+   "reason": "honorific after Allah's name, one spelling everywhere"
+  },
+  {
+   "from": "Subhanho wa Tada",
+   "to": "subhanahu wa ta'ala",
+   "reason": "honorific after Allah's name, one spelling everywhere"
+  },
+  {
+   "from": "Allahhana wa Ta'ala",
+   "to": "Allah subhanahu wa ta'ala",
+   "reason": "\"Allah subhanahu\" run together by the captions"
+  },
+  {
+   "from": "Subhan Allah",
+   "to": "SubhanAllah",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Subhanallah",
+   "to": "SubhanAllah",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Quran",
+   "to": "Qur'an",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "dua",
+   "to": "du'a",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Omar",
+   "to": "Umar",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Mohammed",
+   "to": "Muhammad",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Sahhabi",
+   "to": "Sahabi",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Sahhabi's",
+   "to": "Sahabi's",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "Allahh",
+   "to": "Allah",
+   "reason": "caption typo"
+  },
+  {
+   "from": "Haj",
+   "to": "Hajj",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "from": "mushtahid",
+   "to": "mujtahid",
+   "reason": "misheard term"
+  },
+  {
+   "from": "ishtihad",
+   "to": "ijtihad",
+   "reason": "misheard term"
+  }
+ ],
+ "fixes": [
+  {
+   "youtubeId": "4k5Jqkocowg",
+   "cutId": 96,
+   "from": "Satan Bilal",
+   "to": "Sayyidina Bilal",
+   "severity": "offensive",
+   "reason": "misheard honorific: the hadith of Bilal coming to call the adhan and finding the Prophet weeping"
+  },
+  {
+   "youtubeId": "4k5Jqkocowg",
+   "cutId": 96,
+   "from": "make Adam.",
+   "to": "make adhan.",
+   "severity": "jarring",
+   "reason": "misheard: Bilal asked permission to call the adhan"
+  },
+  {
+   "youtubeId": "4k5Jqkocowg",
+   "cutId": 96,
+   "from": "he's all prophetam. Crying,",
+   "to": "he saw the Prophet, alayhis salam, crying.",
+   "severity": "mishearing",
+   "reason": "misheard \"he saw the Prophet, alayhis salam\""
+  },
+  {
+   "youtubeId": "4k5Jqkocowg",
+   "cutId": 96,
+   "from": "Allah, what makes you cry? Allah?",
+   "to": "Ya Rasulallah, what makes you cry? Ya Rasulallah?",
+   "severity": "jarring",
+   "reason": "Bilal addresses the Prophet (\"Ya Rasulallah\"), not Allah; as captioned it reads as asking Allah why He cries"
+  },
+  {
+   "youtubeId": "tidGQC4SrgA",
+   "cutId": 66,
+   "from": "um of Satan Muhammad in",
+   "to": "ummah of Sayyidina Muhammad,",
+   "severity": "offensive",
+   "reason": "misheard \"ummah of Sayyidina Muhammad\""
+  },
+  {
+   "youtubeId": "tidGQC4SrgA",
+   "cutId": 66,
+   "from": "Subhanaka for?",
+   "to": "SubhanAllah for?",
+   "severity": "mishearing",
+   "reason": "the 33 tasbih: SubhanAllah, Alhamdulillah"
+  },
+  {
+   "youtubeId": "tidGQC4SrgA",
+   "cutId": 66,
+   "from": "Subahanica for?",
+   "to": "SubhanAllah for?",
+   "severity": "mishearing",
+   "reason": "the 33 tasbih"
+  },
+  {
+   "youtubeId": "Rd0e9kXdPvI",
+   "cutId": 59,
+   "from": "jump between all of the machete.",
+   "to": "joke between all of the mashayikh.",
+   "severity": "jarring",
+   "reason": "misheard \"a common joke among the mashayikh\" (scholars hearing divorce cases)"
+  },
+  {
+   "youtubeId": "fBzrLN77gng",
+   "cutId": 58,
+   "from": "Imam Alshafi'i Allah a question,",
+   "to": "Imam al-Shafi'i, rahimahullah, a question,",
+   "severity": "jarring",
+   "reason": "misheard \"rahimahullah\"; as captioned the man asks Allah a question"
+  },
+  {
+   "youtubeId": "fBzrLN77gng",
+   "cutId": 58,
+   "from": "Alshafi'i said,",
+   "to": "al-Shafi'i said,",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "nLLmze8Pqyw",
+   "cutId": 71,
+   "from": "complent, said Allah,",
+   "to": "complained, said,",
+   "severity": "jarring",
+   "reason": "\"Allah,\" here is unclear (a non-Muslim addressing the Prophet), and reads as addressing Allah; dropped"
+  },
+  {
+   "youtubeId": "JecirKBPMEk",
+   "cutId": 134,
+   "from": "Blacks,",
+   "to": "black,",
+   "severity": "jarring",
+   "reason": "early generations wearing black ihram; the capitalised plural reads as a racial term"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "soul.",
+   "to": "fast.",
+   "severity": "jarring",
+   "reason": "misheard: the traveller may break his fast"
+  },
+  {
+   "youtubeId": "uXdTiiVvBMs",
+   "cutId": 143,
+   "from": "F",
+   "to": "",
+   "severity": "jarring",
+   "reason": "stray letter (likely the start of a word the captions lost); reads as an expletive"
+  },
+  {
+   "youtubeId": "xWTSTtz0Oh4",
+   "cutId": 152,
+   "from": "profitable law,",
+   "to": "Prophet of Allah,",
+   "severity": "jarring",
+   "reason": "misheard \"Prophet of Allah\" (how to address him)"
+  },
+  {
+   "youtubeId": "-AJEmUJZ5q0",
+   "cutId": 78,
+   "from": "president, you bite him,",
+   "to": "presents you buy him,",
+   "severity": "jarring",
+   "reason": "misheard: the child does not want the presents you buy him"
+  },
+  {
+   "youtubeId": "yiNsCRmUhqo",
+   "cutId": 86,
+   "from": "a law,",
+   "to": "Allah,",
+   "severity": "jarring",
+   "reason": "misheard \"choose Allah\""
+  },
+  {
+   "youtubeId": "1suEmWBqlKE",
+   "cutId": 166,
+   "from": "in a law",
+   "to": "in Allah",
+   "severity": "jarring",
+   "reason": "misheard \"seek refuge in Allah\""
+  },
+  {
+   "youtubeId": "47U_LMc09cg",
+   "cutId": 168,
+   "from": "after a lot,",
+   "to": "after Allah",
+   "severity": "jarring",
+   "reason": "misheard \"after Allah taught Adam\""
+  },
+  {
+   "youtubeId": "9k7QxXtCzaQ",
+   "cutId": 57,
+   "from": "translation. For summer",
+   "to": "translation for sabr",
+   "severity": "mishearing",
+   "reason": "misheard \"sabr\" (patience)"
+  },
+  {
+   "youtubeId": "9k7QxXtCzaQ",
+   "cutId": 57,
+   "from": "Soviet,",
+   "to": "sabr,",
+   "severity": "jarring",
+   "reason": "misheard \"sabr\""
+  },
+  {
+   "youtubeId": "TLCGBj4AlB0",
+   "cutId": 1,
+   "from": "sheepka,",
+   "to": "shabka,",
+   "severity": "mishearing",
+   "reason": "Egyptian engagement jewellery"
+  },
+  {
+   "youtubeId": "ECaTWkof57E",
+   "cutId": 14,
+   "from": "rub.",
+   "to": "Rabb.",
+   "severity": "mishearing",
+   "reason": "misheard \"we are the Rabb\" (Lord)"
+  },
+  {
+   "youtubeId": "NIR88RRpat4",
+   "cutId": 27,
+   "from": "I, I.",
+   "to": "I, I,",
+   "severity": "punctuation",
+   "reason": "stutter broken into a sentence"
+  },
+  {
+   "youtubeId": "FAxIZIqwfd8",
+   "cutId": 40,
+   "from": "new Oh Allah,",
+   "to": "du'a, O Allah,",
+   "severity": "mishearing",
+   "reason": "misheard \"this du'a\""
+  },
+  {
+   "youtubeId": "UGuKJLZnbi8",
+   "cutId": 42,
+   "from": "i.e. You",
+   "to": "i.e., you",
+   "severity": "punctuation",
+   "reason": "sentence break after i.e."
+  },
+  {
+   "youtubeId": "UGuKJLZnbi8",
+   "cutId": 42,
+   "from": "this is. This is",
+   "to": "this is, this is",
+   "severity": "punctuation",
+   "reason": "repetition broken into two sentences"
+  },
+  {
+   "youtubeId": "UGuKJLZnbi8",
+   "cutId": 42,
+   "from": "the from some of your",
+   "to": "the son of your",
+   "severity": "mishearing",
+   "reason": "the du'a: the son of your female servant"
+  },
+  {
+   "youtubeId": "N_-YiwIb-u0",
+   "cutId": 43,
+   "from": "em man,",
+   "to": "iman,",
+   "severity": "mishearing",
+   "reason": "misheard \"iman\""
+  },
+  {
+   "youtubeId": "45XUrfJS68Q",
+   "cutId": 44,
+   "from": "make zalal. For me.",
+   "to": "make zina halal for me.",
+   "severity": "mishearing",
+   "reason": "the hadith of the young man asking permission for zina"
+  },
+  {
+   "youtubeId": "45XUrfJS68Q",
+   "cutId": 44,
+   "from": "masids",
+   "to": "masjids",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "RZmsvGE785o",
+   "cutId": 47,
+   "from": "sadaka,",
+   "to": "sadaqah,",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "RZmsvGE785o",
+   "cutId": 47,
+   "from": "wife. When",
+   "to": "wife, when",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "RZmsvGE785o",
+   "cutId": 47,
+   "from": "but. Its",
+   "to": "but its",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "U_tCg-U0QSY",
+   "cutId": 48,
+   "from": "ibada.",
+   "to": "ibadah.",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "WZySKAmC8go",
+   "cutId": 51,
+   "from": "Um also",
+   "to": "Umar also",
+   "severity": "mishearing",
+   "reason": "Hadith Jibril, narrated by Umar"
+  },
+  {
+   "youtubeId": "WZySKAmC8go",
+   "cutId": 51,
+   "from": "prom.",
+   "to": "Prophet.",
+   "severity": "mishearing",
+   "reason": "misheard \"protective over the Prophet\""
+  },
+  {
+   "youtubeId": "xY7hvYifpxo",
+   "cutId": 55,
+   "from": "he. Said,",
+   "to": "he said,",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "BnU535dqG6U",
+   "cutId": 56,
+   "from": "Prophet Saw says. That",
+   "to": "Prophet, sallallahu alayhi wa sallam, says that",
+   "severity": "mishearing",
+   "reason": "\"(saw)\" honorific, and a sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "rb2EkzjgO98",
+   "cutId": 60,
+   "from": "as. We",
+   "to": "as we",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "HfIT8TSoHiE",
+   "cutId": 62,
+   "from": "selfhelp",
+   "to": "self-help",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "QOpIvu1uJx0",
+   "cutId": 63,
+   "from": "Tawa",
+   "to": "taqwa",
+   "severity": "mishearing",
+   "reason": "misheard \"taqwa\""
+  },
+  {
+   "youtubeId": "HZgblQ00z1U",
+   "cutId": 64,
+   "from": "Th",
+   "to": "Ta'if",
+   "severity": "mishearing",
+   "reason": "misheard \"Ta'if\""
+  },
+  {
+   "youtubeId": "9kvuzeMaiIs",
+   "cutId": 65,
+   "from": "I Imazali",
+   "to": "Imam al-Ghazali",
+   "severity": "mishearing",
+   "reason": "misheard \"Imam al-Ghazali\""
+  },
+  {
+   "youtubeId": "ZEci87kH91c",
+   "cutId": 69,
+   "from": "he said.",
+   "to": "he said,",
+   "severity": "punctuation",
+   "reason": "\"He said\" split from what he said"
+  },
+  {
+   "youtubeId": "5Aml70_OLcY",
+   "cutId": 70,
+   "from": "joged",
+   "to": "jogged",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "5Aml70_OLcY",
+   "cutId": 70,
+   "from": "Jus",
+   "to": "Jew,",
+   "severity": "mishearing",
+   "reason": "misheard \"Christian or Jew\""
+  },
+  {
+   "youtubeId": "nLLmze8Pqyw",
+   "cutId": 71,
+   "from": "he said.",
+   "to": "he said,",
+   "severity": "punctuation",
+   "reason": "\"He said\" split from what he said"
+  },
+  {
+   "youtubeId": "9dfbEJIi88g",
+   "cutId": 72,
+   "from": "Prophetam",
+   "to": "Prophet, alayhis salam,",
+   "severity": "mishearing",
+   "reason": "honorific run into the word"
+  },
+  {
+   "youtubeId": "GeiEP_IfXiA",
+   "cutId": 74,
+   "from": "Omar",
+   "to": "Umar",
+   "severity": "spelling",
+   "reason": "one spelling everywhere"
+  },
+  {
+   "youtubeId": "X4-7PrsB-C8",
+   "cutId": 75,
+   "from": "he said.",
+   "to": "he said,",
+   "severity": "punctuation",
+   "reason": "\"He said\" split from what he said"
+  },
+  {
+   "youtubeId": "X4-7PrsB-C8",
+   "cutId": 75,
+   "from": "Prophet saw I'm doing",
+   "to": "Prophet, sallallahu alayhi wa sallam, doing",
+   "severity": "mishearing",
+   "reason": "\"(saw)\" honorific misheard as \"saw I'm\""
+  },
+  {
+   "youtubeId": "9b7v5pgdwJ8",
+   "cutId": 76,
+   "from": "the first Sallam,",
+   "to": "the Prophet, alayhis salam,",
+   "severity": "mishearing",
+   "reason": "misheard \"the Prophet, alayhis salam\""
+  },
+  {
+   "youtubeId": "F2q4PuWl5fA",
+   "cutId": 79,
+   "from": "telling food,",
+   "to": "selling food,",
+   "severity": "mishearing",
+   "reason": "misheard \"selling food\""
+  },
+  {
+   "youtubeId": "F2q4PuWl5fA",
+   "cutId": 79,
+   "from": "wellknown.",
+   "to": "well-known.",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "KcvxPmQjiYU",
+   "cutId": 80,
+   "from": "believed with him",
+   "to": "pleased with him",
+   "severity": "mishearing",
+   "reason": "misheard \"Allah is pleased with him\""
+  },
+  {
+   "youtubeId": "SOg6jT07toA",
+   "cutId": 83,
+   "from": "of. Worship",
+   "to": "of worship",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "9gv3nsrVXQw",
+   "cutId": 90,
+   "from": "I'm. I",
+   "to": "I'm, I",
+   "severity": "punctuation",
+   "reason": "stutter broken into a sentence"
+  },
+  {
+   "youtubeId": "Tg1kZDiwdqM",
+   "cutId": 98,
+   "from": "nephs",
+   "to": "nafs",
+   "severity": "mishearing",
+   "reason": "misheard \"nafs\""
+  },
+  {
+   "youtubeId": "Tg1kZDiwdqM",
+   "cutId": 98,
+   "from": "nefs",
+   "to": "nafs",
+   "severity": "mishearing",
+   "reason": "misheard \"nafs\""
+  },
+  {
+   "youtubeId": "Tg1kZDiwdqM",
+   "cutId": 98,
+   "from": "says. It",
+   "to": "says, it",
+   "severity": "punctuation",
+   "reason": "\"He says\" split from what he said"
+  },
+  {
+   "youtubeId": "Tg1kZDiwdqM",
+   "cutId": 98,
+   "from": "said. You",
+   "to": "said, you",
+   "severity": "punctuation",
+   "reason": "\"He said\" split from what he said"
+  },
+  {
+   "youtubeId": "ak1x-SRws3A",
+   "cutId": 99,
+   "from": "most half",
+   "to": "mushaf",
+   "severity": "mishearing",
+   "reason": "misheard \"mushaf\""
+  },
+  {
+   "youtubeId": "vd6LgagKq3Q",
+   "cutId": 100,
+   "from": "a A. A. A. Skin",
+   "to": "a, a, a, a skin",
+   "severity": "punctuation",
+   "reason": "stutter broken into sentences"
+  },
+  {
+   "youtubeId": "N1409yARUg4",
+   "cutId": 103,
+   "from": "UM,",
+   "to": "ummah,",
+   "severity": "mishearing",
+   "reason": "misheard \"ummah\""
+  },
+  {
+   "youtubeId": "N1409yARUg4",
+   "cutId": 103,
+   "from": "UM to enter into J",
+   "to": "ummah to enter into Jannah",
+   "severity": "mishearing",
+   "reason": "misheard \"ummah\", \"Jannah\""
+  },
+  {
+   "youtubeId": "N1409yARUg4",
+   "cutId": 103,
+   "from": "Umah.",
+   "to": "ummah.",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "N1409yARUg4",
+   "cutId": 103,
+   "from": "Prophet Wasam,",
+   "to": "Prophet, sallallahu alayhi wa sallam,",
+   "severity": "mishearing",
+   "reason": "honorific"
+  },
+  {
+   "youtubeId": "81_ysLJWW2I",
+   "cutId": 107,
+   "from": "Aki",
+   "to": "Akhi",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "SJ1ScQcgGdY",
+   "cutId": 108,
+   "from": "disroing.",
+   "to": "disrobing.",
+   "severity": "mishearing",
+   "reason": "caption typo"
+  },
+  {
+   "youtubeId": "dnxxRiRnBr8",
+   "cutId": 109,
+   "from": "Immmet's",
+   "to": "Imam Ahmad's",
+   "severity": "mishearing",
+   "reason": "misheard \"Imam Ahmad's collection\""
+  },
+  {
+   "youtubeId": "dnxxRiRnBr8",
+   "cutId": 109,
+   "from": "musen,",
+   "to": "muzn,",
+   "severity": "mishearing",
+   "reason": "al-muzn: rain clouds"
+  },
+  {
+   "youtubeId": "arfn_TLWNbU",
+   "cutId": 110,
+   "from": "Musa Alisam.",
+   "to": "Musa, alayhis salam.",
+   "severity": "mishearing",
+   "reason": "honorific"
+  },
+  {
+   "youtubeId": "arfn_TLWNbU",
+   "cutId": 110,
+   "from": "Mus Alisam.",
+   "to": "Musa, alayhis salam.",
+   "severity": "mishearing",
+   "reason": "name and honorific"
+  },
+  {
+   "youtubeId": "_t4fT_ijz4s",
+   "cutId": 111,
+   "from": "internally",
+   "to": "eternally",
+   "severity": "mishearing",
+   "reason": "misheard \"eternally in paradise\""
+  },
+  {
+   "youtubeId": "_t4fT_ijz4s",
+   "cutId": 111,
+   "from": "Eman and Allah,",
+   "to": "iman in Allah,",
+   "severity": "mishearing",
+   "reason": "misheard \"iman in Allah\""
+  },
+  {
+   "youtubeId": "byhbsgVKZjM",
+   "cutId": 112,
+   "from": "king's",
+   "to": "kings",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "byhbsgVKZjM",
+   "cutId": 112,
+   "from": "even Ahmed",
+   "to": "Imam Ahmad",
+   "severity": "mishearing",
+   "reason": "misheard \"Imam Ahmad\" (who then walks to Baghdad)"
+  },
+  {
+   "youtubeId": "kjs5e9e4zwU",
+   "cutId": 113,
+   "from": "sevenmilewide",
+   "to": "seven-mile-wide",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "qbTsKn6IfQU",
+   "cutId": 114,
+   "from": "ASR",
+   "to": "Asr",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "qbTsKn6IfQU",
+   "cutId": 114,
+   "from": "one. Of",
+   "to": "one of",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "BmcUBeZeQ2c",
+   "cutId": 116,
+   "from": "Masid",
+   "to": "masjid",
+   "severity": "mishearing",
+   "reason": "misheard \"masjid\""
+  },
+  {
+   "youtubeId": "BmcUBeZeQ2c",
+   "cutId": 116,
+   "from": "edib",
+   "to": "adab",
+   "severity": "mishearing",
+   "reason": "misheard \"adab\""
+  },
+  {
+   "youtubeId": "OAOQzHJVnE8",
+   "cutId": 118,
+   "from": "Abdul Hak",
+   "to": "Abdul Haq",
+   "severity": "spelling",
+   "reason": "one spelling for the story's character"
+  },
+  {
+   "youtubeId": "ogAXx-3OBGg",
+   "cutId": 119,
+   "from": "got. To",
+   "to": "got to",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "n72kGaJ2BPA",
+   "cutId": 120,
+   "from": "zakat fet.",
+   "to": "zakat al-fitr.",
+   "severity": "mishearing",
+   "reason": "misheard \"zakat al-fitr\""
+  },
+  {
+   "youtubeId": "yyyJ9gnldD8",
+   "cutId": 121,
+   "from": "ifar.",
+   "to": "iftar.",
+   "severity": "mishearing",
+   "reason": "misheard \"iftar\""
+  },
+  {
+   "youtubeId": "yyyJ9gnldD8",
+   "cutId": 121,
+   "from": "Anar and Ifar",
+   "to": "an iftar and iftar",
+   "severity": "mishearing",
+   "reason": "misheard \"iftar\""
+  },
+  {
+   "youtubeId": "yyyJ9gnldD8",
+   "cutId": 121,
+   "from": "me? Forar.",
+   "to": "me for iftar.",
+   "severity": "mishearing",
+   "reason": "misheard \"for iftar\""
+  },
+  {
+   "youtubeId": "yyyJ9gnldD8",
+   "cutId": 121,
+   "from": "Thear.",
+   "to": "the iftar.",
+   "severity": "mishearing",
+   "reason": "misheard \"the iftar\""
+  },
+  {
+   "youtubeId": "5uSvI9kftrA",
+   "cutId": 123,
+   "from": "Fahalah",
+   "to": "If Allah",
+   "severity": "mishearing",
+   "reason": "misheard \"If Allah is able to bring me back\""
+  },
+  {
+   "youtubeId": "XpmQy2JuwfQ",
+   "cutId": 124,
+   "from": "wudoo.",
+   "to": "wudu.",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "XpmQy2JuwfQ",
+   "cutId": 124,
+   "from": "woo",
+   "to": "wudu",
+   "severity": "mishearing",
+   "reason": "misheard \"wudu\""
+  },
+  {
+   "youtubeId": "XpmQy2JuwfQ",
+   "cutId": 124,
+   "from": "that. Doesn't",
+   "to": "that doesn't",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "_vSSXxmycr4",
+   "cutId": 125,
+   "from": "this, UM",
+   "to": "this ummah",
+   "severity": "mishearing",
+   "reason": "misheard \"this ummah\""
+  },
+  {
+   "youtubeId": "_vSSXxmycr4",
+   "cutId": 125,
+   "from": "Panalah,",
+   "to": "SubhanAllah,",
+   "severity": "mishearing",
+   "reason": "misheard \"SubhanAllah\""
+  },
+  {
+   "youtubeId": "_vSSXxmycr4",
+   "cutId": 125,
+   "from": "the. Quran.",
+   "to": "the Qur'an.",
+   "severity": "punctuation",
+   "reason": "sentence broken before its last word"
+  },
+  {
+   "youtubeId": "treMWTIujCk",
+   "cutId": 127,
+   "from": "Abdman",
+   "to": "Abdul Rahman",
+   "severity": "mishearing",
+   "reason": "the story's character Abdul Rahman"
+  },
+  {
+   "youtubeId": "treMWTIujCk",
+   "cutId": 127,
+   "from": "Abdahman,",
+   "to": "Abdul Rahman,",
+   "severity": "mishearing",
+   "reason": "the story's character Abdul Rahman"
+  },
+  {
+   "youtubeId": "treMWTIujCk",
+   "cutId": 127,
+   "from": "Abdul Hak",
+   "to": "Abdul Haq",
+   "severity": "spelling",
+   "reason": "the story's character Abdul Haq"
+  },
+  {
+   "youtubeId": "treMWTIujCk",
+   "cutId": 127,
+   "from": "Abd Hak,",
+   "to": "Abdul Haq,",
+   "severity": "mishearing",
+   "reason": "the story's character Abdul Haq"
+  },
+  {
+   "youtubeId": "treMWTIujCk",
+   "cutId": 127,
+   "from": "Abdak?",
+   "to": "Abdul Haq?",
+   "severity": "mishearing",
+   "reason": "the story's character Abdul Haq"
+  },
+  {
+   "youtubeId": "wZxpmFSgJfg",
+   "cutId": 131,
+   "from": "Jenna",
+   "to": "Jannah",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "QVdZbYTRZ1k",
+   "cutId": 132,
+   "from": "AZ,",
+   "to": "ijazah,",
+   "severity": "mishearing",
+   "reason": "misheard \"ijazah\" (a teacher's permission)"
+  },
+  {
+   "youtubeId": "QVdZbYTRZ1k",
+   "cutId": 132,
+   "from": "to. Let",
+   "to": "to let",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "UciYihpJMJE",
+   "cutId": 133,
+   "from": "'th,",
+   "to": "hadha,",
+   "severity": "mishearing",
+   "reason": "clipped \"hadha\" (\"this is my straight path\")"
+  },
+  {
+   "youtubeId": "JecirKBPMEk",
+   "cutId": 134,
+   "from": "TA around the KAA",
+   "to": "tawaf around the Ka'bah",
+   "severity": "mishearing",
+   "reason": "misheard \"tawaf around the Ka'bah\""
+  },
+  {
+   "youtubeId": "JecirKBPMEk",
+   "cutId": 134,
+   "from": "theam",
+   "to": "the ihram",
+   "severity": "mishearing",
+   "reason": "misheard \"the ihram\""
+  },
+  {
+   "youtubeId": "rTXO4r5oGnA",
+   "cutId": 136,
+   "from": "said He. S. Wasam said.",
+   "to": "said, Hays. He, sallallahu alayhi wa sallam, said,",
+   "severity": "mishearing",
+   "reason": "hadith of A'ishah: \"we were given hays\"; honorific"
+  },
+  {
+   "youtubeId": "rTXO4r5oGnA",
+   "cutId": 136,
+   "from": "with S.",
+   "to": "with sawm.",
+   "severity": "mishearing",
+   "reason": "\"I had started the morning fasting\""
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "Abu Bas Alari,",
+   "to": "Abu Basra al-Ghifari,",
+   "severity": "mishearing",
+   "reason": "the hadith of Abu Basra al-Ghifari"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "from Al",
+   "to": "from Fustat",
+   "severity": "mishearing",
+   "reason": "the hadith: he set sail from Fustat"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "but. Had",
+   "to": "but had",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "SAf.",
+   "to": "safar.",
+   "severity": "mishearing",
+   "reason": "misheard \"safar\" (travel)"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "Muhammad S. Wasam?",
+   "to": "Muhammad, sallallahu alayhi wa sallam?",
+   "severity": "mishearing",
+   "reason": "honorific"
+  },
+  {
+   "youtubeId": "ZAbxfGZl6DE",
+   "cutId": 138,
+   "from": "HAL?",
+   "to": "halal?",
+   "severity": "mishearing",
+   "reason": "misheard \"halal\""
+  },
+  {
+   "youtubeId": "ZAbxfGZl6DE",
+   "cutId": 138,
+   "from": "cotton CL candy",
+   "to": "cotton candy",
+   "severity": "mishearing",
+   "reason": "stray letters"
+  },
+  {
+   "youtubeId": "OTu_G4wBhts",
+   "cutId": 140,
+   "from": "threeparent",
+   "to": "three-parent",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "XWRAnq4Wwew",
+   "cutId": 141,
+   "from": "do? We do?",
+   "to": "do we do?",
+   "severity": "punctuation",
+   "reason": "question broken in two"
+  },
+  {
+   "youtubeId": "rGE5ffnBHuI",
+   "cutId": 142,
+   "from": "Asser,",
+   "to": "Asr,",
+   "severity": "mishearing",
+   "reason": "misheard \"Asr\""
+  },
+  {
+   "youtubeId": "rGE5ffnBHuI",
+   "cutId": 142,
+   "from": "son? Where",
+   "to": "sun where",
+   "severity": "mishearing",
+   "reason": "misheard \"no sun where you're from\""
+  },
+  {
+   "youtubeId": "rGE5ffnBHuI",
+   "cutId": 142,
+   "from": "Vladivto?",
+   "to": "Vladivostok?",
+   "severity": "mishearing",
+   "reason": "clipped name"
+  },
+  {
+   "youtubeId": "uXdTiiVvBMs",
+   "cutId": 143,
+   "from": "Allah Abbar.",
+   "to": "Allahu Akbar.",
+   "severity": "mishearing",
+   "reason": "misheard \"Allahu Akbar\""
+  },
+  {
+   "youtubeId": "Sj-y8pkwHis",
+   "cutId": 144,
+   "from": "allencompassing",
+   "to": "all-encompassing",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "PtyYuUVWUb8",
+   "cutId": 145,
+   "from": "KUF",
+   "to": "kuffar",
+   "severity": "mishearing",
+   "reason": "misheard \"kuffar\""
+  },
+  {
+   "youtubeId": "pjgxRFdsvys",
+   "cutId": 146,
+   "from": "And. Places",
+   "to": "And places",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "pjgxRFdsvys",
+   "cutId": 146,
+   "from": "No. 13Th",
+   "to": "no 13th",
+   "severity": "punctuation",
+   "reason": "\"no 13th floor\" broken in two"
+  },
+  {
+   "youtubeId": "nXFNIUvr1A8",
+   "cutId": 147,
+   "from": "B Umaya",
+   "to": "Bani Umayya",
+   "severity": "mishearing",
+   "reason": "clipped name"
+  },
+  {
+   "youtubeId": "nXFNIUvr1A8",
+   "cutId": 147,
+   "from": "Bani Umaya",
+   "to": "Bani Umayya",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "bKja8bx8zuk",
+   "cutId": 148,
+   "from": "Navami. Luke,",
+   "to": "Nizam al-Mulk,",
+   "severity": "mishearing",
+   "reason": "misheard \"Nizam al-Mulk\""
+  },
+  {
+   "youtubeId": "bKja8bx8zuk",
+   "cutId": 148,
+   "from": "illgotten",
+   "to": "ill-gotten",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "SGAhWg9XH8o",
+   "cutId": 149,
+   "from": "as Abi Becker,",
+   "to": "Asma bint Abi Bakr,",
+   "severity": "mishearing",
+   "reason": "misheard \"Asma bint Abi Bakr\""
+  },
+  {
+   "youtubeId": "SGAhWg9XH8o",
+   "cutId": 149,
+   "from": "Asmab and Tabi Becker,",
+   "to": "Asma bint Abi Bakr,",
+   "severity": "mishearing",
+   "reason": "misheard \"Asma bint Abi Bakr\""
+  },
+  {
+   "youtubeId": "HMjE7FjhNtk",
+   "cutId": 150,
+   "from": "Bohani for him? Allah? Not",
+   "to": "Abu Hanifa, rahimahullah, not",
+   "severity": "mishearing",
+   "reason": "misheard \"Imam Abu Hanifa, rahimahullah\""
+  },
+  {
+   "youtubeId": "xWTSTtz0Oh4",
+   "cutId": 152,
+   "from": "second. Ruling",
+   "to": "second ruling",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "QcHLlb2mn_Q",
+   "cutId": 157,
+   "from": "mal",
+   "to": "malak",
+   "severity": "mishearing",
+   "reason": "misheard \"malak\""
+  },
+  {
+   "youtubeId": "jFRhdrzIw8s",
+   "cutId": 159,
+   "from": "Shahad",
+   "to": "Shahadah",
+   "severity": "spelling",
+   "reason": "spelling"
+  },
+  {
+   "youtubeId": "gxg9VZz2bZ0",
+   "cutId": 162,
+   "from": "sheh.",
+   "to": "shaykh.",
+   "severity": "mishearing",
+   "reason": "misheard \"shaykh\""
+  },
+  {
+   "youtubeId": "gxg9VZz2bZ0",
+   "cutId": 162,
+   "from": "times? A day",
+   "to": "times a day?",
+   "severity": "punctuation",
+   "reason": "question broken in two"
+  },
+  {
+   "youtubeId": "V-cL1PpQD14",
+   "cutId": 163,
+   "from": "Dean",
+   "to": "Deen",
+   "severity": "mishearing",
+   "reason": "misheard \"Deen\""
+  },
+  {
+   "youtubeId": "V-cL1PpQD14",
+   "cutId": 163,
+   "from": "in. Action.",
+   "to": "in action.",
+   "severity": "punctuation",
+   "reason": "sentence broken before its last word"
+  },
+  {
+   "youtubeId": "FNiDACSqMas",
+   "cutId": 164,
+   "from": "sunn",
+   "to": "sunnah",
+   "severity": "spelling",
+   "reason": "clipped word"
+  },
+  {
+   "youtubeId": "CSlt5_xbyqM",
+   "cutId": 171,
+   "from": "Prophet Sallam",
+   "to": "Prophet, alayhis salam,",
+   "severity": "mishearing",
+   "reason": "honorific"
+  },
+  {
+   "youtubeId": "_XATcw3ZXXE",
+   "cutId": 173,
+   "from": "Urukua,",
+   "to": "ruku',",
+   "severity": "mishearing",
+   "reason": "misheard \"ruku'\""
+  },
+  {
+   "youtubeId": "_XATcw3ZXXE",
+   "cutId": 173,
+   "from": "Rokua",
+   "to": "ruku'",
+   "severity": "mishearing",
+   "reason": "misheard \"ruku'\""
+  },
+  {
+   "youtubeId": "_XATcw3ZXXE",
+   "cutId": 173,
+   "from": "My. Back",
+   "to": "My back",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "Mw6wrK21trY",
+   "cutId": 174,
+   "from": "Allah in his message and all best,",
+   "to": "Allah and His Messenger know best,",
+   "severity": "mishearing",
+   "reason": "misheard \"Allah and His Messenger know best\""
+  },
+  {
+   "youtubeId": "HfIT8TSoHiE",
+   "cutId": 62,
+   "from": "says. This",
+   "to": "says, this",
+   "severity": "punctuation",
+   "reason": "\"says\" split from what it says"
+  },
+  {
+   "youtubeId": "Mw6wrK21trY",
+   "cutId": 174,
+   "from": "said. Allah",
+   "to": "said, Allah",
+   "severity": "punctuation",
+   "reason": "\"He said\" split from what he said"
+  },
+  {
+   "youtubeId": "SGAhWg9XH8o",
+   "cutId": 149,
+   "from": "she said. I",
+   "to": "she said, I",
+   "severity": "punctuation",
+   "reason": "\"she said\" split from what she said"
+  },
+  {
+   "youtubeId": "W0X24Ov_b3k",
+   "cutId": 137,
+   "from": "Basra said. Do",
+   "to": "Basra said, Do",
+   "severity": "punctuation",
+   "reason": "\"said\" split from what he said"
+  },
+  {
+   "youtubeId": "WZySKAmC8go",
+   "cutId": 51,
+   "from": "he says. We",
+   "to": "he says, We",
+   "severity": "punctuation",
+   "reason": "\"he says\" split from what he said"
+  },
+  {
+   "youtubeId": "XpmQy2JuwfQ",
+   "cutId": 124,
+   "from": "it said. Making",
+   "to": "it said, making",
+   "severity": "punctuation",
+   "reason": "\"It said\" split from what it said"
+  },
+  {
+   "youtubeId": "bYBtwQduoxo",
+   "cutId": 167,
+   "from": "the. Prophet's",
+   "to": "the Prophet's",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-phrase"
+  },
+  {
+   "youtubeId": "coUbK0Rspro",
+   "cutId": 160,
+   "from": "that. Here's",
+   "to": "that here's",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "nXFNIUvr1A8",
+   "cutId": 147,
+   "from": "was. The",
+   "to": "was, the",
+   "severity": "punctuation",
+   "reason": "sentence broken mid-clause"
+  },
+  {
+   "youtubeId": "rTXO4r5oGnA",
+   "cutId": 136,
+   "from": "Sallallah Wasam said.",
+   "to": "sallallahu alayhi wa sallam said,",
+   "severity": "punctuation",
+   "reason": "honorific; \"said\" split from what he said"
+  },
+  {
+   "youtubeId": "Rd0e9kXdPvI",
+   "cutId": 59,
+   "from": "But but. But",
+   "to": "But, but, but",
+   "severity": "punctuation",
+   "reason": "stutter broken into a sentence"
+  },
+  {
+   "youtubeId": "FAxIZIqwfd8",
+   "cutId": 40,
+   "from": "Prophet Salallahu said As",
+   "to": "Prophet, sallallahu alayhi wa sallam, said, as",
+   "severity": "mishearing",
+   "reason": "\"(saw)\" honorific clipped to \"Salallahu\"; \"said\" split from what he said"
+  },
+  {
+   "youtubeId": "FAxIZIqwfd8",
+   "cutId": 40,
+   "from": "Prophet Salallahu advised,",
+   "to": "Prophet, sallallahu alayhi wa sallam, advised,",
+   "severity": "mishearing",
+   "reason": "honorific clipped to \"Salallahu\""
+  },
+  {
+   "youtubeId": "rb2EkzjgO98",
+   "cutId": 60,
+   "from": "Rasul Alayhi Salaat wa Salaam,",
+   "to": "Rasul, alayhi salatu wa salam,",
+   "severity": "spelling",
+   "reason": "honorific, one spelling everywhere"
+  },
+  {
+   "youtubeId": "rb2EkzjgO98",
+   "cutId": 60,
+   "from": "Prophet Alayhi Salaat wa Salaam",
+   "to": "Prophet, alayhi salatu wa salam,",
+   "severity": "spelling",
+   "reason": "honorific, one spelling everywhere"
+  },
+  {
+   "youtubeId": "ECaTWkof57E",
+   "cutId": 14,
+   "from": "Subhan Allah, When",
+   "to": "SubhanAllah, when",
+   "severity": "punctuation",
+   "reason": "capital mid-sentence"
+  },
+  {
+   "youtubeId": "GLOD742Tzbs",
+   "cutId": 50,
+   "from": "The why",
+   "to": "Then why",
+   "severity": "mishearing",
+   "reason": "misheard \"Then why is it lost?\""
+  },
+  {
+   "youtubeId": "QOpIvu1uJx0",
+   "cutId": 63,
+   "from": "big. For",
+   "to": "big for",
+   "severity": "punctuation",
+   "reason": "\"no one's too big for Allah's mercy\" broken in two"
+  },
+  {
+   "youtubeId": "xY7hvYifpxo",
+   "cutId": 55,
+   "from": "Can I let me",
+   "to": "Can I, let me",
+   "severity": "punctuation",
+   "reason": "self-correction run together"
+  },
+  {
+   "youtubeId": "ECaTWkof57E",
+   "cutId": 14,
+   "from": "grow, But",
+   "to": "grow, but",
+   "severity": "punctuation",
+   "reason": "capital mid-sentence"
+  }
+ ]
+}

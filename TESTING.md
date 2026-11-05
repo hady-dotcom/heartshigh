@@ -11,6 +11,8 @@ Seven suites, all run before any "come and look". Run them from the repo root.
 | 5 | `sizetest.py` | 6 devices × 8 screens: no overflow, no clipped CTA, tap targets |
 | 6 | `unfurl.py` | all 5 Grow pages unfurl (measured by height growth, not class names) |
 | 7 | `yt.py` | YouTube engine: right video, right window, swipes pass through the embed |
+| 8 | `htl.test.js` | Hook/turn/land trim, caption snap, word-count and window warnings |
+| 9 | `htl_ui.py` | Editor timeline chips and kinetic preview at 1280×800 and 390×844; the feed honours the saved delivery |
 
 Plus `sim2.py`, which reproduces the artifact host's document skeleton and measures
 rendered geometry — added after a release where elements existed at 0×0 and the page

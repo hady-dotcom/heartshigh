@@ -1,0 +1,75 @@
+# Clip Rubric v2
+
+A clip is a 15–60 second vertical excerpt from a lecture, watched on its own.
+It plays with sound on, to a viewer who did not choose it, knows nothing about
+the speaker or the lecture, and will leave within two seconds if nothing holds
+them.
+
+Nothing outside the clip provides context, sets expectations, or earns
+patience. Axes 1 and 2 are load-bearing: a clip that fails either cannot be
+rescued by strength elsewhere.
+
+The strongest clips have one shape: a hook that works cold, a turn (one
+thought that shifts or sharpens it), and a land (the line that sticks). Judge
+only the words in the clip's units. A title, summary or stated idea attached to
+the clip is the clipper's claim, not evidence, and never raises a score.
+
+## Axes
+
+### 1. Standalone comprehensibility
+Does every referent resolve inside the clip, and would a stranger take away
+only what the speaker actually said?
+- 1 — Opens on a pronoun, "this", "that story", or a conclusion whose premise
+      was cut. Or opens on a link phrase continuing a prior thought ("as I
+      mentioned", "so anyway", "as I was saying"). Or depends on the room: a
+      named audience member, pointing, crowd work, pair-share, notices or
+      logistics. Or, heard alone, it could be taken as a claim the speaker did
+      not make (for example he voices a view he goes on to reject, and the clip
+      stops before the rejection). A new viewer is lost or misled.
+- 3 — Mostly self-contained; one reference requires a guess the viewer can
+      make from tone.
+- 5 — A viewer with no context understands the whole thing, and what they
+      understand is what the speaker meant.
+
+### 2. Hook (first 3 seconds)
+Judge ONLY the words in the `hook_window` field, which is computed from audio
+timings, not estimated. Does it stop a scroll?
+- 1 — Throat-clearing, filler, a greeting or logistics, or a subordinate
+      clause continuing a prior thought. A window that starts partway through a
+      sentence belongs here.
+- 3 — Clear and coherent, but no tension, question, or surprise.
+- 5 — Poses a question, states a counterintuitive claim, sets up a contrast
+      ("not this, but this"), or opens a story with immediate stakes.
+An opening that is only recitation, or speech in a language other than the
+clip's main language, with no point yet in that main language, scores no
+higher than 2.
+
+### 3. Payoff
+Does the clip contain its own resolution: setup, turn and land?
+- 1 — The point arrives after the clip ends, or the clip is setup with no land.
+      So does a clip built around a reaction (laughter, "amen", a pause)
+      when the line that earned the reaction is not inside the clip.
+- 3 — Resolution is implied but not stated, or the land is stated but the
+      clip trails into the start of the next sentence, list or topic. A story
+      told at length where only its turn matters belongs here.
+- 5 — Setup, turn and land are all inside the clip, and it ends just after the
+      land sentence completes.
+
+### 4. Quotability
+Is there a line a viewer would screenshot or repeat?
+- 1 — No memorable phrasing, or the key line is garbled or broken in the
+      transcript so it cannot be read as said.
+- 3 — One good line, buried, long, or flat.
+- 5 — A sharp, self-contained line delivered with weight, usually one sentence
+      of roughly 8–15 words. Strongest forms, in order: a thesis the speaker
+      repeats; a verse or citation followed by a one-line application; a
+      contrast; a puzzle and its solution; the turn of a story; a question
+      and its answer.
+
+## Scoring notes
+- Score each axis independently. Do not average as you go.
+- Cite the unit IDs that justify each score.
+- A high score on one axis never compensates for a low score on another.
+- Do not score the importance of the topic or the doctrine. Judge the clip as
+  a standalone excerpt only.
+- Most candidates are 3s. A 5 must be earned by the units you cite.

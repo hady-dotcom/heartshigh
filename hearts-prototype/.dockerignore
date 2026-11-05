@@ -1,0 +1,12 @@
+node_modules
+.next
+.next-e2e
+data
+media
+artifacts
+playwright-report
+test-results
+.git
+bin
+*.log
+coverage
