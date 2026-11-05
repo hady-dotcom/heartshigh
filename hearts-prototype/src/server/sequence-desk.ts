@@ -231,14 +231,19 @@ async function deleteAnswersForPoints(payload: Payload, pointIds: number[]) {
 
 /** Keeps learner answers when the question text is the same. A changed question drops only its own answers. */
 async function syncFilmQuestions(payload: Payload, lessonId: number, callouts: CourseFilm['callouts']) {
-  const existing = await payload.find({
-    collection: 'engagement-points',
-    overrideAccess: true,
-    depth: 0,
-    limit: 50,
-    where: { lesson: { equals: lessonId } },
-  })
-  const points = existing.docs.map((row) => asDoc(row)).map((row) => ({ id: row.id, prompt: String(row.prompt || '') }))
+  const points: { id: number; prompt: string }[] = []
+  for (let page = 1; page <= 20; page += 1) {
+    const existing = await payload.find({
+      collection: 'engagement-points',
+      overrideAccess: true,
+      depth: 0,
+      limit: 100,
+      page,
+      where: { lesson: { equals: lessonId } },
+    })
+    points.push(...existing.docs.map((row) => asDoc(row)).map((row) => ({ id: row.id, prompt: String(row.prompt || '') })))
+    if (!existing.hasNextPage) break
+  }
   const plan = matchQuestions(points, callouts.map((callout) => callout.prompt))
   for (const kept of plan.kept) {
     const callout = callouts.find((row) => row.prompt === kept.prompt)

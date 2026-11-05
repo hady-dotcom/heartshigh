@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { KeepPlaceSheet } from '@/components/journey/sheet'
 import { dismissGuestOffer, readGuestDevice, rememberGuestName, rememberGuestWeekdays, type GuestDeviceState } from '@/lib/guest-device'
+import { workbookCardHref } from '@/lib/content-sanity'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -127,7 +128,7 @@ export function GuestMeBody({ base, portal }: { base: string; portal: string }) 
         {state?.name ? <p data-testid="me-name">{state.name}</p> : null}
       </form>
       <p className="eyebrow">Workbook</p>
-      <a className="list-link" href={`${base}/workbook`} data-testid="me-workbook">
+      <a className="list-link workbook-card" href={workbookCardHref(base)} data-testid="me-workbook">
         <span className="grow">Workbook<small>The first ten films, your answer, and a few from other parents</small></span>
         <span aria-hidden>›</span>
       </a>

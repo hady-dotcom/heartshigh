@@ -12,7 +12,8 @@ import { doorLabel, type Door } from '@/lib/doors'
 import { phaseLabel } from '@/lib/parent-feedback'
 import { readSaidAnswers, saidForFilm } from '@/lib/said-answers'
 import { learnerBrand } from '@/lib/learner-brand'
-import { filmLabel, shownCalloutSecond } from '@/lib/portal-look'
+import { filmLabel } from '@/lib/portal-look'
+import { placeQuestionTimes, workbookCardHref } from '@/lib/content-sanity'
 import { earlierPlayableUnfinished, filmCanPlay, firstPlayableIndex } from '@/lib/film-availability'
 import { isSequencePortal, kineticMomentsOn, lockMessage, resumeChoice, sectionAnchor, sectionGroups, sequenceProgress, SEQUENCE_COPY } from '@/lib/sequence'
 import { reduceParentingDemo, watchedCount, withDemoQuery } from '@/lib/parenting-demo'
@@ -206,7 +207,7 @@ async function CourseOverview({ payload, user, portal, base, query }: Ctx, cours
           {lessons.length === 1 ? (sequence ? 'Schedule this film' : 'Schedule this talk') : 'Schedule all of these'}
         </Link>
         {sequence && shellOf(portal) === 'modern' ? (
-          <a className="list-link" href={withCurrentQuery(`${base}/workbook`, query)} data-testid="open-workbook">
+          <a className="list-link workbook-card" href={withCurrentQuery(workbookCardHref(base), query)} data-testid="open-workbook">
             <span className="grow">Workbook<small>The first ten films, your answer, and a few from other parents</small></span>
             <span aria-hidden>›</span>
           </a>
@@ -347,7 +348,16 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
   const points = allPoints.filter((point) => ref(point.lesson) === lessonId)
   const mine = ctx.demo ? [] : await rows(payload, 'answers', { and: [{ user: { equals: user.id } }, { lesson: { in: lessonIds } }] })
   const at = now()
-  const views: PointView[] = points.filter((point) => str(point.family) !== 'workbook').map((point, index) => {
+  const filmPoints = points.filter((point) => str(point.family) !== 'workbook')
+  const placed = placeQuestionTimes(
+    filmPoints.map((point) => ({ id: point.id, second: Number(point.second || 0), prompt: str(point.prompt) })),
+    Number(lesson.durationSeconds || 0),
+    { pullLate: !sequence },
+  )
+  const placedById = new Map(placed.map((row, index) => [row.id, { second: row.second, number: index + 1 }]))
+  const views: PointView[] = filmPoints.flatMap((point) => {
+    const slot = placedById.get(point.id)
+    if (!slot) return []
     const contingentId = ref(point.contingent)
     const contingentAnswer = contingentId ? mine.find((answer) => ref(answer.point) === contingentId) : null
     const state = unlockState({
@@ -359,11 +369,11 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       at,
     })
     const answer = mine.find((row) => ref(row.point) === point.id && answerCounts(row))
-    return {
+    return [{
       id: point.id,
-      number: index + 1,
-      second: shownCalloutSecond(Number(point.second || 0), Number(lesson.durationSeconds || 0), sequence),
-      prompt: shownQuestionPrompt(str(point.prompt), { sheet: sequence, index }),
+      number: slot.number,
+      second: slot.second,
+      prompt: shownQuestionPrompt(str(point.prompt), { sheet: sequence, index: slot.number - 1 }),
       kind: (['reflection', 'question', 'multiple_choice', 'task'].includes(str(point.kind)) ? point.kind : 'reflection') as PointView['kind'],
       options: Array.isArray(point.options) ? (point.options as unknown[]).map(String) : [],
       dueDays: point.dueDays == null || point.dueDays === '' ? null : Number(point.dueDays),
@@ -376,7 +386,7 @@ export async function CourseScreen(ctx: Ctx, courseId: number) {
       answered: Boolean(answer),
       myAnswer: answer ? str(answer.body) || str(answer.choice) : undefined,
       timeLimitSec: Number(point.timeLimitSec || 0) || null,
-    }
+    }]
   }).filter((view) => !sequence || view.prompt)
 
   const swarm: Record<number, SwarmItem[]> = {}

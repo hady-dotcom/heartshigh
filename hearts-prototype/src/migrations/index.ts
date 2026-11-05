@@ -52,6 +52,7 @@ import * as migration_20261025_238000_system_font from './20261025_238000_system
 import * as migration_20261026_120000_sheet_courses from './20261026_120000_sheet_courses';
 import * as migration_20261028_120000_rate_hit_portal from './20261028_120000_rate_hit_portal';
 import * as migration_20261028_180000_editorial_covers from './20261028_180000_editorial_covers';
+import * as migration_20261105_120000_question_times from './20261105_120000_question_times';
 
 export const migrations = [
   {
@@ -323,5 +324,10 @@ export const migrations = [
     up: migration_20261028_180000_editorial_covers.up,
     down: migration_20261028_180000_editorial_covers.down,
     name: '20261028_180000_editorial_covers',
+  },
+  {
+    up: migration_20261105_120000_question_times.up,
+    down: migration_20261105_120000_question_times.down,
+    name: '20261105_120000_question_times',
   },
 ];

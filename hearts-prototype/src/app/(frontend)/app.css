@@ -761,6 +761,7 @@
 .card h3 { margin: 0 0 6px; font-size: 17px; }
 .card p { margin: 0; line-height: 1.5; color: var(--ink-2); font-size: 14.5px; }
 .list-link { display: flex; align-items: center; gap: 12px; padding: 14px 4px; border-bottom: 1px solid var(--line); text-decoration: none; color: var(--ink); min-height: 56px; font-weight: 600; }
+a.workbook-card, .tv-workbook.workbook-card { position: relative; z-index: 2; display: flex; width: 100%; box-sizing: border-box; min-height: 56px; touch-action: manipulation; }
 button.list-link { width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: left; }
 .list-link span.grow { flex: 1; }
 .list-link small { color: var(--muted); font-weight: 500; display: block; }

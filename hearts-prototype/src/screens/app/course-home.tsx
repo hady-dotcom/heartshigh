@@ -6,6 +6,7 @@ import { LearnerTabBar } from '@/components/app/learner-bar'
 import { FilmFallback } from '@/components/app/film-fallback'
 import { PlayIcon } from '@/components/icons'
 import { learnerBrand } from '@/lib/learner-brand'
+import { workbookCardHref } from '@/lib/content-sanity'
 import { shellOf } from '@/lib/portal-look'
 import { isSequencePortal, librarySections, sectionAnchor } from '@/lib/sequence'
 import { sortParts } from '@/lib/part-order'
@@ -184,7 +185,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
       <AppFrame testId="garden" brand={learnerBrand(portal)}>
         <div className="app-scroll" data-testid="course-home">
           <Flash error={query.error} notice={query.notice} />
-          <TvHome workbookHref={`${base}/workbook`} slides={slides} watching={watching} shelves={shelves} />
+          <TvHome workbookHref={workbookCardHref(base)} slides={slides} watching={watching} shelves={shelves} />
         </div>
         <LearnerTabBar base={base} active="garden" portal={portal} />
       </AppFrame>
@@ -196,7 +197,7 @@ export async function CourseHomeScreen({ payload, user, portal, base, query }: C
         <Flash error={query.error} notice={query.notice} />
         <div className="app-head"><h1>Courses</h1></div>
         {modern ? (
-          <a className="list-link" href={`${base}/workbook`} data-testid="open-workbook">
+          <a className="list-link workbook-card" href={workbookCardHref(base)} data-testid="open-workbook">
             <span className="grow">Workbook<small>The first ten films</small></span>
             <span aria-hidden>›</span>
           </a>
