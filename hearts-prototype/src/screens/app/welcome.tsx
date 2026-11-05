@@ -34,7 +34,7 @@ export async function WelcomeScreen(ctx: Ctx) {
             {supportNote ? <p className="muted" data-testid="powered-by-donations">{supportNote}</p> : null}
             <Flash error={query.error} notice={query.notice} />
             <Link className="pill gold block" href={next} style={{ marginTop: 18 }} data-testid="welcome-begin">Begin</Link>
-            <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>{portalName(portal)}</p>
+            {brand ? null : <p className="muted" style={{ fontSize: 13, marginTop: 14 }}>{portalName(portal)}</p>}
           </div>
         </div>
       </AppFrame>

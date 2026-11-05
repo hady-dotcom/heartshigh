@@ -329,7 +329,7 @@ export async function seedParentingPortal(payload: Payload) {
   await ensureUser(payload, {
     email: 'parenting-admin@hearts.test',
     password: 'portal-admin',
-    name: 'Parenting admin',
+    name: 'Rafiq Malik',
     role: 'portal-admin',
     accessCode: admin.id,
     tenants: [{ tenant: portal.id }],
