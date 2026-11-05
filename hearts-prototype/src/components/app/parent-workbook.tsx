@@ -38,7 +38,7 @@ export function ParentWorkbookBoard({ films, signedIn, next }: { films: Workbook
             {film.href ? <a className="workbook-open" href={film.href}>Open this film</a> : null}
             <p className="workbook-question" data-testid="workbook-question">{film.prompt}</p>
             <p className="eyebrow">Your answer</p>
-            {own ? <p className="workbook-own" data-testid="workbook-own">{own}</p> : <p className="workbook-prompt" data-testid="workbook-write">Write your answer</p>}
+            {own ? <p className="workbook-own" data-testid="workbook-own">{own}</p> : null}
             {film.pointId && !signedIn ? (
               <form
                 key={own || 'new'}
@@ -51,7 +51,7 @@ export function ParentWorkbookBoard({ films, signedIn, next }: { films: Workbook
                   setNote('Saved on this phone.')
                 }}
               >
-                <textarea name="body" rows={3} defaultValue={own} placeholder="Write your answer" data-testid="workbook-text" />
+                <textarea name="body" rows={3} defaultValue={own} placeholder="Write your answer" data-testid="workbook-text" aria-label="Write your answer" />
                 <button type="submit" className="pill" data-testid="workbook-save">Save on this phone</button>
               </form>
             ) : null}
@@ -60,7 +60,7 @@ export function ParentWorkbookBoard({ films, signedIn, next }: { films: Workbook
                 <input type="hidden" name="action" value="answer" />
                 <input type="hidden" name="point" value={film.pointId} />
                 <input type="hidden" name="next" value={next} />
-                <textarea name="body" rows={3} defaultValue={own} required placeholder="Write your answer" data-testid="workbook-text" />
+                <textarea name="body" rows={3} defaultValue={own} required placeholder="Write your answer" data-testid="workbook-text" aria-label="Write your answer" />
                 <button type="submit" className="pill" data-testid="workbook-save">Save in your workbook</button>
               </form>
             ) : null}

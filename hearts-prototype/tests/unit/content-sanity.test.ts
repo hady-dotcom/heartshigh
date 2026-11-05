@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 import { partListProblems, placeQuestionTimes, placedQuestionProblems, rawQuestionProblems, workbookCardHref } from '../../src/lib/content-sanity'
 
@@ -79,4 +80,12 @@ test('part titles and numbers are checked as a list', () => {
 test('the workbook card href is the portal workbook', () => {
   assert.equal(workbookCardHref('/p/parenting'), '/p/parenting/workbook')
   assert.equal(workbookCardHref('/p/parenting/'), '/p/parenting/workbook')
+})
+
+test('learner pages do not fade their text in from invisible', () => {
+  const css = readFileSync(new URL('../../src/app/(frontend)/shell-modern.css', import.meta.url), 'utf8')
+  const frames = css.match(/@keyframes hh-page-in \{[^}]+\}/)
+  assert.ok(frames)
+  assert.doesNotMatch(frames[0], /opacity/)
+  assert.match(css, /\.route-fade \{[^}]*opacity:\s*1/)
 })
